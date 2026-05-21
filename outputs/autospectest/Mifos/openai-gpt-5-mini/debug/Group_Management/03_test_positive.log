@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.426846
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.356172
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Group Management</module_name>
 
@@ -152,39 +235,29 @@ Do not drop functionally unique code paths (like a specific state transition) ju
     "Groups_Page": {
       "type": "data_table",
       "columns": [
-        {
-          "name": "Group Name",
-          "interactive": "link"
-        },
-        {
-          "name": "Account Number"
-        },
-        {
-          "name": "Office"
-        },
-        {
-          "name": "Status",
-          "type": "unspecified",
-          "notes": "values: Active, Pending, Closed"
-        },
-        {
-          "name": "Staff"
-        }
+        "Group Name",
+        "Account Number",
+        "Office",
+        "Status",
+        "Staff"
       ],
       "row_actions": [
         {
           "action_name": "Open Group",
-          "description": "navigates to Group Detail page (triggered by Group Name link)"
+          "type": "link",
+          "on_click": "navigates to Group Detail page"
         }
       ],
-      "top_right_actions": [
+      "page_actions": [
         {
-          "action_name": "Import Groups",
-          "description": "opens Bulk Import Groups page"
+          "element_name": "Import Groups",
+          "type": "button",
+          "on_click": "navigates to Bulk Import Groups page"
         },
         {
-          "action_name": "Create Group",
-          "description": "opens Create Group form"
+          "element_name": "Create Group",
+          "type": "button",
+          "on_click": "opens Create_Group_Form"
         }
       ]
     },
@@ -200,7 +273,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "required": true
         },
         "Staff": {
-          "type": "dropdown"
+          "type": "unspecified"
         },
         "Submitted_On": {
           "type": "date",
@@ -213,24 +286,28 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "type": "unspecified"
         },
         "Add_Clients_Search": {
-          "type": "search",
-          "description": "search-and-add interface to associate existing clients"
+          "type": "search"
         },
-        "Associated_Clients_List": {
-          "type": "display_list",
-          "fields": {}
+        "Added_Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "unspecified"
+            }
+          }
         }
       },
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "creates group"
+          "type": "button",
+          "on_success": "creates the group"
         }
       ]
     },
     "Bulk_Import_Groups_Page": {
       "type": "page",
-      "components": {
+      "panels": {
         "Groups_Template_Panel": {
           "type": "panel",
           "fields": {
@@ -243,148 +320,220 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           },
           "actions": [
             {
-              "action_name": "Download Template",
-              "description": "downloads groups template filtered by selected Office/Staff"
+              "element_name": "Download Template",
+              "type": "button",
+              "on_click": "downloads groups template"
             }
           ]
         },
         "Groups_Upload_Panel": {
           "type": "panel",
           "fields": {
-            "Groups_File": {
-              "type": "file_upload"
+            "Template_File": {
+              "type": "file_upload",
+              "required": false
             }
           },
           "actions": [
             {
-              "action_name": "Upload",
+              "element_name": "Upload",
+              "type": "button",
               "on_success": "uploads file and starts import job"
             }
           ]
-        },
-        "Import_History_Table": {
-          "type": "data_table",
-          "description": "shows past import jobs and statuses"
         }
+      },
+      "import_history_table": {
+        "type": "data_table",
+        "columns": [],
+        "row_actions": []
       }
     },
     "Group_Detail_Page": {
-      "type": "page",
-      "components": {
-        "Action_Bar": {
-          "type": "action_bar",
-          "available_actions": [
-            {
-              "action_name": "Activate"
-            },
-            {
-              "action_name": "Edit"
-            },
-            {
-              "action_name": "Close"
-            },
-            {
-              "action_name": "Assign Staff"
-            },
-            {
-              "action_name": "Transfer Clients"
+      "type": "detail_page",
+      "actions_component": "Group_Detail_Actions",
+      "tabs": [
+        {
+          "tab_name": "Members",
+          "fields": {
+            "Members_Table": {
+              "type": "data_table",
+              "columns": [
+                "Member Name"
+              ],
+              "row_actions": [
+                {
+                  "action_name": "Open Member Profile",
+                  "type": "link",
+                  "on_click": "navigates to Member Profile"
+                }
+              ]
             }
-          ]
+          }
         },
-        "Detail_Tabs": {
-          "type": "tab_container",
-          "tabs": [
-            {
-              "tab_name": "Members",
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "columns": [
-                    {
-                      "name": "Client",
-                      "interactive": "link",
-                      "description": "link to client profile"
-                    }
-                  ],
-                  "row_actions": [
-                    {
-                      "action_name": "Open Client Profile",
-                      "description": "navigates to client's profile (triggered by Client link)"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "tab_name": "Loan Accounts",
-              "fields": {}
-            },
-            {
-              "tab_name": "Savings Accounts",
-              "fields": {}
-            },
-            {
-              "tab_name": "Notes",
-              "fields": {}
-            },
-            {
-              "tab_name": "Calendar/Meeting",
-              "components": {
-                "Meeting_Actions": {
-                  "type": "action_group",
-                  "available_actions": [
-                    {
-                      "action_name": "Schedule Meeting",
-                      "description": "opens meeting scheduling interface"
-                    },
-                    {
-                      "action_name": "Record Meeting",
-                      "description": "opens meeting record entry interface"
-                    }
-                  ]
-                }
-              }
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {
+            "Loan_Accounts_Table": {
+              "type": "data_table",
+              "columns": [],
+              "row_actions": []
             }
-          ]
+          }
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {
+            "Savings_Accounts_Table": {
+              "type": "data_table",
+              "columns": [],
+              "row_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {
+            "Meeting_Scheduler": {
+              "type": "component",
+              "available_actions": [
+                {
+                  "element_name": "Schedule Meeting",
+                  "type": "button",
+                  "on_click": "opens scheduling workflow"
+                },
+                {
+                  "element_name": "Record Meeting",
+                  "type": "button",
+                  "on_click": "opens meeting record workflow"
+                }
+              ]
+            }
+          }
         }
-      }
+      ]
+    },
+    "Group_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Activate",
+          "type": "button"
+        },
+        {
+          "action_name": "Edit",
+          "type": "button",
+          "on_click": "opens Edit_Group_Form"
+        },
+        {
+          "action_name": "Close",
+          "type": "button"
+        },
+        {
+          "action_name": "Assign Staff",
+          "type": "button",
+          "on_click": "opens Assign_Staff_Dialog"
+        },
+        {
+          "action_name": "Transfer Clients",
+          "type": "button"
+        }
+      ]
+    },
+    "Assign_Staff_Dialog": {
+      "type": "dialog",
+      "fields": {
+        "Staff": {
+          "type": "dropdown",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Assign",
+          "type": "button",
+          "on_success": "assigns selected staff to group"
+        }
+      ]
+    },
+    "Edit_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "unspecified"
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Active": {
+          "type": "checkbox"
+        },
+        "External_Id": {
+          "type": "unspecified"
+        },
+        "Add_Clients_Search": {
+          "type": "search"
+        },
+        "Added_Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "unspecified"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates group"
+        }
+      ]
     },
     "Collection_Sheet_Feature": {
-      "type": "feature",
-      "description": "generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry",
+      "type": "component",
       "actions": [
         {
-          "action_name": "Generate Collection Sheet",
-          "on_success": "renders Collection Sheet table for batch entry"
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_success": "populates sheet for batch data entry with all group clients"
         }
       ],
-      "components": {
-        "Collection_Sheet_Table": {
-          "type": "data_table",
-          "columns": [
-            {
-              "name": "Client",
-              "interactive": "link",
-              "description": "link to client profile"
-            },
-            {
-              "name": "Loan_Repayment_Amount",
-              "type": "number",
-              "description": "editable for batch entry"
-            },
-            {
-              "name": "Savings_Deposit_Amount",
-              "type": "number",
-              "description": "editable for batch entry"
-            }
-          ],
-          "submit_actions": [
-            {
-              "element_name": "Save Entries",
-              "on_success": "saves batch collection entries"
-            }
-          ]
-        }
+      "generated_sheet": {
+        "type": "data_table",
+        "columns": [
+          "Client",
+          "Loan Repayment Amount",
+          "Savings Deposit Amount"
+        ],
+        "row_fields": {
+          "Client": {
+            "type": "unspecified"
+          },
+          "Loan_Repayment_Amount": {
+            "type": "number",
+            "editable": true
+          },
+          "Savings_Deposit_Amount": {
+            "type": "number",
+            "editable": true
+          }
+        },
+        "row_actions": []
       }
     }
   }
@@ -405,7 +554,7 @@ The Group Detail page displays the group name, account number, status, office, a
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:23:41] Test-Positive - LLM RESPONSE
+[16:18:31] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Group Management",
@@ -413,146 +562,208 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open a group's detail from Groups table",
+      "test_case": "Open Group from Groups table navigates to Group Detail",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Groups page is loaded with at least one group in the table"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
       ],
       "steps": [
-        "1. Click the <Group Name> link for <target group> in the Groups table"
+        "1. Click the <Group Name> link in the first row of the Groups table"
       ],
-      "expected_result": "Navigates to the Group Detail page and displays the selected group's name, account number, and Status chip",
-      "priority": "medium"
+      "expected_result": "Group Detail page is displayed showing the group header with the Group Name and action buttons Activate, Edit, Close, Assign Staff, Transfer Clients",
+      "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new group with required fields",
+      "test_case": "Open Create Group form from Groups page",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Groups page is open",
-        "Create Group form is accessible via 'Create Group' top-right action"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Create Group' action",
-        "2. Enter <valid group name> in the Name field",
-        "3. Select <valid office> from the Office dropdown",
-        "4. Select <staff member> from the Staff dropdown (optional)",
-        "5. Enter <valid date> in the Submitted On field",
-        "6. Toggle the Active checkbox if desired",
-        "7. Click the Submit button"
+        "1. Click the Create Group button in the page header"
       ],
-      "expected_result": "creates group",
+      "expected_result": "Create Group form is displayed showing fields Name (required), Office (required), Submitted On (required), Add Clients search, and a Submit button",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a new group and associate existing clients via Add Clients search-and-add",
+      "test_case": "Submit Create Group with required fields and added clients",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Groups page is open",
-        "Create Group form is accessible via 'Create Group' top-right action"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Create Group' action",
-        "2. Enter <valid group name> in the Name field",
-        "3. Select <valid office> from the Office dropdown",
-        "4. Enter <valid date> in the Submitted On field",
-        "5. Enter <search term> in the Add Clients search-and-add field",
-        "6. Select <matching client> from the autocomplete dropdown",
-        "7. Verify the selected client appears in the Associated Clients list",
+        "1. Click the Create Group button",
+        "2. Enter <Group Name> in the Name field",
+        "3. Select <Office> from the Office dropdown",
+        "4. (Optional) Select <Staff> in the Staff field",
+        "5. Enter <date> in Submitted On",
+        "6. Enter <search term> in Add Clients Search",
+        "7. Select <matching client> from the search results to add them to the Added Clients list",
         "8. Click the Submit button"
       ],
-      "expected_result": "creates group",
+      "expected_result": "A new row appears in the Groups table showing the entered <Group Name> and the selected <Office>; the newly created group's row is visible in the Groups list",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Download groups template filtered by Office and Staff from Bulk Import page",
+      "test_case": "Download groups template from Bulk Import page",
       "preconditions": [
-        "User logged in as <Admin>",
+        "User logged in as <User with Group Management permission>",
         "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Import Groups' action in the top-right of the Groups page",
-        "2. Select <valid office> from the Office dropdown in the Groups Template panel",
-        "3. Select <staff member> from the Staff dropdown in the Groups Template panel",
-        "4. Click the 'Download Template' action in the Groups Template panel"
+        "1. Click the Import Groups button in the page header",
+        "2. In the Groups Template panel click the Download Template button"
       ],
-      "expected_result": "downloads groups template filtered by selected Office/Staff",
+      "expected_result": "Groups template file download is triggered in the browser",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Upload a groups file to start an import job",
+      "test_case": "Upload groups file and start import job",
       "preconditions": [
-        "User logged in as <Admin>",
+        "User logged in as <User with Group Management permission>",
         "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Import Groups' action in the top-right of the Groups page",
-        "2. Click the Groups_File file picker in the Groups Upload panel",
-        "3. Select a <valid groups file> from the OS file dialog",
-        "4. Click the 'Upload' button in the Groups Upload panel"
+        "1. Click the Import Groups button",
+        "2. In the Groups Upload panel click the Template File picker",
+        "3. Select a <valid groups template file> from the OS file dialog",
+        "4. Click the Upload button"
       ],
-      "expected_result": "uploads file and starts import job",
+      "expected_result": "A new import job appears in the Import History table indicating the import has started",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Open a client profile from Members tab in Group Detail",
+      "test_case": "Open Edit Group form from Group Detail",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Group Detail page is open for a group that has members"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
       ],
       "steps": [
-        "1. Click the 'Members' tab in the Group Detail page",
-        "2. Click the <Client> link for <target member> in the Members table"
+        "1. Click the <Group Name> link in the Groups table to open the Group Detail page",
+        "2. Click the Edit action button in the Group Detail action bar"
       ],
-      "expected_result": "navigates to client's profile (triggered by Client link)",
+      "expected_result": "Edit Group form is displayed showing fields Name (required), Office (required), Submitted On (required), and a Save button",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Activate a group in Pending state and verify status update",
+      "test_case": "Assign staff to a group via Assign Staff dialog",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Group Detail page is open for a group in <Pending> state"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
       ],
       "steps": [
-        "1. Click the 'Activate' action in the Action Bar on the Group Detail page"
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Assign Staff action button",
+        "3. In the Assign Staff dialog select <Staff> from the Staff dropdown",
+        "4. Click the Assign button in the dialog"
       ],
-      "expected_result": "Status chip shows 'Active'",
+      "expected_result": "A success notification is displayed and the Group Detail page shows the selected <Staff> in the Staff field",
       "priority": "high"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Generate Collection Sheet, enter batch amounts, and save entries",
+      "test_case": "Activate a group updates the status badge to Active",
       "preconditions": [
-        "User logged in as <Collection Officer>",
-        "Group Detail page is open for a group that has clients",
-        "Collection Sheet feature is available for the group"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row in <Pending> status"
       ],
       "steps": [
-        "1. Click the 'Generate Collection Sheet' action for the group",
-        "2. Verify the Collection Sheet table is rendered for batch entry",
-        "3. Enter <valid number> in the Loan_Repayment_Amount cell for the first client row",
-        "4. Enter <valid number> in the Savings_Deposit_Amount cell for the first client row",
-        "5. Click the 'Save Entries' button in the Collection Sheet table"
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Activate action button"
       ],
-      "expected_result": "renders Collection Sheet table for batch entry; saves batch collection entries",
+      "expected_result": "Status badge on the Group Detail page updates to 'Active' and is displayed as a colored status chip",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Open Transfer Clients workflow from Group Detail",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Transfer Clients action button"
+      ],
+      "expected_result": "Transfer Clients dialog or workflow is displayed allowing selection of target group/clients",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Open a member's profile from the Members tab",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row that has members"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Members tab",
+        "3. Click the <Member Name> link in the Members table"
+      ],
+      "expected_result": "Browser navigates to the Member Profile page for the selected member",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-011",
+      "test_case": "Generate Collection Sheet populates editable sheet with clients and amounts",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row that has members"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Generate Collection Sheet button in the Collection Sheet feature"
+      ],
+      "expected_result": "A Collection Sheet data table is displayed containing columns Client, Loan Repayment Amount, Savings Deposit Amount and rows for group clients with editable numeric fields for Loan Repayment Amount and Savings Deposit Amount",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Open Schedule Meeting workflow from Calendar/Meeting tab",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Calendar/Meeting tab",
+        "3. Click the Schedule Meeting button"
+      ],
+      "expected_result": "Scheduling workflow is displayed allowing the user to create a group meeting",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Open Record Meeting workflow from Calendar/Meeting tab",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Calendar/Meeting tab",
+        "3. Click the Record Meeting button"
+      ],
+      "expected_result": "Meeting record workflow is displayed allowing the user to record details of a past meeting",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 5,
-    "medium_priority": 3,
+    "total": 13,
+    "high_priority": 7,
+    "medium_priority": 6,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[14:23:41] Test-Positive - PARSED JSON
+[16:18:31] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Group Management",
@@ -560,140 +771,202 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open a group's detail from Groups table",
+      "test_case": "Open Group from Groups table navigates to Group Detail",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Groups page is loaded with at least one group in the table"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
       ],
       "steps": [
-        "1. Click the <Group Name> link for <target group> in the Groups table"
+        "1. Click the <Group Name> link in the first row of the Groups table"
       ],
-      "expected_result": "Navigates to the Group Detail page and displays the selected group's name, account number, and Status chip",
-      "priority": "medium"
+      "expected_result": "Group Detail page is displayed showing the group header with the Group Name and action buttons Activate, Edit, Close, Assign Staff, Transfer Clients",
+      "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new group with required fields",
+      "test_case": "Open Create Group form from Groups page",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Groups page is open",
-        "Create Group form is accessible via 'Create Group' top-right action"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Create Group' action",
-        "2. Enter <valid group name> in the Name field",
-        "3. Select <valid office> from the Office dropdown",
-        "4. Select <staff member> from the Staff dropdown (optional)",
-        "5. Enter <valid date> in the Submitted On field",
-        "6. Toggle the Active checkbox if desired",
-        "7. Click the Submit button"
+        "1. Click the Create Group button in the page header"
       ],
-      "expected_result": "creates group",
+      "expected_result": "Create Group form is displayed showing fields Name (required), Office (required), Submitted On (required), Add Clients search, and a Submit button",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a new group and associate existing clients via Add Clients search-and-add",
+      "test_case": "Submit Create Group with required fields and added clients",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Groups page is open",
-        "Create Group form is accessible via 'Create Group' top-right action"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Create Group' action",
-        "2. Enter <valid group name> in the Name field",
-        "3. Select <valid office> from the Office dropdown",
-        "4. Enter <valid date> in the Submitted On field",
-        "5. Enter <search term> in the Add Clients search-and-add field",
-        "6. Select <matching client> from the autocomplete dropdown",
-        "7. Verify the selected client appears in the Associated Clients list",
+        "1. Click the Create Group button",
+        "2. Enter <Group Name> in the Name field",
+        "3. Select <Office> from the Office dropdown",
+        "4. (Optional) Select <Staff> in the Staff field",
+        "5. Enter <date> in Submitted On",
+        "6. Enter <search term> in Add Clients Search",
+        "7. Select <matching client> from the search results to add them to the Added Clients list",
         "8. Click the Submit button"
       ],
-      "expected_result": "creates group",
+      "expected_result": "A new row appears in the Groups table showing the entered <Group Name> and the selected <Office>; the newly created group's row is visible in the Groups list",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Download groups template filtered by Office and Staff from Bulk Import page",
+      "test_case": "Download groups template from Bulk Import page",
       "preconditions": [
-        "User logged in as <Admin>",
+        "User logged in as <User with Group Management permission>",
         "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Import Groups' action in the top-right of the Groups page",
-        "2. Select <valid office> from the Office dropdown in the Groups Template panel",
-        "3. Select <staff member> from the Staff dropdown in the Groups Template panel",
-        "4. Click the 'Download Template' action in the Groups Template panel"
+        "1. Click the Import Groups button in the page header",
+        "2. In the Groups Template panel click the Download Template button"
       ],
-      "expected_result": "downloads groups template filtered by selected Office/Staff",
+      "expected_result": "Groups template file download is triggered in the browser",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Upload a groups file to start an import job",
+      "test_case": "Upload groups file and start import job",
       "preconditions": [
-        "User logged in as <Admin>",
+        "User logged in as <User with Group Management permission>",
         "Groups page is open"
       ],
       "steps": [
-        "1. Click the 'Import Groups' action in the top-right of the Groups page",
-        "2. Click the Groups_File file picker in the Groups Upload panel",
-        "3. Select a <valid groups file> from the OS file dialog",
-        "4. Click the 'Upload' button in the Groups Upload panel"
+        "1. Click the Import Groups button",
+        "2. In the Groups Upload panel click the Template File picker",
+        "3. Select a <valid groups template file> from the OS file dialog",
+        "4. Click the Upload button"
       ],
-      "expected_result": "uploads file and starts import job",
+      "expected_result": "A new import job appears in the Import History table indicating the import has started",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Open a client profile from Members tab in Group Detail",
+      "test_case": "Open Edit Group form from Group Detail",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Group Detail page is open for a group that has members"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
       ],
       "steps": [
-        "1. Click the 'Members' tab in the Group Detail page",
-        "2. Click the <Client> link for <target member> in the Members table"
+        "1. Click the <Group Name> link in the Groups table to open the Group Detail page",
+        "2. Click the Edit action button in the Group Detail action bar"
       ],
-      "expected_result": "navigates to client's profile (triggered by Client link)",
+      "expected_result": "Edit Group form is displayed showing fields Name (required), Office (required), Submitted On (required), and a Save button",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Activate a group in Pending state and verify status update",
+      "test_case": "Assign staff to a group via Assign Staff dialog",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Group Detail page is open for a group in <Pending> state"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
       ],
       "steps": [
-        "1. Click the 'Activate' action in the Action Bar on the Group Detail page"
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Assign Staff action button",
+        "3. In the Assign Staff dialog select <Staff> from the Staff dropdown",
+        "4. Click the Assign button in the dialog"
       ],
-      "expected_result": "Status chip shows 'Active'",
+      "expected_result": "A success notification is displayed and the Group Detail page shows the selected <Staff> in the Staff field",
       "priority": "high"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Generate Collection Sheet, enter batch amounts, and save entries",
+      "test_case": "Activate a group updates the status badge to Active",
       "preconditions": [
-        "User logged in as <Collection Officer>",
-        "Group Detail page is open for a group that has clients",
-        "Collection Sheet feature is available for the group"
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row in <Pending> status"
       ],
       "steps": [
-        "1. Click the 'Generate Collection Sheet' action for the group",
-        "2. Verify the Collection Sheet table is rendered for batch entry",
-        "3. Enter <valid number> in the Loan_Repayment_Amount cell for the first client row",
-        "4. Enter <valid number> in the Savings_Deposit_Amount cell for the first client row",
-        "5. Click the 'Save Entries' button in the Collection Sheet table"
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Activate action button"
       ],
-      "expected_result": "renders Collection Sheet table for batch entry; saves batch collection entries",
+      "expected_result": "Status badge on the Group Detail page updates to 'Active' and is displayed as a colored status chip",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Open Transfer Clients workflow from Group Detail",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Transfer Clients action button"
+      ],
+      "expected_result": "Transfer Clients dialog or workflow is displayed allowing selection of target group/clients",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Open a member's profile from the Members tab",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row that has members"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Members tab",
+        "3. Click the <Member Name> link in the Members table"
+      ],
+      "expected_result": "Browser navigates to the Member Profile page for the selected member",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-011",
+      "test_case": "Generate Collection Sheet populates editable sheet with clients and amounts",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row that has members"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Generate Collection Sheet button in the Collection Sheet feature"
+      ],
+      "expected_result": "A Collection Sheet data table is displayed containing columns Client, Loan Repayment Amount, Savings Deposit Amount and rows for group clients with editable numeric fields for Loan Repayment Amount and Savings Deposit Amount",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Open Schedule Meeting workflow from Calendar/Meeting tab",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Calendar/Meeting tab",
+        "3. Click the Schedule Meeting button"
+      ],
+      "expected_result": "Scheduling workflow is displayed allowing the user to create a group meeting",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Open Record Meeting workflow from Calendar/Meeting tab",
+      "preconditions": [
+        "User logged in as <User with Group Management permission>",
+        "Groups page is open with at least one group row"
+      ],
+      "steps": [
+        "1. Click the <Group Name> link to open the Group Detail page",
+        "2. Click the Calendar/Meeting tab",
+        "3. Click the Record Meeting button"
+      ],
+      "expected_result": "Meeting record workflow is displayed allowing the user to record details of a past meeting",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 5,
-    "medium_priority": 3,
+    "total": 13,
+    "high_priority": 7,
+    "medium_priority": 6,
     "low_priority": 0
   }
 }

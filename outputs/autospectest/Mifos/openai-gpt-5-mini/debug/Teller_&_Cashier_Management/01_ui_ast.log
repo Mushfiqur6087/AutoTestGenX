@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.598677
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.760230
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Teller & Cashier Management
 
@@ -218,7 +218,7 @@ The Tellers page displays a data table with columns for Teller Name (clickable l
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:14] UI-AST Agent - LLM RESPONSE
+[16:06:40] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Teller & Cashier Management",
@@ -226,18 +226,17 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
     "Tellers_Table": {
       "type": "data_table",
       "columns": ["Teller Name", "Office", "Status", "Description"],
-      "notes": "Teller Name is a clickable link that navigates to the Teller Detail page",
-      "row_actions": [
-        {
-          "action_name": "Open Teller Detail",
-          "trigger": "Teller Name (link)"
-        }
-      ],
-      "bulk_actions": []
+      "row_link": {
+        "field": "Teller Name",
+        "action": "navigate_to_Teller_Detail"
+      }
     },
     "Create_Teller_Form": {
       "type": "form",
-      "trigger": "+ Create Teller",
+      "trigger": {
+        "element_name": "+ Create Teller",
+        "action": "open_form"
+      },
       "fields": {
         "Office": {
           "type": "unspecified",
@@ -269,73 +268,38 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "element_name": "Create",
           "on_success": "creates teller"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     },
     "Teller_Detail_Page": {
-      "type": "page",
-      "actions": {
-        "Edit_Teller": {
+      "type": "detail_page",
+      "actions": [
+        {
           "element_name": "Edit",
-          "type": "form",
-          "fields": {
-            "Office": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Teller_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Description": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Start_Date": {
-              "type": "date",
-              "required": true
-            },
-            "End_Date": {
-              "type": "date",
-              "required": false
-            },
-            "Status": {
-              "type": "dropdown",
-              "required": false,
-              "options": ["Active", "Inactive"]
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Save",
-              "on_success": "updates teller"
-            }
-          ]
+          "action": "open_edit_form"
         }
-      },
+      ],
       "sections": {
         "Cashiers": {
           "type": "data_table",
           "columns": ["Cashier Name", "Start Date", "End Date", "Is Full Day", "Status"],
-          "row_actions": [
-            {
-              "action_name": "Open Cashier Detail",
-              "trigger": "row_click"
-            }
-          ],
-          "bulk_actions": [],
-          "actions": {
-            "Allocate_Cashier_Button": {
-              "element_name": "+ Allocate Cashier",
-              "opens": "Allocate_Cashier_Form"
-            }
+          "trigger": {
+            "element_name": "+ Allocate Cashier",
+            "action": "open_allocate_cashier_form"
           }
         }
       }
     },
     "Allocate_Cashier_Form": {
       "type": "form",
-      "trigger": "+ Allocate Cashier",
+      "trigger": {
+        "element_name": "+ Allocate Cashier",
+        "action": "open_form"
+      },
       "fields": {
         "Staff": {
           "type": "unspecified",
@@ -361,19 +325,25 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Allocate",
-          "on_success": "creates cashier assignment"
+          "on_success": "creates cashier allocation"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     },
     "Cashier_Detail_Page": {
-      "type": "page",
-      "actions": {
-        "Allocate_Cash": {
-          "action_name": "Allocate Cash",
-          "on_success": "adds cash from vault to cashier"
+      "type": "detail_page",
+      "actions": [
+        {
+          "element_name": "Allocate Cash",
+          "action_description": "adds cash from the vault",
+          "on_success": "adds cash to cash in hand"
         },
-        "Settle_Cash": {
-          "action_name": "Settle Cash",
+        {
+          "element_name": "Settle Cash",
+          "action_description": "returns cash to the vault",
           "fields": {
             "Amount": {
               "type": "number",
@@ -391,17 +361,19 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "submit_actions": [
             {
               "element_name": "Settle",
-              "on_success": "returns cash to vault"
+              "on_success": "creates settlement transaction returning cash to vault"
+            },
+            {
+              "element_name": "Cancel",
+              "on_success": "closes form"
             }
           ]
         }
-      },
+      ],
       "sections": {
         "Cashier_Transactions": {
           "type": "data_table",
-          "columns": ["Date", "Type", "Amount", "Running Balance"],
-          "row_actions": [],
-          "bulk_actions": []
+          "columns": ["Date", "Type", "Amount", "Running Balance"]
         }
       }
     }
@@ -409,7 +381,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:13:14] UI-AST Agent - PARSED JSON
+[16:06:40] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Teller & Cashier Management",
@@ -422,18 +394,17 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Status",
         "Description"
       ],
-      "notes": "Teller Name is a clickable link that navigates to the Teller Detail page",
-      "row_actions": [
-        {
-          "action_name": "Open Teller Detail",
-          "trigger": "Teller Name (link)"
-        }
-      ],
-      "bulk_actions": []
+      "row_link": {
+        "field": "Teller Name",
+        "action": "navigate_to_Teller_Detail"
+      }
     },
     "Create_Teller_Form": {
       "type": "form",
-      "trigger": "+ Create Teller",
+      "trigger": {
+        "element_name": "+ Create Teller",
+        "action": "open_form"
+      },
       "fields": {
         "Office": {
           "type": "unspecified",
@@ -468,53 +439,21 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "element_name": "Create",
           "on_success": "creates teller"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     },
     "Teller_Detail_Page": {
-      "type": "page",
-      "actions": {
-        "Edit_Teller": {
+      "type": "detail_page",
+      "actions": [
+        {
           "element_name": "Edit",
-          "type": "form",
-          "fields": {
-            "Office": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Teller_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Description": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Start_Date": {
-              "type": "date",
-              "required": true
-            },
-            "End_Date": {
-              "type": "date",
-              "required": false
-            },
-            "Status": {
-              "type": "dropdown",
-              "required": false,
-              "options": [
-                "Active",
-                "Inactive"
-              ]
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Save",
-              "on_success": "updates teller"
-            }
-          ]
+          "action": "open_edit_form"
         }
-      },
+      ],
       "sections": {
         "Cashiers": {
           "type": "data_table",
@@ -525,25 +464,19 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "Is Full Day",
             "Status"
           ],
-          "row_actions": [
-            {
-              "action_name": "Open Cashier Detail",
-              "trigger": "row_click"
-            }
-          ],
-          "bulk_actions": [],
-          "actions": {
-            "Allocate_Cashier_Button": {
-              "element_name": "+ Allocate Cashier",
-              "opens": "Allocate_Cashier_Form"
-            }
+          "trigger": {
+            "element_name": "+ Allocate Cashier",
+            "action": "open_allocate_cashier_form"
           }
         }
       }
     },
     "Allocate_Cashier_Form": {
       "type": "form",
-      "trigger": "+ Allocate Cashier",
+      "trigger": {
+        "element_name": "+ Allocate Cashier",
+        "action": "open_form"
+      },
       "fields": {
         "Staff": {
           "type": "unspecified",
@@ -569,19 +502,25 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Allocate",
-          "on_success": "creates cashier assignment"
+          "on_success": "creates cashier allocation"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     },
     "Cashier_Detail_Page": {
-      "type": "page",
-      "actions": {
-        "Allocate_Cash": {
-          "action_name": "Allocate Cash",
-          "on_success": "adds cash from vault to cashier"
+      "type": "detail_page",
+      "actions": [
+        {
+          "element_name": "Allocate Cash",
+          "action_description": "adds cash from the vault",
+          "on_success": "adds cash to cash in hand"
         },
-        "Settle_Cash": {
-          "action_name": "Settle Cash",
+        {
+          "element_name": "Settle Cash",
+          "action_description": "returns cash to the vault",
           "fields": {
             "Amount": {
               "type": "number",
@@ -599,11 +538,15 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "submit_actions": [
             {
               "element_name": "Settle",
-              "on_success": "returns cash to vault"
+              "on_success": "creates settlement transaction returning cash to vault"
+            },
+            {
+              "element_name": "Cancel",
+              "on_success": "closes form"
             }
           ]
         }
-      },
+      ],
       "sections": {
         "Cashier_Transactions": {
           "type": "data_table",
@@ -612,11 +555,779 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "Type",
             "Amount",
             "Running Balance"
-          ],
-          "row_actions": [],
-          "bulk_actions": []
+          ]
         }
       }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:08:25] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Teller & Cashier Management
+
+
+The Tellers page displays a data table with columns for Teller Name (clickable link), Office, Status (Active, Inactive), and Description. A "+ Create Teller" button opens the creation form containing Office (required), Teller Name (required), Description, Start Date (required), End Date, and Status (Active, Inactive). The Teller Detail page displays teller information with an Edit option and a Cashiers section listing all assignments with columns for Cashier Name, Start Date, End Date, Is Full Day, and Status. A "+ Allocate Cashier" button opens the allocation form with Staff (required), Start Date (required), End Date, Is Full Day checkbox, and Description. The Cashier Detail page shows Opening Balance and Cash In Hand, with actions for Allocate Cash (add cash from the vault) and Settle Cash (return cash to the vault — with Amount, Currency, and Transaction Date fields). A Cashier Transactions list shows all allocations, settlements, deposits, and withdrawals with columns for Date, Type, Amount, and Running Balance.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. Remove or neutralize invented submit actions under Create_Teller_Form: delete Create_Teller_Form.submit_actions[*] or replace with a single unspecified submit action (e.g., submit_actions: [{ "element_name": "unspecified_submit" }]) so button names are not invented; path: Create_Teller_Form.submit_actions
+2. Remove or neutralize invented submit actions under Allocate_Cashier_Form: delete Allocate_Cashier_Form.submit_actions[*] or replace with a single unspecified submit action; path: Allocate_Cashier_Form.submit_actions
+3. Remove or neutralize invented submit actions under the Settle Cash action: delete Cashier_Detail_Page.actions[1].submit_actions[*] or replace with a single unspecified submit action if the description does not name the button; path: Cashier_Detail_Page.actions[1].submit_actions
+4. If button names for create/allocate/settle/cancel are intended to be present, update the description to explicitly name them (e.g., 'Create' and 'Cancel' buttons on the Create Teller form) so the AST can include them without being considered phantom.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:09:49] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Teller & Cashier Management",
+  "components": {
+    "Tellers_Page": {
+      "type": "data_table",
+      "columns": {
+        "Teller_Name": { "type": "link" },
+        "Office": { "type": "unspecified" },
+        "Status": { "type": "dropdown", "options": ["Active", "Inactive"] },
+        "Description": { "type": "unspecified" }
+      },
+      "row_actions": [
+        {
+          "action_name": "View",
+          "opens": "Teller_Detail_Page"
+        }
+      ],
+      "create_button": {
+        "element_name": "+ Create Teller",
+        "type": "button",
+        "opens": "Create_Teller_Form"
+      }
+    },
+    "Create_Teller_Form": {
+      "type": "form",
+      "fields": {
+        "Office": { "type": "unspecified", "required": true },
+        "Teller_Name": { "type": "unspecified", "required": true },
+        "Description": { "type": "unspecified", "required": false },
+        "Start_Date": { "type": "date", "required": true },
+        "End_Date": { "type": "date", "required": false },
+        "Status": { "type": "dropdown", "required": false, "options": ["Active", "Inactive"] }
+      },
+      "submit_actions": [
+        { "element_name": "unspecified_submit" }
+      ]
+    },
+    "Teller_Detail_Page": {
+      "type": "page",
+      "actions": [
+        { "action_name": "Edit" }
+      ],
+      "cashiers_section": {
+        "type": "data_table",
+        "columns": {
+          "Cashier_Name": { "type": "link" },
+          "Start_Date": { "type": "date" },
+          "End_Date": { "type": "date" },
+          "Is_Full_Day": { "type": "checkbox" },
+          "Status": { "type": "unspecified" }
+        },
+        "row_actions": [
+          {
+            "action_name": "View",
+            "opens": "Cashier_Detail_Page"
+          }
+        ],
+        "allocate_button": {
+          "element_name": "+ Allocate Cashier",
+          "type": "button",
+          "opens": "Allocate_Cashier_Form"
+        }
+      }
+    },
+    "Allocate_Cashier_Form": {
+      "type": "form",
+      "fields": {
+        "Staff": { "type": "unspecified", "required": true },
+        "Start_Date": { "type": "date", "required": true },
+        "End_Date": { "type": "date", "required": false },
+        "Is_Full_Day": { "type": "checkbox", "required": false },
+        "Description": { "type": "unspecified", "required": false }
+      },
+      "submit_actions": [
+        { "element_name": "unspecified_submit" }
+      ]
+    },
+    "Cashier_Detail_Page": {
+      "type": "page",
+      "actions": [
+        {
+          "action_name": "Allocate Cash"
+        },
+        {
+          "action_name": "Settle Cash",
+          "fields": {
+            "Amount": { "type": "number", "required": true },
+            "Currency": { "type": "unspecified", "required": true },
+            "Transaction_Date": { "type": "date", "required": true }
+          },
+          "submit_actions": [
+            { "element_name": "unspecified_submit" }
+          ]
+        }
+      ],
+      "transactions_list": {
+        "type": "data_table",
+        "columns": {
+          "Date": { "type": "date" },
+          "Type": { "type": "unspecified" },
+          "Amount": { "type": "number" },
+          "Running_Balance": { "type": "number" }
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:09:49] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Teller & Cashier Management",
+  "components": {
+    "Tellers_Page": {
+      "type": "data_table",
+      "columns": {
+        "Teller_Name": {
+          "type": "link"
+        },
+        "Office": {
+          "type": "unspecified"
+        },
+        "Status": {
+          "type": "dropdown",
+          "options": [
+            "Active",
+            "Inactive"
+          ]
+        },
+        "Description": {
+          "type": "unspecified"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "View",
+          "opens": "Teller_Detail_Page"
+        }
+      ],
+      "create_button": {
+        "element_name": "+ Create Teller",
+        "type": "button",
+        "opens": "Create_Teller_Form"
+      }
+    },
+    "Create_Teller_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Teller_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Start_Date": {
+          "type": "date",
+          "required": true
+        },
+        "End_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Status": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Active",
+            "Inactive"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified_submit"
+        }
+      ]
+    },
+    "Teller_Detail_Page": {
+      "type": "page",
+      "actions": [
+        {
+          "action_name": "Edit"
+        }
+      ],
+      "cashiers_section": {
+        "type": "data_table",
+        "columns": {
+          "Cashier_Name": {
+            "type": "link"
+          },
+          "Start_Date": {
+            "type": "date"
+          },
+          "End_Date": {
+            "type": "date"
+          },
+          "Is_Full_Day": {
+            "type": "checkbox"
+          },
+          "Status": {
+            "type": "unspecified"
+          }
+        },
+        "row_actions": [
+          {
+            "action_name": "View",
+            "opens": "Cashier_Detail_Page"
+          }
+        ],
+        "allocate_button": {
+          "element_name": "+ Allocate Cashier",
+          "type": "button",
+          "opens": "Allocate_Cashier_Form"
+        }
+      }
+    },
+    "Allocate_Cashier_Form": {
+      "type": "form",
+      "fields": {
+        "Staff": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Start_Date": {
+          "type": "date",
+          "required": true
+        },
+        "End_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Is_Full_Day": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified_submit"
+        }
+      ]
+    },
+    "Cashier_Detail_Page": {
+      "type": "page",
+      "actions": [
+        {
+          "action_name": "Allocate Cash"
+        },
+        {
+          "action_name": "Settle Cash",
+          "fields": {
+            "Amount": {
+              "type": "number",
+              "required": true
+            },
+            "Currency": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Transaction_Date": {
+              "type": "date",
+              "required": true
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "unspecified_submit"
+            }
+          ]
+        }
+      ],
+      "transactions_list": {
+        "type": "data_table",
+        "columns": {
+          "Date": {
+            "type": "date"
+          },
+          "Type": {
+            "type": "unspecified"
+          },
+          "Amount": {
+            "type": "number"
+          },
+          "Running_Balance": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:11:00] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Teller & Cashier Management
+
+
+The Tellers page displays a data table with columns for Teller Name (clickable link), Office, Status (Active, Inactive), and Description. A "+ Create Teller" button opens the creation form containing Office (required), Teller Name (required), Description, Start Date (required), End Date, and Status (Active, Inactive). The Teller Detail page displays teller information with an Edit option and a Cashiers section listing all assignments with columns for Cashier Name, Start Date, End Date, Is Full Day, and Status. A "+ Allocate Cashier" button opens the allocation form with Staff (required), Start Date (required), End Date, Is Full Day checkbox, and Description. The Cashier Detail page shows Opening Balance and Cash In Hand, with actions for Allocate Cash (add cash from the vault) and Settle Cash (return cash to the vault — with Amount, Currency, and Transaction Date fields). A Cashier Transactions list shows all allocations, settlements, deposits, and withdrawals with columns for Date, Type, Amount, and Running Balance.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Tellers_Page.row_actions[0] — remove this View row action; rely on the Teller_Name link to open the Teller_Detail_Page as described.
+2. components.Teller_Detail_Page.cashiers_section.row_actions[0] — remove this View row action; rely on the Cashier_Name link to open the Cashier_Detail_Page as described.
+3. components.Tellers_Page.columns.Status.type — change from "dropdown" to a non-interactive type (e.g., "text" or "unspecified") to reflect that the description only specifies a Status display column, not an inline editable control.
+4. Optional (narrow): Replace generic submit action element_name values (e.g., "unspecified_submit") with explicit submit labels consistent with the forms (e.g., Create_Teller_Form.submit_actions[0].element_name -> "Create Teller", Allocate_Cashier_Form.submit_actions[0].element_name -> "Allocate Cashier", Cashier_Detail_Page.actions["Settle Cash"].submit_actions[0].element_name -> "Settle") if button labels are desired; otherwise leave submit actions as a single submit action without a fabricated name.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:11:46] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Teller & Cashier Management",
+  "components": {
+    "Tellers_Page": {
+      "type": "data_table",
+      "columns": {
+        "Teller_Name": {
+          "type": "link",
+          "click_action": {
+            "opens": "Teller_Detail_Page"
+          }
+        },
+        "Office": { "type": "unspecified" },
+        "Status": { "type": "unspecified", "options": ["Active", "Inactive"] },
+        "Description": { "type": "unspecified" }
+      },
+      "row_actions": [],
+      "bulk_actions": [],
+      "actions": [
+        {
+          "element_name": "Create Teller",
+          "type": "button",
+          "opens": "Create_Teller_Form"
+        }
+      ]
+    },
+    "Create_Teller_Form": {
+      "type": "form",
+      "fields": {
+        "Office": { "type": "unspecified", "required": true },
+        "Teller_Name": { "type": "unspecified", "required": true },
+        "Description": { "type": "unspecified", "required": false },
+        "Start_Date": { "type": "date", "required": true },
+        "End_Date": { "type": "date", "required": false },
+        "Status": {
+          "type": "dropdown",
+          "required": false,
+          "options": ["Active", "Inactive"]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Teller",
+          "on_success": "creates teller"
+        }
+      ]
+    },
+    "Teller_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "element_name": "Edit",
+          "type": "button",
+          "opens": "Edit_Teller_Form"
+        }
+      ],
+      "cashiers_section": {
+        "type": "data_table",
+        "columns": {
+          "Cashier_Name": {
+            "type": "link",
+            "click_action": { "opens": "Cashier_Detail_Page" }
+          },
+          "Start_Date": { "type": "date" },
+          "End_Date": { "type": "date" },
+          "Is_Full_Day": { "type": "checkbox" },
+          "Status": { "type": "unspecified" }
+        },
+        "row_actions": [],
+        "bulk_actions": [],
+        "actions": [
+          {
+            "element_name": "Allocate Cashier",
+            "type": "button",
+            "opens": "Allocate_Cashier_Form"
+          }
+        ]
+      }
+    },
+    "Edit_Teller_Form": {
+      "type": "form",
+      "fields": {
+        "Office": { "type": "unspecified", "required": true },
+        "Teller_Name": { "type": "unspecified", "required": true },
+        "Description": { "type": "unspecified", "required": false },
+        "Start_Date": { "type": "date", "required": true },
+        "End_Date": { "type": "date", "required": false },
+        "Status": {
+          "type": "dropdown",
+          "required": false,
+          "options": ["Active", "Inactive"]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "saves teller updates"
+        }
+      ]
+    },
+    "Allocate_Cashier_Form": {
+      "type": "form",
+      "fields": {
+        "Staff": { "type": "unspecified", "required": true },
+        "Start_Date": { "type": "date", "required": true },
+        "End_Date": { "type": "date", "required": false },
+        "Is_Full_Day": { "type": "checkbox", "required": false },
+        "Description": { "type": "unspecified", "required": false }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Allocate Cashier",
+          "on_success": "creates cashier allocation"
+        }
+      ]
+    },
+    "Cashier_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "element_name": "Allocate Cash",
+          "type": "button",
+          "fields": {},
+          "on_success": "adds cash from the vault to cashier"
+        },
+        {
+          "element_name": "Settle Cash",
+          "type": "button",
+          "opens": "Settle_Cash_Form"
+        }
+      ],
+      "transactions_section": {
+        "type": "data_table",
+        "component_name": "Cashier_Transactions_List"
+      }
+    },
+    "Settle_Cash_Form": {
+      "type": "form",
+      "fields": {
+        "Amount": { "type": "number", "required": true },
+        "Currency": { "type": "unspecified", "required": true },
+        "Transaction_Date": { "type": "date", "required": true }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Settle",
+          "on_success": "returns cash to the vault and records settlement"
+        }
+      ]
+    },
+    "Cashier_Transactions_List": {
+      "type": "data_table",
+      "columns": {
+        "Date": { "type": "date" },
+        "Type": { "type": "unspecified" },
+        "Amount": { "type": "number" },
+        "Running_Balance": { "type": "number" }
+      },
+      "row_actions": [],
+      "bulk_actions": []
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:11:46] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Teller & Cashier Management",
+  "components": {
+    "Tellers_Page": {
+      "type": "data_table",
+      "columns": {
+        "Teller_Name": {
+          "type": "link",
+          "click_action": {
+            "opens": "Teller_Detail_Page"
+          }
+        },
+        "Office": {
+          "type": "unspecified"
+        },
+        "Status": {
+          "type": "unspecified",
+          "options": [
+            "Active",
+            "Inactive"
+          ]
+        },
+        "Description": {
+          "type": "unspecified"
+        }
+      },
+      "row_actions": [],
+      "bulk_actions": [],
+      "actions": [
+        {
+          "element_name": "Create Teller",
+          "type": "button",
+          "opens": "Create_Teller_Form"
+        }
+      ]
+    },
+    "Create_Teller_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Teller_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Start_Date": {
+          "type": "date",
+          "required": true
+        },
+        "End_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Status": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Active",
+            "Inactive"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Teller",
+          "on_success": "creates teller"
+        }
+      ]
+    },
+    "Teller_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "element_name": "Edit",
+          "type": "button",
+          "opens": "Edit_Teller_Form"
+        }
+      ],
+      "cashiers_section": {
+        "type": "data_table",
+        "columns": {
+          "Cashier_Name": {
+            "type": "link",
+            "click_action": {
+              "opens": "Cashier_Detail_Page"
+            }
+          },
+          "Start_Date": {
+            "type": "date"
+          },
+          "End_Date": {
+            "type": "date"
+          },
+          "Is_Full_Day": {
+            "type": "checkbox"
+          },
+          "Status": {
+            "type": "unspecified"
+          }
+        },
+        "row_actions": [],
+        "bulk_actions": [],
+        "actions": [
+          {
+            "element_name": "Allocate Cashier",
+            "type": "button",
+            "opens": "Allocate_Cashier_Form"
+          }
+        ]
+      }
+    },
+    "Edit_Teller_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Teller_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Start_Date": {
+          "type": "date",
+          "required": true
+        },
+        "End_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Status": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Active",
+            "Inactive"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "saves teller updates"
+        }
+      ]
+    },
+    "Allocate_Cashier_Form": {
+      "type": "form",
+      "fields": {
+        "Staff": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Start_Date": {
+          "type": "date",
+          "required": true
+        },
+        "End_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Is_Full_Day": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Allocate Cashier",
+          "on_success": "creates cashier allocation"
+        }
+      ]
+    },
+    "Cashier_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "element_name": "Allocate Cash",
+          "type": "button",
+          "fields": {},
+          "on_success": "adds cash from the vault to cashier"
+        },
+        {
+          "element_name": "Settle Cash",
+          "type": "button",
+          "opens": "Settle_Cash_Form"
+        }
+      ],
+      "transactions_section": {
+        "type": "data_table",
+        "component_name": "Cashier_Transactions_List"
+      }
+    },
+    "Settle_Cash_Form": {
+      "type": "form",
+      "fields": {
+        "Amount": {
+          "type": "number",
+          "required": true
+        },
+        "Currency": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Transaction_Date": {
+          "type": "date",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Settle",
+          "on_success": "returns cash to the vault and records settlement"
+        }
+      ]
+    },
+    "Cashier_Transactions_List": {
+      "type": "data_table",
+      "columns": {
+        "Date": {
+          "type": "date"
+        },
+        "Type": {
+          "type": "unspecified"
+        },
+        "Amount": {
+          "type": "number"
+        },
+        "Running_Balance": {
+          "type": "number"
+        }
+      },
+      "row_actions": [],
+      "bulk_actions": []
     }
   }
 }

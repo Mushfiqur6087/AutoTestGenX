@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.597301
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.759022
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:12:50] Semantic Critic - SYSTEM PROMPT
+[16:06:27] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:12:50] Semantic Critic - USER PROMPT
+[16:06:27] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -124,7 +124,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
     "FD_Account_Creation_Form": {
       "type": "form",
       "preconditions": [
-        "must be launched from Client Detail page"
+        "accessed from Client Detail page"
       ],
       "fields": {
         "Fixed_Deposit_Product": {
@@ -150,7 +150,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         },
         "Maturity_Instructions": {
           "type": "dropdown",
-          "required": false,
+          "required": true,
           "options": [
             "Transfer to Savings",
             "Re-Invest",
@@ -159,7 +159,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       },
       "constraints": [
-        "Interest rate determined by the selected product's Interest Rate Chart; tiered rates apply based on deposit amount and term length"
+        "interest rate is determined by the selected product's Interest Rate Chart based on Deposit_Amount and Deposit_Period_Value + Deposit_Period_Unit"
       ],
       "submit_actions": [
         {
@@ -168,91 +168,17 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       ]
     },
-    "FD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "FD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status to Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status to Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "closes account prematurely and sets status to Closed (Premature)"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active",
-                "maturity date must be reached"
-              ],
-              "on_success": "closes account on maturity and sets status to Closed (Matured)"
-            }
-          ]
-        },
-        "Matured": {
-          "available_actions": [
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "maturity date must be reached"
-              ],
-              "on_success": "closes account on maturity and sets status to Closed (Matured)"
-            }
-          ]
-        }
-      }
-    },
     "RD_Account_Creation_Form": {
       "type": "form",
       "preconditions": [
-        "must be launched from Client Detail page"
+        "accessed from Client Detail page"
       ],
       "fields": {
         "Recurring_Deposit_Product": {
           "type": "dropdown",
           "required": true
         },
-        "Mandatory_Deposit_Amount_per_Installment": {
+        "Mandatory_Deposit_Amount_Per_Installment": {
           "type": "number",
           "required": true
         },
@@ -286,7 +212,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       },
       "constraints": [
-        "Interest rate determined by the selected product's Interest Rate Chart; tiered rates apply based on deposit amount and term length"
+        "interest rate is determined by the selected product's Interest Rate Chart based on Mandatory_Deposit_Amount_Per_Installment and Deposit_Period_Value + Deposit_Period_Unit"
       ],
       "submit_actions": [
         {
@@ -295,7 +221,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       ]
     },
-    "RD_Account_Detail_Tabs": {
+    "FD_Account_Detail_Tabs": {
       "type": "tab_container",
       "tabs": [
         {
@@ -312,7 +238,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       ]
     },
-    "RD_Account_Detail_Actions": {
+    "FD_Account_Detail_Actions": {
       "type": "state_bound_action_bar",
       "states": {
         "Pending": {
@@ -322,7 +248,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
               "preconditions": [
                 "status must be Pending"
               ],
-              "on_success": "changes status to Approved"
+              "on_success": "changes status from Pending to Approved"
             }
           ]
         },
@@ -333,38 +259,18 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
               "preconditions": [
                 "status must be Approved"
               ],
-              "on_success": "changes status to Active"
+              "on_success": "changes status from Approved to Active"
             }
           ]
         },
         "Active": {
           "available_actions": [
             {
-              "action_name": "Deposit",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "fields": {
-                "Amount": {
-                  "type": "number",
-                  "required": true,
-                  "constraints": [
-                    "must be greater than or equal to Mandatory_Deposit_Amount_per_Installment"
-                  ]
-                },
-                "Deposit_Date": {
-                  "type": "date",
-                  "required": true
-                }
-              },
-              "on_success": "records deposit, updates deposit schedule and total deposits made"
-            },
-            {
               "action_name": "Premature Close",
               "preconditions": [
                 "status must be Active"
               ],
-              "on_success": "closes account prematurely and sets status to Closed (Premature)"
+              "on_success": "changes status to Closed"
             },
             {
               "action_name": "Close on Maturity",
@@ -372,18 +278,90 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
                 "status must be Active",
                 "maturity date must be reached"
               ],
-              "on_success": "closes account on maturity and sets status to Closed (Matured)"
+              "on_success": "changes status to Closed"
+            }
+          ]
+        }
+      }
+    },
+    "RD_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {}
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        }
+      ]
+    },
+    "RD_Account_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "preconditions": [
+                "status must be Pending"
+              ],
+              "on_success": "changes status from Pending to Approved"
             }
           ]
         },
-        "Matured": {
+        "Approved": {
           "available_actions": [
+            {
+              "action_name": "Activate",
+              "preconditions": [
+                "status must be Approved"
+              ],
+              "on_success": "changes status from Approved to Active"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Deposit",
+              "fields": {
+                "Deposit_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Deposit_Date": {
+                  "type": "date",
+                  "required": true
+                }
+              },
+              "constraints": [
+                "Deposit_Amount must be >= account's Mandatory_Deposit_Amount_Per_Installment"
+              ],
+              "preconditions": [
+                "status must be Active"
+              ],
+              "on_success": "increments total deposits made and updates deposit schedule"
+            },
+            {
+              "action_name": "Premature Close",
+              "preconditions": [
+                "status must be Active"
+              ],
+              "on_success": "changes status to Closed"
+            },
             {
               "action_name": "Close on Maturity",
               "preconditions": [
+                "status must be Active",
                 "maturity date must be reached"
               ],
-              "on_success": "closes account on maturity and sets status to Closed (Matured)"
+              "on_success": "changes status to Closed"
             }
           ]
         }
@@ -396,51 +374,49 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:14:47] Semantic Critic - LLM RESPONSE
+[16:08:14] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST introduces several inferred UI elements (button labels, action form fields, and an explicit 'Approved' state) that are not present in the description and therefore should be removed or clarified before use.",
+  "summary": "Rejecting AST because it includes multiple inferred/phantom interactive elements (submit buttons and inferred Deposit action fields/constraints) that are not explicitly specified in the description.",
   "missing": [],
   "phantoms": [
-    "components.FD_Account_Creation_Form.submit_actions[0] (Create Fixed Deposit Account button not named in description)",
-    "components.RD_Account_Creation_Form.submit_actions[0] (Create Recurring Deposit Account button not named in description)",
-    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields.Amount (Deposit action field 'Amount' is not specified in description)",
-    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields.Deposit_Date (Deposit action field 'Deposit_Date' is not specified in description)",
-    "components.FD_Account_Detail_Actions.states.Approved (explicit 'Approved' state object is not named in description)"
+    "components.FD_Account_Creation_Form.submit_actions[0] (Create Fixed Deposit Account button not specified in description)",
+    "components.RD_Account_Creation_Form.submit_actions[0] (Create Recurring Deposit Account button not specified in description)",
+    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (Deposit action fields Deposit_Amount and Deposit_Date are not specified in description)",
+    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].constraints[0] (constraint 'Deposit_Amount must be >= account's Mandatory_Deposit_Amount_Per_Installment' is not specified in description)"
   ],
   "fixes": [
-    "Remove or neutralize explicit submit button labels that were not provided: at components.FD_Account_Creation_Form.submit_actions[0], remove element_name or replace with a generic submit action placeholder (e.g., { \"type\": \"submit\" }) so the label is not assumed.",
-    "Remove or neutralize explicit submit button labels that were not provided: at components.RD_Account_Creation_Form.submit_actions[0], remove element_name or replace with a generic submit action placeholder (e.g., { \"type\": \"submit\" }).",
-    "Remove inferred Deposit action input fields that are not specified: delete components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (or leave the Deposit action without embedded input fields) unless the description explicitly states the Deposit action requires an Amount and Deposit Date input.",
-    "Remove the inferred 'Approved' state node that is not explicitly described: delete components.FD_Account_Detail_Actions.states.Approved (and, if mirrored for RD, ensure no unmentioned intermediate states are added) or update the description to explicitly include any intermediate states and their names."
+    "Remove components.FD_Account_Creation_Form.submit_actions[0] or replace it with a neutral, unspecified submit action only if the description explicitly names the button; do not invent a labeled 'Create Fixed Deposit Account' button.",
+    "Remove components.RD_Account_Creation_Form.submit_actions[0] or replace it with a neutral, unspecified submit action only if the description explicitly names the button; do not invent a labeled 'Create Recurring Deposit Account' button.",
+    "Remove components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (Deposit_Amount and Deposit_Date). If the Deposit action requires specific input fields, the description must explicitly list them; otherwise represent Deposit as a simple action button with no internal fields.",
+    "Remove components.RD_Account_Detail_Actions.states.Active.available_actions[0].constraints[0] (the minimum-deposit constraint). Only include explicit validation rules that are directly stated in the description."
   ]
 }
 
 ------------------------------------------------------------
-[14:14:47] Semantic Critic - PARSED JSON
+[16:08:14] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST introduces several inferred UI elements (button labels, action form fields, and an explicit 'Approved' state) that are not present in the description and therefore should be removed or clarified before use.",
+  "summary": "Rejecting AST because it includes multiple inferred/phantom interactive elements (submit buttons and inferred Deposit action fields/constraints) that are not explicitly specified in the description.",
   "missing": [],
   "phantoms": [
-    "components.FD_Account_Creation_Form.submit_actions[0] (Create Fixed Deposit Account button not named in description)",
-    "components.RD_Account_Creation_Form.submit_actions[0] (Create Recurring Deposit Account button not named in description)",
-    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields.Amount (Deposit action field 'Amount' is not specified in description)",
-    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields.Deposit_Date (Deposit action field 'Deposit_Date' is not specified in description)",
-    "components.FD_Account_Detail_Actions.states.Approved (explicit 'Approved' state object is not named in description)"
+    "components.FD_Account_Creation_Form.submit_actions[0] (Create Fixed Deposit Account button not specified in description)",
+    "components.RD_Account_Creation_Form.submit_actions[0] (Create Recurring Deposit Account button not specified in description)",
+    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (Deposit action fields Deposit_Amount and Deposit_Date are not specified in description)",
+    "components.RD_Account_Detail_Actions.states.Active.available_actions[0].constraints[0] (constraint 'Deposit_Amount must be >= account's Mandatory_Deposit_Amount_Per_Installment' is not specified in description)"
   ],
   "fixes": [
-    "Remove or neutralize explicit submit button labels that were not provided: at components.FD_Account_Creation_Form.submit_actions[0], remove element_name or replace with a generic submit action placeholder (e.g., { \"type\": \"submit\" }) so the label is not assumed.",
-    "Remove or neutralize explicit submit button labels that were not provided: at components.RD_Account_Creation_Form.submit_actions[0], remove element_name or replace with a generic submit action placeholder (e.g., { \"type\": \"submit\" }).",
-    "Remove inferred Deposit action input fields that are not specified: delete components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (or leave the Deposit action without embedded input fields) unless the description explicitly states the Deposit action requires an Amount and Deposit Date input.",
-    "Remove the inferred 'Approved' state node that is not explicitly described: delete components.FD_Account_Detail_Actions.states.Approved (and, if mirrored for RD, ensure no unmentioned intermediate states are added) or update the description to explicitly include any intermediate states and their names."
+    "Remove components.FD_Account_Creation_Form.submit_actions[0] or replace it with a neutral, unspecified submit action only if the description explicitly names the button; do not invent a labeled 'Create Fixed Deposit Account' button.",
+    "Remove components.RD_Account_Creation_Form.submit_actions[0] or replace it with a neutral, unspecified submit action only if the description explicitly names the button; do not invent a labeled 'Create Recurring Deposit Account' button.",
+    "Remove components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (Deposit_Amount and Deposit_Date). If the Deposit action requires specific input fields, the description must explicitly list them; otherwise represent Deposit as a simple action button with no internal fields.",
+    "Remove components.RD_Account_Detail_Actions.states.Active.available_actions[0].constraints[0] (the minimum-deposit constraint). Only include explicit validation rules that are directly stated in the description."
   ]
 }
 
 ------------------------------------------------------------
-[14:16:10] Semantic Critic - USER PROMPT
+[16:09:41] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -462,14 +438,14 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
           "type": "dropdown",
           "required": false,
           "constraints": [
-            "interest rate determined by selected product's Interest Rate Chart; rates are tiered based on deposit amount and term length"
+            "interest rate determined by Interest Rate Chart configured on the product based on deposit amount and deposit period"
           ]
         },
         "Deposit_Amount": {
           "type": "number",
           "required": false
         },
-        "Deposit_Period_Value": {
+        "Deposit_Period_Numeric": {
           "type": "number",
           "required": false
         },
@@ -494,8 +470,8 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
       },
       "submit_actions": [
         {
-          "type": "submit",
-          "on_success": "creates FD account"
+          "element_name": "Submit",
+          "on_success": "creates Fixed Deposit account"
         }
       ]
     },
@@ -519,23 +495,31 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
     "FD_Account_Detail_Actions": {
       "type": "state_bound_action_bar",
       "states": {
-        "*": {
+        "Pending": {
           "available_actions": [
             {
               "action_name": "Approve",
-              "on_success": "approves account"
-            },
+              "on_success": "moves Pending -> Approved"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
             {
               "action_name": "Activate",
-              "on_success": "activates account"
-            },
+              "on_success": "moves Approved -> Active"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
             {
               "action_name": "Premature Close",
-              "on_success": "closes account prematurely"
+              "on_success": "moves Active -> Closed"
             },
             {
               "action_name": "Close on Maturity",
-              "on_success": "closes account on maturity"
+              "on_success": "moves Active -> Closed"
             }
           ]
         }
@@ -548,16 +532,237 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
           "type": "dropdown",
           "required": false,
           "constraints": [
-            "interest rate determined by selected product's Interest Rate Chart; rates are tiered based on deposit amount and term length"
+            "interest rate determined by Interest Rate Chart configured on the product based on deposit amount and deposit period"
           ]
         },
-        "Mandatory_Deposit_Amount_Per_Installment": {
+        "Mandatory_Deposit_Amount_per_installment": {
           "type": "number",
-          "required": true
+          "required": false
+        },
+        "Deposit_Period_Numeric": {
+          "type": "number",
+          "required": false
+        },
+        "Deposit_Frequency": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Daily",
+            "Weekly",
+            "Monthly",
+            "Quarterly",
+            "Yearly"
+          ]
+        },
+        "Expected_First_Deposit_On": {
+          "type": "date",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates Recurring Deposit account"
+        }
+      ]
+    },
+    "RD_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {}
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        }
+      ]
+    },
+    "RD_Account_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "on_success": "moves Pending -> Approved"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "on_success": "moves Approved -> Active"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Deposit"
+            },
+            {
+              "action_name": "Premature Close",
+              "on_success": "moves Active -> Closed"
+            },
+            {
+              "action_name": "Close on Maturity",
+              "on_success": "moves Active -> Closed"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:10:52] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST adds inferred submit buttons and state-bound action mappings that are not specified in the description (multiple phantoms); regenerate after removing or explicitly justifying these inferred elements.",
+  "missing": [],
+  "phantoms": [
+    "components.FD_Account_Creation_Form.submit_actions[0] (Submit button not named in the description)",
+    "components.RD_Account_Creation_Form.submit_actions[0] (Submit button not named in the description)",
+    "components.FD_Account_Detail_Actions.states (Pending/Approved/Active state mapping and on_success transitions are inferred; description only lists action buttons Approve, Activate, Premature Close, Close on Maturity)",
+    "components.RD_Account_Detail_Actions.states (Pending/Approved/Active state mapping and on_success transitions are inferred; description only lists action buttons Approve, Activate, Deposit, Premature Close, Close on Maturity)"
+  ],
+  "fixes": [
+    "components.FD_Account_Creation_Form.submit_actions: Remove this inferred submit_actions array, or if a submission control is required, replace with a single button whose exact label is added to the source description (e.g., set element_name to 'Create Fixed Deposit Account' only if the description is updated to name it).",
+    "components.RD_Account_Creation_Form.submit_actions: Remove this inferred submit_actions array, or if a submission control is required, replace with a single button whose exact label is added to the source description (e.g., set element_name to 'Create Recurring Deposit Account' only if the description is updated to name it).",
+    "components.FD_Account_Detail_Actions.states: Remove the inferred state-bound structure (states.Pending/Approved/Active and their on_success messages). Instead model the detail-page actions exactly as buttons listed (Approve, Activate, Premature Close, Close on Maturity) under a simple 'available_actions' list without state mapping, unless the description is updated to explicitly define states and transitions.",
+    "components.RD_Account_Detail_Actions.states: Remove the inferred state-bound structure (states.Pending/Approved/Active and their on_success messages). Instead model the detail-page actions exactly as buttons listed (Approve, Activate, Deposit, Premature Close, Close on Maturity) under a simple 'available_actions' list without state mapping, unless the description is updated to explicitly define states and transitions."
+  ]
+}
+
+------------------------------------------------------------
+[16:10:52] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST adds inferred submit buttons and state-bound action mappings that are not specified in the description (multiple phantoms); regenerate after removing or explicitly justifying these inferred elements.",
+  "missing": [],
+  "phantoms": [
+    "components.FD_Account_Creation_Form.submit_actions[0] (Submit button not named in the description)",
+    "components.RD_Account_Creation_Form.submit_actions[0] (Submit button not named in the description)",
+    "components.FD_Account_Detail_Actions.states (Pending/Approved/Active state mapping and on_success transitions are inferred; description only lists action buttons Approve, Activate, Premature Close, Close on Maturity)",
+    "components.RD_Account_Detail_Actions.states (Pending/Approved/Active state mapping and on_success transitions are inferred; description only lists action buttons Approve, Activate, Deposit, Premature Close, Close on Maturity)"
+  ],
+  "fixes": [
+    "components.FD_Account_Creation_Form.submit_actions: Remove this inferred submit_actions array, or if a submission control is required, replace with a single button whose exact label is added to the source description (e.g., set element_name to 'Create Fixed Deposit Account' only if the description is updated to name it).",
+    "components.RD_Account_Creation_Form.submit_actions: Remove this inferred submit_actions array, or if a submission control is required, replace with a single button whose exact label is added to the source description (e.g., set element_name to 'Create Recurring Deposit Account' only if the description is updated to name it).",
+    "components.FD_Account_Detail_Actions.states: Remove the inferred state-bound structure (states.Pending/Approved/Active and their on_success messages). Instead model the detail-page actions exactly as buttons listed (Approve, Activate, Premature Close, Close on Maturity) under a simple 'available_actions' list without state mapping, unless the description is updated to explicitly define states and transitions.",
+    "components.RD_Account_Detail_Actions.states: Remove the inferred state-bound structure (states.Pending/Approved/Active and their on_success messages). Instead model the detail-page actions exactly as buttons listed (Approve, Activate, Deposit, Premature Close, Close on Maturity) under a simple 'available_actions' list without state mapping, unless the description is updated to explicitly define states and transitions."
+  ]
+}
+
+------------------------------------------------------------
+[16:11:27] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+Fixed Deposit and Recurring Deposit accounts are created from the Client Detail page. The FD Account creation form contains Fixed Deposit Product dropdown, Deposit Amount, Deposit Period (numeric and unit — Days, Months, Years), and Maturity Instructions (Transfer to Savings, Re-Invest, or Re-Invest Principal and Transfer Interest). The FD Account Detail page shows deposit amount, maturity date, maturity amount, interest rate, and status with action buttons for Approve, Activate, Premature Close, and Close on Maturity. The RD Account creation form contains Recurring Deposit Product dropdown, Mandatory Deposit Amount per installment, Deposit Period, Deposit Frequency (Daily, Weekly, Monthly, Quarterly, Yearly), and Expected First Deposit On date. The RD Account Detail page shows the deposit schedule, total deposits made, maturity details, interest rate, and status with action buttons for Approve, Activate, Deposit, Premature Close, and Close on Maturity. Both FD and RD detail pages include tabs for Summary, Transactions, and Charges. Interest rates are determined by the Interest Rate Chart configured on the product, with tiered rates based on deposit amount and term length.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Fixed & Recurring Deposit Accounts",
+  "components": {
+    "Client_Detail_Page": {
+      "type": "page",
+      "available_actions": [
+        {
+          "action_name": "Create Fixed Deposit Account",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Create Recurring Deposit Account",
+          "element_type": "button"
+        }
+      ]
+    },
+    "FD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Fixed_Deposit_Product": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
+          ]
+        },
+        "Deposit_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
+          ]
+        },
+        "Deposit_Period_Number": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "term length used with product's Interest Rate Chart to determine applicable rate"
+          ]
+        },
+        "Deposit_Period_Unit": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Days",
+            "Months",
+            "Years"
+          ]
+        },
+        "Maturity_Instructions": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Transfer to Savings",
+            "Re-Invest",
+            "Re-Invest Principal and Transfer Interest"
+          ]
+        }
+      }
+    },
+    "RD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Recurring_Deposit_Product": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
+          ]
+        },
+        "Mandatory_Deposit_Amount_per_installment": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
+          ]
         },
         "Deposit_Period": {
-          "type": "unspecified",
-          "required": false
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "term length used with product's Interest Rate Chart to determine applicable rate"
+          ]
         },
         "Deposit_Frequency": {
           "type": "dropdown",
@@ -573,218 +778,8 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         "Expected_First_Deposit_On": {
           "type": "date",
           "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "type": "submit",
-          "on_success": "creates RD account"
-        }
-      ]
-    },
-    "RD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "RD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "*": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "on_success": "approves account"
-            },
-            {
-              "action_name": "Activate",
-              "on_success": "activates account"
-            },
-            {
-              "action_name": "Deposit",
-              "on_success": "records a deposit"
-            },
-            {
-              "action_name": "Premature Close",
-              "on_success": "closes account prematurely"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "on_success": "closes account on maturity"
-            }
-          ]
         }
       }
-    }
-  }
-}
-</ast>
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:17:12] Semantic Critic - LLM RESPONSE
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "The AST is mostly complete but contains an invalid/ambiguous RD Deposit_Period field (type 'unspecified') and should explicitly model the RD deposit period (numeric value and unit) instead of the placeholder; regenerate to fix that.",
-  "missing": [
-    "RD_Account_Creation_Form.fields.Deposit_Period_Value",
-    "RD_Account_Creation_Form.fields.Deposit_Period_Unit"
-  ],
-  "phantoms": [
-    "RD_Account_Creation_Form.fields.Deposit_Period (type: \"unspecified\")"
-  ],
-  "fixes": [
-    "Replace RD_Account_Creation_Form.fields.Deposit_Period (type: \"unspecified\") with two explicit fields under RD_Account_Creation_Form.fields: Deposit_Period_Value and Deposit_Period_Unit.",
-    "Add RD_Account_Creation_Form.fields.Deposit_Period_Value at path 'RD_Account_Creation_Form.fields.Deposit_Period_Value' with { \"type\": \"number\", \"required\": false } (or true if the period is mandatory).",
-    "Add RD_Account_Creation_Form.fields.Deposit_Period_Unit at path 'RD_Account_Creation_Form.fields.Deposit_Period_Unit' with { \"type\": \"dropdown\", \"required\": false, \"options\": [\"Days\", \"Months\", \"Years\"] } (match units to product rules if different).",
-    "Remove the placeholder field 'RD_Account_Creation_Form.fields.Deposit_Period' (type 'unspecified') so no generic/ambiguous field types remain."
-  ]
-}
-
-------------------------------------------------------------
-[14:17:12] Semantic Critic - PARSED JSON
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "The AST is mostly complete but contains an invalid/ambiguous RD Deposit_Period field (type 'unspecified') and should explicitly model the RD deposit period (numeric value and unit) instead of the placeholder; regenerate to fix that.",
-  "missing": [
-    "RD_Account_Creation_Form.fields.Deposit_Period_Value",
-    "RD_Account_Creation_Form.fields.Deposit_Period_Unit"
-  ],
-  "phantoms": [
-    "RD_Account_Creation_Form.fields.Deposit_Period (type: \"unspecified\")"
-  ],
-  "fixes": [
-    "Replace RD_Account_Creation_Form.fields.Deposit_Period (type: \"unspecified\") with two explicit fields under RD_Account_Creation_Form.fields: Deposit_Period_Value and Deposit_Period_Unit.",
-    "Add RD_Account_Creation_Form.fields.Deposit_Period_Value at path 'RD_Account_Creation_Form.fields.Deposit_Period_Value' with { \"type\": \"number\", \"required\": false } (or true if the period is mandatory).",
-    "Add RD_Account_Creation_Form.fields.Deposit_Period_Unit at path 'RD_Account_Creation_Form.fields.Deposit_Period_Unit' with { \"type\": \"dropdown\", \"required\": false, \"options\": [\"Days\", \"Months\", \"Years\"] } (match units to product rules if different).",
-    "Remove the placeholder field 'RD_Account_Creation_Form.fields.Deposit_Period' (type 'unspecified') so no generic/ambiguous field types remain."
-  ]
-}
-
-------------------------------------------------------------
-[14:18:15] Semantic Critic - USER PROMPT
-------------------------------------------------------------
-<description>
-
-Fixed Deposit and Recurring Deposit accounts are created from the Client Detail page. The FD Account creation form contains Fixed Deposit Product dropdown, Deposit Amount, Deposit Period (numeric and unit — Days, Months, Years), and Maturity Instructions (Transfer to Savings, Re-Invest, or Re-Invest Principal and Transfer Interest). The FD Account Detail page shows deposit amount, maturity date, maturity amount, interest rate, and status with action buttons for Approve, Activate, Premature Close, and Close on Maturity. The RD Account creation form contains Recurring Deposit Product dropdown, Mandatory Deposit Amount per installment, Deposit Period, Deposit Frequency (Daily, Weekly, Monthly, Quarterly, Yearly), and Expected First Deposit On date. The RD Account Detail page shows the deposit schedule, total deposits made, maturity details, interest rate, and status with action buttons for Approve, Activate, Deposit, Premature Close, and Close on Maturity. Both FD and RD detail pages include tabs for Summary, Transactions, and Charges. Interest rates are determined by the Interest Rate Chart configured on the product, with tiered rates based on deposit amount and term length.
-
----
-
-
-</description>
-
-<ast>
-{
-  "module_name": "Fixed & Recurring Deposit Accounts",
-  "components": {
-    "FD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Fixed_Deposit_Product": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Deposit_Amount": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Value": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Days",
-            "Months",
-            "Years"
-          ]
-        },
-        "Maturity_Instructions": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Transfer to Savings",
-            "Re-Invest",
-            "Re-Invest Principal and Transfer Interest"
-          ]
-        }
-      },
-      "constraints": [
-        "Interest rate for the account is determined by the selected product's Interest Rate Chart and is tiered based on Deposit_Amount and Deposit_Period_Value (term length)"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create Fixed Deposit",
-          "on_success": "creates fixed deposit account"
-        }
-      ]
-    },
-    "RD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Recurring_Deposit_Product": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Mandatory_Deposit_Amount": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Value": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Days",
-            "Months",
-            "Years"
-          ]
-        },
-        "Deposit_Frequency": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Daily",
-            "Weekly",
-            "Monthly",
-            "Quarterly",
-            "Yearly"
-          ]
-        },
-        "Expected_First_Deposit_On": {
-          "type": "date",
-          "required": false
-        }
-      },
-      "constraints": [
-        "Interest rate for the account is determined by the selected product's Interest Rate Chart and is tiered based on deposit amount (per-installment) and Deposit_Period_Value (term length)"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create Recurring Deposit",
-          "on_success": "creates recurring deposit account"
-        }
-      ]
     },
     "FD_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -803,6 +798,27 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       ]
     },
+    "FD_Account_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Approve",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Activate",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Premature Close",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Close on Maturity",
+          "element_type": "button"
+        }
+      ]
+    },
     "RD_Account_Detail_Tabs": {
       "type": "tab_container",
       "tabs": [
@@ -820,125 +836,30 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
         }
       ]
     },
-    "RD_Deposit_Schedule_Table": {
-      "type": "data_table",
-      "row_actions": [],
-      "bulk_actions": []
-    },
-    "FD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status to Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status to Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "changes status to Prematurely Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "constraints": [
-                "maturity date must be reached"
-              ],
-              "on_success": "changes status to Closed on Maturity"
-            }
-          ]
-        },
-        "Prematurely Closed": {
-          "available_actions": []
-        },
-        "Closed on Maturity": {
-          "available_actions": []
-        }
-      }
-    },
     "RD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status to Approved"
-            }
-          ]
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Approve",
+          "element_type": "button"
         },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status to Active"
-            }
-          ]
+        {
+          "action_name": "Activate",
+          "element_type": "button"
         },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Deposit",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "records deposit against schedule"
-            },
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "changes status to Prematurely Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "constraints": [
-                "maturity date must be reached"
-              ],
-              "on_success": "changes status to Closed on Maturity"
-            }
-          ]
+        {
+          "action_name": "Deposit",
+          "element_type": "button"
         },
-        "Prematurely Closed": {
-          "available_actions": []
+        {
+          "action_name": "Premature Close",
+          "element_type": "button"
         },
-        "Closed on Maturity": {
-          "available_actions": []
+        {
+          "action_name": "Close on Maturity",
+          "element_type": "button"
         }
-      }
+      ]
     }
   }
 }
@@ -947,61 +868,23 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:19:09] Semantic Critic - LLM RESPONSE
+[16:11:39] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
-  "verdict": "retry",
-  "summary": "AST contains several inferred/phantom items (named submit buttons, explicit state machines, extra fields/constraints) and is missing the fact that FD/RD creation is initiated from the Client Detail page.",
-  "missing": [
-    "Client_Detail.create_actions.Create_FD (button/link to open FD creation form from Client Detail page)",
-    "Client_Detail.create_actions.Create_RD (button/link to open RD creation form from Client Detail page)"
-  ],
-  "phantoms": [
-    "FD_Account_Creation_Form.submit_actions[0] (Create Fixed Deposit button not named in description)",
-    "RD_Account_Creation_Form.submit_actions[0] (Create Recurring Deposit button not named in description)",
-    "RD_Account_Creation_Form.fields.Deposit_Period_Unit (deposit period unit options were not specified for RD in the description)",
-    "FD_Account_Detail_Actions.states (explicit state names and per-state preconditions were not specified — description only listed available action buttons)",
-    "RD_Account_Detail_Actions.states (explicit state names and per-state preconditions were not specified — description only listed available action buttons)",
-    "FD_Account_Detail_Actions.states.Active.available_actions[1].constraints[0] (\"maturity date must be reached\" constraint is an inferred rule not stated in the description)",
-    "FD_Account_Creation_Form.fields.*.required (required flags for form fields are inferred but not specified in the description)",
-    "RD_Account_Creation_Form.fields.*.required (required flags for form fields are inferred but not specified in the description)"
-  ],
-  "fixes": [
-    "Add explicit creation actions on the Client Detail page: create a component at Client_Detail.create_actions with two actions: {\"action_name\":\"Create Fixed Deposit\",\"target\":\"FD_Account_Creation_Form\"} and {\"action_name\":\"Create Recurring Deposit\",\"target\":\"RD_Account_Creation_Form\"}.",
-    "Remove the named submit_actions entries that were not in the description: delete FD_Account_Creation_Form.submit_actions[0] and RD_Account_Creation_Form.submit_actions[0]; if a submit action is required, leave a generic unlabeled submit placeholder (e.g., form.submit_action: true) rather than a named button.",
-    "Remove the Deposit_Period_Unit field from RD_Account_Creation_Form.fields (RD description only specified Deposit Period and Deposit Frequency; do not add extra unit dropdown unless the description mentions it). Path: delete RD_Account_Creation_Form.fields.Deposit_Period_Unit.",
-    "Replace the inferred state machines with simple action listings on the detail pages: delete FD_Account_Detail_Actions.states and RD_Account_Detail_Actions.states and instead provide FD_Account_Detail_Actions.available_actions: [\"Approve\",\"Activate\",\"Premature Close\",\"Close on Maturity\"] and RD_Account_Detail_Actions.available_actions: [\"Approve\",\"Activate\",\"Deposit\",\"Premature Close\",\"Close on Maturity\"] (do not invent per-state preconditions or status names unless explicitly described).",
-    "Remove inferred constraints that are not in the description: delete FD_Account_Detail_Actions.states.Active.available_actions[1].constraints[0] (the \"maturity date must be reached\" constraint) and any other inferred constraints not explicitly stated.",
-    "Remove 'required' properties from form fields unless the description explicitly states they are required. Specifically, remove the 'required' keys under FD_Account_Creation_Form.fields.* and RD_Account_Creation_Form.fields.* so the regenerated AST only marks required when described."
-  ]
+  "verdict": "yes",
+  "summary": "AST accurately includes the creation forms, their fields, detail-page action buttons, and the Summary/Transactions/Charges tabs for both FD and RD as specified; no required interactive elements are missing.",
+  "missing": [],
+  "phantoms": [],
+  "fixes": []
 }
 
 ------------------------------------------------------------
-[14:19:09] Semantic Critic - PARSED JSON
+[16:11:39] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
-  "verdict": "retry",
-  "summary": "AST contains several inferred/phantom items (named submit buttons, explicit state machines, extra fields/constraints) and is missing the fact that FD/RD creation is initiated from the Client Detail page.",
-  "missing": [
-    "Client_Detail.create_actions.Create_FD (button/link to open FD creation form from Client Detail page)",
-    "Client_Detail.create_actions.Create_RD (button/link to open RD creation form from Client Detail page)"
-  ],
-  "phantoms": [
-    "FD_Account_Creation_Form.submit_actions[0] (Create Fixed Deposit button not named in description)",
-    "RD_Account_Creation_Form.submit_actions[0] (Create Recurring Deposit button not named in description)",
-    "RD_Account_Creation_Form.fields.Deposit_Period_Unit (deposit period unit options were not specified for RD in the description)",
-    "FD_Account_Detail_Actions.states (explicit state names and per-state preconditions were not specified \u2014 description only listed available action buttons)",
-    "RD_Account_Detail_Actions.states (explicit state names and per-state preconditions were not specified \u2014 description only listed available action buttons)",
-    "FD_Account_Detail_Actions.states.Active.available_actions[1].constraints[0] (\"maturity date must be reached\" constraint is an inferred rule not stated in the description)",
-    "FD_Account_Creation_Form.fields.*.required (required flags for form fields are inferred but not specified in the description)",
-    "RD_Account_Creation_Form.fields.*.required (required flags for form fields are inferred but not specified in the description)"
-  ],
-  "fixes": [
-    "Add explicit creation actions on the Client Detail page: create a component at Client_Detail.create_actions with two actions: {\"action_name\":\"Create Fixed Deposit\",\"target\":\"FD_Account_Creation_Form\"} and {\"action_name\":\"Create Recurring Deposit\",\"target\":\"RD_Account_Creation_Form\"}.",
-    "Remove the named submit_actions entries that were not in the description: delete FD_Account_Creation_Form.submit_actions[0] and RD_Account_Creation_Form.submit_actions[0]; if a submit action is required, leave a generic unlabeled submit placeholder (e.g., form.submit_action: true) rather than a named button.",
-    "Remove the Deposit_Period_Unit field from RD_Account_Creation_Form.fields (RD description only specified Deposit Period and Deposit Frequency; do not add extra unit dropdown unless the description mentions it). Path: delete RD_Account_Creation_Form.fields.Deposit_Period_Unit.",
-    "Replace the inferred state machines with simple action listings on the detail pages: delete FD_Account_Detail_Actions.states and RD_Account_Detail_Actions.states and instead provide FD_Account_Detail_Actions.available_actions: [\"Approve\",\"Activate\",\"Premature Close\",\"Close on Maturity\"] and RD_Account_Detail_Actions.available_actions: [\"Approve\",\"Activate\",\"Deposit\",\"Premature Close\",\"Close on Maturity\"] (do not invent per-state preconditions or status names unless explicitly described).",
-    "Remove inferred constraints that are not in the description: delete FD_Account_Detail_Actions.states.Active.available_actions[1].constraints[0] (the \"maturity date must be reached\" constraint) and any other inferred constraints not explicitly stated.",
-    "Remove 'required' properties from form fields unless the description explicitly states they are required. Specifically, remove the 'required' keys under FD_Account_Creation_Form.fields.* and RD_Account_Creation_Form.fields.* so the regenerated AST only marks required when described."
-  ]
+  "verdict": "yes",
+  "summary": "AST accurately includes the creation forms, their fields, detail-page action buttons, and the Summary/Transactions/Charges tabs for both FD and RD as specified; no required interactive elements are missing.",
+  "missing": [],
+  "phantoms": [],
+  "fixes": []
 }

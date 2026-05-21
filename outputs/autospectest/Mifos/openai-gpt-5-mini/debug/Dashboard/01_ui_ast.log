@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.582455
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.745301
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Dashboard
 
@@ -218,20 +218,21 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:11:16] UI-AST Agent - LLM RESPONSE
+[16:05:10] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Dashboard",
   "components": {
     "Home_Page": {
-      "type": "container",
-      "actions": [
-        {
-          "element_name": "Dashboard",
+      "type": "page",
+      "fields": {},
+      "components": {
+        "Dashboard_Button": {
           "type": "button",
-          "on_click": "navigates to Dashboard"
+          "element_name": "Dashboard",
+          "on_click": "navigates to Dashboard page"
         }
-      ]
+      }
     },
     "Dashboard_Page": {
       "type": "page",
@@ -239,6 +240,26 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Search_Activity": {
           "type": "search",
           "required": false
+        }
+      },
+      "components": {
+        "Client_Trends_Chart": {
+          "type": "unspecified",
+          "element_name": "Client Trends Chart",
+          "series": ["New Clients", "Closed Clients"],
+          "preconditions": ["office must be selected"]
+        },
+        "Amount_Pending_Disbursed_Card": {
+          "type": "unspecified",
+          "element_name": "Amount Pending / Disbursed",
+          "preconditions": ["office must be selected"],
+          "on_no_data": "displays 'No Data'"
+        },
+        "Amount_Collected_Card": {
+          "type": "unspecified",
+          "element_name": "Amount Collected",
+          "preconditions": ["office must be selected"],
+          "on_no_data": "displays 'No Data'"
         }
       }
     }
@@ -246,20 +267,21 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:11:16] UI-AST Agent - PARSED JSON
+[16:05:10] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Dashboard",
   "components": {
     "Home_Page": {
-      "type": "container",
-      "actions": [
-        {
-          "element_name": "Dashboard",
+      "type": "page",
+      "fields": {},
+      "components": {
+        "Dashboard_Button": {
           "type": "button",
-          "on_click": "navigates to Dashboard"
+          "element_name": "Dashboard",
+          "on_click": "navigates to Dashboard page"
         }
-      ]
+      }
     },
     "Dashboard_Page": {
       "type": "page",
@@ -267,6 +289,35 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Search_Activity": {
           "type": "search",
           "required": false
+        }
+      },
+      "components": {
+        "Client_Trends_Chart": {
+          "type": "unspecified",
+          "element_name": "Client Trends Chart",
+          "series": [
+            "New Clients",
+            "Closed Clients"
+          ],
+          "preconditions": [
+            "office must be selected"
+          ]
+        },
+        "Amount_Pending_Disbursed_Card": {
+          "type": "unspecified",
+          "element_name": "Amount Pending / Disbursed",
+          "preconditions": [
+            "office must be selected"
+          ],
+          "on_no_data": "displays 'No Data'"
+        },
+        "Amount_Collected_Card": {
+          "type": "unspecified",
+          "element_name": "Amount Collected",
+          "preconditions": [
+            "office must be selected"
+          ],
+          "on_no_data": "displays 'No Data'"
         }
       }
     }

@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.586956
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.749731
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:11:49] Semantic Critic - SYSTEM PROMPT
+[16:05:27] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:11:49] Semantic Critic - USER PROMPT
+[16:05:27] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -137,7 +137,6 @@ The Client Detail page displays the client name, account number, status badge, a
       ],
       "search": {
         "type": "search",
-        "element_name": "Client_Search",
         "search_fields": [
           "Name",
           "Account No.",
@@ -146,7 +145,7 @@ The Client Detail page displays the client name, account number, status badge, a
         ]
       },
       "filters": {
-        "Status_Filter": {
+        "Status": {
           "type": "dropdown",
           "options": [
             "Pending",
@@ -157,77 +156,62 @@ The Client Detail page displays the client name, account number, status badge, a
           ]
         }
       },
-      "top_actions": [
+      "top_right_actions": [
         {
           "element_name": "Import Client",
           "type": "button",
-          "on_click_navigates_to": "Bulk_Import_Page"
+          "on_click": "navigates to Bulk Import Page"
         },
         {
           "element_name": "Create Client",
           "type": "button",
-          "on_click_navigates_to": "New_Client_Wizard"
+          "on_click": "opens Create Client Wizard"
         }
       ],
       "row_actions": [
         {
-          "action_name": "Open Client Detail",
+          "action_name": "Open",
           "type": "link",
-          "trigger": "click Name",
-          "navigates_to": "Client_Detail_Page"
+          "on_click": "navigates to Client Detail page (for that client)"
         }
       ]
     },
     "Bulk_Import_Page": {
-      "type": "form",
-      "fields": {
+      "type": "page",
+      "components": {
         "Download_Template": {
-          "type": "button",
-          "element_name": "Download Client Template",
-          "action": "downloads client Excel template"
+          "type": "link",
+          "element_name": "Download client Excel template",
+          "on_click": "downloads client import template"
         },
         "Upload_File": {
           "type": "file_upload",
-          "element_name": "Upload Client File"
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Upload",
-          "preconditions": [
-            "Upload_File must be selected"
+          "element_name": "Upload completed client file"
+        },
+        "Import_History_Table": {
+          "type": "data_table",
+          "columns": [
+            "Name",
+            "Import Time",
+            "End Time",
+            "Completed",
+            "Total Records",
+            "Success Count",
+            "Failure Count",
+            "Download"
           ],
-          "on_success": "creates import history entry"
+          "row_actions": [
+            {
+              "action_name": "Download",
+              "type": "link",
+              "on_click": "downloads import result file for that row"
+            }
+          ]
         }
-      ],
-      "Import_History_Table": {
-        "type": "data_table",
-        "columns": [
-          "Name",
-          "Import Time",
-          "End Time",
-          "Completed",
-          "Total Records",
-          "Success Count",
-          "Failure Count",
-          "Download"
-        ],
-        "row_actions": [
-          {
-            "action_name": "Download",
-            "element_name": "Download Import Result"
-          }
-        ]
       }
     },
-    "New_Client_Wizard": {
+    "Create_Client_Wizard": {
       "type": "wizard",
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates client in Pending status"
-        }
-      ],
       "steps": [
         {
           "step_index": 1,
@@ -319,187 +303,204 @@ The Client Detail page displays the client name, account number, status badge, a
                   "required": true
                 }
               },
+              "min": 0,
               "constraints": [
-                "no duplicate Document_Type + Document_Key combinations allowed"
+                "no duplicate Document_Type+Document_Key within this client"
               ]
             }
           }
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates client in Pending status"
         }
       ]
     },
     "Client_Detail_Page": {
       "type": "page",
-      "action_bar": {
-        "type": "state_bound_action_bar",
-        "states": {
-          "Pending": {
-            "available_actions": [
-              {
-                "action_name": "Activate",
-                "fields": {
-                  "Activation_Date": {
-                    "type": "date",
-                    "required": true,
-                    "constraints": [
-                      "must not be before Submitted_On"
-                    ]
-                  }
-                }
-              },
-              {
-                "action_name": "Edit",
-                "type": "button"
-              },
-              {
-                "action_name": "Reject",
-                "fields": {
-                  "Reason": {
-                    "type": "unspecified",
-                    "required": true
-                  }
-                }
-              },
-              {
-                "action_name": "Withdraw",
-                "fields": {
-                  "Reason": {
-                    "type": "unspecified",
-                    "required": true
-                  }
-                }
-              }
-            ]
-          },
-          "Active": {
-            "available_actions": [
-              {
-                "action_name": "Edit",
-                "type": "button"
-              },
-              {
-                "action_name": "Transfer Client",
-                "fields": {
-                  "Destination_Office": {
-                    "type": "unspecified",
-                    "required": true,
-                    "constraints": [
-                      "must be different from current office"
-                    ]
-                  }
-                }
-              },
-              {
-                "action_name": "Close",
-                "fields": {
-                  "Reason": {
-                    "type": "unspecified",
-                    "required": true
-                  }
-                },
-                "constraints": [
-                  "cannot close with active accounts"
-                ]
-              },
-              {
-                "action_name": "Add Charge",
-                "type": "button"
-              },
-              {
-                "action_name": "New Loan",
-                "type": "button"
-              },
-              {
-                "action_name": "New Savings",
-                "type": "button"
-              },
-              {
-                "action_name": "New Share Account",
-                "type": "button"
-              }
-            ]
-          },
-          "Closed": {
-            "available_actions": [
-              {
-                "action_name": "Reactivate",
-                "type": "button"
-              }
-            ]
-          },
-          "Rejected": {
-            "available_actions": []
-          },
-          "Withdrawn": {
-            "available_actions": []
-          }
-        }
-      },
-      "tabs": {
-        "type": "tab_container",
-        "tabs": [
-          {
-            "tab_name": "General",
-            "fields": {}
-          },
-          {
-            "tab_name": "Accounts",
-            "tabs": [
-              {
-                "tab_name": "Loans",
-                "fields": {}
-              },
-              {
-                "tab_name": "Savings",
-                "fields": {}
-              },
-              {
-                "tab_name": "Shares",
-                "fields": {}
-              },
-              {
-                "tab_name": "Fixed Deposits",
-                "fields": {}
-              },
-              {
-                "tab_name": "Recurring Deposits",
-                "fields": {}
-              }
-            ]
-          },
-          {
-            "tab_name": "Identifiers",
-            "fields": {
-              "Identifiers": {
-                "type": "repeating_group",
-                "item_fields": {
-                  "Document_Type": {
-                    "type": "unspecified",
-                    "required": true
+      "components": {
+        "Action_Bar": {
+          "type": "state_bound_action_bar",
+          "states": {
+            "Pending": {
+              "available_actions": [
+                {
+                  "action_name": "Activate",
+                  "fields": {
+                    "Activation_Date": {
+                      "type": "date",
+                      "required": true,
+                      "constraints": [
+                        "must not be before submission date"
+                      ]
+                    }
                   },
-                  "Document_Key": {
-                    "type": "unspecified",
-                    "required": true
-                  }
+                  "on_success": "changes client status Pending \u2192 Active"
                 },
-                "constraints": [
-                  "no duplicate Document_Type + Document_Key combinations allowed"
-                ]
-              }
+                {
+                  "action_name": "Edit"
+                },
+                {
+                  "action_name": "Reject",
+                  "fields": {
+                    "Reason": {
+                      "type": "unspecified",
+                      "required": true
+                    }
+                  },
+                  "on_success": "changes client status Pending \u2192 Rejected"
+                },
+                {
+                  "action_name": "Withdraw",
+                  "fields": {
+                    "Reason": {
+                      "type": "unspecified",
+                      "required": true
+                    }
+                  },
+                  "on_success": "changes client status Pending \u2192 Withdrawn"
+                }
+              ]
+            },
+            "Active": {
+              "available_actions": [
+                {
+                  "action_name": "Edit"
+                },
+                {
+                  "action_name": "Transfer Client",
+                  "fields": {
+                    "Destination_Office": {
+                      "type": "unspecified",
+                      "required": true,
+                      "constraints": [
+                        "must be different from current office"
+                      ]
+                    }
+                  },
+                  "on_success": "transfers client to Destination_Office"
+                },
+                {
+                  "action_name": "Close",
+                  "fields": {
+                    "Closure_Reason": {
+                      "type": "unspecified",
+                      "required": true
+                    }
+                  },
+                  "constraints": [
+                    "cannot close when active accounts exist"
+                  ],
+                  "on_success": "changes client status Active \u2192 Closed"
+                },
+                {
+                  "action_name": "Add Charge",
+                  "on_success": "initiates Add Charge flow"
+                },
+                {
+                  "action_name": "New Loan",
+                  "on_success": "initiates New Loan application"
+                },
+                {
+                  "action_name": "New Savings",
+                  "on_success": "initiates New Savings account opening"
+                },
+                {
+                  "action_name": "New Share Account",
+                  "on_success": "initiates New Share Account opening"
+                }
+              ]
+            },
+            "Closed": {
+              "available_actions": [
+                {
+                  "action_name": "Reactivate",
+                  "on_success": "changes client status Closed \u2192 Active"
+                }
+              ]
+            },
+            "Rejected": {
+              "available_actions": []
+            },
+            "Withdrawn": {
+              "available_actions": []
             }
-          },
-          {
-            "tab_name": "Family Members",
-            "fields": {}
-          },
-          {
-            "tab_name": "Notes",
-            "fields": {}
-          },
-          {
-            "tab_name": "Documents",
-            "fields": {}
           }
-        ]
+        },
+        "Detail_Tabs": {
+          "type": "tab_container",
+          "tabs": [
+            {
+              "tab_name": "General",
+              "fields": {}
+            },
+            {
+              "tab_name": "Accounts",
+              "tabs": [
+                {
+                  "tab_name": "Loans",
+                  "fields": {}
+                },
+                {
+                  "tab_name": "Savings",
+                  "fields": {}
+                },
+                {
+                  "tab_name": "Shares",
+                  "fields": {}
+                },
+                {
+                  "tab_name": "Fixed Deposits",
+                  "fields": {}
+                },
+                {
+                  "tab_name": "Recurring Deposits",
+                  "fields": {}
+                }
+              ]
+            },
+            {
+              "tab_name": "Identifiers",
+              "fields": {
+                "Identifiers": {
+                  "type": "repeating_group",
+                  "item_fields": {
+                    "Document_Type": {
+                      "type": "unspecified",
+                      "required": true
+                    },
+                    "Document_Key": {
+                      "type": "unspecified",
+                      "required": true
+                    }
+                  },
+                  "min": 0,
+                  "constraints": [
+                    "no duplicate Document_Type+Document_Key within this client"
+                  ],
+                  "actions": [
+                    "add",
+                    "remove"
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Family Members",
+              "fields": {}
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {}
+            },
+            {
+              "tab_name": "Documents",
+              "fields": {}
+            }
+          ]
+        }
       }
     }
   }
@@ -509,23 +510,29 @@ The Client Detail page displays the client name, account number, status badge, a
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:55] Semantic Critic - LLM RESPONSE
+[16:07:20] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately and completely represents the interactive elements, steps, actions, constraints, and tabs described.",
+  "summary": "AST correctly captures the interactive elements, actions, state-bound behaviors, wizard steps, and tab structure; only minor inferred items (identifiers as a repeating group and a duplicate constraint in the Create Client wizard) are present but non-critical.",
   "missing": [],
-  "phantoms": [],
+  "phantoms": [
+    "Create_Client_Wizard.steps[3].fields.Identifiers.type (repeating_group inferred for the wizard step though the description only named the fields)",
+    "Create_Client_Wizard.steps[3].fields.Identifiers.constraints[0] (duplicate-prevention constraint was explicitly described for the detail Identifiers tab but not explicitly for the wizard step)"
+  ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:13:55] Semantic Critic - PARSED JSON
+[16:07:20] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately and completely represents the interactive elements, steps, actions, constraints, and tabs described.",
+  "summary": "AST correctly captures the interactive elements, actions, state-bound behaviors, wizard steps, and tab structure; only minor inferred items (identifiers as a repeating group and a duplicate constraint in the Create Client wizard) are present but non-critical.",
   "missing": [],
-  "phantoms": [],
+  "phantoms": [
+    "Create_Client_Wizard.steps[3].fields.Identifiers.type (repeating_group inferred for the wizard step though the description only named the fields)",
+    "Create_Client_Wizard.steps[3].fields.Identifiers.constraints[0] (duplicate-prevention constraint was explicitly described for the detail Identifiers tab but not explicitly for the wizard step)"
+  ],
   "fixes": []
 }

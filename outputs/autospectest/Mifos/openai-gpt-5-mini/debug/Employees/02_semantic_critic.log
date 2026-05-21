@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.598479
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.760098
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:13:24] Semantic Critic - SYSTEM PROMPT
+[16:06:36] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:13:24] Semantic Critic - USER PROMPT
+[16:06:36] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -124,95 +124,81 @@ The Employees page displays a data table with columns for Name (clickable link),
     "Employees_Table": {
       "type": "data_table",
       "columns": [
-        {
-          "column_name": "Name",
-          "type": "link",
-          "on_click": "navigates to Staff_Detail"
-        },
-        {
-          "column_name": "Office",
-          "type": "unspecified"
-        },
-        {
-          "column_name": "Is_Loan_Officer",
-          "type": "unspecified",
-          "description": "indicator whether staff is a loan officer"
-        },
-        {
-          "column_name": "Status",
-          "type": "unspecified",
-          "description": "values: Active, Inactive"
-        }
+        "Name",
+        "Office",
+        "Is Loan Officer",
+        "Status"
       ],
       "row_actions": [
         {
-          "action_name": "Open Details",
-          "type": "link",
-          "on_click": "navigates to Staff_Detail"
+          "action_name": "View",
+          "triggered_by": "Name",
+          "action_type": "link",
+          "navigates_to": "Staff_Detail_Page"
         }
-      ]
+      ],
+      "bulk_actions": []
     },
     "Create_Employee_Button": {
       "type": "button",
       "element_name": "+ Create Employee",
-      "on_click": "opens Create_Employee_Form"
+      "opens": "Create_Employee_Form"
     },
     "Create_Employee_Form": {
       "type": "form",
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Is_Loan_Officer": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Mobile_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Joining_Date": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "External_ID": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "Save",
-          "on_success": "creates employee",
-          "post_effects": [
-            "if Is_Loan_Officer == true then staff appears in Loan Officer dropdown for loan creation",
-            "if Is_Loan_Officer == true then staff can be assigned to clients, groups, and centers"
-          ]
+          "element_name": "Create",
+          "on_success": "creates employee; if Is Loan Officer is checked, the staff member becomes available in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form without creating employee"
         }
       ]
     },
-    "Staff_Detail": {
+    "Staff_Detail_Page": {
       "type": "detail_page",
       "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Edit_Employee_Form"
+          "action_type": "button",
+          "opens": "Edit_Employee_Form"
         }
       ]
     },
@@ -221,48 +207,68 @@ The Employees page displays a data table with columns for Name (clickable link),
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Is_Loan_Officer": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Mobile_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Joining_Date": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "External_ID": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates employee",
-          "post_effects": [
-            "if Is_Loan_Officer == true then staff appears in Loan Officer dropdown for loan creation",
-            "if Is_Loan_Officer == true then staff can be assigned to clients, groups, and centers"
-          ]
+          "on_success": "updates employee; if Is Loan Officer is checked, the staff member becomes available in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes edit form without saving"
         }
       ]
+    },
+    "Employee_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "opens": "Edit_Employee_Form"
+            }
+          ]
+        },
+        "Inactive": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "opens": "Edit_Employee_Form"
+            }
+          ]
+        }
+      }
     }
   }
 }
@@ -271,45 +277,231 @@ The Employees page displays a data table with columns for Name (clickable link),
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:14:56] Semantic Critic - LLM RESPONSE
+[16:08:23] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST includes a few inferred UI elements not present in the description (row action and explicit 'Save' submit button labels) and should be regenerated to remove those phantoms.",
+  "summary": "AST includes several elements not explicitly described (multiple invented submit buttons, a state_bound_action_bar, and a named row action) and should be regenerated to match the description precisely.",
   "missing": [],
   "phantoms": [
-    "components.Employees_Table.row_actions[0] (Open Details row action not stated in description; only Name link was mentioned)",
-    "components.Create_Employee_Form.submit_actions[0] (Save button label was not specified in the description)",
-    "components.Edit_Employee_Form.submit_actions[0] (Save button label was not specified in the description)"
+    "Create_Employee_Form.submit_actions[0] (Create button label not specified in description)",
+    "Create_Employee_Form.submit_actions[1] (Cancel button not specified in description)",
+    "Edit_Employee_Form.submit_actions[0] (Save button label not specified in description)",
+    "Edit_Employee_Form.submit_actions[1] (Cancel button not specified in description)",
+    "Employee_Detail_Actions (state_bound_action_bar not described; description only states Staff Detail page shows employee information with an Edit option)",
+    "Employees_Table.row_actions[0] (action_name 'View' not specified; description only states Name is a clickable link to the Staff Detail page)"
   ],
   "fixes": [
-    "Remove components.Employees_Table.row_actions[0] entirely — the description only specifies that the Name column is a clickable link to Staff_Detail; no separate row action was described.",
-    "Update components.Create_Employee_Form.submit_actions: either remove the explicit element_name 'Save' or make the submit action an unnamed/generic submit (e.g., submit_actions: [{ on_success: 'creates employee', ... }]) because the description does not specify the button label.",
-    "Update components.Edit_Employee_Form.submit_actions: either remove the explicit element_name 'Save' or make the submit action an unnamed/generic submit (e.g., submit_actions: [{ on_success: 'updates employee', ... }]) because the description does not specify the button label."
+    "Remove the Employee_Detail_Actions state_bound_action_bar unless the description explicitly states actions vary by Status; if actions are identical regardless of status, keep a single Edit action under Staff_Detail_Page.actions instead. (JSON path: components.Employee_Detail_Actions — delete or replace with Staff_Detail_Page.actions only.)",
+    "Do not invent submit button labels for forms unless specified. For Create_Employee_Form and Edit_Employee_Form, either omit submit_actions entirely or include a single unspecified submit action. Change Create_Employee_Form.submit_actions from named Create/Cancel to either an unspecified submit action or remove. (JSON path: components.Create_Employee_Form.submit_actions — replace with [] or a single generic submit placeholder.)",
+    "Do not invent submit button labels for Edit_Employee_Form. Remove or replace Save/Cancel with unspecified submit action(s). (JSON path: components.Edit_Employee_Form.submit_actions — replace with [] or a single generic submit placeholder.)",
+    "Replace Employees_Table.row_actions[0].action_name 'View' with a neutral description that matches the text: reflect that the Name column is a clickable link navigating to Staff_Detail_Page, and avoid adding a separate 'View' action name. (JSON path: components.Employees_Table.row_actions[0].action_name — change to null or remove action_name, and ensure triggered_by is 'Name' with action_type 'link' and navigates_to 'Staff_Detail_Page'.)"
   ]
 }
 
 ------------------------------------------------------------
-[14:14:56] Semantic Critic - PARSED JSON
+[16:08:23] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST includes a few inferred UI elements not present in the description (row action and explicit 'Save' submit button labels) and should be regenerated to remove those phantoms.",
+  "summary": "AST includes several elements not explicitly described (multiple invented submit buttons, a state_bound_action_bar, and a named row action) and should be regenerated to match the description precisely.",
   "missing": [],
   "phantoms": [
-    "components.Employees_Table.row_actions[0] (Open Details row action not stated in description; only Name link was mentioned)",
-    "components.Create_Employee_Form.submit_actions[0] (Save button label was not specified in the description)",
-    "components.Edit_Employee_Form.submit_actions[0] (Save button label was not specified in the description)"
+    "Create_Employee_Form.submit_actions[0] (Create button label not specified in description)",
+    "Create_Employee_Form.submit_actions[1] (Cancel button not specified in description)",
+    "Edit_Employee_Form.submit_actions[0] (Save button label not specified in description)",
+    "Edit_Employee_Form.submit_actions[1] (Cancel button not specified in description)",
+    "Employee_Detail_Actions (state_bound_action_bar not described; description only states Staff Detail page shows employee information with an Edit option)",
+    "Employees_Table.row_actions[0] (action_name 'View' not specified; description only states Name is a clickable link to the Staff Detail page)"
   ],
   "fixes": [
-    "Remove components.Employees_Table.row_actions[0] entirely \u2014 the description only specifies that the Name column is a clickable link to Staff_Detail; no separate row action was described.",
-    "Update components.Create_Employee_Form.submit_actions: either remove the explicit element_name 'Save' or make the submit action an unnamed/generic submit (e.g., submit_actions: [{ on_success: 'creates employee', ... }]) because the description does not specify the button label.",
-    "Update components.Edit_Employee_Form.submit_actions: either remove the explicit element_name 'Save' or make the submit action an unnamed/generic submit (e.g., submit_actions: [{ on_success: 'updates employee', ... }]) because the description does not specify the button label."
+    "Remove the Employee_Detail_Actions state_bound_action_bar unless the description explicitly states actions vary by Status; if actions are identical regardless of status, keep a single Edit action under Staff_Detail_Page.actions instead. (JSON path: components.Employee_Detail_Actions \u2014 delete or replace with Staff_Detail_Page.actions only.)",
+    "Do not invent submit button labels for forms unless specified. For Create_Employee_Form and Edit_Employee_Form, either omit submit_actions entirely or include a single unspecified submit action. Change Create_Employee_Form.submit_actions from named Create/Cancel to either an unspecified submit action or remove. (JSON path: components.Create_Employee_Form.submit_actions \u2014 replace with [] or a single generic submit placeholder.)",
+    "Do not invent submit button labels for Edit_Employee_Form. Remove or replace Save/Cancel with unspecified submit action(s). (JSON path: components.Edit_Employee_Form.submit_actions \u2014 replace with [] or a single generic submit placeholder.)",
+    "Replace Employees_Table.row_actions[0].action_name 'View' with a neutral description that matches the text: reflect that the Name column is a clickable link navigating to Staff_Detail_Page, and avoid adding a separate 'View' action name. (JSON path: components.Employees_Table.row_actions[0].action_name \u2014 change to null or remove action_name, and ensure triggered_by is 'Name' with action_type 'link' and navigates_to 'Staff_Detail_Page'.)"
   ]
 }
 
 ------------------------------------------------------------
-[14:16:01] Semantic Critic - USER PROMPT
+[16:09:38] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Employees page displays a data table with columns for Name (clickable link), Office, Is Loan Officer indicator, and Status (Active, Inactive). A "+ Create Employee" button opens the creation form containing Office (required), First Name (required), Last Name (required), Is Loan Officer checkbox, Mobile Number, Is Active checkbox, Joining Date, and External ID. Staff members marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers. The Staff Detail page shows employee information with an Edit option.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Employees",
+  "components": {
+    "Employees_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Office",
+        "Is_Loan_Officer",
+        "Status"
+      ],
+      "row_actions": [
+        {
+          "triggered_by": "Name",
+          "action_type": "link",
+          "navigates_to": "Staff_Detail_Page"
+        }
+      ]
+    },
+    "Create_Employee_Button": {
+      "type": "button",
+      "element_name": "+ Create Employee",
+      "navigates_to": "Create_Employee_Form"
+    },
+    "Create_Employee_Form": {
+      "type": "form",
+      "submit_actions": [],
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "staff marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans",
+            "staff marked as Is Loan Officer can be assigned to clients, groups, and centers"
+          ]
+        },
+        "Mobile_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Joining_Date": {
+          "type": "date",
+          "required": false
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      }
+    },
+    "Staff_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "opens_form",
+          "navigates_to": "Edit_Employee_Form"
+        }
+      ],
+      "fields": {}
+    },
+    "Edit_Employee_Form": {
+      "type": "form",
+      "submit_actions": [],
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "staff marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans",
+            "staff marked as Is Loan Officer can be assigned to clients, groups, and centers"
+          ]
+        },
+        "Mobile_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Joining_Date": {
+          "type": "date",
+          "required": false
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:10:34] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST mostly captures the table, create button, and create form fields, but it includes an ungrounded Edit form with populated fields (phantom) and omits submit actions for the create/edit forms; regenerate after addressing these issues.",
+  "missing": [
+    "Create_Employee_Form.submit_actions[0] (Save/Create submit action not present)",
+    "Edit_Employee_Form.submit_actions[0] (Save/Create submit action not present)"
+  ],
+  "phantoms": [
+    "Edit_Employee_Form.fields (the description only mentions an Edit option on the Staff Detail page but does not specify the editable fields; populating the Edit form fields is a phantom inference)"
+  ],
+  "fixes": [
+    "Create_Employee_Form.submit_actions — add a submit action (e.g., { \"action_name\": \"Save\", \"action_type\": \"submit\" }) so the form can create an employee.",
+    "Edit_Employee_Form.fields — remove the populated fields and replace with an empty object (set to {}) unless the specification explicitly lists which fields are editable; the description only mentions an Edit option, so do not invent fields.",
+    "Edit_Employee_Form.submit_actions — add a submit action (e.g., { \"action_name\": \"Save\", \"action_type\": \"submit\" }) if an Edit form is kept, so edits can be submitted."
+  ]
+}
+
+------------------------------------------------------------
+[16:10:34] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST mostly captures the table, create button, and create form fields, but it includes an ungrounded Edit form with populated fields (phantom) and omits submit actions for the create/edit forms; regenerate after addressing these issues.",
+  "missing": [
+    "Create_Employee_Form.submit_actions[0] (Save/Create submit action not present)",
+    "Edit_Employee_Form.submit_actions[0] (Save/Create submit action not present)"
+  ],
+  "phantoms": [
+    "Edit_Employee_Form.fields (the description only mentions an Edit option on the Staff Detail page but does not specify the editable fields; populating the Edit form fields is a phantom inference)"
+  ],
+  "fixes": [
+    "Create_Employee_Form.submit_actions \u2014 add a submit action (e.g., { \"action_name\": \"Save\", \"action_type\": \"submit\" }) so the form can create an employee.",
+    "Edit_Employee_Form.fields \u2014 remove the populated fields and replace with an empty object (set to {}) unless the specification explicitly lists which fields are editable; the description only mentions an Edit option, so do not invent fields.",
+    "Edit_Employee_Form.submit_actions \u2014 add a submit action (e.g., { \"action_name\": \"Save\", \"action_type\": \"submit\" }) if an Edit form is kept, so edits can be submitted."
+  ]
+}
+
+------------------------------------------------------------
+[16:11:23] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -326,136 +518,89 @@ The Employees page displays a data table with columns for Name (clickable link),
   "components": {
     "Employees_Page": {
       "type": "page",
-      "actions": [
-        {
-          "element_name": "+ Create Employee",
+      "components": {
+        "Employees_Table": {
+          "type": "data_table",
+          "columns": {
+            "Name": {
+              "type": "link",
+              "target": "Employee_Detail_Page",
+              "description": "clicking navigates to the Employee Detail page"
+            }
+          }
+        },
+        "Create_Employee_Button": {
           "type": "button",
-          "on_click": "opens Create_Employee_Form"
+          "element_name": "+ Create Employee",
+          "action_type": "open_form",
+          "target": "Create_Employee_Form"
         }
-      ],
-      "children": [
-        {
-          "component_ref": "Employees_Table"
-        }
-      ]
-    },
-    "Employees_Table": {
-      "type": "data_table",
-      "columns": [
-        {
-          "name": "Name",
-          "type": "link",
-          "navigates_to": "Employee_Detail_Page"
-        },
-        {
-          "name": "Office",
-          "type": "unspecified"
-        },
-        {
-          "name": "Is Loan Officer",
-          "type": "unspecified"
-        },
-        {
-          "name": "Status",
-          "type": "unspecified",
-          "options": [
-            "Active",
-            "Inactive"
-          ]
-        }
-      ]
+      }
     },
     "Create_Employee_Form": {
       "type": "form",
       "fields": {
         "Office": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "First_Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Last_Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Is_Loan_Officer": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Mobile_Number": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         },
         "Is_Active": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Joining_Date": {
-          "type": "date",
-          "required": false
+          "type": "date"
         },
         "External_ID": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         }
       },
       "submit_actions": [
         {
-          "on_success": "creates employee; if Is_Loan_Officer == true then employee is included in the Loan Officer dropdown when creating loans and is assignable to clients, groups, and centers"
+          "action_name": "Save",
+          "action_type": "submit",
+          "on_success": "creates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
         }
       ]
     },
     "Employee_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "element_name": "Edit",
+      "type": "page",
+      "components": {
+        "Edit_Button": {
           "type": "button",
-          "on_click": "opens Edit_Employee_Form"
+          "element_name": "Edit",
+          "action_type": "open_form",
+          "target": "Edit_Employee_Form"
         }
-      ]
+      }
     },
     "Edit_Employee_Form": {
       "type": "form",
-      "fields": {
-        "Office": {
-          "type": "unspecified",
-          "required": true
-        },
-        "First_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Last_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Is_Loan_Officer": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Mobile_Number": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Is_Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Joining_Date": {
-          "type": "date",
-          "required": false
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
+      "fields": {},
       "submit_actions": [
         {
-          "on_success": "updates employee; if Is_Loan_Officer changed then updates inclusion in Loan Officer dropdown and assignability to clients, groups, and centers"
+          "action_name": "Save",
+          "action_type": "submit",
+          "on_success": "updates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
         }
       ]
     }
@@ -466,27 +611,29 @@ The Employees page displays a data table with columns for Name (clickable link),
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:16:34] Semantic Critic - LLM RESPONSE
+[16:11:48] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST matches the described interactive elements (employees table with Name link, + Create Employee button and form with required fields, Employee Detail page with Edit action); only minor phantom is that the Edit form's fields are detailed though the description only mentioned an Edit option.",
+  "summary": "AST matches the described interactive elements (Employees table with Name link, Create Employee button + form fields, Employee detail Edit option); minor assumptions about submit buttons are present but acceptable.",
   "missing": [],
   "phantoms": [
-    "components.Edit_Employee_Form.fields (detailed editable fields are specified though description only states there is an Edit option on the Staff Detail page)"
+    "Create_Employee_Form.submit_actions[0] (Save button not explicitly named in description)",
+    "Edit_Employee_Form.submit_actions[0] (Save button not explicitly named in description)"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:16:34] Semantic Critic - PARSED JSON
+[16:11:48] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST matches the described interactive elements (employees table with Name link, + Create Employee button and form with required fields, Employee Detail page with Edit action); only minor phantom is that the Edit form's fields are detailed though the description only mentioned an Edit option.",
+  "summary": "AST matches the described interactive elements (Employees table with Name link, Create Employee button + form fields, Employee detail Edit option); minor assumptions about submit buttons are present but acceptable.",
   "missing": [],
   "phantoms": [
-    "components.Edit_Employee_Form.fields (detailed editable fields are specified though description only states there is an Edit option on the Staff Detail page)"
+    "Create_Employee_Form.submit_actions[0] (Save button not explicitly named in description)",
+    "Edit_Employee_Form.submit_actions[0] (Save button not explicitly named in description)"
   ],
   "fixes": []
 }

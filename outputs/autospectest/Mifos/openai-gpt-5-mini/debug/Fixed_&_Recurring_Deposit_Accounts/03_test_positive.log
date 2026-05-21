@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.437904
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.369082
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Fixed & Recurring Deposit Accounts</module_name>
 
@@ -149,24 +232,46 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 {
   "module_name": "Fixed & Recurring Deposit Accounts",
   "components": {
+    "Client_Detail_Page": {
+      "type": "page",
+      "available_actions": [
+        {
+          "action_name": "Create Fixed Deposit Account",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Create Recurring Deposit Account",
+          "element_type": "button"
+        }
+      ]
+    },
     "FD_Account_Creation_Form": {
       "type": "form",
       "fields": {
         "Fixed_Deposit_Product": {
           "type": "dropdown",
-          "required": true
+          "required": false,
+          "constraints": [
+            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
+          ]
         },
         "Deposit_Amount": {
           "type": "number",
-          "required": true
+          "required": false,
+          "constraints": [
+            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
+          ]
         },
-        "Deposit_Period_Value": {
+        "Deposit_Period_Number": {
           "type": "number",
-          "required": true
+          "required": false,
+          "constraints": [
+            "term length used with product's Interest Rate Chart to determine applicable rate"
+          ]
         },
         "Deposit_Period_Unit": {
           "type": "dropdown",
-          "required": true,
+          "required": false,
           "options": [
             "Days",
             "Months",
@@ -182,44 +287,35 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             "Re-Invest Principal and Transfer Interest"
           ]
         }
-      },
-      "constraints": [
-        "Interest rate for the account is determined by the selected product's Interest Rate Chart and is tiered based on Deposit_Amount and Deposit_Period_Value (term length)"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create Fixed Deposit",
-          "on_success": "creates fixed deposit account"
-        }
-      ]
+      }
     },
     "RD_Account_Creation_Form": {
       "type": "form",
       "fields": {
         "Recurring_Deposit_Product": {
           "type": "dropdown",
-          "required": true
+          "required": false,
+          "constraints": [
+            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
+          ]
         },
-        "Mandatory_Deposit_Amount": {
+        "Mandatory_Deposit_Amount_per_installment": {
           "type": "number",
-          "required": true
+          "required": false,
+          "constraints": [
+            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
+          ]
         },
-        "Deposit_Period_Value": {
+        "Deposit_Period": {
           "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Days",
-            "Months",
-            "Years"
+          "required": false,
+          "constraints": [
+            "term length used with product's Interest Rate Chart to determine applicable rate"
           ]
         },
         "Deposit_Frequency": {
           "type": "dropdown",
-          "required": true,
+          "required": false,
           "options": [
             "Daily",
             "Weekly",
@@ -232,16 +328,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "type": "date",
           "required": false
         }
-      },
-      "constraints": [
-        "Interest rate for the account is determined by the selected product's Interest Rate Chart and is tiered based on deposit amount (per-installment) and Deposit_Period_Value (term length)"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create Recurring Deposit",
-          "on_success": "creates recurring deposit account"
-        }
-      ]
+      }
     },
     "FD_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -257,6 +344,27 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         {
           "tab_name": "Charges",
           "fields": {}
+        }
+      ]
+    },
+    "FD_Account_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Approve",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Activate",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Premature Close",
+          "element_type": "button"
+        },
+        {
+          "action_name": "Close on Maturity",
+          "element_type": "button"
         }
       ]
     },
@@ -277,125 +385,30 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         }
       ]
     },
-    "RD_Deposit_Schedule_Table": {
-      "type": "data_table",
-      "row_actions": [],
-      "bulk_actions": []
-    },
-    "FD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status to Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status to Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "changes status to Prematurely Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "constraints": [
-                "maturity date must be reached"
-              ],
-              "on_success": "changes status to Closed on Maturity"
-            }
-          ]
-        },
-        "Prematurely Closed": {
-          "available_actions": []
-        },
-        "Closed on Maturity": {
-          "available_actions": []
-        }
-      }
-    },
     "RD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status to Approved"
-            }
-          ]
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Approve",
+          "element_type": "button"
         },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status to Active"
-            }
-          ]
+        {
+          "action_name": "Activate",
+          "element_type": "button"
         },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Deposit",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "records deposit against schedule"
-            },
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "changes status to Prematurely Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "constraints": [
-                "maturity date must be reached"
-              ],
-              "on_success": "changes status to Closed on Maturity"
-            }
-          ]
+        {
+          "action_name": "Deposit",
+          "element_type": "button"
         },
-        "Prematurely Closed": {
-          "available_actions": []
+        {
+          "action_name": "Premature Close",
+          "element_type": "button"
         },
-        "Closed on Maturity": {
-          "available_actions": []
+        {
+          "action_name": "Close on Maturity",
+          "element_type": "button"
         }
-      }
+      ]
     }
   }
 }
@@ -413,7 +426,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:24:24] Test-Positive - LLM RESPONSE
+[16:19:31] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Fixed & Recurring Deposit Accounts",
@@ -421,140 +434,179 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Fixed Deposit - happy path",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Client Detail page is open and FD Account creation form is visible"
-      ],
+      "test_case": "Create Fixed Deposit account — happy path shows interest and maturity calculation",
+      "preconditions": ["User logged in as <Bank Officer>", "Client Detail page is open for <client>"],
       "steps": [
-        "1. Select <Fixed deposit product> from the Fixed Deposit Product dropdown",
-        "2. Enter <deposit amount> in the Deposit Amount field",
-        "3. Enter <term value> in the Deposit Period Value field",
-        "4. Select <term unit> from the Deposit Period Unit dropdown",
-        "5. Select <maturity instruction> from the Maturity Instructions dropdown",
-        "6. Click the Create Fixed Deposit button"
+        "1. Click 'Create Fixed Deposit Account' on the Client Detail page",
+        "2. Select <Fixed Deposit Product> from the Fixed Deposit Product dropdown",
+        "3. Enter <Deposit Amount> in the Deposit Amount field",
+        "4. Enter <Deposit Period Number> in the Deposit Period field",
+        "5. Select <Deposit Period Unit> from the Deposit Period Unit dropdown",
+        "6. Select <Maturity Instruction> from the Maturity Instructions dropdown",
+        "7. Click Create (or Submit) to create the Fixed Deposit account"
       ],
-      "expected_result": "creates fixed deposit account and FD detail page displays Deposit Amount, Maturity Date, Maturity Amount, and Interest Rate (interest rate shown based on selected product's Interest Rate Chart)",
+      "expected_result": "Fixed Deposit Account detail page is displayed for the new account showing the entered Deposit Amount; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity Amount and Maturity Date are displayed and update to reflect the entered Deposit Amount and term; Status badge on the detail page shows 'Pending'",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create Recurring Deposit - happy path",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Client Detail page is open and RD Account creation form is visible"
-      ],
+      "test_case": "Create Recurring Deposit account — happy path shows interest, schedule and maturity details",
+      "preconditions": ["User logged in as <Bank Officer>", "Client Detail page is open for <client>"],
       "steps": [
-        "1. Select <Recurring deposit product> from the Recurring Deposit Product dropdown",
-        "2. Enter <mandatory installment amount> in the Mandatory Deposit Amount field",
-        "3. Enter <term value> in the Deposit Period Value field",
-        "4. Select <term unit> from the Deposit Period Unit dropdown",
-        "5. Select <deposit frequency> from the Deposit Frequency dropdown",
-        "6. Enter <expected first deposit date> in the Expected First Deposit On field",
-        "7. Click the Create Recurring Deposit button"
+        "1. Click 'Create Recurring Deposit Account' on the Client Detail page",
+        "2. Select <Recurring Deposit Product> from the Recurring Deposit Product dropdown",
+        "3. Enter <Mandatory Deposit Amount per installment> in the Mandatory Deposit Amount per installment field",
+        "4. Enter <Deposit Period> in the Deposit Period field",
+        "5. Select <Deposit Frequency> from the Deposit Frequency dropdown",
+        "6. Enter <Expected First Deposit On> in the Expected First Deposit On date field",
+        "7. Click Create (or Submit) to create the Recurring Deposit account"
       ],
-      "expected_result": "creates recurring deposit account and RD detail page displays Deposit Schedule, Total Deposits Made, Maturity Details, and Interest Rate (interest rate shown based on selected product's Interest Rate Chart)",
+      "expected_result": "Recurring Deposit Account detail page is displayed for the new account showing the entered Mandatory Installment Amount, Deposit Frequency, and Expected First Deposit On date; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity details including Maturity Amount and Maturity Date are displayed; Status badge on the detail page shows 'Pending'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Approve Fixed Deposit in Pending state",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Pending status and FD Account Detail page is open"
-      ],
+      "test_case": "Navigate Fixed Deposit account detail tabs (Summary, Transactions, Charges)",
+      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account>"],
       "steps": [
-        "1. Click the Approve action button in the FD action bar"
+        "1. Click the 'Summary' tab on the FD Account detail page",
+        "2. Verify Summary panel is visible",
+        "3. Click the 'Transactions' tab",
+        "4. Verify Transactions panel is visible",
+        "5. Click the 'Charges' tab",
+        "6. Verify Charges panel is visible"
       ],
-      "expected_result": "changes status to Approved and status badge displays 'Approved'",
-      "priority": "high"
+      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Activate Fixed Deposit in Approved state",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Approved status and FD Account Detail page is open"
-      ],
+      "test_case": "Navigate Recurring Deposit account detail tabs (Summary, Transactions, Charges)",
+      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account>"],
       "steps": [
-        "1. Click the Activate action button in the FD action bar"
+        "1. Click the 'Summary' tab on the RD Account detail page",
+        "2. Verify Summary panel is visible",
+        "3. Click the 'Transactions' tab",
+        "4. Verify Transactions panel is visible",
+        "5. Click the 'Charges' tab",
+        "6. Verify Charges panel is visible"
       ],
-      "expected_result": "changes status to Active and status badge displays 'Active'",
-      "priority": "high"
+      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit schedule and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
+      "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Prematurely close an Active Fixed Deposit",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Active status and FD Account Detail page is open"
-      ],
+      "test_case": "Approve Fixed Deposit account from Pending to Approved",
+      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> in 'Pending' status"],
       "steps": [
-        "1. Click the Premature Close action button in the FD action bar",
-        "2. Confirm the premature close action if a confirmation dialog appears"
+        "1. Click the 'Approve' button on the FD Account detail page",
+        "2. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "changes status to Prematurely Closed and status badge displays 'Prematurely Closed'",
+      "expected_result": "Status badge updates to 'Approved' on the Fixed Deposit Account Detail page",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Close Fixed Deposit on maturity when maturity date reached",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Active status, and the maturity date has been reached",
-        "FD Account Detail page is open"
-      ],
+      "test_case": "Activate Fixed Deposit account after approval",
+      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> in 'Approved' status"],
       "steps": [
-        "1. Click the Close on Maturity action button in the FD action bar",
-        "2. Confirm the close on maturity action if a confirmation dialog appears"
+        "1. Click the 'Activate' button on the FD Account detail page",
+        "2. Click Confirm on the Activate dialog"
       ],
-      "expected_result": "changes status to Closed on Maturity and status badge displays 'Closed on Maturity'",
+      "expected_result": "Status badge updates to 'Active' on the Fixed Deposit Account Detail page",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Record a deposit against RD schedule (Deposit action)",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Recurring Deposit account is in Active status and RD Account Detail page with schedule is open"
-      ],
+      "test_case": "Prematurely close an Active Fixed Deposit account",
+      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> in 'Active' status"],
       "steps": [
-        "1. Click the Deposit action button in the RD action bar",
-        "2. Enter <deposit amount> in the deposit modal or input presented",
-        "3. Click the Confirm/Submit button in the deposit modal"
+        "1. Click the 'Premature Close' button on the FD Account detail page",
+        "2. Click Confirm on the Premature Close dialog"
       ],
-      "expected_result": "records deposit against schedule and RD detail page updates Total Deposits Made and the Deposit Schedule to reflect the recorded deposit",
-      "priority": "high"
+      "expected_result": "Status badge updates to 'Prematurely Closed' on the Fixed Deposit Account Detail page and the Transactions tab shows a transaction row recording the premature closure",
+      "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Navigate between FD detail tabs (Summary, Transactions, Charges)",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit Account Detail page is open"
-      ],
+      "test_case": "Close Fixed Deposit account on maturity",
+      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> that has reached its maturity date"],
       "steps": [
-        "1. Click the Transactions tab",
-        "2. Verify Transactions tab content is displayed",
-        "3. Click the Charges tab",
-        "4. Verify Charges tab content is displayed",
-        "5. Click the Summary tab",
-        "6. Verify Summary tab content is displayed"
+        "1. Click the 'Close on Maturity' button on the FD Account detail page",
+        "2. Click Confirm on the Close on Maturity dialog"
       ],
-      "expected_result": "Tabs switch and respective tab content is displayed for Summary, Transactions, and Charges",
+      "expected_result": "Status badge updates to 'Closed on Maturity' on the Fixed Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Approve Recurring Deposit account from Pending to Approved",
+      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Pending' status"],
+      "steps": [
+        "1. Click the 'Approve' button on the RD Account detail page",
+        "2. Click Confirm on the Approve dialog"
+      ],
+      "expected_result": "Status badge updates to 'Approved' on the Recurring Deposit Account Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Activate Recurring Deposit account after approval",
+      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Approved' status"],
+      "steps": [
+        "1. Click the 'Activate' button on the RD Account detail page",
+        "2. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Status badge updates to 'Active' on the Recurring Deposit Account Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-011",
+      "test_case": "Make a deposit on an Active Recurring Deposit account and verify transactions and total",
+      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"],
+      "steps": [
+        "1. Click the 'Deposit' button on the RD Account detail page to open the Deposit dialog",
+        "2. Enter <valid deposit amount> in the Deposit dialog",
+        "3. Click Confirm on the Deposit dialog",
+        "4. Click the 'Transactions' tab to view transactions",
+        "5. Click the 'Summary' tab to view updated totals"
+      ],
+      "expected_result": "A new transaction row appears in the Transactions tab showing the deposit of the entered amount; the 'Total deposits made' value on the Summary panel updates to include the new deposit",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Prematurely close an Active Recurring Deposit account",
+      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"],
+      "steps": [
+        "1. Click the 'Premature Close' button on the RD Account detail page",
+        "2. Click Confirm on the Premature Close dialog"
+      ],
+      "expected_result": "Status badge updates to 'Prematurely Closed' on the Recurring Deposit Account Detail page and the Transactions tab shows a transaction recording the premature closure",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Close Recurring Deposit account on maturity",
+      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> that has reached its maturity date"],
+      "steps": [
+        "1. Click the 'Close on Maturity' button on the RD Account detail page",
+        "2. Click Confirm on the Close on Maturity dialog"
+      ],
+      "expected_result": "Status badge updates to 'Closed on Maturity' on the Recurring Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 7,
-    "medium_priority": 1,
+    "total": 13,
+    "high_priority": 6,
+    "medium_priority": 7,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[14:24:24] Test-Positive - PARSED JSON
+[16:19:31] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Fixed & Recurring Deposit Accounts",
@@ -562,134 +614,212 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Fixed Deposit - happy path",
+      "test_case": "Create Fixed Deposit account \u2014 happy path shows interest and maturity calculation",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Client Detail page is open and FD Account creation form is visible"
+        "User logged in as <Bank Officer>",
+        "Client Detail page is open for <client>"
       ],
       "steps": [
-        "1. Select <Fixed deposit product> from the Fixed Deposit Product dropdown",
-        "2. Enter <deposit amount> in the Deposit Amount field",
-        "3. Enter <term value> in the Deposit Period Value field",
-        "4. Select <term unit> from the Deposit Period Unit dropdown",
-        "5. Select <maturity instruction> from the Maturity Instructions dropdown",
-        "6. Click the Create Fixed Deposit button"
+        "1. Click 'Create Fixed Deposit Account' on the Client Detail page",
+        "2. Select <Fixed Deposit Product> from the Fixed Deposit Product dropdown",
+        "3. Enter <Deposit Amount> in the Deposit Amount field",
+        "4. Enter <Deposit Period Number> in the Deposit Period field",
+        "5. Select <Deposit Period Unit> from the Deposit Period Unit dropdown",
+        "6. Select <Maturity Instruction> from the Maturity Instructions dropdown",
+        "7. Click Create (or Submit) to create the Fixed Deposit account"
       ],
-      "expected_result": "creates fixed deposit account and FD detail page displays Deposit Amount, Maturity Date, Maturity Amount, and Interest Rate (interest rate shown based on selected product's Interest Rate Chart)",
+      "expected_result": "Fixed Deposit Account detail page is displayed for the new account showing the entered Deposit Amount; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity Amount and Maturity Date are displayed and update to reflect the entered Deposit Amount and term; Status badge on the detail page shows 'Pending'",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create Recurring Deposit - happy path",
+      "test_case": "Create Recurring Deposit account \u2014 happy path shows interest, schedule and maturity details",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Client Detail page is open and RD Account creation form is visible"
+        "User logged in as <Bank Officer>",
+        "Client Detail page is open for <client>"
       ],
       "steps": [
-        "1. Select <Recurring deposit product> from the Recurring Deposit Product dropdown",
-        "2. Enter <mandatory installment amount> in the Mandatory Deposit Amount field",
-        "3. Enter <term value> in the Deposit Period Value field",
-        "4. Select <term unit> from the Deposit Period Unit dropdown",
-        "5. Select <deposit frequency> from the Deposit Frequency dropdown",
-        "6. Enter <expected first deposit date> in the Expected First Deposit On field",
-        "7. Click the Create Recurring Deposit button"
+        "1. Click 'Create Recurring Deposit Account' on the Client Detail page",
+        "2. Select <Recurring Deposit Product> from the Recurring Deposit Product dropdown",
+        "3. Enter <Mandatory Deposit Amount per installment> in the Mandatory Deposit Amount per installment field",
+        "4. Enter <Deposit Period> in the Deposit Period field",
+        "5. Select <Deposit Frequency> from the Deposit Frequency dropdown",
+        "6. Enter <Expected First Deposit On> in the Expected First Deposit On date field",
+        "7. Click Create (or Submit) to create the Recurring Deposit account"
       ],
-      "expected_result": "creates recurring deposit account and RD detail page displays Deposit Schedule, Total Deposits Made, Maturity Details, and Interest Rate (interest rate shown based on selected product's Interest Rate Chart)",
+      "expected_result": "Recurring Deposit Account detail page is displayed for the new account showing the entered Mandatory Installment Amount, Deposit Frequency, and Expected First Deposit On date; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity details including Maturity Amount and Maturity Date are displayed; Status badge on the detail page shows 'Pending'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Approve Fixed Deposit in Pending state",
+      "test_case": "Navigate Fixed Deposit account detail tabs (Summary, Transactions, Charges)",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Pending status and FD Account Detail page is open"
+        "User logged in as <Bank Officer>",
+        "Fixed Deposit Account detail page is open for <FD account>"
       ],
       "steps": [
-        "1. Click the Approve action button in the FD action bar"
+        "1. Click the 'Summary' tab on the FD Account detail page",
+        "2. Verify Summary panel is visible",
+        "3. Click the 'Transactions' tab",
+        "4. Verify Transactions panel is visible",
+        "5. Click the 'Charges' tab",
+        "6. Verify Charges panel is visible"
       ],
-      "expected_result": "changes status to Approved and status badge displays 'Approved'",
-      "priority": "high"
+      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Activate Fixed Deposit in Approved state",
+      "test_case": "Navigate Recurring Deposit account detail tabs (Summary, Transactions, Charges)",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Approved status and FD Account Detail page is open"
+        "User logged in as <Bank Officer>",
+        "Recurring Deposit Account detail page is open for <RD account>"
       ],
       "steps": [
-        "1. Click the Activate action button in the FD action bar"
+        "1. Click the 'Summary' tab on the RD Account detail page",
+        "2. Verify Summary panel is visible",
+        "3. Click the 'Transactions' tab",
+        "4. Verify Transactions panel is visible",
+        "5. Click the 'Charges' tab",
+        "6. Verify Charges panel is visible"
       ],
-      "expected_result": "changes status to Active and status badge displays 'Active'",
-      "priority": "high"
+      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit schedule and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
+      "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Prematurely close an Active Fixed Deposit",
+      "test_case": "Approve Fixed Deposit account from Pending to Approved",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Active status and FD Account Detail page is open"
+        "User logged in as <Bank Officer>",
+        "Fixed Deposit Account detail page is open for <FD account> in 'Pending' status"
       ],
       "steps": [
-        "1. Click the Premature Close action button in the FD action bar",
-        "2. Confirm the premature close action if a confirmation dialog appears"
+        "1. Click the 'Approve' button on the FD Account detail page",
+        "2. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "changes status to Prematurely Closed and status badge displays 'Prematurely Closed'",
+      "expected_result": "Status badge updates to 'Approved' on the Fixed Deposit Account Detail page",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Close Fixed Deposit on maturity when maturity date reached",
+      "test_case": "Activate Fixed Deposit account after approval",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit account is in Active status, and the maturity date has been reached",
-        "FD Account Detail page is open"
+        "User logged in as <Bank Officer>",
+        "Fixed Deposit Account detail page is open for <FD account> in 'Approved' status"
       ],
       "steps": [
-        "1. Click the Close on Maturity action button in the FD action bar",
-        "2. Confirm the close on maturity action if a confirmation dialog appears"
+        "1. Click the 'Activate' button on the FD Account detail page",
+        "2. Click Confirm on the Activate dialog"
       ],
-      "expected_result": "changes status to Closed on Maturity and status badge displays 'Closed on Maturity'",
+      "expected_result": "Status badge updates to 'Active' on the Fixed Deposit Account Detail page",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Record a deposit against RD schedule (Deposit action)",
+      "test_case": "Prematurely close an Active Fixed Deposit account",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Recurring Deposit account is in Active status and RD Account Detail page with schedule is open"
+        "User logged in as <Bank Officer>",
+        "Fixed Deposit Account detail page is open for <FD account> in 'Active' status"
       ],
       "steps": [
-        "1. Click the Deposit action button in the RD action bar",
-        "2. Enter <deposit amount> in the deposit modal or input presented",
-        "3. Click the Confirm/Submit button in the deposit modal"
+        "1. Click the 'Premature Close' button on the FD Account detail page",
+        "2. Click Confirm on the Premature Close dialog"
       ],
-      "expected_result": "records deposit against schedule and RD detail page updates Total Deposits Made and the Deposit Schedule to reflect the recorded deposit",
-      "priority": "high"
+      "expected_result": "Status badge updates to 'Prematurely Closed' on the Fixed Deposit Account Detail page and the Transactions tab shows a transaction row recording the premature closure",
+      "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Navigate between FD detail tabs (Summary, Transactions, Charges)",
+      "test_case": "Close Fixed Deposit account on maturity",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "Fixed Deposit Account Detail page is open"
+        "User logged in as <Bank Officer>",
+        "Fixed Deposit Account detail page is open for <FD account> that has reached its maturity date"
       ],
       "steps": [
-        "1. Click the Transactions tab",
-        "2. Verify Transactions tab content is displayed",
-        "3. Click the Charges tab",
-        "4. Verify Charges tab content is displayed",
-        "5. Click the Summary tab",
-        "6. Verify Summary tab content is displayed"
+        "1. Click the 'Close on Maturity' button on the FD Account detail page",
+        "2. Click Confirm on the Close on Maturity dialog"
       ],
-      "expected_result": "Tabs switch and respective tab content is displayed for Summary, Transactions, and Charges",
+      "expected_result": "Status badge updates to 'Closed on Maturity' on the Fixed Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Approve Recurring Deposit account from Pending to Approved",
+      "preconditions": [
+        "User logged in as <Bank Officer>",
+        "Recurring Deposit Account detail page is open for <RD account> in 'Pending' status"
+      ],
+      "steps": [
+        "1. Click the 'Approve' button on the RD Account detail page",
+        "2. Click Confirm on the Approve dialog"
+      ],
+      "expected_result": "Status badge updates to 'Approved' on the Recurring Deposit Account Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Activate Recurring Deposit account after approval",
+      "preconditions": [
+        "User logged in as <Bank Officer>",
+        "Recurring Deposit Account detail page is open for <RD account> in 'Approved' status"
+      ],
+      "steps": [
+        "1. Click the 'Activate' button on the RD Account detail page",
+        "2. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Status badge updates to 'Active' on the Recurring Deposit Account Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-011",
+      "test_case": "Make a deposit on an Active Recurring Deposit account and verify transactions and total",
+      "preconditions": [
+        "User logged in as <Bank Officer>",
+        "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"
+      ],
+      "steps": [
+        "1. Click the 'Deposit' button on the RD Account detail page to open the Deposit dialog",
+        "2. Enter <valid deposit amount> in the Deposit dialog",
+        "3. Click Confirm on the Deposit dialog",
+        "4. Click the 'Transactions' tab to view transactions",
+        "5. Click the 'Summary' tab to view updated totals"
+      ],
+      "expected_result": "A new transaction row appears in the Transactions tab showing the deposit of the entered amount; the 'Total deposits made' value on the Summary panel updates to include the new deposit",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Prematurely close an Active Recurring Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Officer>",
+        "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"
+      ],
+      "steps": [
+        "1. Click the 'Premature Close' button on the RD Account detail page",
+        "2. Click Confirm on the Premature Close dialog"
+      ],
+      "expected_result": "Status badge updates to 'Prematurely Closed' on the Recurring Deposit Account Detail page and the Transactions tab shows a transaction recording the premature closure",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Close Recurring Deposit account on maturity",
+      "preconditions": [
+        "User logged in as <Bank Officer>",
+        "Recurring Deposit Account detail page is open for <RD account> that has reached its maturity date"
+      ],
+      "steps": [
+        "1. Click the 'Close on Maturity' button on the RD Account detail page",
+        "2. Click Confirm on the Close on Maturity dialog"
+      ],
+      "expected_result": "Status badge updates to 'Closed on Maturity' on the Recurring Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 7,
-    "medium_priority": 1,
+    "total": 13,
+    "high_priority": 6,
+    "medium_priority": 7,
     "low_priority": 0
   }
 }

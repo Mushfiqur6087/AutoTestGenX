@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.593953
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.756192
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:11:41] Semantic Critic - SYSTEM PROMPT
+[16:05:27] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:11:41] Semantic Critic - USER PROMPT
+[16:05:27] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -121,51 +121,42 @@ The Share Products page displays a data table with columns for Product Name (cli
 {
   "module_name": "Share Products",
   "components": {
-    "Share_Products_Page_Actions": {
-      "type": "action_bar",
-      "actions": [
+    "Share_Products_Table": {
+      "type": "data_table",
+      "columns": [
         {
-          "element_name": "+ Create Share Product",
-          "type": "button",
-          "on_click": "opens Create_Share_Product_Wizard"
+          "name": "Product Name",
+          "clickable": true
+        },
+        {
+          "name": "Short Name"
+        },
+        {
+          "name": "Total Shares"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open",
+          "description": "opens product detail when Product Name link is clicked"
         }
       ]
     },
-    "Share_Products_Table": {
-      "type": "data_table",
-      "columns": {
-        "Product_Name": {
-          "type": "link",
-          "on_click": "opens Product_Detail_View"
-        },
-        "Short_Name": {
-          "type": "unspecified"
-        },
-        "Total_Shares": {
-          "type": "number"
-        }
-      },
-      "row_actions": [
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Product_Detail_View_in_edit_mode"
-        },
-        {
-          "action_name": "Delete",
-          "type": "button",
-          "on_success": "deletes share product"
-        }
-      ],
-      "bulk_actions": []
+    "Create_Share_Product_Button": {
+      "type": "button",
+      "element_name": "+ Create Share Product",
+      "on_click": "opens Create_Share_Product_Wizard"
     },
     "Create_Share_Product_Wizard": {
       "type": "wizard",
       "submit_actions": [
         {
           "element_name": "Create",
-          "type": "button",
           "on_success": "creates share product"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "dismisses wizard"
         }
       ],
       "steps": [
@@ -175,21 +166,15 @@ The Share Products page displays a data table with columns for Product Name (cli
           "fields": {
             "Product_Name": {
               "type": "unspecified",
-              "constraints": [
-                "required"
-              ]
+              "required": true
             },
             "Short_Name": {
               "type": "unspecified",
-              "constraints": [
-                "required"
-              ]
+              "required": true
             },
             "Description": {
               "type": "unspecified",
-              "constraints": [
-                "required"
-              ]
+              "required": true
             }
           }
         },
@@ -198,7 +183,7 @@ The Share Products page displays a data table with columns for Product Name (cli
           "step_name": "Currency",
           "fields": {
             "Currency": {
-              "type": "unspecified"
+              "type": "dropdown"
             },
             "Decimal_Places": {
               "type": "number"
@@ -214,17 +199,19 @@ The Share Products page displays a data table with columns for Product Name (cli
           "fields": {
             "Total_Number_of_Shares": {
               "type": "number",
-              "constraints": [
-                "required"
-              ]
+              "required": true
             },
             "Shares_to_be_Issued": {
               "type": "number"
             },
             "Nominal_Unit_Price": {
               "type": "number",
+              "required": true
+            },
+            "Capital_Value": {
+              "type": "number",
               "constraints": [
-                "required"
+                "auto-calculated from Total_Number_of_Shares and Nominal_Unit_Price"
               ]
             }
           }
@@ -257,14 +244,16 @@ The Share Products page displays a data table with columns for Product Name (cli
           "step_index": 5,
           "step_name": "Market Price",
           "fields": {
-            "Market_Price_Rows": {
+            "Market_Prices": {
               "type": "repeating_group",
               "item_fields": {
                 "From_Date": {
-                  "type": "date"
+                  "type": "date",
+                  "required": true
                 },
                 "Share_Value": {
-                  "type": "number"
+                  "type": "number",
+                  "required": true
                 }
               }
             }
@@ -274,12 +263,320 @@ The Share Products page displays a data table with columns for Product Name (cli
           "step_index": 6,
           "step_name": "Charges",
           "fields": {
-            "Charge_Search": {
+            "Charges_Search": {
               "type": "search"
+            },
+            "Add_Selected_Charge": {
+              "type": "button",
+              "element_name": "Add Selected Charge"
             },
             "Selected_Charges": {
               "type": "repeating_group",
-              "item_fields": {}
+              "item_fields": {
+                "Charge": {
+                  "type": "unspecified"
+                }
+              },
+              "row_actions": [
+                {
+                  "action_name": "Remove Charge"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "step_index": 7,
+          "step_name": "Accounting",
+          "fields": {
+            "Accounting_Method": {
+              "type": "radio",
+              "options": [
+                "None",
+                "Cash-based"
+              ]
+            },
+            "GL_Share_Reference": {
+              "type": "dropdown",
+              "visible_when": "Accounting_Method == Cash-based",
+              "required_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Share_Suspense": {
+              "type": "dropdown",
+              "visible_when": "Accounting_Method == Cash-based",
+              "required_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Equity_in_Shares": {
+              "type": "dropdown",
+              "visible_when": "Accounting_Method == Cash-based",
+              "required_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Income_from_Fees": {
+              "type": "dropdown",
+              "visible_when": "Accounting_Method == Cash-based",
+              "required_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Share_Equity": {
+              "type": "dropdown",
+              "visible_when": "Accounting_Method == Cash-based",
+              "required_when": "Accounting_Method == Cash-based"
+            }
+          }
+        }
+      ]
+    },
+    "Share_Product_Detail": {
+      "type": "detail_view",
+      "fields": {},
+      "actions": [
+        {
+          "action_name": "Edit",
+          "on_click": "opens Create_Share_Product_Wizard in edit mode",
+          "on_success": "updates share product"
+        },
+        {
+          "action_name": "Delete",
+          "on_success": "deletes share product"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:07:38] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is mostly complete but includes multiple inferred (phantom) properties and is missing explicit add/remove row actions for the Market Price repeating table; regenerate after addressing these issues.",
+  "missing": [
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.row_actions.Add_Row (Add-row control for Market Price repeating table is not present)",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.row_actions.Remove_Row (Remove-row control for Market Price repeating table is not present)"
+  ],
+  "phantoms": [
+    "Create_Share_Product_Wizard.submit_actions[0] (Create button element_name not specified in description)",
+    "Create_Share_Product_Wizard.submit_actions[1] (Cancel button element_name not specified in description)",
+    "Create_Share_Product_Wizard.submit_actions[0].on_success (on_success behavior for Create not in description)",
+    "Create_Share_Product_Wizard.submit_actions[1].on_success (on_success behavior for Cancel not in description)",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.From_Date.required (required flag not specified in description)",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.Share_Value.required (required flag not specified in description)",
+    "Create_Share_Product_Wizard.steps[5].fields.Add_Selected_Charge.element_name (button label 'Add Selected Charge' not specified in description)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Reference.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Suspense.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Equity_in_Shares.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Income_from_Fees.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Equity.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Share_Product_Detail.actions[0].on_click (on_click behavior 'opens Create_Share_Product_Wizard in edit mode' is inferred and not explicitly stated)"
+  ],
+  "fixes": [
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices: add explicit row_actions array with entries for Add_Row and Remove_Row (e.g., Create_Share_Product_Wizard.steps[4].fields.Market_Prices.row_actions = [{\"action_name\":\"Add Row\"},{\"action_name\":\"Remove Row\"}]) to reflect 'rows can be added or removed'.",
+    "Create_Share_Product_Wizard.submit_actions: remove these entries entirely unless the description is updated to explicitly name 'Create' and 'Cancel' buttons; if kept, remove on_success properties (Create_Share_Product_Wizard.submit_actions[*].on_success) since those behaviors are not in the description.",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.From_Date: remove the implied required flag (delete the 'required' property) unless the description explicitly states the row fields are required.",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.Share_Value: remove the implied required flag (delete the 'required' property) unless the description explicitly states the row fields are required.",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Reference, GL_Share_Suspense, GL_Equity_in_Shares, GL_Income_from_Fees, GL_Share_Equity: remove the 'required_when' properties and keep only the visibility trigger (visible_when) because the description only states these fields are revealed when 'Cash-based' is selected, not that they become required.",
+    "Create_Share_Product_Wizard.steps[5].fields.Add_Selected_Charge: either remove the explicit element_name ('Add Selected Charge') or update the source description to include this exact button label; if keeping a control, prefer a neutral property name (e.g., 'add_action') instead of an asserted label.",
+    "Share_Product_Detail.actions[0]: remove the inferred on_click value ('opens Create_Share_Product_Wizard in edit mode') or change it to a neutral action declaration (e.g., keep only action_name:'Edit') unless the description explicitly states the edit flow opens the wizard in edit mode."
+  ]
+}
+
+------------------------------------------------------------
+[16:07:38] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is mostly complete but includes multiple inferred (phantom) properties and is missing explicit add/remove row actions for the Market Price repeating table; regenerate after addressing these issues.",
+  "missing": [
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.row_actions.Add_Row (Add-row control for Market Price repeating table is not present)",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.row_actions.Remove_Row (Remove-row control for Market Price repeating table is not present)"
+  ],
+  "phantoms": [
+    "Create_Share_Product_Wizard.submit_actions[0] (Create button element_name not specified in description)",
+    "Create_Share_Product_Wizard.submit_actions[1] (Cancel button element_name not specified in description)",
+    "Create_Share_Product_Wizard.submit_actions[0].on_success (on_success behavior for Create not in description)",
+    "Create_Share_Product_Wizard.submit_actions[1].on_success (on_success behavior for Cancel not in description)",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.From_Date.required (required flag not specified in description)",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.Share_Value.required (required flag not specified in description)",
+    "Create_Share_Product_Wizard.steps[5].fields.Add_Selected_Charge.element_name (button label 'Add Selected Charge' not specified in description)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Reference.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Suspense.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Equity_in_Shares.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Income_from_Fees.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Equity.required_when (required_when constraint inferred; description only states the fields are revealed)",
+    "Share_Product_Detail.actions[0].on_click (on_click behavior 'opens Create_Share_Product_Wizard in edit mode' is inferred and not explicitly stated)"
+  ],
+  "fixes": [
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices: add explicit row_actions array with entries for Add_Row and Remove_Row (e.g., Create_Share_Product_Wizard.steps[4].fields.Market_Prices.row_actions = [{\"action_name\":\"Add Row\"},{\"action_name\":\"Remove Row\"}]) to reflect 'rows can be added or removed'.",
+    "Create_Share_Product_Wizard.submit_actions: remove these entries entirely unless the description is updated to explicitly name 'Create' and 'Cancel' buttons; if kept, remove on_success properties (Create_Share_Product_Wizard.submit_actions[*].on_success) since those behaviors are not in the description.",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.From_Date: remove the implied required flag (delete the 'required' property) unless the description explicitly states the row fields are required.",
+    "Create_Share_Product_Wizard.steps[4].fields.Market_Prices.item_fields.Share_Value: remove the implied required flag (delete the 'required' property) unless the description explicitly states the row fields are required.",
+    "Create_Share_Product_Wizard.steps[6].fields.GL_Share_Reference, GL_Share_Suspense, GL_Equity_in_Shares, GL_Income_from_Fees, GL_Share_Equity: remove the 'required_when' properties and keep only the visibility trigger (visible_when) because the description only states these fields are revealed when 'Cash-based' is selected, not that they become required.",
+    "Create_Share_Product_Wizard.steps[5].fields.Add_Selected_Charge: either remove the explicit element_name ('Add Selected Charge') or update the source description to include this exact button label; if keeping a control, prefer a neutral property name (e.g., 'add_action') instead of an asserted label.",
+    "Share_Product_Detail.actions[0]: remove the inferred on_click value ('opens Create_Share_Product_Wizard in edit mode') or change it to a neutral action declaration (e.g., keep only action_name:'Edit') unless the description explicitly states the edit flow opens the wizard in edit mode."
+  ]
+}
+
+------------------------------------------------------------
+[16:09:06] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Share Products page displays a data table with columns for Product Name (clickable link), Short Name, and Total Shares. A "+ Create Share Product" button opens a 7-step stepper wizard. Step 1 (Details) contains Product Name (required), Short Name (required), and Description (required). Step 2 (Currency) contains Currency, Decimal Places, and Currency In Multiples Of. Step 3 (Terms) contains Total Number of Shares (required), Shares to be Issued, Nominal/Unit Price (required), and Capital Value (auto-calculated). Step 4 (Settings) contains Allow Dividends for Inactive Clients checkbox, Minimum/Maximum/Nominal Shares per Client, Minimum Active Period Frequency, and Lock-in Period. Step 5 (Market Price) is a table where each row defines a From Date and Share Value; rows can be added or removed. Step 6 (Charges) is a search-and-add interface. Step 7 (Accounting) contains a radio button for None or Cash-based; selecting Cash-based reveals GL account mappings for Share Reference, Share Suspense, Equity in Shares, Income from Fees, and Share Equity. Clicking an existing product opens its detail view with Edit and Delete options.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Share Products",
+  "components": {
+    "Share_Products_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "column_name": "Product Name",
+          "type": "link",
+          "link_action": "Open_Product_Detail"
+        },
+        {
+          "column_name": "Short Name",
+          "type": "unspecified"
+        },
+        {
+          "column_name": "Total Shares",
+          "type": "number"
+        }
+      ],
+      "row_actions": []
+    },
+    "Create_Share_Product_Button": {
+      "type": "button",
+      "element_name": "+ Create Share Product",
+      "on_click": "opens Create_Share_Product_Wizard"
+    },
+    "Create_Share_Product_Wizard": {
+      "type": "wizard",
+      "steps": [
+        {
+          "step_index": 1,
+          "step_name": "Details",
+          "fields": {
+            "Product_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Short_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Description": {
+              "type": "unspecified",
+              "required": true
+            }
+          }
+        },
+        {
+          "step_index": 2,
+          "step_name": "Currency",
+          "fields": {
+            "Currency": {
+              "type": "unspecified"
+            },
+            "Decimal_Places": {
+              "type": "number"
+            },
+            "Currency_In_Multiples_Of": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "step_index": 3,
+          "step_name": "Terms",
+          "fields": {
+            "Total_Number_of_Shares": {
+              "type": "number",
+              "required": true
+            },
+            "Shares_to_be_Issued": {
+              "type": "number"
+            },
+            "Nominal_Unit_Price": {
+              "type": "number",
+              "required": true
+            },
+            "Capital_Value": {
+              "type": "number",
+              "computed": true,
+              "computed_from": [
+                "Total_Number_of_Shares",
+                "Nominal_Unit_Price"
+              ]
+            }
+          }
+        },
+        {
+          "step_index": 4,
+          "step_name": "Settings",
+          "fields": {
+            "Allow_Dividends_for_Inactive_Clients": {
+              "type": "checkbox"
+            },
+            "Minimum_Shares_per_Client": {
+              "type": "number"
+            },
+            "Maximum_Shares_per_Client": {
+              "type": "number"
+            },
+            "Nominal_Shares_per_Client": {
+              "type": "number"
+            },
+            "Minimum_Active_Period_Frequency": {
+              "type": "unspecified"
+            },
+            "Lock_in_Period": {
+              "type": "unspecified"
+            }
+          }
+        },
+        {
+          "step_index": 5,
+          "step_name": "Market Price",
+          "fields": {
+            "Market_Prices": {
+              "type": "repeating_group",
+              "item_fields": {
+                "From_Date": {
+                  "type": "date"
+                },
+                "Share_Value": {
+                  "type": "number"
+                }
+              },
+              "row_actions": [
+                {
+                  "action_name": "Add Row"
+                },
+                {
+                  "action_name": "Remove Row"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "step_index": 6,
+          "step_name": "Charges",
+          "fields": {
+            "Charges": {
+              "type": "search",
+              "add_action": {
+                "action_name": "add_selected_charge"
+              }
             }
           }
         },
@@ -296,46 +593,36 @@ The Share Products page displays a data table with columns for Product Name (cli
             },
             "GL_Share_Reference": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
             "GL_Share_Suspense": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
             "GL_Equity_in_Shares": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
             "GL_Income_from_Fees": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
             "GL_Share_Equity": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             }
           }
         }
       ]
     },
-    "Product_Detail_View": {
+    "Share_Product_Detail": {
       "type": "detail_view",
       "actions": [
         {
-          "action_name": "Edit",
-          "type": "button",
-          "on_click": "enables edit of product",
-          "on_success": "saves updated product"
+          "action_name": "Edit"
         },
         {
-          "action_name": "Delete",
-          "type": "button",
-          "on_success": "deletes share product"
+          "action_name": "Delete"
         }
       ]
     }
@@ -346,33 +633,27 @@ The Share Products page displays a data table with columns for Product Name (cli
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:54] Semantic Critic - LLM RESPONSE
+[16:10:11] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST is mostly complete with one minor missing field (Capital Value) and two small phantoms (inline table row actions); acceptable to use.",
-  "missing": [
-    "Create_Share_Product_Wizard.steps[3].fields.Capital_Value"
-  ],
+  "summary": "The AST includes all interactive elements described (table with clickable product name, create button, full 7-step wizard with required fields, repeating market-price rows, search-and-add charges, accounting radio with conditional GL fields, and detail view actions); only one minor inferred dependency was added.",
+  "missing": [],
   "phantoms": [
-    "Share_Products_Table.row_actions[0] (Edit button not specified in description as a table row action)",
-    "Share_Products_Table.row_actions[1] (Delete button not specified in description as a table row action)"
+    "Create_Share_Product_Wizard.steps[2].fields.Capital_Value.computed_from (explicit dependency on fields inferred rather than stated)"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:13:54] Semantic Critic - PARSED JSON
+[16:10:11] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST is mostly complete with one minor missing field (Capital Value) and two small phantoms (inline table row actions); acceptable to use.",
-  "missing": [
-    "Create_Share_Product_Wizard.steps[3].fields.Capital_Value"
-  ],
+  "summary": "The AST includes all interactive elements described (table with clickable product name, create button, full 7-step wizard with required fields, repeating market-price rows, search-and-add charges, accounting radio with conditional GL fields, and detail view actions); only one minor inferred dependency was added.",
+  "missing": [],
   "phantoms": [
-    "Share_Products_Table.row_actions[0] (Edit button not specified in description as a table row action)",
-    "Share_Products_Table.row_actions[1] (Delete button not specified in description as a table row action)"
+    "Create_Share_Product_Wizard.steps[2].fields.Capital_Value.computed_from (explicit dependency on fields inferred rather than stated)"
   ],
   "fixes": []
 }

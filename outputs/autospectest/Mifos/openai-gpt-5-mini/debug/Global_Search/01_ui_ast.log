@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.583994
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.747348
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Global Search
 
@@ -218,12 +218,12 @@ Global search is accessible from the search icon in the top toolbar from any pag
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:11:17] UI-AST Agent - LLM RESPONSE
+[16:05:14] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Global Search",
   "components": {
-    "Toolbar_Search_Icon": {
+    "Topbar_Search_Icon": {
       "type": "button",
       "element_name": "Search Icon",
       "preconditions": [
@@ -233,112 +233,148 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
     },
     "Global_Search_Input": {
       "type": "search",
-      "element_name": "Global Search Input",
-      "visible_when": "Toolbar_Search_Icon == clicked",
+      "element_name": "Search Input",
+      "visible_when": "Topbar_Search_Icon == clicked",
       "preconditions": [
         "user must be logged in"
       ],
-      "search_on_type": true,
-      "search_scope": [
+      "constraints": [
+        "supports partial matching",
+        "case-insensitive"
+      ],
+      "triggers": [
+        "on_input"
+      ],
+      "search_scopes": [
         "Clients",
         "Groups",
         "Loans",
         "Savings accounts"
       ],
-      "constraints": [
-        "partial matching",
-        "case-insensitive"
-      ],
       "results_dropdown": {
-        "type": "dropdown_grouped",
-        "group_by": "entity_type",
+        "type": "dropdown",
+        "element_name": "Search Results Dropdown",
+        "visible_when": "Global_Search_Input != ''",
+        "grouped_by": [
+          "Clients",
+          "Groups",
+          "Loans",
+          "Savings accounts"
+        ],
         "groups": [
           {
-            "entity_type": "Clients",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Clients",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Client detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Client detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Groups",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Groups",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Group detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Group detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Loans",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Loans",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Loan detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Loan detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Savings accounts",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Savings accounts",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Savings account detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Savings account detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           }
         ],
-        "no_results_message": "No results found"
+        "no_results_message": {
+          "text": "No results found",
+          "visible_when": "Results_Count == 0 and Global_Search_Input != ''"
+        }
       }
     }
   }
 }
 
 ------------------------------------------------------------
-[14:11:17] UI-AST Agent - PARSED JSON
+[16:05:14] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Global Search",
   "components": {
-    "Toolbar_Search_Icon": {
+    "Topbar_Search_Icon": {
       "type": "button",
       "element_name": "Search Icon",
       "preconditions": [
@@ -348,100 +384,136 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
     },
     "Global_Search_Input": {
       "type": "search",
-      "element_name": "Global Search Input",
-      "visible_when": "Toolbar_Search_Icon == clicked",
+      "element_name": "Search Input",
+      "visible_when": "Topbar_Search_Icon == clicked",
       "preconditions": [
         "user must be logged in"
       ],
-      "search_on_type": true,
-      "search_scope": [
+      "constraints": [
+        "supports partial matching",
+        "case-insensitive"
+      ],
+      "triggers": [
+        "on_input"
+      ],
+      "search_scopes": [
         "Clients",
         "Groups",
         "Loans",
         "Savings accounts"
       ],
-      "constraints": [
-        "partial matching",
-        "case-insensitive"
-      ],
       "results_dropdown": {
-        "type": "dropdown_grouped",
-        "group_by": "entity_type",
+        "type": "dropdown",
+        "element_name": "Search Results Dropdown",
+        "visible_when": "Global_Search_Input != ''",
+        "grouped_by": [
+          "Clients",
+          "Groups",
+          "Loans",
+          "Savings accounts"
+        ],
         "groups": [
           {
-            "entity_type": "Clients",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Clients",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Client detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Client detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Groups",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Groups",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Group detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Group detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Loans",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Loans",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Loan detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Loan detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Savings accounts",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Savings accounts",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Savings account detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Savings account detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           }
         ],
-        "no_results_message": "No results found"
+        "no_results_message": {
+          "text": "No results found",
+          "visible_when": "Results_Count == 0 and Global_Search_Input != ''"
+        }
       }
     }
   }

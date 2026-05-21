@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.589466
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.752664
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Center Management
 
@@ -220,32 +220,31 @@ The Center Detail page displays the center name, status, office, and staff with 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:12:01] UI-AST Agent - LLM RESPONSE
+[16:05:43] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Center Management",
   "components": {
-    "Centers_Page": {
+    "Centers_Table": {
       "type": "data_table",
       "columns": ["Name", "Account #", "External Id", "Status", "Office Name"],
-      "link_columns": ["Name"],
-      "top_actions": [
-        {
-          "element_name": "Import Center",
-          "action_type": "button",
-          "on_click": "opens Bulk_Import_Centers"
-        },
-        {
-          "element_name": "Create Center",
-          "action_type": "button",
-          "on_click": "opens Create_Center_Form"
-        }
-      ],
       "row_actions": [
         {
-          "action_name": "Open Center",
-          "action_type": "link",
-          "on_click": "navigates to Center_Detail_Page"
+          "action_name": "View",
+          "element_name": "Name",
+          "on_trigger": "navigates to Center Detail"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
+        },
+        {
+          "element_name": "Import Center",
+          "type": "button",
+          "on_trigger": "navigates to Bulk_Import_Centers"
         }
       ]
     },
@@ -257,11 +256,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "constraints": ["required"]
         },
         "Office": {
-          "type": "unspecified",
+          "type": "dropdown",
           "constraints": ["required"]
         },
         "Staff": {
-          "type": "unspecified"
+          "type": "search"
         },
         "Active": {
           "type": "checkbox"
@@ -277,7 +276,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "repeating_group",
           "item_fields": {
             "Group": {
-              "type": "dropdown"
+              "type": "search"
             }
           }
         }
@@ -285,76 +284,43 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Submit",
-          "element_type": "submit",
-          "on_success": "creates the center"
+          "on_success": "creates center"
         }
       ]
     },
     "Bulk_Import_Centers": {
       "type": "form",
       "fields": {
-        "File": {
+        "Download_Template": {
+          "type": "link",
+          "element_name": "Download Template"
+        },
+        "Import_File": {
           "type": "file_upload",
           "constraints": ["required"]
         }
       },
-      "actions": [
-        {
-          "element_name": "Download Template",
-          "action_type": "link",
-          "on_click": "downloads import template"
-        }
-      ],
       "submit_actions": [
         {
           "element_name": "Upload",
-          "element_type": "submit",
           "on_success": "imports centers from file"
         }
       ]
     },
-    "Center_Detail_Page": {
-      "type": "page",
-      "action_bar": {
-        "type": "action_bar",
-        "available_actions": [
-          {
-            "action_name": "Activate",
-            "action_type": "button"
-          },
-          {
-            "action_name": "Edit",
-            "action_type": "button",
-            "opens": "Edit_Center_Form"
-          },
-          {
-            "action_name": "Close",
-            "action_type": "button"
-          },
-          {
-            "action_name": "Assign Staff",
-            "action_type": "button",
-            "opens": "Assign_Staff_Dialog"
-          },
-          {
-            "action_name": "Generate Collection Sheet",
-            "action_type": "button",
-            "on_click": "opens Collection_Sheet"
-          }
-        ]
-      },
+    "Center_Detail_Tabs": {
+      "type": "tab_container",
       "tabs": [
         {
           "tab_name": "Groups",
           "fields": {
-            "Member_Groups": {
+            "Member_Groups_Table": {
               "type": "data_table",
               "columns": ["Group Name"],
               "row_actions": [
                 {
-                  "action_name": "Open Group",
-                  "action_type": "link",
-                  "on_click": "navigates to Group_Detail_Page"
+                  "action_name": "View Group",
+                  "element_name": "Group Name",
+                  "on_trigger": "navigates to Group Detail"
                 }
               ]
             }
@@ -378,6 +344,35 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         }
       ]
     },
+    "Center_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Activate",
+          "type": "button",
+          "on_success": "sets center status to Active"
+        },
+        {
+          "action_name": "Edit",
+          "type": "button",
+          "on_trigger": "opens Edit_Center_Form"
+        },
+        {
+          "action_name": "Close",
+          "type": "button",
+          "on_success": "sets center status to Closed"
+        },
+        {
+          "action_name": "Assign Staff",
+          "type": "button",
+          "fields": {
+            "Staff": {
+              "type": "search"
+            }
+          }
+        }
+      ]
+    },
     "Edit_Center_Form": {
       "type": "form",
       "fields": {
@@ -386,11 +381,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "constraints": ["required"]
         },
         "Office": {
-          "type": "unspecified",
+          "type": "dropdown",
           "constraints": ["required"]
         },
         "Staff": {
-          "type": "unspecified"
+          "type": "search"
         },
         "Active": {
           "type": "checkbox"
@@ -406,7 +401,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "repeating_group",
           "item_fields": {
             "Group": {
-              "type": "dropdown"
+              "type": "search"
             }
           }
         }
@@ -414,61 +409,36 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Save",
-          "element_type": "submit",
           "on_success": "updates center"
         }
       ]
     },
-    "Assign_Staff_Dialog": {
-      "type": "dialog",
-      "fields": {
-        "Staff_Assignments": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Staff_Member": {
-              "type": "unspecified"
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Assign",
-          "element_type": "submit",
-          "on_success": "assigns selected staff to center"
-        }
-      ]
+    "Collection_Sheet_Generator": {
+      "type": "button",
+      "element_name": "Generate Collection Sheet",
+      "on_trigger": "opens Collection_Sheet for batch data entry"
     },
     "Collection_Sheet": {
       "type": "data_table",
-      "description": "Generated sheet listing groups and their clients for batch entry",
-      "row_structure": {
-        "type": "repeating_group",
-        "item_fields": {
-          "Group_Name": {
-            "type": "unspecified"
-          },
-          "Clients": {
-            "type": "repeating_group",
-            "item_fields": {
-              "Client_Name": {
-                "type": "unspecified"
-              },
-              "Loan_Repayment_Amount": {
-                "type": "number"
-              },
-              "Savings_Deposit_Amount": {
-                "type": "number"
-              }
-            }
-          }
+      "row_fields": {
+        "Group_Name": {
+          "type": "unspecified"
+        },
+        "Client_Name": {
+          "type": "unspecified"
+        },
+        "Loan_Repayment": {
+          "type": "number"
+        },
+        "Savings_Deposit": {
+          "type": "number"
         }
       },
+      "editable_columns": ["Loan_Repayment", "Savings_Deposit"],
       "submit_actions": [
         {
           "element_name": "Submit Collection Sheet",
-          "element_type": "submit",
-          "on_success": "saves batch collection entries"
+          "on_success": "records repayments and deposits"
         }
       ]
     }
@@ -476,12 +446,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:12:01] UI-AST Agent - PARSED JSON
+[16:05:43] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Center Management",
   "components": {
-    "Centers_Page": {
+    "Centers_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -490,26 +460,23 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Status",
         "Office Name"
       ],
-      "link_columns": [
-        "Name"
-      ],
-      "top_actions": [
-        {
-          "element_name": "Import Center",
-          "action_type": "button",
-          "on_click": "opens Bulk_Import_Centers"
-        },
-        {
-          "element_name": "Create Center",
-          "action_type": "button",
-          "on_click": "opens Create_Center_Form"
-        }
-      ],
       "row_actions": [
         {
-          "action_name": "Open Center",
-          "action_type": "link",
-          "on_click": "navigates to Center_Detail_Page"
+          "action_name": "View",
+          "element_name": "Name",
+          "on_trigger": "navigates to Center Detail"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
+        },
+        {
+          "element_name": "Import Center",
+          "type": "button",
+          "on_trigger": "navigates to Bulk_Import_Centers"
         }
       ]
     },
@@ -523,13 +490,13 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           ]
         },
         "Office": {
-          "type": "unspecified",
+          "type": "dropdown",
           "constraints": [
             "required"
           ]
         },
         "Staff": {
-          "type": "unspecified"
+          "type": "search"
         },
         "Active": {
           "type": "checkbox"
@@ -547,7 +514,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "repeating_group",
           "item_fields": {
             "Group": {
-              "type": "dropdown"
+              "type": "search"
             }
           }
         }
@@ -555,80 +522,47 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Submit",
-          "element_type": "submit",
-          "on_success": "creates the center"
+          "on_success": "creates center"
         }
       ]
     },
     "Bulk_Import_Centers": {
       "type": "form",
       "fields": {
-        "File": {
+        "Download_Template": {
+          "type": "link",
+          "element_name": "Download Template"
+        },
+        "Import_File": {
           "type": "file_upload",
           "constraints": [
             "required"
           ]
         }
       },
-      "actions": [
-        {
-          "element_name": "Download Template",
-          "action_type": "link",
-          "on_click": "downloads import template"
-        }
-      ],
       "submit_actions": [
         {
           "element_name": "Upload",
-          "element_type": "submit",
           "on_success": "imports centers from file"
         }
       ]
     },
-    "Center_Detail_Page": {
-      "type": "page",
-      "action_bar": {
-        "type": "action_bar",
-        "available_actions": [
-          {
-            "action_name": "Activate",
-            "action_type": "button"
-          },
-          {
-            "action_name": "Edit",
-            "action_type": "button",
-            "opens": "Edit_Center_Form"
-          },
-          {
-            "action_name": "Close",
-            "action_type": "button"
-          },
-          {
-            "action_name": "Assign Staff",
-            "action_type": "button",
-            "opens": "Assign_Staff_Dialog"
-          },
-          {
-            "action_name": "Generate Collection Sheet",
-            "action_type": "button",
-            "on_click": "opens Collection_Sheet"
-          }
-        ]
-      },
+    "Center_Detail_Tabs": {
+      "type": "tab_container",
       "tabs": [
         {
           "tab_name": "Groups",
           "fields": {
-            "Member_Groups": {
+            "Member_Groups_Table": {
               "type": "data_table",
               "columns": [
                 "Group Name"
               ],
               "row_actions": [
                 {
-                  "action_name": "Open Group",
-                  "action_type": "link",
-                  "on_click": "navigates to Group_Detail_Page"
+                  "action_name": "View Group",
+                  "element_name": "Group Name",
+                  "on_trigger": "navigates to Group Detail"
                 }
               ]
             }
@@ -652,6 +586,35 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         }
       ]
     },
+    "Center_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Activate",
+          "type": "button",
+          "on_success": "sets center status to Active"
+        },
+        {
+          "action_name": "Edit",
+          "type": "button",
+          "on_trigger": "opens Edit_Center_Form"
+        },
+        {
+          "action_name": "Close",
+          "type": "button",
+          "on_success": "sets center status to Closed"
+        },
+        {
+          "action_name": "Assign Staff",
+          "type": "button",
+          "fields": {
+            "Staff": {
+              "type": "search"
+            }
+          }
+        }
+      ]
+    },
     "Edit_Center_Form": {
       "type": "form",
       "fields": {
@@ -662,13 +625,13 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           ]
         },
         "Office": {
-          "type": "unspecified",
+          "type": "dropdown",
           "constraints": [
             "required"
           ]
         },
         "Staff": {
-          "type": "unspecified"
+          "type": "search"
         },
         "Active": {
           "type": "checkbox"
@@ -686,7 +649,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "repeating_group",
           "item_fields": {
             "Group": {
-              "type": "dropdown"
+              "type": "search"
             }
           }
         }
@@ -694,495 +657,39 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Save",
-          "element_type": "submit",
           "on_success": "updates center"
         }
       ]
     },
-    "Assign_Staff_Dialog": {
-      "type": "dialog",
-      "fields": {
-        "Staff_Assignments": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Staff_Member": {
-              "type": "unspecified"
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Assign",
-          "element_type": "submit",
-          "on_success": "assigns selected staff to center"
-        }
-      ]
+    "Collection_Sheet_Generator": {
+      "type": "button",
+      "element_name": "Generate Collection Sheet",
+      "on_trigger": "opens Collection_Sheet for batch data entry"
     },
     "Collection_Sheet": {
       "type": "data_table",
-      "description": "Generated sheet listing groups and their clients for batch entry",
-      "row_structure": {
-        "type": "repeating_group",
-        "item_fields": {
-          "Group_Name": {
-            "type": "unspecified"
-          },
-          "Clients": {
-            "type": "repeating_group",
-            "item_fields": {
-              "Client_Name": {
-                "type": "unspecified"
-              },
-              "Loan_Repayment_Amount": {
-                "type": "number"
-              },
-              "Savings_Deposit_Amount": {
-                "type": "number"
-              }
-            }
-          }
+      "row_fields": {
+        "Group_Name": {
+          "type": "unspecified"
+        },
+        "Client_Name": {
+          "type": "unspecified"
+        },
+        "Loan_Repayment": {
+          "type": "number"
+        },
+        "Savings_Deposit": {
+          "type": "number"
         }
       },
+      "editable_columns": [
+        "Loan_Repayment",
+        "Savings_Deposit"
+      ],
       "submit_actions": [
         {
           "element_name": "Submit Collection Sheet",
-          "element_type": "submit",
-          "on_success": "saves batch collection entries"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:14:07] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Center Management
-
-
-Centers are higher-level organizational units that contain groups. The Centers page displays a data table with columns for Name (clickable link), Account #, External Id, Status, and Office Name. Buttons at the top-right provide "Import Center" and "Create Center." The Create Center form contains Name (required), Office (required), Staff, Active checkbox, External Id, Submitted On (required), and a Select and Add groups dropdown search. Clicking "Submit" creates the center. The Bulk Import Centers page follows the same template-download and file-upload pattern as Groups.
-
-The Center Detail page displays the center name, status, office, and staff with action buttons for Activate, Edit, Close, and Assign Staff. Tabs show Groups (list of member groups with links), Loan Accounts, Savings Accounts, Notes, and a Calendar/Meeting section. The Collection Sheet feature generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove Centers_Page.row_actions or at minimum remove the inferred 'Open Center' row action so navigation is represented only via the 'Name' clickable link: edit JSON path Centers_Page.row_actions to [] or delete the array entry at Centers_Page.row_actions[0].
-2. Replace Edit_Center_Form.fields with an empty object to avoid inventing fields not listed in the description: set Edit_Center_Form.fields = {} (remove all nested field entries under Edit_Center_Form.fields).
-3. Replace Assign_Staff_Dialog.fields with an empty object because the description only names the Assign Staff action and provides no dialog field details: set Assign_Staff_Dialog.fields = {} (remove Staff_Assignments repeating_group).
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:16:06] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Center Management",
-  "components": {
-    "Centers_Page": {
-      "type": "data_table",
-      "columns": ["Name", "Account #", "External Id", "Status", "Office Name"],
-      "clickable_link_column": "Name",
-      "top_right_actions": [
-        {
-          "element_name": "Import Center",
-          "opens": "Bulk_Import_Centers"
-        },
-        {
-          "element_name": "Create Center",
-          "opens": "Create_Center_Form"
-        }
-      ],
-      "row_actions": []
-    },
-    "Create_Center_Form": {
-      "type": "form",
-      "fields": {
-        "Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Office": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Staff": {
-          "type": "search",
-          "required": false
-        },
-        "Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "External_Id": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Submitted_On": {
-          "type": "date",
-          "required": true
-        },
-        "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group": {
-              "type": "search",
-              "required": false
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates the center"
-        }
-      ]
-    },
-    "Bulk_Import_Centers": {
-      "type": "form",
-      "fields": {
-        "File": {
-          "type": "file_upload",
-          "required": true
-        }
-      },
-      "actions": [
-        {
-          "element_name": "Download Template"
-        }
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Upload",
-          "on_success": "imports centers"
-        }
-      ]
-    },
-    "Center_Detail_Actions": {
-      "type": "action_bar",
-      "actions": [
-        {
-          "action_name": "Activate",
-          "on_success": "activates center"
-        },
-        {
-          "action_name": "Edit",
-          "opens": "Edit_Center_Form",
-          "on_success": "opens edit form"
-        },
-        {
-          "action_name": "Close",
-          "on_success": "closes center"
-        },
-        {
-          "action_name": "Assign Staff",
-          "opens": "Assign_Staff_Dialog",
-          "on_success": "opens assign staff dialog"
-        }
-      ]
-    },
-    "Edit_Center_Form": {
-      "type": "form",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates center"
-        }
-      ]
-    },
-    "Assign_Staff_Dialog": {
-      "type": "dialog",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "Assign",
-          "on_success": "assigns staff"
-        }
-      ]
-    },
-    "Center_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Groups",
-          "fields": {
-            "Groups_List": {
-              "type": "data_table",
-              "columns": ["Group Name"],
-              "clickable_link_column": "Group Name",
-              "row_actions": []
-            }
-          }
-        },
-        {
-          "tab_name": "Loan Accounts",
-          "fields": {}
-        },
-        {
-          "tab_name": "Savings Accounts",
-          "fields": {}
-        },
-        {
-          "tab_name": "Notes",
-          "fields": {}
-        },
-        {
-          "tab_name": "Calendar/Meeting",
-          "fields": {}
-        }
-      ]
-    },
-    "Collection_Sheet": {
-      "type": "form",
-      "description": "Generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry",
-      "fields": {
-        "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group_Name": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Clients": {
-              "type": "repeating_group",
-              "item_fields": {
-                "Client_Name": {
-                  "type": "unspecified",
-                  "required": false
-                },
-                "Loan_Repayment_Amount": {
-                  "type": "number",
-                  "required": false
-                },
-                "Savings_Deposit_Amount": {
-                  "type": "number",
-                  "required": false
-                }
-              }
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Generate Sheet",
-          "on_success": "renders collection sheet for batch data entry"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:16:06] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Center Management",
-  "components": {
-    "Centers_Page": {
-      "type": "data_table",
-      "columns": [
-        "Name",
-        "Account #",
-        "External Id",
-        "Status",
-        "Office Name"
-      ],
-      "clickable_link_column": "Name",
-      "top_right_actions": [
-        {
-          "element_name": "Import Center",
-          "opens": "Bulk_Import_Centers"
-        },
-        {
-          "element_name": "Create Center",
-          "opens": "Create_Center_Form"
-        }
-      ],
-      "row_actions": []
-    },
-    "Create_Center_Form": {
-      "type": "form",
-      "fields": {
-        "Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Office": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Staff": {
-          "type": "search",
-          "required": false
-        },
-        "Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "External_Id": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Submitted_On": {
-          "type": "date",
-          "required": true
-        },
-        "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group": {
-              "type": "search",
-              "required": false
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates the center"
-        }
-      ]
-    },
-    "Bulk_Import_Centers": {
-      "type": "form",
-      "fields": {
-        "File": {
-          "type": "file_upload",
-          "required": true
-        }
-      },
-      "actions": [
-        {
-          "element_name": "Download Template"
-        }
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Upload",
-          "on_success": "imports centers"
-        }
-      ]
-    },
-    "Center_Detail_Actions": {
-      "type": "action_bar",
-      "actions": [
-        {
-          "action_name": "Activate",
-          "on_success": "activates center"
-        },
-        {
-          "action_name": "Edit",
-          "opens": "Edit_Center_Form",
-          "on_success": "opens edit form"
-        },
-        {
-          "action_name": "Close",
-          "on_success": "closes center"
-        },
-        {
-          "action_name": "Assign Staff",
-          "opens": "Assign_Staff_Dialog",
-          "on_success": "opens assign staff dialog"
-        }
-      ]
-    },
-    "Edit_Center_Form": {
-      "type": "form",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates center"
-        }
-      ]
-    },
-    "Assign_Staff_Dialog": {
-      "type": "dialog",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "Assign",
-          "on_success": "assigns staff"
-        }
-      ]
-    },
-    "Center_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Groups",
-          "fields": {
-            "Groups_List": {
-              "type": "data_table",
-              "columns": [
-                "Group Name"
-              ],
-              "clickable_link_column": "Group Name",
-              "row_actions": []
-            }
-          }
-        },
-        {
-          "tab_name": "Loan Accounts",
-          "fields": {}
-        },
-        {
-          "tab_name": "Savings Accounts",
-          "fields": {}
-        },
-        {
-          "tab_name": "Notes",
-          "fields": {}
-        },
-        {
-          "tab_name": "Calendar/Meeting",
-          "fields": {}
-        }
-      ]
-    },
-    "Collection_Sheet": {
-      "type": "form",
-      "description": "Generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry",
-      "fields": {
-        "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group_Name": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Clients": {
-              "type": "repeating_group",
-              "item_fields": {
-                "Client_Name": {
-                  "type": "unspecified",
-                  "required": false
-                },
-                "Loan_Repayment_Amount": {
-                  "type": "number",
-                  "required": false
-                },
-                "Savings_Deposit_Amount": {
-                  "type": "number",
-                  "required": false
-                }
-              }
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Generate Sheet",
-          "on_success": "renders collection sheet for batch data entry"
+          "on_success": "records repayments and deposits"
         }
       ]
     }

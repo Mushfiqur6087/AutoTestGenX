@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.598431
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.760057
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Employees
 
@@ -218,97 +218,84 @@ The Employees page displays a data table with columns for Name (clickable link),
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:24] UI-AST Agent - LLM RESPONSE
+[16:06:36] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Employees",
   "components": {
     "Employees_Table": {
       "type": "data_table",
-      "columns": [
-        {
-          "column_name": "Name",
-          "type": "link",
-          "on_click": "navigates to Staff_Detail"
-        },
-        {
-          "column_name": "Office",
-          "type": "unspecified"
-        },
-        {
-          "column_name": "Is_Loan_Officer",
-          "type": "unspecified",
-          "description": "indicator whether staff is a loan officer"
-        },
-        {
-          "column_name": "Status",
-          "type": "unspecified",
-          "description": "values: Active, Inactive"
-        }
-      ],
+      "columns": ["Name", "Office", "Is Loan Officer", "Status"],
       "row_actions": [
         {
-          "action_name": "Open Details",
-          "type": "link",
-          "on_click": "navigates to Staff_Detail"
+          "action_name": "View",
+          "triggered_by": "Name",
+          "action_type": "link",
+          "navigates_to": "Staff_Detail_Page"
         }
-      ]
+      ],
+      "bulk_actions": []
     },
     "Create_Employee_Button": {
       "type": "button",
       "element_name": "+ Create Employee",
-      "on_click": "opens Create_Employee_Form"
+      "opens": "Create_Employee_Form"
     },
     "Create_Employee_Form": {
       "type": "form",
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "Is_Loan_Officer": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Mobile_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Joining_Date": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "External_ID": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "Save",
-          "on_success": "creates employee",
-          "post_effects": [
-            "if Is_Loan_Officer == true then staff appears in Loan Officer dropdown for loan creation",
-            "if Is_Loan_Officer == true then staff can be assigned to clients, groups, and centers"
-          ]
+          "element_name": "Create",
+          "on_success": "creates employee; if Is Loan Officer is checked, the staff member becomes available in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form without creating employee"
         }
       ]
     },
-    "Staff_Detail": {
+    "Staff_Detail_Page": {
       "type": "detail_page",
       "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Edit_Employee_Form"
+          "action_type": "button",
+          "opens": "Edit_Employee_Form"
         }
       ]
     },
@@ -317,48 +304,74 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "Is_Loan_Officer": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Mobile_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Joining_Date": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "External_ID": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates employee",
-          "post_effects": [
-            "if Is_Loan_Officer == true then staff appears in Loan Officer dropdown for loan creation",
-            "if Is_Loan_Officer == true then staff can be assigned to clients, groups, and centers"
-          ]
+          "on_success": "updates employee; if Is Loan Officer is checked, the staff member becomes available in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes edit form without saving"
         }
       ]
+    },
+    "Employee_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "opens": "Edit_Employee_Form"
+            }
+          ]
+        },
+        "Inactive": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "opens": "Edit_Employee_Form"
+            }
+          ]
+        }
+      }
     }
   }
 }
 
 ------------------------------------------------------------
-[14:13:24] UI-AST Agent - PARSED JSON
+[16:06:36] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Employees",
@@ -366,95 +379,81 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
     "Employees_Table": {
       "type": "data_table",
       "columns": [
-        {
-          "column_name": "Name",
-          "type": "link",
-          "on_click": "navigates to Staff_Detail"
-        },
-        {
-          "column_name": "Office",
-          "type": "unspecified"
-        },
-        {
-          "column_name": "Is_Loan_Officer",
-          "type": "unspecified",
-          "description": "indicator whether staff is a loan officer"
-        },
-        {
-          "column_name": "Status",
-          "type": "unspecified",
-          "description": "values: Active, Inactive"
-        }
+        "Name",
+        "Office",
+        "Is Loan Officer",
+        "Status"
       ],
       "row_actions": [
         {
-          "action_name": "Open Details",
-          "type": "link",
-          "on_click": "navigates to Staff_Detail"
+          "action_name": "View",
+          "triggered_by": "Name",
+          "action_type": "link",
+          "navigates_to": "Staff_Detail_Page"
         }
-      ]
+      ],
+      "bulk_actions": []
     },
     "Create_Employee_Button": {
       "type": "button",
       "element_name": "+ Create Employee",
-      "on_click": "opens Create_Employee_Form"
+      "opens": "Create_Employee_Form"
     },
     "Create_Employee_Form": {
       "type": "form",
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Is_Loan_Officer": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Mobile_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Joining_Date": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "External_ID": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "Save",
-          "on_success": "creates employee",
-          "post_effects": [
-            "if Is_Loan_Officer == true then staff appears in Loan Officer dropdown for loan creation",
-            "if Is_Loan_Officer == true then staff can be assigned to clients, groups, and centers"
-          ]
+          "element_name": "Create",
+          "on_success": "creates employee; if Is Loan Officer is checked, the staff member becomes available in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form without creating employee"
         }
       ]
     },
-    "Staff_Detail": {
+    "Staff_Detail_Page": {
       "type": "detail_page",
       "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Edit_Employee_Form"
+          "action_type": "button",
+          "opens": "Edit_Employee_Form"
         }
       ]
     },
@@ -463,54 +462,74 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Is_Loan_Officer": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Mobile_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Joining_Date": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "External_ID": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates employee",
-          "post_effects": [
-            "if Is_Loan_Officer == true then staff appears in Loan Officer dropdown for loan creation",
-            "if Is_Loan_Officer == true then staff can be assigned to clients, groups, and centers"
-          ]
+          "on_success": "updates employee; if Is Loan Officer is checked, the staff member becomes available in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes edit form without saving"
         }
       ]
+    },
+    "Employee_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "opens": "Edit_Employee_Form"
+            }
+          ]
+        },
+        "Inactive": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "opens": "Edit_Employee_Form"
+            }
+          ]
+        }
+      }
     }
   }
 }
 
 ------------------------------------------------------------
-[14:14:56] UI-AST Agent - USER PROMPT
+[16:08:23] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Employees
 
@@ -522,151 +541,364 @@ The Employees page displays a data table with columns for Name (clickable link),
 
 
 **CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove components.Employees_Table.row_actions[0] entirely — the description only specifies that the Name column is a clickable link to Staff_Detail; no separate row action was described.
-2. Update components.Create_Employee_Form.submit_actions: either remove the explicit element_name 'Save' or make the submit action an unnamed/generic submit (e.g., submit_actions: [{ on_success: 'creates employee', ... }]) because the description does not specify the button label.
-3. Update components.Edit_Employee_Form.submit_actions: either remove the explicit element_name 'Save' or make the submit action an unnamed/generic submit (e.g., submit_actions: [{ on_success: 'updates employee', ... }]) because the description does not specify the button label.
+1. Remove the Employee_Detail_Actions state_bound_action_bar unless the description explicitly states actions vary by Status; if actions are identical regardless of status, keep a single Edit action under Staff_Detail_Page.actions instead. (JSON path: components.Employee_Detail_Actions — delete or replace with Staff_Detail_Page.actions only.)
+2. Do not invent submit button labels for forms unless specified. For Create_Employee_Form and Edit_Employee_Form, either omit submit_actions entirely or include a single unspecified submit action. Change Create_Employee_Form.submit_actions from named Create/Cancel to either an unspecified submit action or remove. (JSON path: components.Create_Employee_Form.submit_actions — replace with [] or a single generic submit placeholder.)
+3. Do not invent submit button labels for Edit_Employee_Form. Remove or replace Save/Cancel with unspecified submit action(s). (JSON path: components.Edit_Employee_Form.submit_actions — replace with [] or a single generic submit placeholder.)
+4. Replace Employees_Table.row_actions[0].action_name 'View' with a neutral description that matches the text: reflect that the Name column is a clickable link navigating to Staff_Detail_Page, and avoid adding a separate 'View' action name. (JSON path: components.Employees_Table.row_actions[0].action_name — change to null or remove action_name, and ensure triggered_by is 'Name' with action_type 'link' and navigates_to 'Staff_Detail_Page'.)
 
 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:16:01] UI-AST Agent - LLM RESPONSE
+[16:09:38] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Employees",
+  "components": {
+    "Employees_Table": {
+      "type": "data_table",
+      "columns": ["Name", "Office", "Is_Loan_Officer", "Status"],
+      "row_actions": [
+        {
+          "triggered_by": "Name",
+          "action_type": "link",
+          "navigates_to": "Staff_Detail_Page"
+        }
+      ]
+    },
+    "Create_Employee_Button": {
+      "type": "button",
+      "element_name": "+ Create Employee",
+      "navigates_to": "Create_Employee_Form"
+    },
+    "Create_Employee_Form": {
+      "type": "form",
+      "submit_actions": [],
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "staff marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans",
+            "staff marked as Is Loan Officer can be assigned to clients, groups, and centers"
+          ]
+        },
+        "Mobile_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Joining_Date": {
+          "type": "date",
+          "required": false
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      }
+    },
+    "Staff_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "opens_form",
+          "navigates_to": "Edit_Employee_Form"
+        }
+      ],
+      "fields": {}
+    },
+    "Edit_Employee_Form": {
+      "type": "form",
+      "submit_actions": [],
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "staff marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans",
+            "staff marked as Is Loan Officer can be assigned to clients, groups, and centers"
+          ]
+        },
+        "Mobile_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Joining_Date": {
+          "type": "date",
+          "required": false
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:09:38] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Employees",
+  "components": {
+    "Employees_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Office",
+        "Is_Loan_Officer",
+        "Status"
+      ],
+      "row_actions": [
+        {
+          "triggered_by": "Name",
+          "action_type": "link",
+          "navigates_to": "Staff_Detail_Page"
+        }
+      ]
+    },
+    "Create_Employee_Button": {
+      "type": "button",
+      "element_name": "+ Create Employee",
+      "navigates_to": "Create_Employee_Form"
+    },
+    "Create_Employee_Form": {
+      "type": "form",
+      "submit_actions": [],
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "staff marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans",
+            "staff marked as Is Loan Officer can be assigned to clients, groups, and centers"
+          ]
+        },
+        "Mobile_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Joining_Date": {
+          "type": "date",
+          "required": false
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      }
+    },
+    "Staff_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "opens_form",
+          "navigates_to": "Edit_Employee_Form"
+        }
+      ],
+      "fields": {}
+    },
+    "Edit_Employee_Form": {
+      "type": "form",
+      "submit_actions": [],
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "staff marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans",
+            "staff marked as Is Loan Officer can be assigned to clients, groups, and centers"
+          ]
+        },
+        "Mobile_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Joining_Date": {
+          "type": "date",
+          "required": false
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:10:34] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Employees
+
+
+The Employees page displays a data table with columns for Name (clickable link), Office, Is Loan Officer indicator, and Status (Active, Inactive). A "+ Create Employee" button opens the creation form containing Office (required), First Name (required), Last Name (required), Is Loan Officer checkbox, Mobile Number, Is Active checkbox, Joining Date, and External ID. Staff members marked as Is Loan Officer appear in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers. The Staff Detail page shows employee information with an Edit option.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. Create_Employee_Form.submit_actions — add a submit action (e.g., { "action_name": "Save", "action_type": "submit" }) so the form can create an employee.
+2. Edit_Employee_Form.fields — remove the populated fields and replace with an empty object (set to {}) unless the specification explicitly lists which fields are editable; the description only mentions an Edit option, so do not invent fields.
+3. Edit_Employee_Form.submit_actions — add a submit action (e.g., { "action_name": "Save", "action_type": "submit" }) if an Edit form is kept, so edits can be submitted.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:11:23] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Employees",
   "components": {
     "Employees_Page": {
       "type": "page",
-      "actions": [
-        {
-          "element_name": "+ Create Employee",
+      "components": {
+        "Employees_Table": {
+          "type": "data_table",
+          "columns": {
+            "Name": {
+              "type": "link",
+              "target": "Employee_Detail_Page",
+              "description": "clicking navigates to the Employee Detail page"
+            }
+          }
+        },
+        "Create_Employee_Button": {
           "type": "button",
-          "on_click": "opens Create_Employee_Form"
+          "element_name": "+ Create Employee",
+          "action_type": "open_form",
+          "target": "Create_Employee_Form"
         }
-      ],
-      "children": [
-        {
-          "component_ref": "Employees_Table"
-        }
-      ]
-    },
-    "Employees_Table": {
-      "type": "data_table",
-      "columns": [
-        {
-          "name": "Name",
-          "type": "link",
-          "navigates_to": "Employee_Detail_Page"
-        },
-        {
-          "name": "Office",
-          "type": "unspecified"
-        },
-        {
-          "name": "Is Loan Officer",
-          "type": "unspecified"
-        },
-        {
-          "name": "Status",
-          "type": "unspecified",
-          "options": [
-            "Active",
-            "Inactive"
-          ]
-        }
-      ]
+      }
     },
     "Create_Employee_Form": {
       "type": "form",
       "fields": {
         "Office": {
           "type": "unspecified",
-          "required": true
+          "constraints": ["required"]
         },
         "First_Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": ["required"]
         },
         "Last_Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": ["required"]
         },
         "Is_Loan_Officer": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Mobile_Number": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         },
         "Is_Active": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Joining_Date": {
-          "type": "date",
-          "required": false
+          "type": "date"
         },
         "External_ID": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         }
       },
       "submit_actions": [
         {
-          "on_success": "creates employee; if Is_Loan_Officer == true then employee is included in the Loan Officer dropdown when creating loans and is assignable to clients, groups, and centers"
+          "action_name": "Save",
+          "action_type": "submit",
+          "on_success": "creates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
         }
       ]
     },
     "Employee_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "element_name": "Edit",
+      "type": "page",
+      "components": {
+        "Edit_Button": {
           "type": "button",
-          "on_click": "opens Edit_Employee_Form"
+          "element_name": "Edit",
+          "action_type": "open_form",
+          "target": "Edit_Employee_Form"
         }
-      ]
+      }
     },
     "Edit_Employee_Form": {
       "type": "form",
-      "fields": {
-        "Office": {
-          "type": "unspecified",
-          "required": true
-        },
-        "First_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Last_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Is_Loan_Officer": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Mobile_Number": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Is_Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Joining_Date": {
-          "type": "date",
-          "required": false
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
+      "fields": {},
       "submit_actions": [
         {
-          "on_success": "updates employee; if Is_Loan_Officer changed then updates inclusion in Loan Officer dropdown and assignability to clients, groups, and centers"
+          "action_name": "Save",
+          "action_type": "submit",
+          "on_success": "updates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
         }
       ]
     }
@@ -674,143 +906,96 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:16:01] UI-AST Agent - PARSED JSON
+[16:11:23] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Employees",
   "components": {
     "Employees_Page": {
       "type": "page",
-      "actions": [
-        {
-          "element_name": "+ Create Employee",
+      "components": {
+        "Employees_Table": {
+          "type": "data_table",
+          "columns": {
+            "Name": {
+              "type": "link",
+              "target": "Employee_Detail_Page",
+              "description": "clicking navigates to the Employee Detail page"
+            }
+          }
+        },
+        "Create_Employee_Button": {
           "type": "button",
-          "on_click": "opens Create_Employee_Form"
+          "element_name": "+ Create Employee",
+          "action_type": "open_form",
+          "target": "Create_Employee_Form"
         }
-      ],
-      "children": [
-        {
-          "component_ref": "Employees_Table"
-        }
-      ]
-    },
-    "Employees_Table": {
-      "type": "data_table",
-      "columns": [
-        {
-          "name": "Name",
-          "type": "link",
-          "navigates_to": "Employee_Detail_Page"
-        },
-        {
-          "name": "Office",
-          "type": "unspecified"
-        },
-        {
-          "name": "Is Loan Officer",
-          "type": "unspecified"
-        },
-        {
-          "name": "Status",
-          "type": "unspecified",
-          "options": [
-            "Active",
-            "Inactive"
-          ]
-        }
-      ]
+      }
     },
     "Create_Employee_Form": {
       "type": "form",
       "fields": {
         "Office": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "First_Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Last_Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Is_Loan_Officer": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Mobile_Number": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         },
         "Is_Active": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Joining_Date": {
-          "type": "date",
-          "required": false
+          "type": "date"
         },
         "External_ID": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         }
       },
       "submit_actions": [
         {
-          "on_success": "creates employee; if Is_Loan_Officer == true then employee is included in the Loan Officer dropdown when creating loans and is assignable to clients, groups, and centers"
+          "action_name": "Save",
+          "action_type": "submit",
+          "on_success": "creates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
         }
       ]
     },
     "Employee_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "element_name": "Edit",
+      "type": "page",
+      "components": {
+        "Edit_Button": {
           "type": "button",
-          "on_click": "opens Edit_Employee_Form"
+          "element_name": "Edit",
+          "action_type": "open_form",
+          "target": "Edit_Employee_Form"
         }
-      ]
+      }
     },
     "Edit_Employee_Form": {
       "type": "form",
-      "fields": {
-        "Office": {
-          "type": "unspecified",
-          "required": true
-        },
-        "First_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Last_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Is_Loan_Officer": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Mobile_Number": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Is_Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Joining_Date": {
-          "type": "date",
-          "required": false
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
+      "fields": {},
       "submit_actions": [
         {
-          "on_success": "updates employee; if Is_Loan_Officer changed then updates inclusion in Loan Officer dropdown and assignability to clients, groups, and centers"
+          "action_name": "Save",
+          "action_type": "submit",
+          "on_success": "updates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
         }
       ]
     }

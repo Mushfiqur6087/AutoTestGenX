@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.598244
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.759870
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Offices
 
@@ -218,421 +218,7 @@ The Offices page displays a hierarchical table of all offices with columns for O
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:12:49] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Offices",
-  "components": {
-    "Offices_Table": {
-      "type": "data_table",
-      "row_actions": [
-        {
-          "action_name": "Open",
-          "element_name": "Office Name link",
-          "action_type": "link",
-          "on_action": "navigates to Office_Detail_Page"
-        }
-      ]
-    },
-    "Create_Office_Button": {
-      "type": "button",
-      "element_name": "+ Create Office",
-      "on_click": "opens Create_Office_Form"
-    },
-    "Create_Office_Form": {
-      "type": "form",
-      "fields": {
-        "Office_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Parent_Office": {
-          "type": "dropdown",
-          "required": true,
-          "constraints": [
-            "Head Office is the root"
-          ]
-        },
-        "Opened_On_Date": {
-          "type": "date",
-          "required": true
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates office and adds it to hierarchy"
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "closes form without creating office"
-        }
-      ]
-    },
-    "Office_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "action_name": "Edit",
-          "on_action": "opens Edit_Office_Form"
-        }
-      ]
-    },
-    "Edit_Office_Form": {
-      "type": "form",
-      "fields": {
-        "Office_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Parent_Office": {
-          "type": "dropdown",
-          "required": true,
-          "constraints": [
-            "Head Office is the root"
-          ]
-        },
-        "Opened_On_Date": {
-          "type": "date",
-          "required": true
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates office"
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "closes form without saving"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:12:49] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Offices",
-  "components": {
-    "Offices_Table": {
-      "type": "data_table",
-      "row_actions": [
-        {
-          "action_name": "Open",
-          "element_name": "Office Name link",
-          "action_type": "link",
-          "on_action": "navigates to Office_Detail_Page"
-        }
-      ]
-    },
-    "Create_Office_Button": {
-      "type": "button",
-      "element_name": "+ Create Office",
-      "on_click": "opens Create_Office_Form"
-    },
-    "Create_Office_Form": {
-      "type": "form",
-      "fields": {
-        "Office_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Parent_Office": {
-          "type": "dropdown",
-          "required": true,
-          "constraints": [
-            "Head Office is the root"
-          ]
-        },
-        "Opened_On_Date": {
-          "type": "date",
-          "required": true
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates office and adds it to hierarchy"
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "closes form without creating office"
-        }
-      ]
-    },
-    "Office_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "action_name": "Edit",
-          "on_action": "opens Edit_Office_Form"
-        }
-      ]
-    },
-    "Edit_Office_Form": {
-      "type": "form",
-      "fields": {
-        "Office_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Parent_Office": {
-          "type": "dropdown",
-          "required": true,
-          "constraints": [
-            "Head Office is the root"
-          ]
-        },
-        "Opened_On_Date": {
-          "type": "date",
-          "required": true
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates office"
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "closes form without saving"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:14:40] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Offices
-
-
-The Offices page displays a hierarchical table of all offices with columns for Office Name (clickable link), External ID, Parent Office, Opening Date, and hierarchy position. A "+ Create Office" button opens the creation form containing Office Name (required), Parent Office (required — Head Office is the root), Opened On Date (required), and External ID. The Office Detail page shows office information with an Edit option. Offices define the branch structure — clients, groups, staff, and accounting operations are all associated with specific offices.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove or neutralize Create_Office_Form.submit_actions: delete Create_Office_Form.submit_actions[0] and Create_Office_Form.submit_actions[1], or replace them with a single generic submit action without a specific label and without inferred on_success text (path: Create_Office_Form.submit_actions).
-2. Remove inferred on_success text from Create_Office_Form.submit_actions (if any submit action is kept, leave on_success empty or omit it) (path: Create_Office_Form.submit_actions[*].on_success).
-3. Do not invent Edit_Office_Form.fields: replace Edit_Office_Form.fields with an empty object {} unless the description is updated to explicitly list which fields the Edit form contains (path: Edit_Office_Form.fields).
-4. Remove Edit_Office_Form.submit_actions or make them generic: delete Edit_Office_Form.submit_actions or replace with a single unspecified submit action without labels and without inferred on_success text (path: Edit_Office_Form.submit_actions).
-5. If the intention is to have explicit submit buttons and edit-form fields, update the description to name those buttons (e.g., 'Create', 'Save', 'Cancel') and to enumerate the edit form fields so they can be included without being treated as phantoms.
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:15:53] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Offices",
-  "components": {
-    "Offices_Table": {
-      "type": "data_table",
-      "columns": [
-        "Office Name",
-        "External ID",
-        "Parent Office",
-        "Opening Date",
-        "Hierarchy Position"
-      ],
-      "row_actions": [
-        {
-          "action_name": "Office_Name_Link",
-          "type": "link",
-          "on_click": "navigates to Office Detail page"
-        },
-        {
-          "action_name": "Expand/Collapse",
-          "type": "button",
-          "on_click": "toggles child rows"
-        }
-      ]
-    },
-    "Create_Office_Button": {
-      "type": "button",
-      "element_name": "+ Create Office",
-      "on_click": "opens Create_Office_Form"
-    },
-    "Create_Office_Form": {
-      "type": "form",
-      "fields": {
-        "Office_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Parent_Office": {
-          "type": "dropdown",
-          "required": true,
-          "constraints": [
-            "Head Office is the root"
-          ]
-        },
-        "Opened_On_Date": {
-          "type": "date",
-          "required": true
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "unspecified"
-        }
-      ]
-    },
-    "Office_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Edit_Office_Form"
-        }
-      ]
-    },
-    "Edit_Office_Form": {
-      "type": "form",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "unspecified"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:15:53] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Offices",
-  "components": {
-    "Offices_Table": {
-      "type": "data_table",
-      "columns": [
-        "Office Name",
-        "External ID",
-        "Parent Office",
-        "Opening Date",
-        "Hierarchy Position"
-      ],
-      "row_actions": [
-        {
-          "action_name": "Office_Name_Link",
-          "type": "link",
-          "on_click": "navigates to Office Detail page"
-        },
-        {
-          "action_name": "Expand/Collapse",
-          "type": "button",
-          "on_click": "toggles child rows"
-        }
-      ]
-    },
-    "Create_Office_Button": {
-      "type": "button",
-      "element_name": "+ Create Office",
-      "on_click": "opens Create_Office_Form"
-    },
-    "Create_Office_Form": {
-      "type": "form",
-      "fields": {
-        "Office_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Parent_Office": {
-          "type": "dropdown",
-          "required": true,
-          "constraints": [
-            "Head Office is the root"
-          ]
-        },
-        "Opened_On_Date": {
-          "type": "date",
-          "required": true
-        },
-        "External_ID": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "unspecified"
-        }
-      ]
-    },
-    "Office_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Edit_Office_Form"
-        }
-      ]
-    },
-    "Edit_Office_Form": {
-      "type": "form",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "unspecified"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:16:31] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Offices
-
-
-The Offices page displays a hierarchical table of all offices with columns for Office Name (clickable link), External ID, Parent Office, Opening Date, and hierarchy position. A "+ Create Office" button opens the creation form containing Office Name (required), Parent Office (required — Head Office is the root), Opened On Date (required), and External ID. The Office Detail page shows office information with an Edit option. Offices define the branch structure — clients, groups, staff, and accounting operations are all associated with specific offices.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove components.Offices_Table.row_actions[1] — delete the Expand/Collapse button unless the spec explicitly states row expansion/collapse behavior.
-2. Remove components.Create_Office_Form.submit_actions[0] — delete the unspecified submit action; if a submit button exists in the UI text, replace with a named action (e.g., element_name: "Save" or "Create") and include it in the description before regenerating.
-3. Remove components.Edit_Office_Form.submit_actions[0] — delete the unspecified submit action; if an Edit form submit button is part of the spec, replace with a named action (e.g., element_name: "Save" or "Update") and include it in the description before regenerating.
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:17:07] UI-AST Agent - LLM RESPONSE
+[16:06:19] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Offices",
@@ -646,20 +232,21 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Opened On Date",
         "Hierarchy Position"
       ],
+      "hierarchical": true,
       "row_actions": [
         {
-          "action_name": "View Details",
-          "description": "navigates to Office Detail page when Office Name link is clicked",
-          "navigates_to": "Office_Detail_Page"
-        }
-      ],
-      "top_actions": [
-        {
-          "element_name": "+ Create Office",
-          "type": "button",
-          "opens_form": "Create_Office_Form"
+          "action_name": "Open Office Detail",
+          "type": "link",
+          "on_click": "navigates to Office_Detail_Page",
+          "target": "Office_Detail_Page"
         }
       ]
+    },
+    "Create_Office_Button": {
+      "type": "button",
+      "element_name": "+ Create Office",
+      "on_click": "opens Create_Office_Form",
+      "target": "Create_Office_Form"
     },
     "Create_Office_Form": {
       "type": "form",
@@ -669,10 +256,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         },
         "Parent_Office": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": true,
           "constraints": [
-            "Head Office is the root of the hierarchy"
+            "Head Office is the root"
           ]
         },
         "Opened_On_Date": {
@@ -688,18 +275,24 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "element_name": "Create",
           "on_success": "creates office"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     },
     "Office_Detail_Page": {
       "type": "detail_page",
+      "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "opens_form": "Edit_Office_Form"
+          "type": "button",
+          "on_click": "opens Edit_Office_Form",
+          "target": "Edit_Office_Form"
         }
-      ],
-      "fields": {}
+      ]
     },
     "Edit_Office_Form": {
       "type": "form",
@@ -709,10 +302,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         },
         "Parent_Office": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": true,
           "constraints": [
-            "Head Office is the root of the hierarchy"
+            "Head Office is the root"
           ]
         },
         "Opened_On_Date": {
@@ -728,6 +321,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "element_name": "Save",
           "on_success": "updates office"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     }
@@ -735,7 +332,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:17:07] UI-AST Agent - PARSED JSON
+[16:06:19] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Offices",
@@ -749,20 +346,21 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Opened On Date",
         "Hierarchy Position"
       ],
+      "hierarchical": true,
       "row_actions": [
         {
-          "action_name": "View Details",
-          "description": "navigates to Office Detail page when Office Name link is clicked",
-          "navigates_to": "Office_Detail_Page"
-        }
-      ],
-      "top_actions": [
-        {
-          "element_name": "+ Create Office",
-          "type": "button",
-          "opens_form": "Create_Office_Form"
+          "action_name": "Open Office Detail",
+          "type": "link",
+          "on_click": "navigates to Office_Detail_Page",
+          "target": "Office_Detail_Page"
         }
       ]
+    },
+    "Create_Office_Button": {
+      "type": "button",
+      "element_name": "+ Create Office",
+      "on_click": "opens Create_Office_Form",
+      "target": "Create_Office_Form"
     },
     "Create_Office_Form": {
       "type": "form",
@@ -772,10 +370,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         },
         "Parent_Office": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": true,
           "constraints": [
-            "Head Office is the root of the hierarchy"
+            "Head Office is the root"
           ]
         },
         "Opened_On_Date": {
@@ -791,18 +389,24 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "element_name": "Create",
           "on_success": "creates office"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
         }
       ]
     },
     "Office_Detail_Page": {
       "type": "detail_page",
+      "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "opens_form": "Edit_Office_Form"
+          "type": "button",
+          "on_click": "opens Edit_Office_Form",
+          "target": "Edit_Office_Form"
         }
-      ],
-      "fields": {}
+      ]
     },
     "Edit_Office_Form": {
       "type": "form",
@@ -812,10 +416,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         },
         "Parent_Office": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": true,
           "constraints": [
-            "Head Office is the root of the hierarchy"
+            "Head Office is the root"
           ]
         },
         "Opened_On_Date": {
@@ -830,6 +434,200 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Save",
+          "on_success": "updates office"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:07:55] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Offices
+
+
+The Offices page displays a hierarchical table of all offices with columns for Office Name (clickable link), External ID, Parent Office, Opening Date, and hierarchy position. A "+ Create Office" button opens the creation form containing Office Name (required), Parent Office (required — Head Office is the root), Opened On Date (required), and External ID. The Office Detail page shows office information with an Edit option. Offices define the branch structure — clients, groups, staff, and accounting operations are all associated with specific offices.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Create_Office_Form.submit_actions — Remove explicit labeled buttons; instead either omit submit_actions or replace with a single generic submit action without a UI label (e.g., {"type":"submit","on_success":"creates office"}) because the description does not name form buttons.
+2. components.Edit_Office_Form — Do not invent edit form fields; replace the populated fields object with an empty fields object: "components.Edit_Office_Form.fields": {}. The description only states there is an Edit option on the detail page and does not enumerate editable fields.
+3. components.Edit_Office_Form.submit_actions — Remove explicit labeled buttons (Save/Cancel) or replace with generic actions if necessary; do not assume button labels not present in the description.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:09:14] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Offices",
+  "components": {
+    "Offices_Table": {
+      "type": "data_table",
+      "columns": [
+        "Office Name",
+        "External ID",
+        "Parent Office",
+        "Opened On Date",
+        "Hierarchy Position"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Office",
+          "action_type": "link",
+          "opens": "Office_Detail_Page",
+          "trigger_column": "Office Name"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create Office",
+          "action_type": "button",
+          "opens": "Create_Office_Form"
+        }
+      ]
+    },
+    "Create_Office_Form": {
+      "type": "form",
+      "fields": {
+        "Office_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Parent_Office": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "must select an existing office as parent",
+            "Head Office is the root"
+          ]
+        },
+        "Opened_On": {
+          "type": "date",
+          "required": true
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "type": "submit",
+          "on_success": "creates office"
+        }
+      ]
+    },
+    "Office_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "button",
+          "opens": "Edit_Office_Form"
+        }
+      ]
+    },
+    "Edit_Office_Form": {
+      "type": "form",
+      "fields": {},
+      "submit_actions": [
+        {
+          "type": "submit",
+          "on_success": "updates office"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:09:14] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Offices",
+  "components": {
+    "Offices_Table": {
+      "type": "data_table",
+      "columns": [
+        "Office Name",
+        "External ID",
+        "Parent Office",
+        "Opened On Date",
+        "Hierarchy Position"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Office",
+          "action_type": "link",
+          "opens": "Office_Detail_Page",
+          "trigger_column": "Office Name"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create Office",
+          "action_type": "button",
+          "opens": "Create_Office_Form"
+        }
+      ]
+    },
+    "Create_Office_Form": {
+      "type": "form",
+      "fields": {
+        "Office_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Parent_Office": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "must select an existing office as parent",
+            "Head Office is the root"
+          ]
+        },
+        "Opened_On": {
+          "type": "date",
+          "required": true
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "type": "submit",
+          "on_success": "creates office"
+        }
+      ]
+    },
+    "Office_Detail_Page": {
+      "type": "detail_page",
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "button",
+          "opens": "Edit_Office_Form"
+        }
+      ]
+    },
+    "Edit_Office_Form": {
+      "type": "form",
+      "fields": {},
+      "submit_actions": [
+        {
+          "type": "submit",
           "on_success": "updates office"
         }
       ]

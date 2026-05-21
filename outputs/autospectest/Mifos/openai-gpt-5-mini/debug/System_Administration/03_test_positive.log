@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.441799
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.373826
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>System Administration</module_name>
 
@@ -151,139 +234,308 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   "components": {
     "Manage_Scheduler_Jobs": {
       "type": "data_table",
-      "description": "Table of batch jobs; interactive columns for toggling and editing schedules.",
-      "interactive_columns": [
-        {
-          "column_name": "Is Active",
-          "field_name": "Is_Active",
-          "type": "checkbox",
-          "editable": true,
-          "constraints": [],
-          "on_change_on_success": "toggles job active state"
-        },
-        {
-          "column_name": "CRON Expression",
-          "field_name": "CRON_Expression",
-          "type": "unspecified",
-          "editable": true,
-          "constraints": [],
-          "on_change_on_success": "updates job CRON expression"
-        }
+      "columns": [
+        "Job_Name",
+        "Is_Active",
+        "CRON_Expression",
+        "Previous_Run_Status",
+        "Next_Run_Time",
+        "Currently_Running",
+        "Actions"
       ],
+      "row_fields": {
+        "Job_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": []
+        },
+        "CRON_Expression": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": []
+        },
+        "Previous_Run_Status": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Status": {
+              "type": "display",
+              "required": false,
+              "constraints": []
+            },
+            "Start_Time": {
+              "type": "date",
+              "required": false,
+              "constraints": []
+            },
+            "End_Time": {
+              "type": "date",
+              "required": false,
+              "constraints": []
+            }
+          }
+        },
+        "Next_Run_Time": {
+          "type": "date",
+          "required": false,
+          "constraints": []
+        },
+        "Currently_Running": {
+          "type": "indicator",
+          "required": false,
+          "constraints": []
+        }
+      },
       "row_actions": [
         {
-          "action_name": "Edit Schedule",
+          "action_name": "Edit",
           "fields": {
             "CRON_Expression": {
               "type": "unspecified",
-              "required": true
+              "required": true,
+              "constraints": []
+            },
+            "Is_Active": {
+              "type": "checkbox",
+              "required": false,
+              "constraints": []
             }
           },
-          "on_success": "updates job CRON expression"
+          "on_success": "updates job configuration"
         }
       ],
-      "bulk_actions": [],
-      "notes": "Other columns (Previous Run Status, Next Run Time, Currently Running) are passive displays and therefore not represented as interactive elements."
-    },
-    "Scheduler_Global_Toggle": {
-      "type": "checkbox",
-      "element_name": "Scheduler Enabled",
-      "on_change_on_success": "starts or stops execution of all scheduled jobs",
-      "on_success": "when enabled scheduler executes scheduled jobs; when disabled scheduled jobs will not execute"
+      "pre_actions": [],
+      "notes": [],
+      "examples_of_jobs": [
+        "Apply Annual Fee",
+        "Add Accrual Transactions",
+        "Apply Penalty to Overdue Loans",
+        "Update Loan Summary",
+        "Post Interest for Savings",
+        "Transfer Fees",
+        "Generate Loan Loss Provisioning"
+      ],
+      "global_controls": {
+        "Scheduler_Enabled": {
+          "type": "checkbox",
+          "element_name": "Start/Stop Scheduler",
+          "required": false,
+          "on_success": "controls whether scheduled jobs execute (Start/Stop)",
+          "constraints": []
+        }
+      }
     },
     "Global_Configuration": {
       "type": "data_table",
-      "description": "System-wide feature flags and configuration values.",
-      "interactive_columns": [
-        {
-          "column_name": "Enabled",
-          "field_name": "Enabled",
+      "columns": [
+        "Configuration_Name",
+        "Enabled",
+        "Value",
+        "Description",
+        "Actions"
+      ],
+      "row_fields": {
+        "Configuration_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Enabled": {
           "type": "checkbox",
-          "editable": true,
-          "on_change_on_success": "toggles the configuration flag",
+          "required": false,
           "constraints": []
         },
-        {
-          "column_name": "Value",
-          "field_name": "Value",
+        "Value": {
           "type": "unspecified",
-          "editable": true,
+          "required": false,
+          "constraints": []
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false,
           "constraints": []
         }
+      },
+      "row_actions": [
+        {
+          "action_name": "Edit",
+          "fields": {
+            "Enabled": {
+              "type": "checkbox",
+              "required": false,
+              "constraints": []
+            },
+            "Value": {
+              "type": "unspecified",
+              "required": false,
+              "constraints": []
+            }
+          },
+          "on_success": "updates configuration"
+        }
       ],
-      "row_actions": [],
-      "bulk_actions": []
+      "rows_example": [
+        {
+          "Configuration_Name": "maker-checker",
+          "Enabled": {
+            "type": "checkbox"
+          },
+          "on_success": "enables maker-checker (4-eyes approval)"
+        },
+        {
+          "Configuration_Name": "reschedule-future-repayments",
+          "Enabled": {
+            "type": "checkbox"
+          }
+        },
+        {
+          "Configuration_Name": "allow-transactions-on-non-workingday",
+          "Enabled": {
+            "type": "checkbox"
+          }
+        },
+        {
+          "Configuration_Name": "reschedule-repayments-on-holidays",
+          "Enabled": {
+            "type": "checkbox"
+          }
+        },
+        {
+          "Configuration_Name": "savings-interest-posting-current-period-end",
+          "Enabled": {
+            "type": "checkbox"
+          }
+        },
+        {
+          "Configuration_Name": "financial-year-beginning-month",
+          "Enabled": {
+            "type": "checkbox"
+          },
+          "Value": {
+            "type": "unspecified"
+          }
+        },
+        {
+          "Configuration_Name": "meetings-mandatory-for-jlg-loans",
+          "Enabled": {
+            "type": "checkbox"
+          }
+        }
+      ]
     },
     "Manage_Codes": {
       "type": "data_table",
-      "description": "List of code lists. Clicking a code navigates to manage its values.",
-      "interactive_columns": [
-        {
-          "column_name": "Name",
-          "field_name": "Code_List_Name",
-          "type": "link",
-          "navigation_target": "Code_List_Detail"
-        }
+      "columns": [
+        "Name",
+        "Is_System_Defined",
+        "Actions"
       ],
+      "row_fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_System_Defined": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": []
+        }
+      },
       "row_actions": [
         {
-          "action_name": "Manage Values",
-          "on_success": "opens Code_List_Detail for the selected code list"
+          "action_name": "Open",
+          "on_success": "opens code values editor",
+          "opens": "Code_List_Detail"
         }
       ],
-      "bulk_actions": []
+      "examples_of_code_lists": [
+        "Client Type",
+        "Gender",
+        "Address Type",
+        "Loan Purpose"
+      ]
     },
     "Code_List_Detail": {
-      "type": "data_table",
-      "description": "Values for a specific code list. Supports adding, editing, reordering, and deactivating entries.",
-      "top_actions": [
+      "type": "form",
+      "fields": {
+        "Code_List_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Entries": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Code": {
+              "type": "unspecified",
+              "required": true,
+              "constraints": []
+            },
+            "Display_Text": {
+              "type": "unspecified",
+              "required": true,
+              "constraints": []
+            },
+            "Is_Active": {
+              "type": "checkbox",
+              "required": false,
+              "constraints": []
+            }
+          }
+        }
+      },
+      "submit_actions": [
         {
-          "action_name": "Add Entry",
-          "fields": {},
-          "on_success": "adds new code list entry"
+          "element_name": "Add Entry",
+          "on_success": "adds code list entry"
         },
         {
-          "action_name": "Reorder Entries",
-          "fields": {},
-          "on_success": "reorders entries which changes dropdown ordering"
+          "element_name": "Save Changes",
+          "on_success": "saves entries and order"
         }
       ],
-      "row_actions": [
+      "entry_row_actions": [
         {
           "action_name": "Edit Entry",
-          "fields": {},
-          "on_success": "saves changes to entry"
+          "fields": {
+            "Code": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Display_Text": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Is_Active": {
+              "type": "checkbox",
+              "required": false
+            }
+          },
+          "on_success": "updates entry"
         },
         {
           "action_name": "Deactivate Entry",
           "fields": {},
-          "on_success": "marks entry inactive so it no longer appears in dropdowns"
+          "on_success": "marks entry inactive"
+        },
+        {
+          "action_name": "Reorder Entries",
+          "fields": {},
+          "on_success": "reorders entries",
+          "constraints": []
         }
-      ],
-      "bulk_actions": []
+      ]
     },
     "Manage_Data_Tables": {
       "type": "data_table",
-      "description": "Lists custom data tables that extend core entities.",
-      "interactive_columns": [
-        {
-          "column_name": "Name",
-          "field_name": "Data_Table_Name",
-          "type": "link",
-          "navigation_target": "Edit_Data_Table_Form"
-        }
+      "columns": [
+        "Data_Table_Name",
+        "Application_Table_Name",
+        "Multi_Row",
+        "Actions"
       ],
-      "row_actions": [
-        {
-          "action_name": "Edit",
-          "on_success": "opens Create/Edit form for the selected custom data table"
-        }
-      ],
-      "bulk_actions": []
-    },
-    "Create_Data_Table_Form": {
-      "type": "form",
-      "fields": {
+      "row_fields": {
         "Data_Table_Name": {
           "type": "unspecified",
           "required": true
@@ -304,14 +556,58 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         "Multi_Row": {
           "type": "checkbox",
           "required": false
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Edit",
+          "opens": "Data_Table_Edit_Form",
+          "on_success": "opens data table edit form"
+        },
+        {
+          "action_name": "View",
+          "opens": "Data_Table_View",
+          "on_success": "opens data table view"
+        }
+      ],
+      "notes": [
+        "Delete action not included unless explicitly allowed"
+      ]
+    },
+    "Data_Table_Create_Form": {
+      "type": "form",
+      "fields": {
+        "Data_Table_Name": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": []
+        },
+        "Application_Table_Name": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "m_client",
+            "m_group",
+            "m_loan",
+            "m_office",
+            "m_saving_account",
+            "m_product_loan",
+            "m_savings_product"
+          ],
+          "constraints": []
+        },
+        "Multi_Row": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": []
         },
         "Columns": {
           "type": "repeating_group",
-          "min": 0,
           "item_fields": {
             "Name": {
               "type": "unspecified",
-              "required": true
+              "required": true,
+              "constraints": []
             },
             "Type": {
               "type": "dropdown",
@@ -325,19 +621,23 @@ Do not drop functionally unique code paths (like a specific state transition) ju
                 "datetime",
                 "text",
                 "dropdown"
-              ]
+              ],
+              "constraints": []
             },
             "Length": {
               "type": "number",
-              "required": false
+              "required": false,
+              "constraints": []
             },
             "Is_Mandatory": {
               "type": "checkbox",
-              "required": false
+              "required": false,
+              "constraints": []
             },
             "Is_Unique": {
               "type": "checkbox",
-              "required": false
+              "required": false,
+              "constraints": []
             }
           }
         }
@@ -345,72 +645,131 @@ Do not drop functionally unique code paths (like a specific state transition) ju
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "creates custom data table with defined columns"
+          "on_success": "creates custom data table"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "cancels creation"
         }
       ]
     },
     "Audit_Trails": {
       "type": "data_table",
-      "description": "System audit trail with filters and maker-checker actions for pending commands.",
-      "filters": [
-        {
-          "field_name": "Action_Name",
-          "type": "search"
-        },
-        {
-          "field_name": "Entity_Name",
-          "type": "search"
-        },
-        {
-          "field_name": "Resource_ID",
-          "type": "search"
-        },
-        {
-          "field_name": "Maker_ID",
-          "type": "search"
-        },
-        {
-          "field_name": "Checker_ID",
-          "type": "search"
-        },
-        {
-          "field_name": "Office",
-          "type": "search"
-        },
-        {
-          "field_name": "Date_Range",
-          "type": "repeating_group",
-          "item_fields": {
-            "Start_Date": {
-              "type": "date"
-            },
-            "End_Date": {
-              "type": "date"
-            }
-          }
-        }
+      "columns": [
+        "Action_Name",
+        "Entity_Name",
+        "Resource_ID",
+        "Maker",
+        "Made_On_Date",
+        "Checker",
+        "Checked_On_Date",
+        "Processing_Result",
+        "Office_Name",
+        "Client/Loan/Savings_Details",
+        "Actions"
       ],
+      "filters": {
+        "Action_Name": {
+          "type": "search",
+          "required": false
+        },
+        "Entity_Name": {
+          "type": "search",
+          "required": false
+        },
+        "Resource_ID": {
+          "type": "search",
+          "required": false
+        },
+        "Maker_ID": {
+          "type": "search",
+          "required": false
+        },
+        "Checker_ID": {
+          "type": "search",
+          "required": false
+        },
+        "Office": {
+          "type": "search",
+          "required": false
+        },
+        "Date_Range": {
+          "type": "date",
+          "required": false
+        }
+      },
+      "row_fields": {
+        "Action_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Entity_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Resource_ID": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Maker": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Made_On_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Checker": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Checked_On_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Processing_Result": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Office_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Client/Loan/Savings_Details": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
       "row_actions": [
+        {
+          "action_name": "View Details",
+          "on_success": "shows full audit action payload"
+        },
         {
           "action_name": "Approve",
           "preconditions": [
-            "processing result must be Pending",
+            "Processing_Result == Pending",
             "maker-checker must be enabled"
           ],
           "fields": {},
-          "on_success": "changes processing result to Approved"
+          "on_success": "approves command"
         },
         {
           "action_name": "Reject",
           "preconditions": [
-            "processing result must be Pending",
+            "Processing_Result == Pending",
             "maker-checker must be enabled"
           ],
-          "fields": {},
-          "on_success": "changes processing result to Rejected"
+          "fields": {
+            "Rejection_Reason": {
+              "type": "unspecified",
+              "required": true,
+              "constraints": []
+            }
+          },
+          "on_success": "rejects command"
         }
-      ],
-      "bulk_actions": []
+      ]
     }
   }
 }
@@ -436,7 +795,7 @@ The Audit Trails page displays all system actions with columns for Action Name, 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:25:39] Test-Positive - LLM RESPONSE
+[16:20:54] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "System Administration",
@@ -444,243 +803,218 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Enable the global scheduler toggle",
+      "test_case": "Enable the global scheduler via Start/Stop Scheduler toggle",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "System Administration page is open"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click the 'Scheduler Enabled' checkbox to enable scheduling"
+        "1. Navigate to System Administration > Manage Scheduler Jobs",
+        "2. Click the Start/Stop Scheduler toggle to enable the scheduler"
       ],
-      "expected_result": "when enabled scheduler executes scheduled jobs; when disabled scheduled jobs will not execute",
+      "expected_result": "Start/Stop Scheduler toggle shows checked state (the toggle is visibly enabled)",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Toggle 'Is Active' for a scheduler job row",
+      "test_case": "Activate a specific scheduled job using the Is Active checkbox",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Scheduler Jobs table is visible",
-        "<target job> is listed in the Manage Scheduler Jobs table"
+        "A scheduled job row exists for <job name>"
       ],
       "steps": [
-        "1. Click the 'Is Active' checkbox for <target job>"
+        "1. Navigate to System Administration > Manage Scheduler Jobs",
+        "2. In the row for <job name>, click the Is Active checkbox to activate the job"
       ],
-      "expected_result": "toggles job active state",
-      "priority": "high"
+      "expected_result": "Is Active checkbox in the row for <job name> is checked",
+      "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Edit CRON Expression inline for a scheduler job",
+      "test_case": "Edit a job's CRON expression via the Edit row action",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Scheduler Jobs table is visible",
-        "<target job> is listed in the Manage Scheduler Jobs table"
+        "A scheduled job row exists for <job name>"
       ],
       "steps": [
-        "1. Click the CRON Expression cell for <target job> to activate inline edit",
-        "2. Enter <valid CRON expression> into the CRON Expression field",
-        "3. Press Enter (or click Save) to persist the CRON Expression change"
+        "1. Navigate to System Administration > Manage Scheduler Jobs",
+        "2. Click Actions > Edit for the row of <job name>",
+        "3. Enter <valid CRON expression> in the CRON Expression field",
+        "4. Click Save"
       ],
-      "expected_result": "updates job CRON expression",
+      "expected_result": "CRON Expression column for <job name> displays the updated CRON expression",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit CRON Expression using 'Edit Schedule' row action",
+      "test_case": "Enable the maker-checker configuration in Global Configuration",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Manage Scheduler Jobs table is visible",
-        "<target job> is listed in the Manage Scheduler Jobs table"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click 'Edit Schedule' for <target job>",
-        "2. Enter <valid CRON expression> in the CRON Expression field in the Edit Schedule form/modal",
-        "3. Click Save to apply the schedule change"
+        "1. Navigate to System Administration > Global Configuration",
+        "2. Click Edit for the 'maker-checker' configuration row",
+        "3. Check the Enabled checkbox for 'maker-checker'",
+        "4. Click Save"
       ],
-      "expected_result": "updates job CRON expression",
+      "expected_result": "Enabled checkbox for 'maker-checker' configuration shows checked",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Toggle a Global Configuration 'Enabled' flag",
+      "test_case": "Update the value of the financial-year-beginning-month configuration",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Global Configuration table is visible",
-        "<configuration item> is listed in the Global Configuration table"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click the 'Enabled' checkbox for <configuration item>"
+        "1. Navigate to System Administration > Global Configuration",
+        "2. Click Edit for the 'financial-year-beginning-month' configuration row",
+        "3. Enter <valid month> in the Value field",
+        "4. Click Save"
       ],
-      "expected_result": "toggles the configuration flag",
-      "priority": "high"
+      "expected_result": "Value column for 'financial-year-beginning-month' displays the entered value",
+      "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Edit a Global Configuration 'Value' cell",
+      "test_case": "Open a code list from Manage Codes to view its values",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Global Configuration table is visible",
-        "<configuration item> is listed in the Global Configuration table"
+        "A code list row exists for <Code List Name>"
       ],
       "steps": [
-        "1. Click the 'Value' cell for <configuration item> to activate edit",
-        "2. Enter <value> into the 'Value' field",
-        "3. Press Enter (or click Save) to persist the change"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name>"
       ],
-      "expected_result": "Value cell displays the entered <value>",
+      "expected_result": "Code values editor opens for <Code List Name>",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Open a code list from Manage Codes",
+      "test_case": "Add a new entry to a code list using Add Entry",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Codes table is visible",
-        "<code list> is listed in the Manage Codes table"
+        "A code list exists for <Code List Name>"
       ],
       "steps": [
-        "1. Click the Name link for <code list>"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name> to open the Code List editor",
+        "3. Click 'Add Entry' to create a new entry row",
+        "4. Enter <Code> in the Code field and <Display Text> in the Display Text field for the new row",
+        "5. Click 'Add Entry' (the Add Entry submit action)"
       ],
-      "expected_result": "opens Code_List_Detail for the selected code list",
-      "priority": "medium"
+      "expected_result": "New entry row appears in the Code List editor for <Code List Name> with the entered Code and Display Text",
+      "priority": "high"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Add a new entry to a code list",
+      "test_case": "Deactivate an existing code list entry",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Code_List_Detail for <code list> is open"
+        "A code list exists for <Code List Name> with an active entry <entry identifier>"
       ],
       "steps": [
-        "1. Click the 'Add Entry' top action",
-        "2. Enter <new code entry> in the Add Entry form fields",
-        "3. Click Save to add the entry"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name> to open the Code List editor",
+        "3. Click 'Deactivate Entry' on the entry row for <entry identifier>",
+        "4. Click Confirm on the Deactivate Entry dialog"
       ],
-      "expected_result": "adds new code list entry",
-      "priority": "high"
+      "expected_result": "The entry row for <entry identifier> is shown as inactive (Is Active unchecked) in the Code List editor",
+      "priority": "medium"
     },
     {
       "tc_id": "P-009",
       "test_case": "Reorder entries in a code list",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Code_List_Detail for <code list> is open",
-        "Code list contains multiple entries"
+        "A code list exists for <Code List Name> with at least two entries <entry A> and <entry B>"
       ],
       "steps": [
-        "1. Click the 'Reorder Entries' top action",
-        "2. Drag <target entry> to a different position in the entries list",
-        "3. Click Save to persist the new ordering"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name> to open the Code List editor",
+        "3. Use the reorder control to move <entry A> after <entry B>",
+        "4. Click 'Reorder Entries' (the Reorder Entries action) or Save Changes to persist the order"
       ],
-      "expected_result": "reorders entries which changes dropdown ordering",
+      "expected_result": "Entries in the Code List editor reflect the new order with <entry A> positioned after <entry B>",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Deactivate a code list entry",
+      "test_case": "Create a custom data table using the Data Table Create form",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Code_List_Detail for <code list> is open",
-        "<target entry> is active in the list"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click 'Deactivate Entry' for <target entry>"
+        "1. Navigate to System Administration > Manage Data Tables",
+        "2. Click 'Create Data Table' to open the Data Table Create form",
+        "3. Enter <Data Table Name> in Data Table Name",
+        "4. Select <Application Table Name> from the Application Table Name dropdown",
+        "5. (Optional) Click 'Add Row' under Columns to add one column",
+        "6. For the new column row, enter <Name> and select <Type> from the Type dropdown; optionally set <Length>, check <Is Mandatory> and/or <Is Unique>",
+        "7. Click 'Create'"
       ],
-      "expected_result": "marks entry inactive so it no longer appears in dropdowns",
-      "priority": "medium"
+      "expected_result": "New row appears in Manage Data Tables with the entered Data Table Name and selected Application Table Name",
+      "priority": "high"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Open Create/Edit form from Manage Data Tables",
+      "test_case": "Open the Data Table edit form from Manage Data Tables",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Data Tables table is visible",
-        "<custom data table> is listed in the Manage Data Tables table"
+        "A custom data table exists with name <Data Table Name>"
       ],
       "steps": [
-        "1. Click the Name link for <custom data table>"
+        "1. Navigate to System Administration > Manage Data Tables",
+        "2. Click Actions > Edit for the row of <Data Table Name>"
       ],
-      "expected_result": "opens Create/Edit form for the selected custom data table",
+      "expected_result": "Data table edit form opens for <Data Table Name>",
       "priority": "medium"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Create a new custom data table with one column",
+      "test_case": "Approve a pending audit command in Audit Trails when maker-checker is enabled",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Create Data Table form is open"
+        "maker-checker is enabled in Global Configuration",
+        "An audit trail row exists with Processing_Result == Pending for <Action/Resource>"
       ],
       "steps": [
-        "1. Enter <Data Table Name> in the Data Table Name field",
-        "2. Select <application table> from the Application Table Name dropdown",
-        "3. Click the Multi Row checkbox",
-        "4. Click 'Add Row' to add a column definition",
-        "5. Enter <column name> in the Name field for the new column",
-        "6. Select <column type> from the Type dropdown for the new column",
-        "7. Enter <length> in the Length field (optional)",
-        "8. Click the Is Mandatory checkbox for the new column (optional)",
-        "9. Click the Is Unique checkbox for the new column (optional)",
-        "10. Click the 'Create' button to submit the form"
+        "1. Navigate to System Administration > Audit Trails",
+        "2. (Optional) Use filters to locate the pending row (enter <Action Name> in Action Name and click Search)",
+        "3. Click 'Approve' on the pending audit row for <Action/Resource>",
+        "4. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "creates custom data table with defined columns",
+      "expected_result": "Processing Result column for the selected audit row updates to 'Approved'",
       "priority": "high"
     },
     {
       "tc_id": "P-013",
-      "test_case": "Filter Audit Trails by Action Name",
+      "test_case": "Reject a pending audit command with a rejection reason in Audit Trails",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Audit Trails table is visible"
+        "maker-checker is enabled in Global Configuration",
+        "An audit trail row exists with Processing_Result == Pending for <Action/Resource>"
       ],
       "steps": [
-        "1. Enter <action name> in the Action Name filter field",
-        "2. Click Apply Filters (or Search) to apply the filter"
+        "1. Navigate to System Administration > Audit Trails",
+        "2. (Optional) Use filters to locate the pending row (enter <Action Name> in Action Name and click Search)",
+        "3. Click 'Reject' on the pending audit row for <Action/Resource>",
+        "4. Enter <Rejection_Reason> in the Rejection Reason field",
+        "5. Click Confirm on the Reject dialog"
       ],
-      "expected_result": "Audit trail table displays results filtered by the entered <action name>",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-014",
-      "test_case": "Approve a pending audit trail command",
-      "preconditions": [
-        "User logged in as <Administrator>",
-        "Audit Trails table is visible",
-        "maker-checker is enabled",
-        "A command with Processing Result = Pending exists in the Audit Trails table as <pending command>"
-      ],
-      "steps": [
-        "1. Click 'Approve' for <pending command>"
-      ],
-      "expected_result": "changes processing result to Approved",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-015",
-      "test_case": "Reject a pending audit trail command",
-      "preconditions": [
-        "User logged in as <Administrator>",
-        "Audit Trails table is visible",
-        "maker-checker is enabled",
-        "A command with Processing Result = Pending exists in the Audit Trails table as <pending command>"
-      ],
-      "steps": [
-        "1. Click 'Reject' for <pending command>"
-      ],
-      "expected_result": "changes processing result to Rejected",
+      "expected_result": "Processing Result column for the selected audit row updates to 'Rejected' and the rejection reason is recorded in the audit details",
       "priority": "high"
     }
   ],
   "summary": {
-    "total": 15,
-    "high_priority": 8,
-    "medium_priority": 7,
+    "total": 13,
+    "high_priority": 7,
+    "medium_priority": 6,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[14:25:39] Test-Positive - PARSED JSON
+[16:20:54] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "System Administration",
@@ -688,237 +1022,212 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Enable the global scheduler toggle",
+      "test_case": "Enable the global scheduler via Start/Stop Scheduler toggle",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "System Administration page is open"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click the 'Scheduler Enabled' checkbox to enable scheduling"
+        "1. Navigate to System Administration > Manage Scheduler Jobs",
+        "2. Click the Start/Stop Scheduler toggle to enable the scheduler"
       ],
-      "expected_result": "when enabled scheduler executes scheduled jobs; when disabled scheduled jobs will not execute",
+      "expected_result": "Start/Stop Scheduler toggle shows checked state (the toggle is visibly enabled)",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Toggle 'Is Active' for a scheduler job row",
+      "test_case": "Activate a specific scheduled job using the Is Active checkbox",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Scheduler Jobs table is visible",
-        "<target job> is listed in the Manage Scheduler Jobs table"
+        "A scheduled job row exists for <job name>"
       ],
       "steps": [
-        "1. Click the 'Is Active' checkbox for <target job>"
+        "1. Navigate to System Administration > Manage Scheduler Jobs",
+        "2. In the row for <job name>, click the Is Active checkbox to activate the job"
       ],
-      "expected_result": "toggles job active state",
-      "priority": "high"
+      "expected_result": "Is Active checkbox in the row for <job name> is checked",
+      "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Edit CRON Expression inline for a scheduler job",
+      "test_case": "Edit a job's CRON expression via the Edit row action",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Scheduler Jobs table is visible",
-        "<target job> is listed in the Manage Scheduler Jobs table"
+        "A scheduled job row exists for <job name>"
       ],
       "steps": [
-        "1. Click the CRON Expression cell for <target job> to activate inline edit",
-        "2. Enter <valid CRON expression> into the CRON Expression field",
-        "3. Press Enter (or click Save) to persist the CRON Expression change"
+        "1. Navigate to System Administration > Manage Scheduler Jobs",
+        "2. Click Actions > Edit for the row of <job name>",
+        "3. Enter <valid CRON expression> in the CRON Expression field",
+        "4. Click Save"
       ],
-      "expected_result": "updates job CRON expression",
+      "expected_result": "CRON Expression column for <job name> displays the updated CRON expression",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit CRON Expression using 'Edit Schedule' row action",
+      "test_case": "Enable the maker-checker configuration in Global Configuration",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Manage Scheduler Jobs table is visible",
-        "<target job> is listed in the Manage Scheduler Jobs table"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click 'Edit Schedule' for <target job>",
-        "2. Enter <valid CRON expression> in the CRON Expression field in the Edit Schedule form/modal",
-        "3. Click Save to apply the schedule change"
+        "1. Navigate to System Administration > Global Configuration",
+        "2. Click Edit for the 'maker-checker' configuration row",
+        "3. Check the Enabled checkbox for 'maker-checker'",
+        "4. Click Save"
       ],
-      "expected_result": "updates job CRON expression",
+      "expected_result": "Enabled checkbox for 'maker-checker' configuration shows checked",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Toggle a Global Configuration 'Enabled' flag",
+      "test_case": "Update the value of the financial-year-beginning-month configuration",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Global Configuration table is visible",
-        "<configuration item> is listed in the Global Configuration table"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click the 'Enabled' checkbox for <configuration item>"
+        "1. Navigate to System Administration > Global Configuration",
+        "2. Click Edit for the 'financial-year-beginning-month' configuration row",
+        "3. Enter <valid month> in the Value field",
+        "4. Click Save"
       ],
-      "expected_result": "toggles the configuration flag",
-      "priority": "high"
+      "expected_result": "Value column for 'financial-year-beginning-month' displays the entered value",
+      "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Edit a Global Configuration 'Value' cell",
+      "test_case": "Open a code list from Manage Codes to view its values",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Global Configuration table is visible",
-        "<configuration item> is listed in the Global Configuration table"
+        "A code list row exists for <Code List Name>"
       ],
       "steps": [
-        "1. Click the 'Value' cell for <configuration item> to activate edit",
-        "2. Enter <value> into the 'Value' field",
-        "3. Press Enter (or click Save) to persist the change"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name>"
       ],
-      "expected_result": "Value cell displays the entered <value>",
+      "expected_result": "Code values editor opens for <Code List Name>",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Open a code list from Manage Codes",
+      "test_case": "Add a new entry to a code list using Add Entry",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Codes table is visible",
-        "<code list> is listed in the Manage Codes table"
+        "A code list exists for <Code List Name>"
       ],
       "steps": [
-        "1. Click the Name link for <code list>"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name> to open the Code List editor",
+        "3. Click 'Add Entry' to create a new entry row",
+        "4. Enter <Code> in the Code field and <Display Text> in the Display Text field for the new row",
+        "5. Click 'Add Entry' (the Add Entry submit action)"
       ],
-      "expected_result": "opens Code_List_Detail for the selected code list",
-      "priority": "medium"
+      "expected_result": "New entry row appears in the Code List editor for <Code List Name> with the entered Code and Display Text",
+      "priority": "high"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Add a new entry to a code list",
+      "test_case": "Deactivate an existing code list entry",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Code_List_Detail for <code list> is open"
+        "A code list exists for <Code List Name> with an active entry <entry identifier>"
       ],
       "steps": [
-        "1. Click the 'Add Entry' top action",
-        "2. Enter <new code entry> in the Add Entry form fields",
-        "3. Click Save to add the entry"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name> to open the Code List editor",
+        "3. Click 'Deactivate Entry' on the entry row for <entry identifier>",
+        "4. Click Confirm on the Deactivate Entry dialog"
       ],
-      "expected_result": "adds new code list entry",
-      "priority": "high"
+      "expected_result": "The entry row for <entry identifier> is shown as inactive (Is Active unchecked) in the Code List editor",
+      "priority": "medium"
     },
     {
       "tc_id": "P-009",
       "test_case": "Reorder entries in a code list",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Code_List_Detail for <code list> is open",
-        "Code list contains multiple entries"
+        "A code list exists for <Code List Name> with at least two entries <entry A> and <entry B>"
       ],
       "steps": [
-        "1. Click the 'Reorder Entries' top action",
-        "2. Drag <target entry> to a different position in the entries list",
-        "3. Click Save to persist the new ordering"
+        "1. Navigate to System Administration > Manage Codes",
+        "2. Click Open on the row for <Code List Name> to open the Code List editor",
+        "3. Use the reorder control to move <entry A> after <entry B>",
+        "4. Click 'Reorder Entries' (the Reorder Entries action) or Save Changes to persist the order"
       ],
-      "expected_result": "reorders entries which changes dropdown ordering",
+      "expected_result": "Entries in the Code List editor reflect the new order with <entry A> positioned after <entry B>",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Deactivate a code list entry",
+      "test_case": "Create a custom data table using the Data Table Create form",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Code_List_Detail for <code list> is open",
-        "<target entry> is active in the list"
+        "User logged in as <Administrator>"
       ],
       "steps": [
-        "1. Click 'Deactivate Entry' for <target entry>"
+        "1. Navigate to System Administration > Manage Data Tables",
+        "2. Click 'Create Data Table' to open the Data Table Create form",
+        "3. Enter <Data Table Name> in Data Table Name",
+        "4. Select <Application Table Name> from the Application Table Name dropdown",
+        "5. (Optional) Click 'Add Row' under Columns to add one column",
+        "6. For the new column row, enter <Name> and select <Type> from the Type dropdown; optionally set <Length>, check <Is Mandatory> and/or <Is Unique>",
+        "7. Click 'Create'"
       ],
-      "expected_result": "marks entry inactive so it no longer appears in dropdowns",
-      "priority": "medium"
+      "expected_result": "New row appears in Manage Data Tables with the entered Data Table Name and selected Application Table Name",
+      "priority": "high"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Open Create/Edit form from Manage Data Tables",
+      "test_case": "Open the Data Table edit form from Manage Data Tables",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Manage Data Tables table is visible",
-        "<custom data table> is listed in the Manage Data Tables table"
+        "A custom data table exists with name <Data Table Name>"
       ],
       "steps": [
-        "1. Click the Name link for <custom data table>"
+        "1. Navigate to System Administration > Manage Data Tables",
+        "2. Click Actions > Edit for the row of <Data Table Name>"
       ],
-      "expected_result": "opens Create/Edit form for the selected custom data table",
+      "expected_result": "Data table edit form opens for <Data Table Name>",
       "priority": "medium"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Create a new custom data table with one column",
+      "test_case": "Approve a pending audit command in Audit Trails when maker-checker is enabled",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Create Data Table form is open"
+        "maker-checker is enabled in Global Configuration",
+        "An audit trail row exists with Processing_Result == Pending for <Action/Resource>"
       ],
       "steps": [
-        "1. Enter <Data Table Name> in the Data Table Name field",
-        "2. Select <application table> from the Application Table Name dropdown",
-        "3. Click the Multi Row checkbox",
-        "4. Click 'Add Row' to add a column definition",
-        "5. Enter <column name> in the Name field for the new column",
-        "6. Select <column type> from the Type dropdown for the new column",
-        "7. Enter <length> in the Length field (optional)",
-        "8. Click the Is Mandatory checkbox for the new column (optional)",
-        "9. Click the Is Unique checkbox for the new column (optional)",
-        "10. Click the 'Create' button to submit the form"
+        "1. Navigate to System Administration > Audit Trails",
+        "2. (Optional) Use filters to locate the pending row (enter <Action Name> in Action Name and click Search)",
+        "3. Click 'Approve' on the pending audit row for <Action/Resource>",
+        "4. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "creates custom data table with defined columns",
+      "expected_result": "Processing Result column for the selected audit row updates to 'Approved'",
       "priority": "high"
     },
     {
       "tc_id": "P-013",
-      "test_case": "Filter Audit Trails by Action Name",
+      "test_case": "Reject a pending audit command with a rejection reason in Audit Trails",
       "preconditions": [
         "User logged in as <Administrator>",
-        "Audit Trails table is visible"
+        "maker-checker is enabled in Global Configuration",
+        "An audit trail row exists with Processing_Result == Pending for <Action/Resource>"
       ],
       "steps": [
-        "1. Enter <action name> in the Action Name filter field",
-        "2. Click Apply Filters (or Search) to apply the filter"
+        "1. Navigate to System Administration > Audit Trails",
+        "2. (Optional) Use filters to locate the pending row (enter <Action Name> in Action Name and click Search)",
+        "3. Click 'Reject' on the pending audit row for <Action/Resource>",
+        "4. Enter <Rejection_Reason> in the Rejection Reason field",
+        "5. Click Confirm on the Reject dialog"
       ],
-      "expected_result": "Audit trail table displays results filtered by the entered <action name>",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-014",
-      "test_case": "Approve a pending audit trail command",
-      "preconditions": [
-        "User logged in as <Administrator>",
-        "Audit Trails table is visible",
-        "maker-checker is enabled",
-        "A command with Processing Result = Pending exists in the Audit Trails table as <pending command>"
-      ],
-      "steps": [
-        "1. Click 'Approve' for <pending command>"
-      ],
-      "expected_result": "changes processing result to Approved",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-015",
-      "test_case": "Reject a pending audit trail command",
-      "preconditions": [
-        "User logged in as <Administrator>",
-        "Audit Trails table is visible",
-        "maker-checker is enabled",
-        "A command with Processing Result = Pending exists in the Audit Trails table as <pending command>"
-      ],
-      "steps": [
-        "1. Click 'Reject' for <pending command>"
-      ],
-      "expected_result": "changes processing result to Rejected",
+      "expected_result": "Processing Result column for the selected audit row updates to 'Rejected' and the rejection reason is recorded in the audit details",
       "priority": "high"
     }
   ],
   "summary": {
-    "total": 15,
-    "high_priority": 8,
-    "medium_priority": 7,
+    "total": 13,
+    "high_priority": 7,
+    "medium_priority": 6,
     "low_priority": 0
   }
 }

@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.599752
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.761193
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:13:45] Semantic Critic - SYSTEM PROMPT
+[16:07:14] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:13:45] Semantic Critic - USER PROMPT
+[16:07:14] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -123,7 +123,7 @@ The Working Days page allows configuring which days of the week are working days
 {
   "module_name": "Organization Settings",
   "components": {
-    "Holidays_Page": {
+    "Holidays_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -132,12 +132,11 @@ The Working Days page allows configuring which days of the week are working days
         "Status",
         "Rescheduling Type"
       ],
-      "row_selection": false,
-      "toolbar_actions": [
+      "actions": [
         {
           "element_name": "+ Create Holiday",
-          "type": "button",
-          "opens_form": "Create_Holiday_Form"
+          "action": "open_form",
+          "target": "Create_Holiday_Form"
         }
       ]
     },
@@ -149,22 +148,22 @@ The Working Days page allows configuring which days of the week are working days
           "required": true,
           "constraints": []
         },
-        "From Date": {
+        "From_Date": {
           "type": "date",
           "required": true,
           "constraints": []
         },
-        "To Date": {
+        "To_Date": {
           "type": "date",
           "required": true,
           "constraints": []
         },
-        "Repayments Rescheduled To date": {
+        "Repayments_Rescheduled_To_Date": {
           "type": "date",
           "required": false,
           "constraints": []
         },
-        "Rescheduling Type": {
+        "Rescheduling_Type": {
           "type": "dropdown",
           "required": false,
           "constraints": []
@@ -174,9 +173,9 @@ The Working Days page allows configuring which days of the week are working days
           "required": false,
           "constraints": []
         },
-        "Applicable Offices": {
+        "Applicable_Offices": {
           "type": "dropdown",
-          "multi": true,
+          "multi_select": true,
           "required": false,
           "constraints": []
         }
@@ -184,14 +183,11 @@ The Working Days page allows configuring which days of the week are working days
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "creates holiday and reschedules installments per Rescheduling Type"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "creates holiday and affects loan repayment schedules: installments falling on holidays are automatically rescheduled per the configured type"
         }
       ]
     },
-    "Working_Days_Page": {
+    "Working_Days_Form": {
       "type": "form",
       "fields": {
         "Monday": {
@@ -229,7 +225,7 @@ The Working Days page allows configuring which days of the week are working days
           "required": false,
           "constraints": []
         },
-        "Repayment Rescheduling": {
+        "Repayment_Rescheduling": {
           "type": "dropdown",
           "required": false,
           "constraints": []
@@ -238,14 +234,11 @@ The Working Days page allows configuring which days of the week are working days
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates working days; repayments that fall on non-working days will be rescheduled per selected rule"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "updates which days are working days and adjusts repayment rescheduling behavior for repayments falling on non-working days"
         }
       ]
     },
-    "Currencies_Page": {
+    "Currencies_List": {
       "type": "data_table",
       "columns": [
         "Code",
@@ -253,42 +246,39 @@ The Working Days page allows configuring which days of the week are working days
         "Decimal Places",
         "Active"
       ],
-      "row_fields": {
-        "Active": {
-          "type": "checkbox"
-        }
-      },
-      "toolbar_actions": [],
+      "row_editable_columns": [
+        "Active"
+      ],
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates active currencies"
+          "on_success": "updates active currencies selection"
         }
       ]
     },
-    "Funds_Page": {
+    "Funds_Table": {
       "type": "data_table",
       "columns": [
         "Fund Name",
         "External ID"
       ],
-      "toolbar_actions": [
+      "actions": [
         {
-          "element_name": "+ Create Fund",
-          "type": "button",
-          "opens_form": "Create_Fund_Form"
+          "element_name": "Create Fund",
+          "action": "open_form",
+          "target": "Create_Fund_Form"
         }
       ]
     },
     "Create_Fund_Form": {
       "type": "form",
       "fields": {
-        "Fund Name": {
+        "Fund_Name": {
           "type": "unspecified",
           "required": false,
           "constraints": []
         },
-        "External ID": {
+        "External_ID": {
           "type": "unspecified",
           "required": false,
           "constraints": []
@@ -298,13 +288,10 @@ The Working Days page allows configuring which days of the week are working days
         {
           "element_name": "Create",
           "on_success": "creates fund"
-        },
-        {
-          "element_name": "Cancel"
         }
       ]
     },
-    "Payment_Types_Page": {
+    "Payment_Types_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -312,19 +299,11 @@ The Working Days page allows configuring which days of the week are working days
         "Is Cash Payment",
         "Position"
       ],
-      "row_fields": {
-        "Is Cash Payment": {
-          "type": "checkbox"
-        },
-        "Position": {
-          "type": "number"
-        }
-      },
-      "toolbar_actions": [
+      "actions": [
         {
           "element_name": "+ Create",
-          "type": "button",
-          "opens_form": "Create_Payment_Type_Form"
+          "action": "open_form",
+          "target": "Create_Payment_Type_Form"
         }
       ]
     },
@@ -333,7 +312,7 @@ The Working Days page allows configuring which days of the week are working days
       "fields": {
         "Name": {
           "type": "unspecified",
-          "required": false,
+          "required": true,
           "constraints": []
         },
         "Description": {
@@ -341,7 +320,7 @@ The Working Days page allows configuring which days of the week are working days
           "required": false,
           "constraints": []
         },
-        "Is Cash Payment": {
+        "Is_Cash_Payment": {
           "type": "checkbox",
           "required": false,
           "constraints": []
@@ -355,186 +334,49 @@ The Working Days page allows configuring which days of the week are working days
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "adds payment type; new type appears as dropdown option in all transaction forms"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "creates payment type and appears as a dropdown option in all transaction forms"
         }
       ]
     },
-    "Bulk_Import_Page": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Clients",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Clients from uploaded file"
-            }
+    "Bulk_Import": {
+      "type": "form",
+      "fields": {
+        "Entity_Type": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Clients",
+            "Groups",
+            "Centers",
+            "Offices",
+            "Staff",
+            "Users",
+            "Loans",
+            "Savings"
+          ],
+          "constraints": []
+        },
+        "Template_Download": {
+          "type": "button",
+          "action": "download_template",
+          "preconditions": [
+            "Entity_Type must be selected"
           ]
         },
+        "Upload_File": {
+          "type": "file_upload",
+          "required": true,
+          "constraints": []
+        }
+      },
+      "submit_actions": [
         {
-          "tab_name": "Groups",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Groups from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Centers",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Centers from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Offices",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Offices from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Staff",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Staff from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Users",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Users from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Loans",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Loans from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Savings",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Savings from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Other",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports selected entity type from uploaded file"
-            }
-          ]
+          "element_name": "Import",
+          "preconditions": [
+            "Upload_File is present",
+            "Entity_Type must be selected"
+          ],
+          "on_success": "imports data for the selected entity type according to the uploaded template"
         }
       ]
     }
@@ -545,57 +387,61 @@ The Working Days page allows configuring which days of the week are working days
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:15:12] Semantic Critic - LLM RESPONSE
+[16:08:56] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST mostly covers the described pages and fields but includes multiple inferred UI elements (phantoms) not explicitly present in the description and should be regenerated with those removed or justified.",
+  "summary": "AST contains multiple inferred/unnamed interactive elements and metadata (submit button names, preconditions, editable-metadata, required flags) that are not explicitly stated in the description; regenerate with only items explicitly named.",
   "missing": [],
   "phantoms": [
-    "Create_Holiday_Form.submit_actions[1] (Cancel button not mentioned in description)",
-    "Working_Days_Page.submit_actions[1] (Cancel button not mentioned in description)",
-    "Currencies_Page.submit_actions[0] (Save button not explicitly mentioned in description)",
-    "Create_Fund_Form.submit_actions[1] (Cancel button not mentioned in description)",
-    "Create_Payment_Type_Form.submit_actions[1] (Cancel button not mentioned in description)",
-    "Currencies_Page.row_fields.Active (explicit 'Active' column/checkbox was inferred even though description only said 'selecting active currencies from a list' without specifying an Active column)"
+    "components.Currencies_List.row_editable_columns (row_editable_columns metadata not described)",
+    "components.Currencies_List.submit_actions[0] (Save button not named in description)",
+    "components.Create_Holiday_Form.submit_actions[0] (Create submit action label not specified in description)",
+    "components.Working_Days_Form.submit_actions[0] (Save submit action label not specified in description)",
+    "components.Create_Payment_Type_Form.submit_actions[0] (Create submit action label not specified in description)",
+    "components.Bulk_Import.Template_Download.preconditions[0] (\"Entity_Type must be selected\" precondition not stated in description)",
+    "components.Bulk_Import.fields.Upload_File.required (required=true inferred but not explicitly stated)"
   ],
   "fixes": [
-    "Remove or justify implicit Cancel buttons: delete Create_Holiday_Form.submit_actions[1] or update description to mention a Cancel action.",
-    "Remove or justify implicit Cancel buttons: delete Working_Days_Page.submit_actions[1] or update description to mention a Cancel action.",
-    "Remove or justify implicit Save on Currencies page: delete Currencies_Page.submit_actions[0] or update description to explicitly state there is a Save/Apply action for active currency selection.",
-    "Remove or justify implicit Cancel in Fund creation: delete Create_Fund_Form.submit_actions[1] or update description to include a Cancel action in the Create Fund form.",
-    "Remove or justify implicit Cancel in Payment Type creation: delete Create_Payment_Type_Form.submit_actions[1] or update description to include a Cancel action in the Create Payment Type form.",
-    "Clarify active-currency UI: either remove Currencies_Page.row_fields.Active entry or update description to explicitly state an 'Active' column/checkbox is present for selecting currencies."
+    "Remove components.Currencies_List.row_editable_columns or derive it only if the description explicitly states per-row in-place editing; otherwise omit this metadata.",
+    "Remove components.Currencies_List.submit_actions array or change submit action to an unspecified/unnamed action unless the description names a Save/Submit button; update path: components.Currencies_List.submit_actions",
+    "Remove components.Create_Holiday_Form.submit_actions[0].element_name (do not invent a submit button label); if a submit action must be present, set element_name to null or 'unspecified' at components.Create_Holiday_Form.submit_actions[0].element_name",
+    "Remove components.Working_Days_Form.submit_actions[0].element_name or set it to 'unspecified' at components.Working_Days_Form.submit_actions[0].element_name since no button name is provided in the description",
+    "Remove components.Create_Payment_Type_Form.submit_actions[0].element_name or set to 'unspecified' at components.Create_Payment_Type_Form.submit_actions[0].element_name because the description does not name the submit button",
+    "Remove components.Bulk_Import.Template_Download.preconditions or only include them if the description explicitly requires selecting an entity type before downloading; update path: components.Bulk_Import.Template_Download.preconditions",
+    "Unset components.Bulk_Import.fields.Upload_File.required (set required to 'unspecified' or remove the flag) unless the description explicitly states the upload is required; update path: components.Bulk_Import.fields.Upload_File.required"
   ]
 }
 
 ------------------------------------------------------------
-[14:15:12] Semantic Critic - PARSED JSON
+[16:08:56] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST mostly covers the described pages and fields but includes multiple inferred UI elements (phantoms) not explicitly present in the description and should be regenerated with those removed or justified.",
+  "summary": "AST contains multiple inferred/unnamed interactive elements and metadata (submit button names, preconditions, editable-metadata, required flags) that are not explicitly stated in the description; regenerate with only items explicitly named.",
   "missing": [],
   "phantoms": [
-    "Create_Holiday_Form.submit_actions[1] (Cancel button not mentioned in description)",
-    "Working_Days_Page.submit_actions[1] (Cancel button not mentioned in description)",
-    "Currencies_Page.submit_actions[0] (Save button not explicitly mentioned in description)",
-    "Create_Fund_Form.submit_actions[1] (Cancel button not mentioned in description)",
-    "Create_Payment_Type_Form.submit_actions[1] (Cancel button not mentioned in description)",
-    "Currencies_Page.row_fields.Active (explicit 'Active' column/checkbox was inferred even though description only said 'selecting active currencies from a list' without specifying an Active column)"
+    "components.Currencies_List.row_editable_columns (row_editable_columns metadata not described)",
+    "components.Currencies_List.submit_actions[0] (Save button not named in description)",
+    "components.Create_Holiday_Form.submit_actions[0] (Create submit action label not specified in description)",
+    "components.Working_Days_Form.submit_actions[0] (Save submit action label not specified in description)",
+    "components.Create_Payment_Type_Form.submit_actions[0] (Create submit action label not specified in description)",
+    "components.Bulk_Import.Template_Download.preconditions[0] (\"Entity_Type must be selected\" precondition not stated in description)",
+    "components.Bulk_Import.fields.Upload_File.required (required=true inferred but not explicitly stated)"
   ],
   "fixes": [
-    "Remove or justify implicit Cancel buttons: delete Create_Holiday_Form.submit_actions[1] or update description to mention a Cancel action.",
-    "Remove or justify implicit Cancel buttons: delete Working_Days_Page.submit_actions[1] or update description to mention a Cancel action.",
-    "Remove or justify implicit Save on Currencies page: delete Currencies_Page.submit_actions[0] or update description to explicitly state there is a Save/Apply action for active currency selection.",
-    "Remove or justify implicit Cancel in Fund creation: delete Create_Fund_Form.submit_actions[1] or update description to include a Cancel action in the Create Fund form.",
-    "Remove or justify implicit Cancel in Payment Type creation: delete Create_Payment_Type_Form.submit_actions[1] or update description to include a Cancel action in the Create Payment Type form.",
-    "Clarify active-currency UI: either remove Currencies_Page.row_fields.Active entry or update description to explicitly state an 'Active' column/checkbox is present for selecting currencies."
+    "Remove components.Currencies_List.row_editable_columns or derive it only if the description explicitly states per-row in-place editing; otherwise omit this metadata.",
+    "Remove components.Currencies_List.submit_actions array or change submit action to an unspecified/unnamed action unless the description names a Save/Submit button; update path: components.Currencies_List.submit_actions",
+    "Remove components.Create_Holiday_Form.submit_actions[0].element_name (do not invent a submit button label); if a submit action must be present, set element_name to null or 'unspecified' at components.Create_Holiday_Form.submit_actions[0].element_name",
+    "Remove components.Working_Days_Form.submit_actions[0].element_name or set it to 'unspecified' at components.Working_Days_Form.submit_actions[0].element_name since no button name is provided in the description",
+    "Remove components.Create_Payment_Type_Form.submit_actions[0].element_name or set to 'unspecified' at components.Create_Payment_Type_Form.submit_actions[0].element_name because the description does not name the submit button",
+    "Remove components.Bulk_Import.Template_Download.preconditions or only include them if the description explicitly requires selecting an entity type before downloading; update path: components.Bulk_Import.Template_Download.preconditions",
+    "Unset components.Bulk_Import.fields.Upload_File.required (set required to 'unspecified' or remove the flag) unless the description explicitly states the upload is required; update path: components.Bulk_Import.fields.Upload_File.required"
   ]
 }
 
 ------------------------------------------------------------
-[14:16:43] Semantic Critic - USER PROMPT
+[16:10:24] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -624,8 +470,7 @@ The Working Days page allows configuring which days of the week are working days
       "actions": [
         {
           "element_name": "+ Create Holiday",
-          "type": "button",
-          "opens": "Create_Holiday_Form"
+          "opens_form": "Create_Holiday_Form"
         }
       ]
     },
@@ -634,21 +479,15 @@ The Working Days page allows configuring which days of the week are working days
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "From_Date": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "To_Date": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Repayments_Rescheduled_To_Date": {
           "type": "date"
@@ -661,14 +500,13 @@ The Working Days page allows configuring which days of the week are working days
         },
         "Applicable_Offices": {
           "type": "dropdown",
-          "multiple": true
+          "multi_select": true
         }
       },
       "submit_actions": [
         {
-          "element_name": "Create Holiday",
-          "type": "button",
-          "on_success": "creates holiday; installments falling on holidays are automatically rescheduled per the configured type"
+          "element_name": "unspecified",
+          "on_success": "creates holiday and reschedules installments falling on holidays per Rescheduling Type"
         }
       ]
     },
@@ -699,15 +537,22 @@ The Working Days page allows configuring which days of the week are working days
         "Repayment_Rescheduling": {
           "type": "dropdown"
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "updates working days and repayment rescheduling behavior"
+        }
+      ]
     },
-    "Currencies_Page": {
+    "Currencies_List": {
       "type": "data_table",
       "columns": [
         "Code",
         "Name",
         "Decimal Places"
-      ]
+      ],
+      "selectable_rows": true
     },
     "Funds_Page": {
       "type": "data_table",
@@ -717,9 +562,8 @@ The Working Days page allows configuring which days of the week are working days
       ],
       "actions": [
         {
-          "element_name": "+ Create Fund",
-          "type": "button",
-          "opens": "Create_Fund_Form"
+          "element_name": "Create Fund",
+          "opens_form": "Create_Fund_Form"
         }
       ]
     },
@@ -735,8 +579,7 @@ The Working Days page allows configuring which days of the week are working days
       },
       "submit_actions": [
         {
-          "element_name": "Create Fund",
-          "type": "button",
+          "element_name": "unspecified",
           "on_success": "creates fund"
         }
       ]
@@ -749,18 +592,10 @@ The Working Days page allows configuring which days of the week are working days
         "Is Cash Payment",
         "Position"
       ],
-      "row_entries": [
-        "Cash",
-        "Bank Transfer",
-        "Mobile Money",
-        "Check",
-        "Receipt"
-      ],
       "actions": [
         {
           "element_name": "+ Create",
-          "type": "button",
-          "opens": "Create_Payment_Type_Form"
+          "opens_form": "Create_Payment_Type_Form"
         }
       ]
     },
@@ -782,176 +617,196 @@ The Working Days page allows configuring which days of the week are working days
       },
       "submit_actions": [
         {
-          "element_name": "Create Payment Type",
-          "type": "button",
-          "on_success": "adds new payment type; appears as dropdown option in all transaction forms"
+          "element_name": "unspecified",
+          "on_success": "creates payment type and makes it available in transaction form dropdowns"
         }
       ]
     },
-    "Bulk_Import_Page": {
-      "type": "panel",
-      "import_types": {
-        "Clients": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+    "Bulk_Import": {
+      "type": "container",
+      "entity_types": [
+        {
+          "entity_name": "Clients",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Client records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Clients data"
             }
           ]
         },
-        "Groups": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Groups",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Group records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Groups data"
             }
           ]
         },
-        "Centers": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Centers",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Center records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Centers data"
             }
           ]
         },
-        "Offices": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Offices",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Office records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Offices data"
             }
           ]
         },
-        "Staff": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Staff",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Staff records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Staff data"
             }
           ]
         },
-        "Users": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Users",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports User records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Users data"
             }
           ]
         },
-        "Loans": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Loans",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Loan records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Loans data"
             }
           ]
         },
-        "Savings": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Savings",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Savings records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Savings data"
+            }
+          ]
+        },
+        {
+          "entity_name": "Other",
+          "description": "additional importable entity types",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
+            }
+          },
+          "fields": {
+            "Upload_File": {
+              "type": "file_upload",
+              "required": "unspecified"
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "unspecified",
+              "on_success": "imports selected entity data"
             }
           ]
         }
-      }
+      ]
     }
   }
 }
@@ -960,27 +815,23 @@ The Working Days page allows configuring which days of the week are working days
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:17:19] Semantic Critic - LLM RESPONSE
+[16:10:52] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST matches the described interactive pages and forms with only a minor omission (currency activation control).",
-  "missing": [
-    "Currencies_Page.active_selection_control (missing row-level control to select/activate currencies, e.g., checkbox or toggle per currency)"
-  ],
+  "summary": "AST accurately captures all interactive elements described (pages, tables, create buttons/forms, fields, checkboxes, dropdowns, file uploads, and import templates) with no significant missing items or extraneous phantoms.",
+  "missing": [],
   "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:17:19] Semantic Critic - PARSED JSON
+[16:10:52] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST matches the described interactive pages and forms with only a minor omission (currency activation control).",
-  "missing": [
-    "Currencies_Page.active_selection_control (missing row-level control to select/activate currencies, e.g., checkbox or toggle per currency)"
-  ],
+  "summary": "AST accurately captures all interactive elements described (pages, tables, create buttons/forms, fields, checkboxes, dropdowns, file uploads, and import templates) with no significant missing items or extraneous phantoms.",
+  "missing": [],
   "phantoms": [],
   "fixes": []
 }

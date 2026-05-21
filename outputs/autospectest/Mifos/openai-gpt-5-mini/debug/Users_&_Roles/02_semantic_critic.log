@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.598959
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.760453
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:13:25] Semantic Critic - SYSTEM PROMPT
+[16:07:11] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:13:25] Semantic Critic - USER PROMPT
+[16:07:11] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -123,34 +123,20 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
 {
   "module_name": "Users & Roles",
   "components": {
-    "Users_Page": {
+    "Users_Table": {
       "type": "data_table",
-      "columns": {
-        "Username": {
+      "clickable_columns": [
+        "Username"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open_User_Detail",
           "type": "link",
-          "notes": "clickable link navigates to user detail"
-        },
-        "First_Name": {
-          "type": "unspecified"
-        },
-        "Last_Name": {
-          "type": "unspecified"
-        },
-        "Email": {
-          "type": "email"
-        },
-        "Office": {
-          "type": "unspecified"
-        },
-        "Status": {
-          "type": "unspecified"
+          "trigger_column": "Username",
+          "description": "Navigate to the selected user's detail page"
         }
-      }
-    },
-    "Create_User_Button": {
-      "type": "button",
-      "element_name": "+ Create User",
-      "opens": "Create_User_Form"
+      ],
+      "bulk_actions": []
     },
     "Create_User_Form": {
       "type": "form",
@@ -172,6 +158,241 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
         },
         "Email": {
           "type": "email",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false,
+          "on_select": "associates selected staff record to the user"
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must meet password policy"
+          ]
+        },
+        "Repeat_Password": {
+          "type": "password",
+          "required": false,
+          "constraints": [
+            "must match Password"
+          ]
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multi_select": true,
+          "required": false,
+          "on_change": "assigns selected roles to the user"
+        },
+        "Override_Password_Expiry_Policy": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Send_Password_to_Email": {
+          "type": "checkbox",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create User",
+          "on_success": "creates user"
+        }
+      ]
+    },
+    "Roles_Table": {
+      "type": "data_table",
+      "clickable_columns": [
+        "Name"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Configure_Permissions",
+          "type": "link",
+          "trigger_column": "Name",
+          "description": "Open permissions matrix for this role"
+        }
+      ],
+      "bulk_actions": []
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Role",
+          "on_success": "opens Permissions configuration for the new role"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "fields": {
+        "User_Management": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each User Management permission in this category"
+        },
+        "Portfolio": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Portfolio permission in this category"
+        },
+        "Organization": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Organization permission in this category"
+        },
+        "Accounting": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Accounting permission in this category"
+        },
+        "Reports": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Reports permission in this category"
+        },
+        "Other_Categories": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for any additional permission categories (e.g., etc.)"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Permissions",
+          "on_success": "applies permissions to role and controls what menu items, pages, and actions the role can access"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:08:41] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing the Create buttons and a required constraint, and contains several phantom elements not present in the description.",
+  "missing": [
+    "components.Users_Table.create_button (+ Create User button that opens Create_User_Form)",
+    "components.Roles_Table.create_button (+ Create Role button that opens Create_Role_Form)",
+    "components.Create_User_Form.fields.Repeat_Password.required (should be true since Repeat Password must match and is expected to be required)"
+  ],
+  "phantoms": [
+    "components.Roles_Table.clickable_columns[0] (\"Name\" column marked clickable — description did not state role names are clickable)",
+    "components.Roles_Table.row_actions[0] (Configure_Permissions row action triggered by Name — not described)",
+    "components.Role_Permissions_Page.fields.Other_Categories (an inferred 'Other_Categories' field not mentioned in the description)"
+  ],
+  "fixes": [
+    "components.Users_Table.create_button: Add an explicit create button entry under components.Users_Table, e.g. { \"element_name\": \"+ Create User\", \"type\": \"button\", \"opens\": \"components.Create_User_Form\" } so the AST models the described action to open the creation form.",
+    "components.Roles_Table.create_button: Add an explicit create button entry under components.Roles_Table, e.g. { \"element_name\": \"+ Create Role\", \"type\": \"button\", \"opens\": \"components.Create_Role_Form\" } so the AST models the described action to open the role creation form.",
+    "components.Create_User_Form.fields.Repeat_Password.required: Set this to true to reflect that Repeat Password is expected to be provided and validated (currently false).",
+    "components.Roles_Table.clickable_columns: Remove the 'Name' clickable column entry and the associated row action (components.Roles_Table.row_actions[0]) unless the description is updated to explicitly state that clicking a role name opens a permissions page. The description only specified that after creation the permissions page displays.",
+    "components.Role_Permissions_Page.fields.Other_Categories: Remove the 'Other_Categories' field (or replace it with only explicitly listed categories) because it was an inference not present in the description. Include only the categories explicitly named (User Management, Portfolio, Organization, Accounting, Reports, etc.) or add explicit category names in the description to retain it."
+  ]
+}
+
+------------------------------------------------------------
+[16:08:41] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing the Create buttons and a required constraint, and contains several phantom elements not present in the description.",
+  "missing": [
+    "components.Users_Table.create_button (+ Create User button that opens Create_User_Form)",
+    "components.Roles_Table.create_button (+ Create Role button that opens Create_Role_Form)",
+    "components.Create_User_Form.fields.Repeat_Password.required (should be true since Repeat Password must match and is expected to be required)"
+  ],
+  "phantoms": [
+    "components.Roles_Table.clickable_columns[0] (\"Name\" column marked clickable \u2014 description did not state role names are clickable)",
+    "components.Roles_Table.row_actions[0] (Configure_Permissions row action triggered by Name \u2014 not described)",
+    "components.Role_Permissions_Page.fields.Other_Categories (an inferred 'Other_Categories' field not mentioned in the description)"
+  ],
+  "fixes": [
+    "components.Users_Table.create_button: Add an explicit create button entry under components.Users_Table, e.g. { \"element_name\": \"+ Create User\", \"type\": \"button\", \"opens\": \"components.Create_User_Form\" } so the AST models the described action to open the creation form.",
+    "components.Roles_Table.create_button: Add an explicit create button entry under components.Roles_Table, e.g. { \"element_name\": \"+ Create Role\", \"type\": \"button\", \"opens\": \"components.Create_Role_Form\" } so the AST models the described action to open the role creation form.",
+    "components.Create_User_Form.fields.Repeat_Password.required: Set this to true to reflect that Repeat Password is expected to be provided and validated (currently false).",
+    "components.Roles_Table.clickable_columns: Remove the 'Name' clickable column entry and the associated row action (components.Roles_Table.row_actions[0]) unless the description is updated to explicitly state that clicking a role name opens a permissions page. The description only specified that after creation the permissions page displays.",
+    "components.Role_Permissions_Page.fields.Other_Categories: Remove the 'Other_Categories' field (or replace it with only explicitly listed categories) because it was an inference not present in the description. Include only the categories explicitly named (User Management, Portfolio, Organization, Accounting, Reports, etc.) or add explicit category names in the description to retain it."
+  ]
+}
+
+------------------------------------------------------------
+[16:10:05] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Users page displays a data table with columns for Username (clickable link), First Name, Last Name, Email, Office, and Status. A "+ Create User" button opens the creation form containing Username (required, must be unique), First Name (required), Last Name (required), Email (required, validated for email format), Office (required), Staff dropdown (links the user to a staff record), Password (required, must meet password policy), Repeat Password (must match — shows a validation error if they differ), Roles (multi-select checkboxes), Override Password Expiry Policy checkbox, and Send Password to Email checkbox.
+
+The Roles page displays all roles with Name and Description columns. A "+ Create Role" button opens a form with Role Name and Description. After creation, a permissions page displays a categorized matrix of all system permissions (User Management, Portfolio, Organization, Accounting, Reports, etc.) with checkboxes for each permission. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": [
+        "Username",
+        "First Name",
+        "Last Name",
+        "Email",
+        "Office",
+        "Status"
+      ],
+      "clickable_columns": [
+        "Username"
+      ],
+      "create_button": {
+        "element_name": "+ Create User",
+        "type": "button",
+        "opens": "components.Create_User_Form"
+      }
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": [
+            "must be unique"
+          ]
+        },
+        "First Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
           "required": true,
           "constraints": [
             "must be valid email format"
@@ -184,7 +405,8 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
         "Staff": {
           "type": "dropdown",
           "required": false,
-          "notes": "links the user to an existing staff record"
+          "options_source": "Staff_Records",
+          "description": "links the user to a staff record"
         },
         "Password": {
           "type": "password",
@@ -193,7 +415,7 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
             "must meet password policy"
           ]
         },
-        "Repeat_Password": {
+        "Repeat Password": {
           "type": "password",
           "required": true,
           "constraints": [
@@ -204,85 +426,139 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
           "type": "checkbox",
           "multiple": true,
           "required": false,
-          "notes": "multi-select checkboxes for assigning roles; options not enumerated"
+          "options_source": "Roles_List"
         },
-        "Override_Password_Expiry_Policy": {
+        "Override Password Expiry Policy": {
           "type": "checkbox",
           "required": false
         },
-        "Send_Password_to_Email": {
+        "Send Password to Email": {
           "type": "checkbox",
           "required": false
-        }
-      }
-    },
-    "Roles_Page": {
-      "type": "data_table",
-      "columns": {
-        "Name": {
-          "type": "unspecified"
-        },
-        "Description": {
-          "type": "unspecified"
-        }
-      }
-    },
-    "Create_Role_Button": {
-      "type": "button",
-      "element_name": "+ Create Role",
-      "opens": "Create_Role_Form"
-    },
-    "Create_Role_Form": {
-      "type": "form",
-      "fields": {
-        "Role_Name": {
-          "type": "unspecified"
-        },
-        "Description": {
-          "type": "unspecified"
         }
       },
       "submit_actions": [
         {
-          "element_name": "Create Role",
-          "on_success": "opens Role Permissions page for the created role"
+          "element_name": "Create",
+          "type": "button",
+          "on_success": "creates user"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ],
+      "constraints": []
+    },
+    "Roles_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Description"
+      ],
+      "create_button": {
+        "element_name": "+ Create Role",
+        "type": "button",
+        "opens": "components.Create_Role_Form"
+      }
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "type": "button",
+          "on_success": "opens Role_Permissions_Page",
+          "opens": "components.Role_Permissions_Page"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
         }
       ]
     },
     "Role_Permissions_Page": {
       "type": "form",
-      "notes": "categorized matrix of all system permissions; enabling/disabling controls access",
+      "description": "Categorized matrix of system permissions. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.",
+      "on_change": "modifies role access to menu items, pages, and actions",
       "fields": {
-        "Permission_Categories": {
+        "User Management": {
           "type": "repeating_group",
           "item_fields": {
-            "Category_Name": {
-              "type": "unspecified",
-              "options": [
-                "User Management",
-                "Portfolio",
-                "Organization",
-                "Accounting",
-                "Reports"
-              ],
-              "required": false
+            "Permission": {
+              "type": "unspecified"
             },
-            "Permissions": {
-              "type": "repeating_group",
-              "item_fields": {
-                "Permission_Name": {
-                  "type": "unspecified"
-                },
-                "Enabled": {
-                  "type": "checkbox",
-                  "required": false,
-                  "on_change": "controls access to menu items, pages, and actions"
-                }
-              }
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Portfolio": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Organization": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Accounting": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Reports": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
             }
           }
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Permissions",
+          "type": "button",
+          "on_success": "updates role permissions"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ]
     }
   }
 }
@@ -291,23 +567,270 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:14:52] Semantic Critic - LLM RESPONSE
+[16:11:11] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
-  "verdict": "yes",
-  "summary": "The AST accurately includes all interactive elements (tables, buttons, forms, fields, validation constraints, and permissions matrix) described in the specification.",
+  "verdict": "retry",
+  "summary": "The AST covers the main interactive elements but includes multiple inferred/unnamed elements (phantoms) and a few inferred properties that should not be invented; please remove or align these with the description and add explicit validation mapping for the repeat-password error.",
   "missing": [],
-  "phantoms": [],
-  "fixes": []
+  "phantoms": [
+    "Create_User_Form.submit_actions[1] (Cancel button not mentioned in description)",
+    "Create_Role_Form.submit_actions[1] (Cancel button not mentioned in description)",
+    "Role_Permissions_Page.submit_actions[1] (Cancel button not mentioned in description)",
+    "Create_User_Form.fields.Staff.options_source (Staff_Records options_source not in description)",
+    "Create_User_Form.fields.Roles.options_source (Roles_List options_source not in description)"
+  ],
+  "fixes": [
+    "Remove or mark explicit only-if-described Cancel buttons: delete Create_User_Form.submit_actions[1], Create_Role_Form.submit_actions[1], and Role_Permissions_Page.submit_actions[1] unless the description is updated to mention them.",
+    "Remove inferred options_source properties that were not in the description: delete Create_User_Form.fields.Staff.options_source and Create_User_Form.fields.Roles.options_source (or set them to unspecified) so the AST does not invent data sources.",
+    "Avoid inventing unlabeled form submit button names: either (a) keep a single submit action but set element_name to a neutral value like \"submit\" or leave element_name unspecified for Create_User_Form.submit_actions[0] and Create_Role_Form.submit_actions[0], or (b) update the description to explicitly name those buttons if specific labels are required (update paths Create_User_Form.submit_actions[0] and Create_Role_Form.submit_actions[0]).",
+    "Add explicit validation error mapping for the Repeat Password field to reflect the described behavior: add Create_User_Form.fields['Repeat Password'].validation { \"trigger\": \"mismatch_with_Password\", \"message\": \"Passwords do not match\" } so the AST captures the described validation consequence."
+  ]
 }
 
 ------------------------------------------------------------
-[14:14:52] Semantic Critic - PARSED JSON
+[16:11:11] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
-  "verdict": "yes",
-  "summary": "The AST accurately includes all interactive elements (tables, buttons, forms, fields, validation constraints, and permissions matrix) described in the specification.",
+  "verdict": "retry",
+  "summary": "The AST covers the main interactive elements but includes multiple inferred/unnamed elements (phantoms) and a few inferred properties that should not be invented; please remove or align these with the description and add explicit validation mapping for the repeat-password error.",
   "missing": [],
-  "phantoms": [],
-  "fixes": []
+  "phantoms": [
+    "Create_User_Form.submit_actions[1] (Cancel button not mentioned in description)",
+    "Create_Role_Form.submit_actions[1] (Cancel button not mentioned in description)",
+    "Role_Permissions_Page.submit_actions[1] (Cancel button not mentioned in description)",
+    "Create_User_Form.fields.Staff.options_source (Staff_Records options_source not in description)",
+    "Create_User_Form.fields.Roles.options_source (Roles_List options_source not in description)"
+  ],
+  "fixes": [
+    "Remove or mark explicit only-if-described Cancel buttons: delete Create_User_Form.submit_actions[1], Create_Role_Form.submit_actions[1], and Role_Permissions_Page.submit_actions[1] unless the description is updated to mention them.",
+    "Remove inferred options_source properties that were not in the description: delete Create_User_Form.fields.Staff.options_source and Create_User_Form.fields.Roles.options_source (or set them to unspecified) so the AST does not invent data sources.",
+    "Avoid inventing unlabeled form submit button names: either (a) keep a single submit action but set element_name to a neutral value like \"submit\" or leave element_name unspecified for Create_User_Form.submit_actions[0] and Create_Role_Form.submit_actions[0], or (b) update the description to explicitly name those buttons if specific labels are required (update paths Create_User_Form.submit_actions[0] and Create_Role_Form.submit_actions[0]).",
+    "Add explicit validation error mapping for the Repeat Password field to reflect the described behavior: add Create_User_Form.fields['Repeat Password'].validation { \"trigger\": \"mismatch_with_Password\", \"message\": \"Passwords do not match\" } so the AST captures the described validation consequence."
+  ]
+}
+
+------------------------------------------------------------
+[16:12:00] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Users page displays a data table with columns for Username (clickable link), First Name, Last Name, Email, Office, and Status. A "+ Create User" button opens the creation form containing Username (required, must be unique), First Name (required), Last Name (required), Email (required, validated for email format), Office (required), Staff dropdown (links the user to a staff record), Password (required, must meet password policy), Repeat Password (must match — shows a validation error if they differ), Roles (multi-select checkboxes), Override Password Expiry Policy checkbox, and Send Password to Email checkbox.
+
+The Roles page displays all roles with Name and Description columns. A "+ Create Role" button opens a form with Role Name and Description. After creation, a permissions page displays a categorized matrix of all system permissions (User Management, Portfolio, Organization, Accounting, Reports, etc.) with checkboxes for each permission. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Username",
+          "is_link": true
+        },
+        {
+          "name": "First Name"
+        },
+        {
+          "name": "Last Name"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Office"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create User",
+          "opens": "Create_User_Form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open User",
+          "trigger": "click_Username"
+        }
+      ]
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": [
+            "must be unique"
+          ]
+        },
+        "First Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must meet password policy"
+          ]
+        },
+        "Repeat Password": {
+          "type": "password",
+          "required": true,
+          "validation": {
+            "trigger": "mismatch_with_Password",
+            "message": "Passwords do not match"
+          }
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multiple": true
+        },
+        "Override Password Expiry Policy": {
+          "type": "checkbox"
+        },
+        "Send Password to Email": {
+          "type": "checkbox"
+        }
+      },
+      "submit_actions": [
+        {}
+      ]
+    },
+    "Roles_Page": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create Role",
+          "opens": "Create_Role_Form"
+        }
+      ]
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role Name": {
+          "type": "unspecified"
+        },
+        "Description": {
+          "type": "unspecified"
+        }
+      },
+      "submit_actions": [
+        {
+          "on_success": "navigates to Role_Permissions_Page"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "fields": {
+        "Permissions": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Category Name": {
+              "type": "unspecified"
+            },
+            "Permissions": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Permission Name": {
+                  "type": "unspecified"
+                },
+                "Enabled": {
+                  "type": "checkbox"
+                }
+              }
+            }
+          }
+        }
+      },
+      "notes": [
+        "Categories include User Management, Portfolio, Organization, Accounting, Reports, etc.",
+        "Enabling or disabling permissions controls what menu items, pages, and actions the role can access"
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:12:42] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST mostly covers the described functionality but has missing submit button details and contains a couple of phantom elements that should be removed or clarified before use.",
+  "missing": [
+    "components.Create_User_Form.submit_actions[0] (submit action object is empty — missing submit button label and on_success behavior)",
+    "components.Create_Role_Form.submit_actions[0].action_name (submit action has on_success but no action/button name)"
+  ],
+  "phantoms": [
+    "components.Users_Table.row_actions[0] (Open User action not explicitly named in the description; description only states Username is a clickable link)",
+    "components.Role_Permissions_Page.notes (freeform notes block is documentation, not an interactive element described in the spec)"
+  ],
+  "fixes": [
+    "components.Create_User_Form.submit_actions[0] — replace the empty object with a concrete submit action, e.g. { \"action_name\": \"Create User\", \"type\": \"submit\", \"on_success\": \"close_form_and_refresh_Users_Table\" } (or an equivalent submit action defined in the spec).",
+    "components.Create_Role_Form.submit_actions[0] — add an action_name (e.g. \"Create Role\") to the existing submit action object so the submit button is explicitly defined: add \"action_name\": \"Create Role\".",
+    "components.Users_Table.row_actions[0] — remove this row action object if the description does not explicitly name the action; alternatively, if you intend to keep it, ensure the description explicitly states the effect (e.g., 'clicking Username opens the user details') and update the spec accordingly.",
+    "components.Role_Permissions_Page.notes — remove this notes block from the interactive AST (move it to non-interactive documentation) because it is not an interactive element required by the description."
+  ]
+}
+
+------------------------------------------------------------
+[16:12:42] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST mostly covers the described functionality but has missing submit button details and contains a couple of phantom elements that should be removed or clarified before use.",
+  "missing": [
+    "components.Create_User_Form.submit_actions[0] (submit action object is empty \u2014 missing submit button label and on_success behavior)",
+    "components.Create_Role_Form.submit_actions[0].action_name (submit action has on_success but no action/button name)"
+  ],
+  "phantoms": [
+    "components.Users_Table.row_actions[0] (Open User action not explicitly named in the description; description only states Username is a clickable link)",
+    "components.Role_Permissions_Page.notes (freeform notes block is documentation, not an interactive element described in the spec)"
+  ],
+  "fixes": [
+    "components.Create_User_Form.submit_actions[0] \u2014 replace the empty object with a concrete submit action, e.g. { \"action_name\": \"Create User\", \"type\": \"submit\", \"on_success\": \"close_form_and_refresh_Users_Table\" } (or an equivalent submit action defined in the spec).",
+    "components.Create_Role_Form.submit_actions[0] \u2014 add an action_name (e.g. \"Create Role\") to the existing submit action object so the submit button is explicitly defined: add \"action_name\": \"Create Role\".",
+    "components.Users_Table.row_actions[0] \u2014 remove this row action object if the description does not explicitly name the action; alternatively, if you intend to keep it, ensure the description explicitly states the effect (e.g., 'clicking Username opens the user details') and update the spec accordingly.",
+    "components.Role_Permissions_Page.notes \u2014 remove this notes block from the interactive AST (move it to non-interactive documentation) because it is not an interactive element required by the description."
+  ]
 }

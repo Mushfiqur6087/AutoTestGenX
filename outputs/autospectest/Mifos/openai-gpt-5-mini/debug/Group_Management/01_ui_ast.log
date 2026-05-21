@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.588266
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.751049
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Group Management
 
@@ -220,31 +220,32 @@ The Group Detail page displays the group name, account number, status, office, a
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:12:10] UI-AST Agent - LLM RESPONSE
+[16:05:49] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Group Management",
   "components": {
-    "Groups_Page_Table": {
+    "Groups_Page": {
       "type": "data_table",
-      "columns": ["Group Name", "Account Number", "Office", "Status", "Staff"],
+      "description": "Main listing of groups",
       "row_actions": [
         {
-          "action_name": "View Details",
-          "element_type": "link",
-          "on_success": "navigates to Group Detail page"
+          "action_name": "Open Group Detail",
+          "action_type": "link",
+          "trigger_column": "Group Name",
+          "on_click": "navigates to Group Detail page"
         }
       ],
-      "top_right_actions": [
+      "page_actions": [
         {
           "element_name": "Import Groups",
-          "element_type": "button",
-          "on_success": "navigates to Bulk Import Groups page"
+          "type": "button",
+          "on_click": "navigates to Bulk Import Groups page"
         },
         {
           "element_name": "Create New Group",
-          "element_type": "button",
-          "on_success": "opens Create Group form"
+          "type": "button",
+          "on_click": "opens Create Group form"
         }
       ]
     },
@@ -253,358 +254,892 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "Office": {
           "type": "dropdown",
-          "constraints": ["required"]
+          "required": true
         },
         "Staff": {
           "type": "dropdown",
-          "constraints": []
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
-          "constraints": ["required"]
+          "required": true
         },
         "Active": {
           "type": "checkbox",
-          "constraints": []
+          "required": false
         },
         "External_Id": {
           "type": "unspecified",
-          "constraints": []
+          "required": false
         },
-        "Add_Clients": {
+        "Client_Search": {
+          "type": "search",
+          "required": false,
+          "description": "Search existing clients to associate with the group"
+        },
+        "Selected_Clients": {
           "type": "repeating_group",
           "item_fields": {
             "Client": {
-              "type": "search",
-              "constraints": ["required"]
+              "type": "link",
+              "required": true,
+              "description": "Selected client (links to client profile)"
             }
-          },
-          "constraints": []
+          }
         }
       },
       "submit_actions": [
         {
           "element_name": "Submit",
-          "element_type": "button",
-          "on_success": "creates the group"
+          "on_success": "creates group"
         }
       ]
     },
     "Bulk_Import_Groups_Page": {
-      "type": "composite",
+      "type": "page",
       "panels": {
-        "Groups_Template": {
-          "type": "form",
+        "Groups_Template_Panel": {
+          "type": "panel",
           "fields": {
             "Office": {
               "type": "dropdown",
-              "constraints": []
+              "required": false
             },
             "Staff": {
               "type": "dropdown",
-              "constraints": []
+              "required": false
             }
           },
           "actions": [
             {
               "element_name": "Download",
-              "element_type": "button",
-              "on_success": "downloads groups template pre-populated with selected Office and Staff"
+              "type": "button",
+              "on_click": "downloads groups template"
             }
           ]
         },
-        "Groups_Upload": {
-          "type": "form",
+        "Groups_Upload_Panel": {
+          "type": "panel",
           "fields": {
-            "Groups_File": {
+            "Template_File": {
               "type": "file_upload",
-              "constraints": ["required"]
+              "required": true
             }
           },
           "actions": [
             {
               "element_name": "Upload",
-              "element_type": "button",
-              "on_success": "starts import and records import history"
+              "type": "button",
+              "on_click": "starts import",
+              "on_success": "imports groups and records import history"
             }
           ]
         }
       },
-      "Import_History": {
+      "import_history_table": {
         "type": "data_table",
-        "columns": [],
-        "row_actions": [
-          {
-            "action_name": "View Import Details"
-          }
-        ]
+        "description": "Import history entries for uploaded group files"
       }
     },
-    "Group_Detail": {
-      "type": "detail_page",
-      "components": {
-        "Action_Bar": {
-          "type": "state_bound_action_bar",
-          "states": {
-            "Pending": {
-              "available_actions": [
-                {
-                  "action_name": "Activate",
-                  "element_type": "button",
-                  "on_success": "changes status to Active"
-                },
-                {
-                  "action_name": "Edit",
-                  "element_type": "button",
-                  "fields": {
-                    "Name": { "type": "unspecified", "constraints": ["required"] },
-                    "Office": { "type": "dropdown", "constraints": ["required"] },
-                    "Staff": { "type": "dropdown", "constraints": [] },
-                    "Submitted_On": { "type": "date", "constraints": ["required"] },
-                    "Active": { "type": "checkbox", "constraints": [] },
-                    "External_Id": { "type": "unspecified", "constraints": [] },
-                    "Add_Clients": {
-                      "type": "repeating_group",
-                      "item_fields": { "Client": { "type": "search", "constraints": ["required"] } },
-                      "constraints": []
-                    }
-                  }
-                },
-                {
-                  "action_name": "Close",
-                  "element_type": "button",
-                  "on_success": "changes status to Closed"
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "element_type": "button",
-                  "fields": {
-                    "Staff": { "type": "dropdown", "constraints": ["required"] }
-                  }
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "element_type": "button",
-                  "fields": {
-                    "Clients": {
-                      "type": "repeating_group",
-                      "item_fields": { "Client": { "type": "search", "constraints": ["required"] } },
-                      "constraints": ["required"]
-                    },
-                    "Target_Group": { "type": "search", "constraints": ["required"] }
-                  }
-                }
-              ]
-            },
-            "Active": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "element_type": "button",
-                  "fields": {
-                    "Name": { "type": "unspecified", "constraints": ["required"] },
-                    "Office": { "type": "dropdown", "constraints": ["required"] },
-                    "Staff": { "type": "dropdown", "constraints": [] },
-                    "Submitted_On": { "type": "date", "constraints": ["required"] },
-                    "Active": { "type": "checkbox", "constraints": [] },
-                    "External_Id": { "type": "unspecified", "constraints": [] },
-                    "Add_Clients": {
-                      "type": "repeating_group",
-                      "item_fields": { "Client": { "type": "search", "constraints": ["required"] } },
-                      "constraints": []
-                    }
-                  }
-                },
-                {
-                  "action_name": "Close",
-                  "element_type": "button",
-                  "on_success": "changes status to Closed"
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "element_type": "button",
-                  "fields": {
-                    "Staff": { "type": "dropdown", "constraints": ["required"] }
-                  }
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "element_type": "button",
-                  "fields": {
-                    "Clients": {
-                      "type": "repeating_group",
-                      "item_fields": { "Client": { "type": "search", "constraints": ["required"] } },
-                      "constraints": ["required"]
-                    },
-                    "Target_Group": { "type": "search", "constraints": ["required"] }
-                  }
-                }
-              ]
-            },
-            "Closed": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "element_type": "button",
-                  "fields": {
-                    "Name": { "type": "unspecified", "constraints": ["required"] },
-                    "Office": { "type": "dropdown", "constraints": ["required"] },
-                    "Staff": { "type": "dropdown", "constraints": [] },
-                    "Submitted_On": { "type": "date", "constraints": ["required"] },
-                    "Active": { "type": "checkbox", "constraints": [] },
-                    "External_Id": { "type": "unspecified", "constraints": [] },
-                    "Add_Clients": {
-                      "type": "repeating_group",
-                      "item_fields": { "Client": { "type": "search", "constraints": ["required"] } },
-                      "constraints": []
-                    }
-                  }
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "element_type": "button",
-                  "fields": {
-                    "Staff": { "type": "dropdown", "constraints": ["required"] }
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "Tabs": {
-          "type": "tab_container",
-          "tabs": [
+    "Group_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Active": {
+          "available_actions": [
             {
-              "tab_name": "Members",
-              "fields": {},
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "columns": ["Member Name", "Account Number", "Role"],
-                  "row_actions": [
-                    {
-                      "action_name": "View Member Profile",
-                      "element_type": "link",
-                      "on_success": "navigates to client profile"
-                    }
-                  ]
-                }
-              }
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Create Group form prefilled",
+              "on_success": "updates group"
             },
             {
-              "tab_name": "Loan Accounts",
-              "fields": {},
-              "components": {
-                "Group_Loans_Table": {
-                  "type": "data_table",
-                  "columns": ["Loan ID", "Product", "Balance", "Type"],
-                  "row_actions": [
-                    {
-                      "action_name": "View Loan"
-                    }
-                  ]
-                }
-              }
+              "action_name": "Close",
+              "type": "button",
+              "on_click": "opens Close confirmation",
+              "on_success": "sets status to Closed"
             },
             {
-              "tab_name": "Savings Accounts",
-              "fields": {},
-              "components": {
-                "Savings_Table": {
-                  "type": "data_table",
-                  "columns": ["Account ID", "Product", "Balance"],
-                  "row_actions": [
-                    {
-                      "action_name": "View Savings Account"
-                    }
-                  ]
+              "action_name": "Assign Staff",
+              "type": "button",
+              "fields": {
+                "Staff": {
+                  "type": "dropdown",
+                  "required": true
                 }
-              }
+              },
+              "on_success": "assigns staff to group"
             },
             {
-              "tab_name": "Notes",
-              "fields": {},
-              "components": {}
-            },
-            {
-              "tab_name": "Calendar/Meetings",
-              "fields": {},
-              "components": {
-                "Meetings": {
-                  "type": "form_collection",
-                  "actions": [
-                    {
-                      "element_name": "Schedule Meeting",
-                      "element_type": "button",
-                      "fields": {
-                        "Meeting_Date": { "type": "date", "constraints": ["required"] },
-                        "Meeting_Notes": { "type": "unspecified", "constraints": [] }
-                      },
-                      "on_success": "creates scheduled meeting on group calendar"
-                    },
-                    {
-                      "element_name": "Record Meeting",
-                      "element_type": "button",
-                      "fields": {
-                        "Meeting_Date": { "type": "date", "constraints": ["required"] },
-                        "Meeting_Notes": { "type": "unspecified", "constraints": [] }
-                      },
-                      "on_success": "records meeting details"
-                    }
-                  ],
-                  "components": {
-                    "Calendar_View": {
-                      "type": "unspecified",
-                      "fields": {}
-                    }
-                  }
-                }
-              }
+              "action_name": "Transfer Clients",
+              "type": "button",
+              "on_click": "opens Transfer Clients dialog",
+              "on_success": "transfers clients"
             }
           ]
         },
-        "Collection_Sheet_Feature": {
-          "type": "feature",
-          "actions": [
+        "Pending": {
+          "available_actions": [
             {
-              "element_name": "Generate Collection Sheet",
-              "element_type": "button",
-              "on_success": "generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry"
-            }
-          ],
-          "collection_sheet_table": {
-            "type": "data_table",
-            "editable_rows": true,
-            "row_fields": {
-              "Client": { "type": "link", "constraints": ["required"] },
-              "Loan_Repayment_Amount": { "type": "number", "constraints": [] },
-              "Savings_Deposit_Amount": { "type": "number", "constraints": [] }
+              "action_name": "Activate",
+              "type": "button",
+              "on_click": "activates group",
+              "on_success": "sets status to Active"
             },
-            "submit_actions": [
-              {
-                "element_name": "Save Collection Sheet",
-                "element_type": "button",
-                "on_success": "saves batch entries"
-              }
-            ]
+            {
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Create Group form prefilled",
+              "on_success": "updates group"
+            },
+            {
+              "action_name": "Assign Staff",
+              "type": "button",
+              "fields": {
+                "Staff": {
+                  "type": "dropdown",
+                  "required": true
+                }
+              },
+              "on_success": "assigns staff to group"
+            },
+            {
+              "action_name": "Transfer Clients",
+              "type": "button",
+              "on_click": "opens Transfer Clients dialog",
+              "on_success": "transfers clients"
+            }
+          ]
+        },
+        "Closed": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "type": "button",
+              "on_click": "re-activates group",
+              "on_success": "sets status to Active"
+            },
+            {
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Create Group form prefilled",
+              "on_success": "updates group"
+            },
+            {
+              "action_name": "Assign Staff",
+              "type": "button",
+              "fields": {
+                "Staff": {
+                  "type": "dropdown",
+                  "required": false
+                }
+              },
+              "on_success": "assigns staff to group"
+            },
+            {
+              "action_name": "Transfer Clients",
+              "type": "button",
+              "on_click": "opens Transfer Clients dialog",
+              "on_success": "transfers clients"
+            }
+          ]
+        }
+      }
+    },
+    "Group_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Members",
+          "fields": {
+            "Members_Table": {
+              "type": "data_table",
+              "description": "List of client members",
+              "row_actions": [
+                {
+                  "action_name": "View Member Profile",
+                  "action_type": "link",
+                  "on_click": "navigates to client profile"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {
+            "Loan_Accounts_Table": {
+              "type": "data_table",
+              "description": "Group loans and GLIM accounts"
+            }
+          }
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {
+            "Savings_Accounts_Table": {
+              "type": "data_table",
+              "description": "Group savings and GSIM accounts"
+            }
+          }
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {
+            "Schedule_Meeting": {
+              "type": "button",
+              "element_name": "Schedule Meeting",
+              "on_click": "opens Schedule Meeting dialog",
+              "on_success": "schedules meeting"
+            },
+            "Record_Meeting": {
+              "type": "button",
+              "element_name": "Record Meeting",
+              "on_click": "opens Record Meeting dialog",
+              "on_success": "records meeting details"
+            }
           }
         }
+      ]
+    },
+    "Collection_Sheet_Feature": {
+      "type": "feature",
+      "description": "Generates a collection sheet for batch data entry of repayments and deposits",
+      "actions": [
+        {
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_click": "generates collection sheet for group clients"
+        }
+      ],
+      "generated_sheet": {
+        "type": "data_table",
+        "description": "Editable rows per group client for batch entry",
+        "row_fields": {
+          "Client": {
+            "type": "link",
+            "required": true
+          },
+          "Loan_Repayment_Amount": {
+            "type": "number",
+            "required": false
+          },
+          "Savings_Deposit_Amount": {
+            "type": "number",
+            "required": false
+          }
+        },
+        "submit_actions": [
+          {
+            "element_name": "Save Collection Sheet",
+            "on_success": "records repayments and deposits"
+          }
+        ]
       }
     }
   }
 }
 
 ------------------------------------------------------------
-[14:12:10] UI-AST Agent - PARSED JSON
+[16:05:49] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Group Management",
   "components": {
-    "Groups_Page_Table": {
+    "Groups_Page": {
+      "type": "data_table",
+      "description": "Main listing of groups",
+      "row_actions": [
+        {
+          "action_name": "Open Group Detail",
+          "action_type": "link",
+          "trigger_column": "Group Name",
+          "on_click": "navigates to Group Detail page"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "Import Groups",
+          "type": "button",
+          "on_click": "navigates to Bulk Import Groups page"
+        },
+        {
+          "element_name": "Create New Group",
+          "type": "button",
+          "on_click": "opens Create Group form"
+        }
+      ]
+    },
+    "Create_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Client_Search": {
+          "type": "search",
+          "required": false,
+          "description": "Search existing clients to associate with the group"
+        },
+        "Selected_Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "link",
+              "required": true,
+              "description": "Selected client (links to client profile)"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates group"
+        }
+      ]
+    },
+    "Bulk_Import_Groups_Page": {
+      "type": "page",
+      "panels": {
+        "Groups_Template_Panel": {
+          "type": "panel",
+          "fields": {
+            "Office": {
+              "type": "dropdown",
+              "required": false
+            },
+            "Staff": {
+              "type": "dropdown",
+              "required": false
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Download",
+              "type": "button",
+              "on_click": "downloads groups template"
+            }
+          ]
+        },
+        "Groups_Upload_Panel": {
+          "type": "panel",
+          "fields": {
+            "Template_File": {
+              "type": "file_upload",
+              "required": true
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Upload",
+              "type": "button",
+              "on_click": "starts import",
+              "on_success": "imports groups and records import history"
+            }
+          ]
+        }
+      },
+      "import_history_table": {
+        "type": "data_table",
+        "description": "Import history entries for uploaded group files"
+      }
+    },
+    "Group_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Create Group form prefilled",
+              "on_success": "updates group"
+            },
+            {
+              "action_name": "Close",
+              "type": "button",
+              "on_click": "opens Close confirmation",
+              "on_success": "sets status to Closed"
+            },
+            {
+              "action_name": "Assign Staff",
+              "type": "button",
+              "fields": {
+                "Staff": {
+                  "type": "dropdown",
+                  "required": true
+                }
+              },
+              "on_success": "assigns staff to group"
+            },
+            {
+              "action_name": "Transfer Clients",
+              "type": "button",
+              "on_click": "opens Transfer Clients dialog",
+              "on_success": "transfers clients"
+            }
+          ]
+        },
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "type": "button",
+              "on_click": "activates group",
+              "on_success": "sets status to Active"
+            },
+            {
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Create Group form prefilled",
+              "on_success": "updates group"
+            },
+            {
+              "action_name": "Assign Staff",
+              "type": "button",
+              "fields": {
+                "Staff": {
+                  "type": "dropdown",
+                  "required": true
+                }
+              },
+              "on_success": "assigns staff to group"
+            },
+            {
+              "action_name": "Transfer Clients",
+              "type": "button",
+              "on_click": "opens Transfer Clients dialog",
+              "on_success": "transfers clients"
+            }
+          ]
+        },
+        "Closed": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "type": "button",
+              "on_click": "re-activates group",
+              "on_success": "sets status to Active"
+            },
+            {
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Create Group form prefilled",
+              "on_success": "updates group"
+            },
+            {
+              "action_name": "Assign Staff",
+              "type": "button",
+              "fields": {
+                "Staff": {
+                  "type": "dropdown",
+                  "required": false
+                }
+              },
+              "on_success": "assigns staff to group"
+            },
+            {
+              "action_name": "Transfer Clients",
+              "type": "button",
+              "on_click": "opens Transfer Clients dialog",
+              "on_success": "transfers clients"
+            }
+          ]
+        }
+      }
+    },
+    "Group_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Members",
+          "fields": {
+            "Members_Table": {
+              "type": "data_table",
+              "description": "List of client members",
+              "row_actions": [
+                {
+                  "action_name": "View Member Profile",
+                  "action_type": "link",
+                  "on_click": "navigates to client profile"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {
+            "Loan_Accounts_Table": {
+              "type": "data_table",
+              "description": "Group loans and GLIM accounts"
+            }
+          }
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {
+            "Savings_Accounts_Table": {
+              "type": "data_table",
+              "description": "Group savings and GSIM accounts"
+            }
+          }
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {
+            "Schedule_Meeting": {
+              "type": "button",
+              "element_name": "Schedule Meeting",
+              "on_click": "opens Schedule Meeting dialog",
+              "on_success": "schedules meeting"
+            },
+            "Record_Meeting": {
+              "type": "button",
+              "element_name": "Record Meeting",
+              "on_click": "opens Record Meeting dialog",
+              "on_success": "records meeting details"
+            }
+          }
+        }
+      ]
+    },
+    "Collection_Sheet_Feature": {
+      "type": "feature",
+      "description": "Generates a collection sheet for batch data entry of repayments and deposits",
+      "actions": [
+        {
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_click": "generates collection sheet for group clients"
+        }
+      ],
+      "generated_sheet": {
+        "type": "data_table",
+        "description": "Editable rows per group client for batch entry",
+        "row_fields": {
+          "Client": {
+            "type": "link",
+            "required": true
+          },
+          "Loan_Repayment_Amount": {
+            "type": "number",
+            "required": false
+          },
+          "Savings_Deposit_Amount": {
+            "type": "number",
+            "required": false
+          }
+        },
+        "submit_actions": [
+          {
+            "element_name": "Save Collection Sheet",
+            "on_success": "records repayments and deposits"
+          }
+        ]
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:07:53] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Group Management
+
+
+The Groups page displays a data table with columns for Group Name (clickable link), Account Number, Office, Status (Active, Pending, Closed as colored chips), and Staff. Buttons at the top-right allow importing groups or creating a new group. The Create Group form contains Name (required), Office (required), Staff, Submitted On (required), Active checkbox, External Id, and an Add Clients search-and-add interface to associate existing clients. Clicking "Submit" creates the group. The Bulk Import Groups page has a Groups Template panel (Office and Staff dropdowns with a Download button) and a Groups Upload panel (file picker and Upload button), with an import history table below.
+
+The Group Detail page displays the group name, account number, status, office, and staff with action buttons for Activate, Edit, Close, Assign Staff, and Transfer Clients. Tabs show Members (list of client members with links to their profiles), Loan Accounts (group loans and GLIM — Group Linked Individual Micro-loans), Savings Accounts (group savings and GSIM accounts), Notes, and a Calendar/Meeting section for scheduling and recording group meetings. The Collection Sheet feature generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Group_Detail_Actions: Replace the state_bound_action_bar structure with a flat list of action buttons on the Group Detail page (Activate, Edit, Close, Assign Staff, Transfer Clients) unless the description explicitly states per-status availability; i.e., change components.Group_Detail_Actions.type to 'action_bar' and provide components.Group_Detail_Actions.available_actions: [Activate, Edit, Close, Assign Staff, Transfer Clients].
+2. components.Group_Detail_Actions.states.*.available_actions[*].fields.Staff: Remove the inline 'fields' definition from action entries (Assign Staff) unless the description explicitly specifies that assigning staff opens an action dialog with a Staff dropdown; if an Assign Staff dialog should exist, add a separate component (e.g., components.Assign_Staff_Dialog.fields.Staff) and reference it from the Assign Staff action.
+3. components.Bulk_Import_Groups_Page.panels.Groups_Upload_Panel.fields.Template_File.required: Remove the required flag or make it optional unless the description explicitly states the upload file is required; set required to false or omit the property.
+4. components.Collection_Sheet_Feature.generated_sheet.submit_actions[0]: Remove the inferred 'Save Collection Sheet' submit action or make it optional unless the description explicitly requires a named submit control; if a submit is intended, update the description to mention the exact save/submit control for the collection sheet.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:09:41] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Group Management",
+  "components": {
+    "Groups_Page": {
+      "type": "data_table",
+      "columns": ["Group Name", "Account Number", "Office", "Status", "Staff"],
+      "row_actions": [
+        {
+          "action_name": "Open Group",
+          "type": "link",
+          "on_click": "navigates to Group Detail page"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "Import Groups",
+          "type": "button",
+          "on_click": "navigates to Bulk Import Groups page"
+        },
+        {
+          "element_name": "Create Group",
+          "type": "button",
+          "on_click": "opens Create_Group_Form"
+        }
+      ]
+    },
+    "Create_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": { "type": "unspecified", "required": true },
+        "Office": { "type": "dropdown", "required": true },
+        "Staff": { "type": "unspecified" },
+        "Submitted_On": { "type": "date", "required": true },
+        "Active": { "type": "checkbox" },
+        "External_Id": { "type": "unspecified" },
+        "Add_Clients_Search": { "type": "search" },
+        "Added_Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": { "type": "unspecified" }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "type": "button",
+          "on_success": "creates the group"
+        }
+      ]
+    },
+    "Bulk_Import_Groups_Page": {
+      "type": "page",
+      "panels": {
+        "Groups_Template_Panel": {
+          "type": "panel",
+          "fields": {
+            "Office": { "type": "dropdown" },
+            "Staff": { "type": "dropdown" }
+          },
+          "actions": [
+            {
+              "element_name": "Download Template",
+              "type": "button",
+              "on_click": "downloads groups template"
+            }
+          ]
+        },
+        "Groups_Upload_Panel": {
+          "type": "panel",
+          "fields": {
+            "Template_File": {
+              "type": "file_upload",
+              "required": false
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Upload",
+              "type": "button",
+              "on_success": "uploads file and starts import job"
+            }
+          ]
+        }
+      },
+      "import_history_table": {
+        "type": "data_table",
+        "columns": [],
+        "row_actions": []
+      }
+    },
+    "Group_Detail_Page": {
+      "type": "detail_page",
+      "actions_component": "Group_Detail_Actions",
+      "tabs": [
+        {
+          "tab_name": "Members",
+          "fields": {
+            "Members_Table": {
+              "type": "data_table",
+              "columns": ["Member Name"],
+              "row_actions": [
+                {
+                  "action_name": "Open Member Profile",
+                  "type": "link",
+                  "on_click": "navigates to Member Profile"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {
+            "Loan_Accounts_Table": {
+              "type": "data_table",
+              "columns": [],
+              "row_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {
+            "Savings_Accounts_Table": {
+              "type": "data_table",
+              "columns": [],
+              "row_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {
+            "Meeting_Scheduler": {
+              "type": "component",
+              "available_actions": [
+                {
+                  "element_name": "Schedule Meeting",
+                  "type": "button",
+                  "on_click": "opens scheduling workflow"
+                },
+                {
+                  "element_name": "Record Meeting",
+                  "type": "button",
+                  "on_click": "opens meeting record workflow"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Group_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        { "action_name": "Activate", "type": "button" },
+        { "action_name": "Edit", "type": "button", "on_click": "opens Edit_Group_Form" },
+        { "action_name": "Close", "type": "button" },
+        {
+          "action_name": "Assign Staff",
+          "type": "button",
+          "on_click": "opens Assign_Staff_Dialog"
+        },
+        { "action_name": "Transfer Clients", "type": "button" }
+      ]
+    },
+    "Assign_Staff_Dialog": {
+      "type": "dialog",
+      "fields": {
+        "Staff": { "type": "dropdown", "required": true }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Assign",
+          "type": "button",
+          "on_success": "assigns selected staff to group"
+        }
+      ]
+    },
+    "Edit_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": { "type": "unspecified", "required": true },
+        "Office": { "type": "dropdown", "required": true },
+        "Staff": { "type": "unspecified" },
+        "Submitted_On": { "type": "date", "required": true },
+        "Active": { "type": "checkbox" },
+        "External_Id": { "type": "unspecified" },
+        "Add_Clients_Search": { "type": "search" },
+        "Added_Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": { "type": "unspecified" }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates group"
+        }
+      ]
+    },
+    "Collection_Sheet_Feature": {
+      "type": "component",
+      "actions": [
+        {
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_success": "populates sheet for batch data entry with all group clients"
+        }
+      ],
+      "generated_sheet": {
+        "type": "data_table",
+        "columns": ["Client", "Loan Repayment Amount", "Savings Deposit Amount"],
+        "row_fields": {
+          "Client": { "type": "unspecified" },
+          "Loan_Repayment_Amount": { "type": "number", "editable": true },
+          "Savings_Deposit_Amount": { "type": "number", "editable": true }
+        },
+        "row_actions": []
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:09:41] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Group Management",
+  "components": {
+    "Groups_Page": {
       "type": "data_table",
       "columns": [
         "Group Name",
@@ -615,21 +1150,21 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       ],
       "row_actions": [
         {
-          "action_name": "View Details",
-          "element_type": "link",
-          "on_success": "navigates to Group Detail page"
+          "action_name": "Open Group",
+          "type": "link",
+          "on_click": "navigates to Group Detail page"
         }
       ],
-      "top_right_actions": [
+      "page_actions": [
         {
           "element_name": "Import Groups",
-          "element_type": "button",
-          "on_success": "navigates to Bulk Import Groups page"
+          "type": "button",
+          "on_click": "navigates to Bulk Import Groups page"
         },
         {
-          "element_name": "Create New Group",
-          "element_type": "button",
-          "on_success": "opens Create Group form"
+          "element_name": "Create Group",
+          "type": "button",
+          "on_click": "opens Create_Group_Form"
         }
       ]
     },
@@ -638,1245 +1173,201 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Office": {
           "type": "dropdown",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Staff": {
-          "type": "dropdown",
-          "constraints": []
+          "type": "unspecified"
         },
         "Submitted_On": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Active": {
-          "type": "checkbox",
-          "constraints": []
+          "type": "checkbox"
         },
         "External_Id": {
-          "type": "unspecified",
-          "constraints": []
+          "type": "unspecified"
         },
-        "Add_Clients": {
+        "Add_Clients_Search": {
+          "type": "search"
+        },
+        "Added_Clients": {
           "type": "repeating_group",
           "item_fields": {
             "Client": {
-              "type": "search",
-              "constraints": [
-                "required"
-              ]
+              "type": "unspecified"
             }
-          },
-          "constraints": []
+          }
         }
       },
       "submit_actions": [
         {
           "element_name": "Submit",
-          "element_type": "button",
+          "type": "button",
           "on_success": "creates the group"
         }
       ]
     },
     "Bulk_Import_Groups_Page": {
-      "type": "composite",
+      "type": "page",
       "panels": {
-        "Groups_Template": {
-          "type": "form",
+        "Groups_Template_Panel": {
+          "type": "panel",
           "fields": {
             "Office": {
-              "type": "dropdown",
-              "constraints": []
+              "type": "dropdown"
             },
             "Staff": {
-              "type": "dropdown",
-              "constraints": []
+              "type": "dropdown"
             }
           },
           "actions": [
             {
-              "element_name": "Download",
-              "element_type": "button",
-              "on_success": "downloads groups template pre-populated with selected Office and Staff"
+              "element_name": "Download Template",
+              "type": "button",
+              "on_click": "downloads groups template"
             }
           ]
         },
-        "Groups_Upload": {
-          "type": "form",
+        "Groups_Upload_Panel": {
+          "type": "panel",
           "fields": {
-            "Groups_File": {
+            "Template_File": {
               "type": "file_upload",
-              "constraints": [
-                "required"
-              ]
+              "required": false
             }
           },
           "actions": [
             {
               "element_name": "Upload",
-              "element_type": "button",
-              "on_success": "starts import and records import history"
+              "type": "button",
+              "on_success": "uploads file and starts import job"
             }
           ]
         }
       },
-      "Import_History": {
+      "import_history_table": {
         "type": "data_table",
         "columns": [],
-        "row_actions": [
-          {
-            "action_name": "View Import Details"
-          }
-        ]
-      }
-    },
-    "Group_Detail": {
-      "type": "detail_page",
-      "components": {
-        "Action_Bar": {
-          "type": "state_bound_action_bar",
-          "states": {
-            "Pending": {
-              "available_actions": [
-                {
-                  "action_name": "Activate",
-                  "element_type": "button",
-                  "on_success": "changes status to Active"
-                },
-                {
-                  "action_name": "Edit",
-                  "element_type": "button",
-                  "fields": {
-                    "Name": {
-                      "type": "unspecified",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Office": {
-                      "type": "dropdown",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Staff": {
-                      "type": "dropdown",
-                      "constraints": []
-                    },
-                    "Submitted_On": {
-                      "type": "date",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Active": {
-                      "type": "checkbox",
-                      "constraints": []
-                    },
-                    "External_Id": {
-                      "type": "unspecified",
-                      "constraints": []
-                    },
-                    "Add_Clients": {
-                      "type": "repeating_group",
-                      "item_fields": {
-                        "Client": {
-                          "type": "search",
-                          "constraints": [
-                            "required"
-                          ]
-                        }
-                      },
-                      "constraints": []
-                    }
-                  }
-                },
-                {
-                  "action_name": "Close",
-                  "element_type": "button",
-                  "on_success": "changes status to Closed"
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "element_type": "button",
-                  "fields": {
-                    "Staff": {
-                      "type": "dropdown",
-                      "constraints": [
-                        "required"
-                      ]
-                    }
-                  }
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "element_type": "button",
-                  "fields": {
-                    "Clients": {
-                      "type": "repeating_group",
-                      "item_fields": {
-                        "Client": {
-                          "type": "search",
-                          "constraints": [
-                            "required"
-                          ]
-                        }
-                      },
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Target_Group": {
-                      "type": "search",
-                      "constraints": [
-                        "required"
-                      ]
-                    }
-                  }
-                }
-              ]
-            },
-            "Active": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "element_type": "button",
-                  "fields": {
-                    "Name": {
-                      "type": "unspecified",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Office": {
-                      "type": "dropdown",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Staff": {
-                      "type": "dropdown",
-                      "constraints": []
-                    },
-                    "Submitted_On": {
-                      "type": "date",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Active": {
-                      "type": "checkbox",
-                      "constraints": []
-                    },
-                    "External_Id": {
-                      "type": "unspecified",
-                      "constraints": []
-                    },
-                    "Add_Clients": {
-                      "type": "repeating_group",
-                      "item_fields": {
-                        "Client": {
-                          "type": "search",
-                          "constraints": [
-                            "required"
-                          ]
-                        }
-                      },
-                      "constraints": []
-                    }
-                  }
-                },
-                {
-                  "action_name": "Close",
-                  "element_type": "button",
-                  "on_success": "changes status to Closed"
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "element_type": "button",
-                  "fields": {
-                    "Staff": {
-                      "type": "dropdown",
-                      "constraints": [
-                        "required"
-                      ]
-                    }
-                  }
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "element_type": "button",
-                  "fields": {
-                    "Clients": {
-                      "type": "repeating_group",
-                      "item_fields": {
-                        "Client": {
-                          "type": "search",
-                          "constraints": [
-                            "required"
-                          ]
-                        }
-                      },
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Target_Group": {
-                      "type": "search",
-                      "constraints": [
-                        "required"
-                      ]
-                    }
-                  }
-                }
-              ]
-            },
-            "Closed": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "element_type": "button",
-                  "fields": {
-                    "Name": {
-                      "type": "unspecified",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Office": {
-                      "type": "dropdown",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Staff": {
-                      "type": "dropdown",
-                      "constraints": []
-                    },
-                    "Submitted_On": {
-                      "type": "date",
-                      "constraints": [
-                        "required"
-                      ]
-                    },
-                    "Active": {
-                      "type": "checkbox",
-                      "constraints": []
-                    },
-                    "External_Id": {
-                      "type": "unspecified",
-                      "constraints": []
-                    },
-                    "Add_Clients": {
-                      "type": "repeating_group",
-                      "item_fields": {
-                        "Client": {
-                          "type": "search",
-                          "constraints": [
-                            "required"
-                          ]
-                        }
-                      },
-                      "constraints": []
-                    }
-                  }
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "element_type": "button",
-                  "fields": {
-                    "Staff": {
-                      "type": "dropdown",
-                      "constraints": [
-                        "required"
-                      ]
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "Tabs": {
-          "type": "tab_container",
-          "tabs": [
-            {
-              "tab_name": "Members",
-              "fields": {},
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "columns": [
-                    "Member Name",
-                    "Account Number",
-                    "Role"
-                  ],
-                  "row_actions": [
-                    {
-                      "action_name": "View Member Profile",
-                      "element_type": "link",
-                      "on_success": "navigates to client profile"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "tab_name": "Loan Accounts",
-              "fields": {},
-              "components": {
-                "Group_Loans_Table": {
-                  "type": "data_table",
-                  "columns": [
-                    "Loan ID",
-                    "Product",
-                    "Balance",
-                    "Type"
-                  ],
-                  "row_actions": [
-                    {
-                      "action_name": "View Loan"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "tab_name": "Savings Accounts",
-              "fields": {},
-              "components": {
-                "Savings_Table": {
-                  "type": "data_table",
-                  "columns": [
-                    "Account ID",
-                    "Product",
-                    "Balance"
-                  ],
-                  "row_actions": [
-                    {
-                      "action_name": "View Savings Account"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "tab_name": "Notes",
-              "fields": {},
-              "components": {}
-            },
-            {
-              "tab_name": "Calendar/Meetings",
-              "fields": {},
-              "components": {
-                "Meetings": {
-                  "type": "form_collection",
-                  "actions": [
-                    {
-                      "element_name": "Schedule Meeting",
-                      "element_type": "button",
-                      "fields": {
-                        "Meeting_Date": {
-                          "type": "date",
-                          "constraints": [
-                            "required"
-                          ]
-                        },
-                        "Meeting_Notes": {
-                          "type": "unspecified",
-                          "constraints": []
-                        }
-                      },
-                      "on_success": "creates scheduled meeting on group calendar"
-                    },
-                    {
-                      "element_name": "Record Meeting",
-                      "element_type": "button",
-                      "fields": {
-                        "Meeting_Date": {
-                          "type": "date",
-                          "constraints": [
-                            "required"
-                          ]
-                        },
-                        "Meeting_Notes": {
-                          "type": "unspecified",
-                          "constraints": []
-                        }
-                      },
-                      "on_success": "records meeting details"
-                    }
-                  ],
-                  "components": {
-                    "Calendar_View": {
-                      "type": "unspecified",
-                      "fields": {}
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "Collection_Sheet_Feature": {
-          "type": "feature",
-          "actions": [
-            {
-              "element_name": "Generate Collection Sheet",
-              "element_type": "button",
-              "on_success": "generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry"
-            }
-          ],
-          "collection_sheet_table": {
-            "type": "data_table",
-            "editable_rows": true,
-            "row_fields": {
-              "Client": {
-                "type": "link",
-                "constraints": [
-                  "required"
-                ]
-              },
-              "Loan_Repayment_Amount": {
-                "type": "number",
-                "constraints": []
-              },
-              "Savings_Deposit_Amount": {
-                "type": "number",
-                "constraints": []
-              }
-            },
-            "submit_actions": [
-              {
-                "element_name": "Save Collection Sheet",
-                "element_type": "button",
-                "on_success": "saves batch entries"
-              }
-            ]
-          }
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:14:35] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Group Management
-
-
-The Groups page displays a data table with columns for Group Name (clickable link), Account Number, Office, Status (Active, Pending, Closed as colored chips), and Staff. Buttons at the top-right allow importing groups or creating a new group. The Create Group form contains Name (required), Office (required), Staff, Submitted On (required), Active checkbox, External Id, and an Add Clients search-and-add interface to associate existing clients. Clicking "Submit" creates the group. The Bulk Import Groups page has a Groups Template panel (Office and Staff dropdowns with a Download button) and a Groups Upload panel (file picker and Upload button), with an import history table below.
-
-The Group Detail page displays the group name, account number, status, office, and staff with action buttons for Activate, Edit, Close, Assign Staff, and Transfer Clients. Tabs show Members (list of client members with links to their profiles), Loan Accounts (group loans and GLIM — Group Linked Individual Micro-loans), Savings Accounts (group savings and GSIM accounts), Notes, and a Calendar/Meeting section for scheduling and recording group meetings. The Collection Sheet feature generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Groups_Page_Table.columns[0] — explicitly mark the Group Name column as a clickable link in the AST (e.g., replace simple column name with an object: { "name": "Group Name", "type": "link", "action": "navigate_to_group_detail" }).
-2. Group_Detail.components.Action_Bar.states.Pending.available_actions[1] — remove the nested 'fields' object entirely or replace it with an empty 'fields': {} since the description only specifies an Edit action exists (no field-level details were provided).
-3. Group_Detail.components.Action_Bar.states.Active.available_actions[0] — remove the nested 'fields' object entirely or replace it with an empty 'fields': {} for the Edit action to avoid inferring form fields.
-4. Group_Detail.components.Action_Bar.states.Closed.available_actions[0] — remove the nested 'fields' object entirely or replace it with an empty 'fields': {} for the Edit action to avoid inferring form fields.
-5. Group_Detail.components.Action_Bar.states.Pending.available_actions[3] — remove the nested 'fields' object (Assign Staff) or replace with 'fields': {} because the description only names the Assign Staff action without specifying input fields.
-6. Group_Detail.components.Action_Bar.states.Active.available_actions[2] — remove the nested 'fields' object (Assign Staff) or replace with 'fields': {} for the Active state.
-7. Group_Detail.components.Action_Bar.states.Closed.available_actions[1] — remove the nested 'fields' object (Assign Staff) or replace with 'fields': {} for the Closed state.
-8. Group_Detail.components.Action_Bar.states.Pending.available_actions[4] — remove the nested 'fields' object (Transfer Clients) or replace with 'fields': {} because the description lists the action but does not specify its form fields.
-9. Group_Detail.components.Action_Bar.states.Active.available_actions[3] — remove the nested 'fields' object (Transfer Clients) or replace with 'fields': {} for the Active state.
-10. Group_Detail.components.Collection_Sheet_Feature.collection_sheet_table.row_fields.Client — change 'type' from 'link' to a passive display type (or remove 'type' so it's treated as non-interactive) unless the description explicitly states client names are links in the collection sheet.
-11. Bulk_Import_Groups_Page.panels.Groups_Template.actions[0].on_success — remove the phrase 'pre-populated with selected Office and Staff' from the on_success description or make it explicitly anchored to the description only if that behavior is stated; otherwise keep on_success generic (e.g., 'downloads template').
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:16:04] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Group Management",
-  "components": {
-    "Groups_Page": {
-      "type": "page",
-      "top_right_actions": [
-        {
-          "element_name": "Import Groups",
-          "type": "button",
-          "action": "navigate_to",
-          "target": "Bulk_Import_Groups_Page"
-        },
-        {
-          "element_name": "Create New Group",
-          "type": "button",
-          "action": "navigate_to",
-          "target": "Create_Group_Form"
-        }
-      ],
-      "components": {
-        "Groups_Table": {
-          "type": "data_table",
-          "columns": [
-            {
-              "name": "Group Name",
-              "type": "link",
-              "action": "navigate_to_group_detail"
-            },
-            "Account Number",
-            "Office",
-            "Status",
-            "Staff"
-          ]
-        }
-      }
-    },
-    "Create_Group_Form": {
-      "type": "form",
-      "fields": {
-        "Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Office": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Staff": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Submitted_On": {
-          "type": "date",
-          "required": true
-        },
-        "Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "External_Id": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Add_Clients_Search": {
-          "type": "search",
-          "required": false,
-          "description": "Search to find existing clients to associate with the group. Results provide an Add action per client."
-        },
-        "Associated_Clients": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Client": {
-              "type": "unspecified",
-              "required": true,
-              "description": "Reference to an existing client (added via search)."
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates group"
-        }
-      ]
-    },
-    "Bulk_Import_Groups_Page": {
-      "type": "page",
-      "panels": {
-        "Groups_Template": {
-          "type": "panel",
-          "fields": {
-            "Office": {
-              "type": "dropdown",
-              "required": false
-            },
-            "Staff": {
-              "type": "dropdown",
-              "required": false
-            }
-          },
-          "actions": [
-            {
-              "element_name": "Download Template",
-              "type": "button",
-              "on_success": "downloads template"
-            }
-          ]
-        },
-        "Groups_Upload": {
-          "type": "panel",
-          "fields": {
-            "Groups_File": {
-              "type": "file_upload",
-              "required": true
-            }
-          },
-          "actions": [
-            {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports groups"
-            }
-          ]
-        }
-      },
-      "components": {
-        "Import_History_Table": {
-          "type": "data_table",
-          "description": "Shows history of import attempts and results.",
-          "row_actions": []
-        }
+        "row_actions": []
       }
     },
     "Group_Detail_Page": {
       "type": "detail_page",
-      "components": {
-        "Action_Bar": {
-          "type": "state_bound_action_bar",
-          "states": {
-            "Pending": {
-              "available_actions": [
+      "actions_component": "Group_Detail_Actions",
+      "tabs": [
+        {
+          "tab_name": "Members",
+          "fields": {
+            "Members_Table": {
+              "type": "data_table",
+              "columns": [
+                "Member Name"
+              ],
+              "row_actions": [
                 {
-                  "action_name": "Activate",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Edit",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Close",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "fields": {}
-                }
-              ]
-            },
-            "Active": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Close",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "fields": {}
-                }
-              ]
-            },
-            "Closed": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "fields": {}
+                  "action_name": "Open Member Profile",
+                  "type": "link",
+                  "on_click": "navigates to Member Profile"
                 }
               ]
             }
           }
         },
-        "Detail_Tabs": {
-          "type": "tab_container",
-          "tabs": [
-            {
-              "tab_name": "Members",
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "description": "List of client members associated with the group.",
-                  "columns": [
-                    {
-                      "name": "Client",
-                      "type": "link",
-                      "action": "navigate_to_client_profile"
-                    },
-                    "Client ID",
-                    "Status"
-                  ],
-                  "row_actions": []
-                }
-              }
-            },
-            {
-              "tab_name": "Loan Accounts",
-              "components": {
-                "Loan_Accounts_Table": {
-                  "type": "data_table",
-                  "description": "Group loans and GLIM accounts.",
-                  "row_actions": []
-                }
-              }
-            },
-            {
-              "tab_name": "Savings Accounts",
-              "components": {
-                "Savings_Accounts_Table": {
-                  "type": "data_table",
-                  "description": "Group savings and GSIM accounts.",
-                  "row_actions": []
-                }
-              }
-            },
-            {
-              "tab_name": "Notes",
-              "fields": {}
-            },
-            {
-              "tab_name": "Calendar/Meetings",
-              "components": {
-                "Meetings_Table": {
-                  "type": "data_table",
-                  "description": "Scheduled and recorded group meetings.",
-                  "row_actions": []
-                },
-                "Schedule_Meeting": {
-                  "type": "button",
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {
+            "Loan_Accounts_Table": {
+              "type": "data_table",
+              "columns": [],
+              "row_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {
+            "Savings_Accounts_Table": {
+              "type": "data_table",
+              "columns": [],
+              "row_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {
+            "Meeting_Scheduler": {
+              "type": "component",
+              "available_actions": [
+                {
                   "element_name": "Schedule Meeting",
-                  "description": "Opens scheduler to create a new group meeting."
-                },
-                "Record_Meeting": {
                   "type": "button",
+                  "on_click": "opens scheduling workflow"
+                },
+                {
                   "element_name": "Record Meeting",
-                  "description": "Records details of a meeting (attendees, notes, outcomes)."
+                  "type": "button",
+                  "on_click": "opens meeting record workflow"
                 }
-              }
-            }
-          ]
-        }
-      }
-    },
-    "Collection_Sheet_Feature": {
-      "type": "feature",
-      "components": {
-        "Generate_Collection_Sheet": {
-          "type": "button",
-          "element_name": "Generate Collection Sheet",
-          "description": "Generates a sheet listing all group clients with amounts due for batch entry."
-        },
-        "Collection_Sheet_Table": {
-          "type": "data_table",
-          "description": "Editable sheet for batch data entry of loan repayments and savings deposits.",
-          "row_fields": {
-            "Client": {
-              "type": "unspecified",
-              "required": true,
-              "description": "Client name (display only in collection sheet)."
-            },
-            "Loan_Repayment_Amount": {
-              "type": "number",
-              "required": false
-            },
-            "Savings_Deposit_Amount": {
-              "type": "number",
-              "required": false
+              ]
             }
           }
-        },
-        "Save_Collection_Sheet": {
-          "type": "button",
-          "element_name": "Save Entries",
-          "on_success": "saves collection sheet entries"
         }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:16:04] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Group Management",
-  "components": {
-    "Groups_Page": {
-      "type": "page",
-      "top_right_actions": [
-        {
-          "element_name": "Import Groups",
-          "type": "button",
-          "action": "navigate_to",
-          "target": "Bulk_Import_Groups_Page"
-        },
-        {
-          "element_name": "Create New Group",
-          "type": "button",
-          "action": "navigate_to",
-          "target": "Create_Group_Form"
-        }
-      ],
-      "components": {
-        "Groups_Table": {
-          "type": "data_table",
-          "columns": [
-            {
-              "name": "Group Name",
-              "type": "link",
-              "action": "navigate_to_group_detail"
-            },
-            "Account Number",
-            "Office",
-            "Status",
-            "Staff"
-          ]
-        }
-      }
+      ]
     },
-    "Create_Group_Form": {
-      "type": "form",
-      "fields": {
-        "Name": {
-          "type": "unspecified",
-          "required": true
+    "Group_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Activate",
+          "type": "button"
         },
-        "Office": {
+        {
+          "action_name": "Edit",
+          "type": "button",
+          "on_click": "opens Edit_Group_Form"
+        },
+        {
+          "action_name": "Close",
+          "type": "button"
+        },
+        {
+          "action_name": "Assign Staff",
+          "type": "button",
+          "on_click": "opens Assign_Staff_Dialog"
+        },
+        {
+          "action_name": "Transfer Clients",
+          "type": "button"
+        }
+      ]
+    },
+    "Assign_Staff_Dialog": {
+      "type": "dialog",
+      "fields": {
+        "Staff": {
           "type": "dropdown",
           "required": true
-        },
-        "Staff": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Submitted_On": {
-          "type": "date",
-          "required": true
-        },
-        "Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "External_Id": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Add_Clients_Search": {
-          "type": "search",
-          "required": false,
-          "description": "Search to find existing clients to associate with the group. Results provide an Add action per client."
-        },
-        "Associated_Clients": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Client": {
-              "type": "unspecified",
-              "required": true,
-              "description": "Reference to an existing client (added via search)."
-            }
-          }
         }
       },
       "submit_actions": [
         {
-          "element_name": "Submit",
-          "on_success": "creates group"
+          "element_name": "Assign",
+          "type": "button",
+          "on_success": "assigns selected staff to group"
         }
       ]
     },
-    "Bulk_Import_Groups_Page": {
-      "type": "page",
-      "panels": {
-        "Groups_Template": {
-          "type": "panel",
-          "fields": {
-            "Office": {
-              "type": "dropdown",
-              "required": false
-            },
-            "Staff": {
-              "type": "dropdown",
-              "required": false
-            }
-          },
-          "actions": [
-            {
-              "element_name": "Download Template",
-              "type": "button",
-              "on_success": "downloads template"
-            }
-          ]
-        },
-        "Groups_Upload": {
-          "type": "panel",
-          "fields": {
-            "Groups_File": {
-              "type": "file_upload",
-              "required": true
-            }
-          },
-          "actions": [
-            {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports groups"
-            }
-          ]
-        }
-      },
-      "components": {
-        "Import_History_Table": {
-          "type": "data_table",
-          "description": "Shows history of import attempts and results.",
-          "row_actions": []
-        }
-      }
-    },
-    "Group_Detail_Page": {
-      "type": "detail_page",
-      "components": {
-        "Action_Bar": {
-          "type": "state_bound_action_bar",
-          "states": {
-            "Pending": {
-              "available_actions": [
-                {
-                  "action_name": "Activate",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Edit",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Close",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "fields": {}
-                }
-              ]
-            },
-            "Active": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Close",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Transfer Clients",
-                  "fields": {}
-                }
-              ]
-            },
-            "Closed": {
-              "available_actions": [
-                {
-                  "action_name": "Edit",
-                  "fields": {}
-                },
-                {
-                  "action_name": "Assign Staff",
-                  "fields": {}
-                }
-              ]
-            }
-          }
-        },
-        "Detail_Tabs": {
-          "type": "tab_container",
-          "tabs": [
-            {
-              "tab_name": "Members",
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "description": "List of client members associated with the group.",
-                  "columns": [
-                    {
-                      "name": "Client",
-                      "type": "link",
-                      "action": "navigate_to_client_profile"
-                    },
-                    "Client ID",
-                    "Status"
-                  ],
-                  "row_actions": []
-                }
-              }
-            },
-            {
-              "tab_name": "Loan Accounts",
-              "components": {
-                "Loan_Accounts_Table": {
-                  "type": "data_table",
-                  "description": "Group loans and GLIM accounts.",
-                  "row_actions": []
-                }
-              }
-            },
-            {
-              "tab_name": "Savings Accounts",
-              "components": {
-                "Savings_Accounts_Table": {
-                  "type": "data_table",
-                  "description": "Group savings and GSIM accounts.",
-                  "row_actions": []
-                }
-              }
-            },
-            {
-              "tab_name": "Notes",
-              "fields": {}
-            },
-            {
-              "tab_name": "Calendar/Meetings",
-              "components": {
-                "Meetings_Table": {
-                  "type": "data_table",
-                  "description": "Scheduled and recorded group meetings.",
-                  "row_actions": []
-                },
-                "Schedule_Meeting": {
-                  "type": "button",
-                  "element_name": "Schedule Meeting",
-                  "description": "Opens scheduler to create a new group meeting."
-                },
-                "Record_Meeting": {
-                  "type": "button",
-                  "element_name": "Record Meeting",
-                  "description": "Records details of a meeting (attendees, notes, outcomes)."
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    "Collection_Sheet_Feature": {
-      "type": "feature",
-      "components": {
-        "Generate_Collection_Sheet": {
-          "type": "button",
-          "element_name": "Generate Collection Sheet",
-          "description": "Generates a sheet listing all group clients with amounts due for batch entry."
-        },
-        "Collection_Sheet_Table": {
-          "type": "data_table",
-          "description": "Editable sheet for batch data entry of loan repayments and savings deposits.",
-          "row_fields": {
-            "Client": {
-              "type": "unspecified",
-              "required": true,
-              "description": "Client name (display only in collection sheet)."
-            },
-            "Loan_Repayment_Amount": {
-              "type": "number",
-              "required": false
-            },
-            "Savings_Deposit_Amount": {
-              "type": "number",
-              "required": false
-            }
-          }
-        },
-        "Save_Collection_Sheet": {
-          "type": "button",
-          "element_name": "Save Entries",
-          "on_success": "saves collection sheet entries"
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:17:24] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Group Management
-
-
-The Groups page displays a data table with columns for Group Name (clickable link), Account Number, Office, Status (Active, Pending, Closed as colored chips), and Staff. Buttons at the top-right allow importing groups or creating a new group. The Create Group form contains Name (required), Office (required), Staff, Submitted On (required), Active checkbox, External Id, and an Add Clients search-and-add interface to associate existing clients. Clicking "Submit" creates the group. The Bulk Import Groups page has a Groups Template panel (Office and Staff dropdowns with a Download button) and a Groups Upload panel (file picker and Upload button), with an import history table below.
-
-The Group Detail page displays the group name, account number, status, office, and staff with action buttons for Activate, Edit, Close, Assign Staff, and Transfer Clients. Tabs show Members (list of client members with links to their profiles), Loan Accounts (group loans and GLIM — Group Linked Individual Micro-loans), Savings Accounts (group savings and GSIM accounts), Notes, and a Calendar/Meeting section for scheduling and recording group meetings. The Collection Sheet feature generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. components.Group_Detail_Page.components.Action_Bar: Remove the state_bound_action_bar/states structure and instead represent the actions as top-level action buttons on the Group_Detail_Page (e.g., Action_Bar.available_actions: [Activate, Edit, Close, Assign Staff, Transfer Clients]) so the AST doesn't presume state-bound behavior unless the description explicitly states it.
-2. components.Group_Detail_Page.components.Detail_Tabs.tabs[0].components.Members_Table.columns: Remove the 'Client ID' and 'Status' columns (columns[1] and columns[2]) so the Members table only contains the explicitly-described 'Client' column (link to client profile); if additional columns are required they must be specified in the description.
-3. components.Create_Group_Form.fields.Associated_Clients: Remove the 'Associated_Clients' repeating_group. Keep the 'Add_Clients_Search' search field (fields.Add_Clients_Search) and, if needed, represent added client references as a simple display_list or leave a placeholder fields: {} for the associated clients area — do not invent a repeating_group structure unless the description explicitly requires it.
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:18:16] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Group Management",
-  "components": {
-    "Groups_Page": {
-      "type": "data_table",
-      "columns": [
-        {
-          "name": "Group Name",
-          "interactive": "link"
-        },
-        { "name": "Account Number" },
-        { "name": "Office" },
-        {
-          "name": "Status",
-          "type": "unspecified",
-          "notes": "values: Active, Pending, Closed"
-        },
-        { "name": "Staff" }
-      ],
-      "row_actions": [
-        {
-          "action_name": "Open Group",
-          "description": "navigates to Group Detail page (triggered by Group Name link)"
-        }
-      ],
-      "top_right_actions": [
-        {
-          "action_name": "Import Groups",
-          "description": "opens Bulk Import Groups page"
-        },
-        {
-          "action_name": "Create Group",
-          "description": "opens Create Group form"
-        }
-      ]
-    },
-    "Create_Group_Form": {
+    "Edit_Group_Form": {
       "type": "form",
       "fields": {
         "Name": {
@@ -1888,7 +1379,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         },
         "Staff": {
-          "type": "dropdown"
+          "type": "unspecified"
         },
         "Submitted_On": {
           "type": "date",
@@ -1901,415 +1392,55 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "unspecified"
         },
         "Add_Clients_Search": {
-          "type": "search",
-          "description": "search-and-add interface to associate existing clients"
+          "type": "search"
         },
-        "Associated_Clients_List": {
-          "type": "display_list",
-          "fields": {}
+        "Added_Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "unspecified"
+            }
+          }
         }
       },
       "submit_actions": [
         {
-          "element_name": "Submit",
-          "on_success": "creates group"
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates group"
         }
       ]
-    },
-    "Bulk_Import_Groups_Page": {
-      "type": "page",
-      "components": {
-        "Groups_Template_Panel": {
-          "type": "panel",
-          "fields": {
-            "Office": {
-              "type": "dropdown"
-            },
-            "Staff": {
-              "type": "dropdown"
-            }
-          },
-          "actions": [
-            {
-              "action_name": "Download Template",
-              "description": "downloads groups template filtered by selected Office/Staff"
-            }
-          ]
-        },
-        "Groups_Upload_Panel": {
-          "type": "panel",
-          "fields": {
-            "Groups_File": {
-              "type": "file_upload"
-            }
-          },
-          "actions": [
-            {
-              "action_name": "Upload",
-              "on_success": "uploads file and starts import job"
-            }
-          ]
-        },
-        "Import_History_Table": {
-          "type": "data_table",
-          "description": "shows past import jobs and statuses"
-        }
-      }
-    },
-    "Group_Detail_Page": {
-      "type": "page",
-      "components": {
-        "Action_Bar": {
-          "type": "action_bar",
-          "available_actions": [
-            { "action_name": "Activate" },
-            { "action_name": "Edit" },
-            { "action_name": "Close" },
-            { "action_name": "Assign Staff" },
-            { "action_name": "Transfer Clients" }
-          ]
-        },
-        "Detail_Tabs": {
-          "type": "tab_container",
-          "tabs": [
-            {
-              "tab_name": "Members",
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "columns": [
-                    {
-                      "name": "Client",
-                      "interactive": "link",
-                      "description": "link to client profile"
-                    }
-                  ],
-                  "row_actions": [
-                    {
-                      "action_name": "Open Client Profile",
-                      "description": "navigates to client's profile (triggered by Client link)"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "tab_name": "Loan Accounts",
-              "fields": {}
-            },
-            {
-              "tab_name": "Savings Accounts",
-              "fields": {}
-            },
-            {
-              "tab_name": "Notes",
-              "fields": {}
-            },
-            {
-              "tab_name": "Calendar/Meeting",
-              "components": {
-                "Meeting_Actions": {
-                  "type": "action_group",
-                  "available_actions": [
-                    {
-                      "action_name": "Schedule Meeting",
-                      "description": "opens meeting scheduling interface"
-                    },
-                    {
-                      "action_name": "Record Meeting",
-                      "description": "opens meeting record entry interface"
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        }
-      }
     },
     "Collection_Sheet_Feature": {
-      "type": "feature",
-      "description": "generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry",
+      "type": "component",
       "actions": [
         {
-          "action_name": "Generate Collection Sheet",
-          "on_success": "renders Collection Sheet table for batch entry"
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_success": "populates sheet for batch data entry with all group clients"
         }
       ],
-      "components": {
-        "Collection_Sheet_Table": {
-          "type": "data_table",
-          "columns": [
-            {
-              "name": "Client",
-              "interactive": "link",
-              "description": "link to client profile"
-            },
-            {
-              "name": "Loan_Repayment_Amount",
-              "type": "number",
-              "description": "editable for batch entry"
-            },
-            {
-              "name": "Savings_Deposit_Amount",
-              "type": "number",
-              "description": "editable for batch entry"
-            }
-          ],
-          "submit_actions": [
-            {
-              "element_name": "Save Entries",
-              "on_success": "saves batch collection entries"
-            }
-          ]
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:18:16] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Group Management",
-  "components": {
-    "Groups_Page": {
-      "type": "data_table",
-      "columns": [
-        {
-          "name": "Group Name",
-          "interactive": "link"
-        },
-        {
-          "name": "Account Number"
-        },
-        {
-          "name": "Office"
-        },
-        {
-          "name": "Status",
-          "type": "unspecified",
-          "notes": "values: Active, Pending, Closed"
-        },
-        {
-          "name": "Staff"
-        }
-      ],
-      "row_actions": [
-        {
-          "action_name": "Open Group",
-          "description": "navigates to Group Detail page (triggered by Group Name link)"
-        }
-      ],
-      "top_right_actions": [
-        {
-          "action_name": "Import Groups",
-          "description": "opens Bulk Import Groups page"
-        },
-        {
-          "action_name": "Create Group",
-          "description": "opens Create Group form"
-        }
-      ]
-    },
-    "Create_Group_Form": {
-      "type": "form",
-      "fields": {
-        "Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Office": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Staff": {
-          "type": "dropdown"
-        },
-        "Submitted_On": {
-          "type": "date",
-          "required": true
-        },
-        "Active": {
-          "type": "checkbox"
-        },
-        "External_Id": {
-          "type": "unspecified"
-        },
-        "Add_Clients_Search": {
-          "type": "search",
-          "description": "search-and-add interface to associate existing clients"
-        },
-        "Associated_Clients_List": {
-          "type": "display_list",
-          "fields": {}
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates group"
-        }
-      ]
-    },
-    "Bulk_Import_Groups_Page": {
-      "type": "page",
-      "components": {
-        "Groups_Template_Panel": {
-          "type": "panel",
-          "fields": {
-            "Office": {
-              "type": "dropdown"
-            },
-            "Staff": {
-              "type": "dropdown"
-            }
+      "generated_sheet": {
+        "type": "data_table",
+        "columns": [
+          "Client",
+          "Loan Repayment Amount",
+          "Savings Deposit Amount"
+        ],
+        "row_fields": {
+          "Client": {
+            "type": "unspecified"
           },
-          "actions": [
-            {
-              "action_name": "Download Template",
-              "description": "downloads groups template filtered by selected Office/Staff"
-            }
-          ]
-        },
-        "Groups_Upload_Panel": {
-          "type": "panel",
-          "fields": {
-            "Groups_File": {
-              "type": "file_upload"
-            }
+          "Loan_Repayment_Amount": {
+            "type": "number",
+            "editable": true
           },
-          "actions": [
-            {
-              "action_name": "Upload",
-              "on_success": "uploads file and starts import job"
-            }
-          ]
+          "Savings_Deposit_Amount": {
+            "type": "number",
+            "editable": true
+          }
         },
-        "Import_History_Table": {
-          "type": "data_table",
-          "description": "shows past import jobs and statuses"
-        }
-      }
-    },
-    "Group_Detail_Page": {
-      "type": "page",
-      "components": {
-        "Action_Bar": {
-          "type": "action_bar",
-          "available_actions": [
-            {
-              "action_name": "Activate"
-            },
-            {
-              "action_name": "Edit"
-            },
-            {
-              "action_name": "Close"
-            },
-            {
-              "action_name": "Assign Staff"
-            },
-            {
-              "action_name": "Transfer Clients"
-            }
-          ]
-        },
-        "Detail_Tabs": {
-          "type": "tab_container",
-          "tabs": [
-            {
-              "tab_name": "Members",
-              "components": {
-                "Members_Table": {
-                  "type": "data_table",
-                  "columns": [
-                    {
-                      "name": "Client",
-                      "interactive": "link",
-                      "description": "link to client profile"
-                    }
-                  ],
-                  "row_actions": [
-                    {
-                      "action_name": "Open Client Profile",
-                      "description": "navigates to client's profile (triggered by Client link)"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "tab_name": "Loan Accounts",
-              "fields": {}
-            },
-            {
-              "tab_name": "Savings Accounts",
-              "fields": {}
-            },
-            {
-              "tab_name": "Notes",
-              "fields": {}
-            },
-            {
-              "tab_name": "Calendar/Meeting",
-              "components": {
-                "Meeting_Actions": {
-                  "type": "action_group",
-                  "available_actions": [
-                    {
-                      "action_name": "Schedule Meeting",
-                      "description": "opens meeting scheduling interface"
-                    },
-                    {
-                      "action_name": "Record Meeting",
-                      "description": "opens meeting record entry interface"
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    "Collection_Sheet_Feature": {
-      "type": "feature",
-      "description": "generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry",
-      "actions": [
-        {
-          "action_name": "Generate Collection Sheet",
-          "on_success": "renders Collection Sheet table for batch entry"
-        }
-      ],
-      "components": {
-        "Collection_Sheet_Table": {
-          "type": "data_table",
-          "columns": [
-            {
-              "name": "Client",
-              "interactive": "link",
-              "description": "link to client profile"
-            },
-            {
-              "name": "Loan_Repayment_Amount",
-              "type": "number",
-              "description": "editable for batch entry"
-            },
-            {
-              "name": "Savings_Deposit_Amount",
-              "type": "number",
-              "description": "editable for batch entry"
-            }
-          ],
-          "submit_actions": [
-            {
-              "element_name": "Save Entries",
-              "on_success": "saves batch collection entries"
-            }
-          ]
-        }
+        "row_actions": []
       }
     }
   }

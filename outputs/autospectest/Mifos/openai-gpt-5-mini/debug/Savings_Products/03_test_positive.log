@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.431276
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.361686
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Savings Products</module_name>
 
@@ -149,25 +232,32 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 {
   "module_name": "Savings Products",
   "components": {
-    "Create_Savings_Product_Button": {
-      "type": "button",
-      "label": "+ Create Savings Product",
-      "on_click": "open(Create_Savings_Product_Wizard)"
+    "Filter_Bar": {
+      "type": "form",
+      "fields": {}
     },
     "Savings_Products_Table": {
       "type": "data_table",
-      "filter_bar": {
-        "fields": {}
-      },
       "columns": [
         "Name",
         "Short Name"
       ],
-      "clickable_columns": {
-        "Name": "open(Savings_Product_Detail)"
-      }
+      "row_actions": [
+        {
+          "action_name": "Open Product",
+          "triggered_by_column": "Name",
+          "type": "link"
+        }
+      ],
+      "top_actions": [
+        {
+          "action_name": "+ Create Savings Product",
+          "type": "button",
+          "triggers": "Savings_Product_Wizard"
+        }
+      ]
     },
-    "Create_Savings_Product_Wizard": {
+    "Savings_Product_Wizard": {
       "type": "wizard",
       "steps": [
         {
@@ -220,41 +310,41 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Interest_Compounding_Period": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Daily",
                 "Monthly",
                 "Quarterly",
                 "Semi-Annual",
                 "Annually"
-              ],
-              "required": false
+              ]
             },
             "Interest_Posting_Period": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Monthly",
                 "Quarterly",
                 "Biannually",
                 "Annually"
-              ],
-              "required": false
+              ]
             },
             "Interest_Calculated_Using": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Daily Balance",
                 "Average Daily Balance"
-              ],
-              "required": false
+              ]
             },
             "Days_in_Year": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "360",
                 "365",
                 "Actual"
-              ],
-              "required": false
+              ]
             }
           }
         },
@@ -293,13 +383,13 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Maximum_Overdraft_Amount": {
               "type": "number",
-              "visible_when": "Is_Overdraft_Allowed == true",
-              "required_when": "Is_Overdraft_Allowed == true"
+              "required_when": "Is_Overdraft_Allowed == true",
+              "visible_when": "Is_Overdraft_Allowed == true"
             },
             "Overdraft_Interest_Rate": {
               "type": "number",
-              "visible_when": "Is_Overdraft_Allowed == true",
-              "required_when": "Is_Overdraft_Allowed == true"
+              "required_when": "Is_Overdraft_Allowed == true",
+              "visible_when": "Is_Overdraft_Allowed == true"
             },
             "Enable_Withhold_Tax": {
               "type": "checkbox",
@@ -307,8 +397,8 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Tax_Group": {
               "type": "dropdown",
-              "visible_when": "Enable_Withhold_Tax == true",
-              "required_when": "Enable_Withhold_Tax == true"
+              "required_when": "Enable_Withhold_Tax == true",
+              "visible_when": "Enable_Withhold_Tax == true"
             },
             "Enable_Dormancy_Tracking": {
               "type": "checkbox",
@@ -316,18 +406,18 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Days_to_Inactive": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             },
             "Days_to_Dormancy": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             },
             "Days_to_Escheat": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             }
           }
         },
@@ -335,18 +425,10 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "step_index": 5,
           "step_name": "Charges",
           "fields": {
-            "Charge_Search": {
+            "Charges_Search": {
               "type": "search",
-              "required": false
-            },
-            "Charge_Search_Results": {
-              "type": "data_table",
-              "row_actions": [
-                {
-                  "action_name": "Add_Charge",
-                  "on_action": "add_to(Selected_Charges)"
-                }
-              ]
+              "required": false,
+              "description": "search-and-add interface for predefined charges"
             },
             "Selected_Charges": {
               "type": "repeating_group",
@@ -354,10 +436,6 @@ Do not drop functionally unique code paths (like a specific state transition) ju
                 "Charge": {
                   "type": "unspecified",
                   "required": true
-                },
-                "Amount": {
-                  "type": "number",
-                  "required": false
                 }
               }
             }
@@ -369,52 +447,60 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "fields": {
             "Accounting_Method": {
               "type": "radio",
+              "required": false,
               "options": [
                 "None",
                 "Cash-based"
-              ],
-              "required": false
+              ]
             },
-            "Savings_Reference_GL_Account": {
-              "type": "unspecified",
+            "GL_Mappings": {
+              "type": "repeating_group",
               "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "item_fields": {
+                "Mapping_Name": {
+                  "type": "dropdown",
+                  "required": false,
+                  "description": "one of the required GL account mappings - visible when Cash-based is selected"
+                },
+                "GL_Account": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              }
             },
-            "Savings_Control_GL_Account": {
+            "GL_Savings_Reference": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
-            "Transfers_in_Suspense_GL_Account": {
+            "GL_Savings_Control": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
-            "Interest_on_Savings_GL_Account": {
+            "GL_Transfers_in_Suspense": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
-            "Income_from_Fees_GL_Account": {
+            "GL_Interest_on_Savings": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
-            "Income_from_Penalties_GL_Account": {
+            "GL_Income_from_Fees": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
             },
-            "Escheat_Liability_GL_Account": {
+            "GL_Income_from_Penalties": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Escheat_Liability": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
             }
           }
         }
       ]
     },
-    "Create_Fixed_Deposit_Product_Wizard": {
+    "Fixed_Deposit_Product_Wizard": {
       "type": "wizard",
       "steps": [
         {
@@ -467,41 +553,41 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Interest_Compounding_Period": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Daily",
                 "Monthly",
                 "Quarterly",
                 "Semi-Annual",
                 "Annually"
-              ],
-              "required": false
+              ]
             },
             "Interest_Posting_Period": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Monthly",
                 "Quarterly",
                 "Biannually",
                 "Annually"
-              ],
-              "required": false
+              ]
             },
             "Interest_Calculated_Using": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Daily Balance",
                 "Average Daily Balance"
-              ],
-              "required": false
+              ]
             },
             "Days_in_Year": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "360",
                 "365",
                 "Actual"
-              ],
-              "required": false
+              ]
             }
           }
         },
@@ -531,8 +617,8 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Minimum_Required_Balance": {
               "type": "number",
-              "visible_when": "Enforce_Minimum_Required_Balance == true",
-              "required_when": "Enforce_Minimum_Required_Balance == true"
+              "required_when": "Enforce_Minimum_Required_Balance == true",
+              "visible_when": "Enforce_Minimum_Required_Balance == true"
             },
             "Is_Overdraft_Allowed": {
               "type": "checkbox",
@@ -540,13 +626,13 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Maximum_Overdraft_Amount": {
               "type": "number",
-              "visible_when": "Is_Overdraft_Allowed == true",
-              "required_when": "Is_Overdraft_Allowed == true"
+              "required_when": "Is_Overdraft_Allowed == true",
+              "visible_when": "Is_Overdraft_Allowed == true"
             },
             "Overdraft_Interest_Rate": {
               "type": "number",
-              "visible_when": "Is_Overdraft_Allowed == true",
-              "required_when": "Is_Overdraft_Allowed == true"
+              "required_when": "Is_Overdraft_Allowed == true",
+              "visible_when": "Is_Overdraft_Allowed == true"
             },
             "Enable_Withhold_Tax": {
               "type": "checkbox",
@@ -554,8 +640,8 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Tax_Group": {
               "type": "dropdown",
-              "visible_when": "Enable_Withhold_Tax == true",
-              "required_when": "Enable_Withhold_Tax == true"
+              "required_when": "Enable_Withhold_Tax == true",
+              "visible_when": "Enable_Withhold_Tax == true"
             },
             "Enable_Dormancy_Tracking": {
               "type": "checkbox",
@@ -563,23 +649,84 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Days_to_Inactive": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             },
             "Days_to_Dormancy": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             },
             "Days_to_Escheat": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             }
           }
         },
         {
           "step_index": 5,
+          "step_name": "Charges",
+          "fields": {
+            "Charges_Search": {
+              "type": "search",
+              "required": false
+            },
+            "Selected_Charges": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Charge": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "step_index": 6,
+          "step_name": "Accounting",
+          "fields": {
+            "Accounting_Method": {
+              "type": "radio",
+              "required": false,
+              "options": [
+                "None",
+                "Cash-based"
+              ]
+            },
+            "GL_Savings_Reference": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Savings_Control": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Transfers_in_Suspense": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Interest_on_Savings": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Income_from_Fees": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Income_from_Penalties": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Escheat_Liability": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            }
+          }
+        },
+        {
+          "step_index": 7,
           "step_name": "Pre-Closure",
           "fields": {
             "Pre_Mature_Closure_Applicable": {
@@ -588,21 +735,21 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Pre_Closure_Penal_Interest": {
               "type": "number",
-              "visible_when": "Pre_Mature_Closure_Applicable == true",
-              "required_when": "Pre_Mature_Closure_Applicable == true"
+              "required_when": "Pre_Mature_Closure_Applicable == true",
+              "visible_when": "Pre_Mature_Closure_Applicable == true"
             },
             "Pre_Closure_Penal_Interest_On": {
               "type": "dropdown",
-              "visible_when": "Pre_Mature_Closure_Applicable == true",
-              "required_when": "Pre_Mature_Closure_Applicable == true"
+              "required_when": "Pre_Mature_Closure_Applicable == true",
+              "visible_when": "Pre_Mature_Closure_Applicable == true"
             }
           }
         },
         {
-          "step_index": 6,
+          "step_index": 8,
           "step_name": "Deposit Term",
           "fields": {
-            "Minimum_Deposit_Term_Value": {
+            "Minimum_Deposit_Term": {
               "type": "number",
               "required": false
             },
@@ -610,7 +757,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               "type": "dropdown",
               "required": false
             },
-            "Maximum_Deposit_Term_Value": {
+            "Maximum_Deposit_Term": {
               "type": "number",
               "required": false
             },
@@ -637,7 +784,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           }
         },
         {
-          "step_index": 7,
+          "step_index": 9,
           "step_name": "Interest Rate Chart",
           "fields": {
             "Interest_Rate_Chart": {
@@ -645,127 +792,40 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               "item_fields": {
                 "Period_From": {
                   "type": "number",
-                  "required": true
+                  "required": false
                 },
                 "Period_To": {
                   "type": "number",
-                  "required": true
+                  "required": false
                 },
                 "Period_Type": {
                   "type": "dropdown",
-                  "required": true
+                  "required": false
                 },
                 "Interest_Rate": {
                   "type": "number",
-                  "required": true
+                  "required": false
                 },
                 "Amount_Range_Slabs": {
                   "type": "repeating_group",
                   "item_fields": {
                     "Amount_From": {
                       "type": "number",
-                      "required": true
+                      "required": false
                     },
                     "Amount_To": {
                       "type": "number",
-                      "required": true
-                    },
-                    "Rate": {
-                      "type": "number",
-                      "required": true
+                      "required": false
                     }
-                  },
-                  "min": 0
-                }
-              },
-              "min": 0
-            }
-          }
-        },
-        {
-          "step_index": 8,
-          "step_name": "Charges",
-          "fields": {
-            "Charge_Search": {
-              "type": "search",
-              "required": false
-            },
-            "Charge_Search_Results": {
-              "type": "data_table",
-              "row_actions": [
-                {
-                  "action_name": "Add_Charge",
-                  "on_action": "add_to(Selected_Charges)"
-                }
-              ]
-            },
-            "Selected_Charges": {
-              "type": "repeating_group",
-              "item_fields": {
-                "Charge": {
-                  "type": "unspecified",
-                  "required": true
-                },
-                "Amount": {
-                  "type": "number",
-                  "required": false
+                  }
                 }
               }
-            }
-          }
-        },
-        {
-          "step_index": 9,
-          "step_name": "Accounting",
-          "fields": {
-            "Accounting_Method": {
-              "type": "radio",
-              "options": [
-                "None",
-                "Cash-based"
-              ],
-              "required": false
-            },
-            "Savings_Reference_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
-            },
-            "Savings_Control_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
-            },
-            "Transfers_in_Suspense_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
-            },
-            "Interest_on_Savings_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
-            },
-            "Income_from_Fees_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
-            },
-            "Income_from_Penalties_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
-            },
-            "Escheat_Liability_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
             }
           }
         }
       ]
     },
-    "Create_Recurring_Deposit_Product_Wizard": {
+    "Recurring_Deposit_Product_Wizard": {
       "type": "wizard",
       "steps": [
         {
@@ -818,65 +878,41 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Interest_Compounding_Period": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Daily",
                 "Monthly",
                 "Quarterly",
                 "Semi-Annual",
                 "Annually"
-              ],
-              "required": false
+              ]
             },
             "Interest_Posting_Period": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Monthly",
                 "Quarterly",
                 "Biannually",
                 "Annually"
-              ],
-              "required": false
+              ]
             },
             "Interest_Calculated_Using": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "Daily Balance",
                 "Average Daily Balance"
-              ],
-              "required": false
+              ]
             },
             "Days_in_Year": {
               "type": "dropdown",
+              "required": false,
               "options": [
                 "360",
                 "365",
                 "Actual"
-              ],
-              "required": false
-            },
-            "Mandatory_Recommended_Deposit_Amount": {
-              "type": "number",
-              "required": false
-            },
-            "Is_Mandatory_Deposit": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Allow_Withdrawal": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Adjust_Advance_Towards_Future_Payments": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Recurring_Frequency_Value": {
-              "type": "number",
-              "required": false
-            },
-            "Recurring_Frequency_Unit": {
-              "type": "dropdown",
-              "required": false
+              ]
             }
           }
         },
@@ -906,8 +942,8 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Minimum_Required_Balance": {
               "type": "number",
-              "visible_when": "Enforce_Minimum_Required_Balance == true",
-              "required_when": "Enforce_Minimum_Required_Balance == true"
+              "required_when": "Enforce_Minimum_Required_Balance == true",
+              "visible_when": "Enforce_Minimum_Required_Balance == true"
             },
             "Is_Overdraft_Allowed": {
               "type": "checkbox",
@@ -915,13 +951,13 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Maximum_Overdraft_Amount": {
               "type": "number",
-              "visible_when": "Is_Overdraft_Allowed == true",
-              "required_when": "Is_Overdraft_Allowed == true"
+              "required_when": "Is_Overdraft_Allowed == true",
+              "visible_when": "Is_Overdraft_Allowed == true"
             },
             "Overdraft_Interest_Rate": {
               "type": "number",
-              "visible_when": "Is_Overdraft_Allowed == true",
-              "required_when": "Is_Overdraft_Allowed == true"
+              "required_when": "Is_Overdraft_Allowed == true",
+              "visible_when": "Is_Overdraft_Allowed == true"
             },
             "Enable_Withhold_Tax": {
               "type": "checkbox",
@@ -929,8 +965,8 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Tax_Group": {
               "type": "dropdown",
-              "visible_when": "Enable_Withhold_Tax == true",
-              "required_when": "Enable_Withhold_Tax == true"
+              "required_when": "Enable_Withhold_Tax == true",
+              "visible_when": "Enable_Withhold_Tax == true"
             },
             "Enable_Dormancy_Tracking": {
               "type": "checkbox",
@@ -938,18 +974,43 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             },
             "Days_to_Inactive": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             },
             "Days_to_Dormancy": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
             },
             "Days_to_Escheat": {
               "type": "number",
-              "visible_when": "Enable_Dormancy_Tracking == true",
-              "required_when": "Enable_Dormancy_Tracking == true"
+              "required_when": "Enable_Dormancy_Tracking == true",
+              "visible_when": "Enable_Dormancy_Tracking == true"
+            },
+            "Mandatory_Recommended_Deposit_Amount": {
+              "type": "number",
+              "required": false
+            },
+            "Is_Mandatory_Deposit": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Allow_Withdrawal": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Adjust_Advance_Towards_Future_Payments": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Recurring_Frequency": {
+              "type": "number",
+              "required": true,
+              "description": "numeric recurring frequency (required)"
+            },
+            "Recurring_Frequency_Unit": {
+              "type": "dropdown",
+              "required": false
             }
           }
         },
@@ -957,18 +1018,9 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "step_index": 5,
           "step_name": "Charges",
           "fields": {
-            "Charge_Search": {
+            "Charges_Search": {
               "type": "search",
               "required": false
-            },
-            "Charge_Search_Results": {
-              "type": "data_table",
-              "row_actions": [
-                {
-                  "action_name": "Add_Charge",
-                  "on_action": "add_to(Selected_Charges)"
-                }
-              ]
             },
             "Selected_Charges": {
               "type": "repeating_group",
@@ -976,10 +1028,6 @@ Do not drop functionally unique code paths (like a specific state transition) ju
                 "Charge": {
                   "type": "unspecified",
                   "required": true
-                },
-                "Amount": {
-                  "type": "number",
-                  "required": false
                 }
               }
             }
@@ -991,46 +1039,117 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "fields": {
             "Accounting_Method": {
               "type": "radio",
+              "required": false,
               "options": [
                 "None",
                 "Cash-based"
-              ],
+              ]
+            },
+            "GL_Savings_Reference": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Savings_Control": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Transfers_in_Suspense": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Interest_on_Savings": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Income_from_Fees": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Income_from_Penalties": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Escheat_Liability": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            }
+          }
+        },
+        {
+          "step_index": 7,
+          "step_name": "Deposit Term",
+          "fields": {
+            "Minimum_Deposit_Term": {
+              "type": "number",
               "required": false
             },
-            "Savings_Reference_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "Minimum_Deposit_Term_Unit": {
+              "type": "dropdown",
+              "required": false
             },
-            "Savings_Control_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "Maximum_Deposit_Term": {
+              "type": "number",
+              "required": false
             },
-            "Transfers_in_Suspense_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "Maximum_Deposit_Term_Unit": {
+              "type": "dropdown",
+              "required": false
             },
-            "Interest_on_Savings_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "In_Multiples_Of": {
+              "type": "number",
+              "required": false
             },
-            "Income_from_Fees_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "Minimum_Deposit_Amount": {
+              "type": "number",
+              "required": false
             },
-            "Income_from_Penalties_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "Maximum_Deposit_Amount": {
+              "type": "number",
+              "required": false
             },
-            "Escheat_Liability_GL_Account": {
-              "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based",
-              "required_when": "Accounting_Method == Cash-based"
+            "Default_Deposit_Amount": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        {
+          "step_index": 8,
+          "step_name": "Interest Rate Chart",
+          "fields": {
+            "Interest_Rate_Chart": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Period_From": {
+                  "type": "number",
+                  "required": false
+                },
+                "Period_To": {
+                  "type": "number",
+                  "required": false
+                },
+                "Period_Type": {
+                  "type": "dropdown",
+                  "required": false
+                },
+                "Interest_Rate": {
+                  "type": "number",
+                  "required": false
+                },
+                "Amount_Range_Slabs": {
+                  "type": "repeating_group",
+                  "item_fields": {
+                    "Amount_From": {
+                      "type": "number",
+                      "required": false
+                    },
+                    "Amount_To": {
+                      "type": "number",
+                      "required": false
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -1054,7 +1173,7 @@ Fixed Deposit Products and Recurring Deposit Products follow the same stepper st
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:23:57] Test-Positive - LLM RESPONSE
+[16:18:51] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Savings Products",
@@ -1062,239 +1181,256 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Create Savings Product wizard",
+      "test_case": "Filter Savings Products by name",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button"
+        "1. Navigate to the Savings Products page",
+        "2. Enter <filter term> into the filter/search bar and apply the filter"
       ],
-      "expected_result": "Create Savings Product wizard opens showing the 'Details' step",
-      "priority": "medium"
+      "expected_result": "Savings Products table displays only rows matching <filter term>; unrelated rows are no longer visible",
+      "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new Savings Product using minimal required fields",
+      "test_case": "Open a product from the table via Name link",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>",
+        "At least one savings product exists: <existing product> with Short Name <existing short name>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
-        "4. Click Next to go to the Currency step",
-        "5. Click Next to go to the Terms step",
-        "6. Click Next to go to the Settings step",
-        "7. Click Next to go to the Charges step",
-        "8. Click Next to go to the Accounting step",
-        "9. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click the <existing product> entry in the Name column"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "Product detail view is displayed showing the product name '<existing product>' and Short Name '<existing short name>'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create Savings Product with Enforce Minimum Required Balance enabled",
+      "test_case": "Create a Savings Product (happy path with required fields only)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Enforce Minimum Required Balance checkbox",
-        "6. Enter <Minimum_Required_Balance> in the Minimum Required Balance field",
-        "7. Click Next until the Accounting step is displayed",
-        "8. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name",
+        "4. Enter <short name> in Short Name",
+        "5. Click Next to proceed to the Currency step",
+        "6. Click Next to proceed to the Terms step",
+        "7. Click Next to proceed to the Settings step",
+        "8. Click Next to proceed to the Charges step",
+        "9. Click Next to proceed to the Accounting step",
+        "10. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
-      "priority": "medium"
+      "expected_result": "A success notification is displayed; Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Create Savings Product with Overdraft enabled and fields filled",
+      "test_case": "Create Savings Product with Enforce Minimum Required Balance enabled (conditional field visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
         "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Is Overdraft Allowed checkbox",
-        "6. Enter <Maximum_Overdraft_Amount> in the Maximum Overdraft Amount field",
-        "7. Enter <Overdraft_Interest_Rate> in the Overdraft Interest Rate field",
-        "8. Click Next until the Accounting step is displayed",
-        "9. Click the wizard's final Save action to submit the wizard"
+        "5. Check the 'Enforce Minimum Required Balance' checkbox",
+        "6. Enter <minimum required balance> in Minimum Required Balance",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Settings step the Minimum Required Balance field became visible when 'Enforce Minimum Required Balance' was checked and shows the entered value; after saving, Savings Products table shows a new row with Name '<product name>' and short name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Create Savings Product with Withhold Tax enabled and Tax Group selected",
+      "test_case": "Create Savings Product with Overdraft allowed (Max Overdraft & Overdraft Interest visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
         "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Enable Withhold Tax checkbox",
-        "6. Select <Tax_Group> from the Tax Group dropdown",
-        "7. Click Next until the Accounting step is displayed",
-        "8. Click the wizard's final Save action to submit the wizard"
+        "5. Check the 'Is Overdraft Allowed' checkbox",
+        "6. Enter <maximum overdraft amount> in Maximum Overdraft Amount and <overdraft interest rate> in Overdraft Interest Rate",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Settings step the Maximum Overdraft Amount and Overdraft Interest Rate fields became visible when 'Is Overdraft Allowed' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create Savings Product with Dormancy Tracking enabled and dormancy periods filled",
+      "test_case": "Create Savings Product with Withhold Tax enabled (Tax Group visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
         "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Enable Dormancy Tracking checkbox",
-        "6. Enter <Days_to_Inactive> in the Days to Inactive field",
-        "7. Enter <Days_to_Dormancy> in the Days to Dormancy field",
-        "8. Enter <Days_to_Escheat> in the Days to Escheat field",
-        "9. Click Next until the Accounting step is displayed",
-        "10. Click the wizard's final Save action to submit the wizard"
+        "5. Check the 'Enable Withhold Tax' checkbox",
+        "6. Select <tax group> from the Tax Group dropdown",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Settings step the Tax Group dropdown became visible when 'Enable Withhold Tax' was checked and displays the selected <tax group>; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Add a charge from Charges search results into Selected Charges in the wizard",
+      "test_case": "Create Savings Product with Dormancy Tracking enabled (dormancy fields visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Savings Product wizard is open and on the Charges step"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Enter <search term> in the Charge Search field",
-        "2. Select a matching result from the Charge Search Results table by clicking its Add Charge row action",
-        "3. Verify the added charge appears as an item in the Selected Charges repeating group"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Settings step is displayed",
+        "5. Check the 'Enable Dormancy Tracking' checkbox",
+        "6. Enter <days to inactive> in Days to Inactive, <days to dormancy> in Days to Dormancy and <days to escheat> in Days to Escheat",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Selected Charges repeating group lists the added charge within the wizard",
-      "priority": "high"
+      "expected_result": "On the Settings step the Days to Inactive, Days to Dormancy and Days to Escheat fields became visible when 'Enable Dormancy Tracking' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Select Cash-based accounting and fill GL account mappings",
+      "test_case": "Create Savings Product and enable Cash-based accounting to reveal GL mappings",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Savings Product wizard is open and on the Accounting step"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Select 'Cash-based' from the Accounting Method radio options",
-        "2. Verify Savings Reference GL Account field becomes visible and enter <Savings_Reference_GL_Account>",
-        "3. Enter <Savings_Control_GL_Account> in the Savings Control GL Account field",
-        "4. Enter <Transfers_in_Suspense_GL_Account> in the Transfers in Suspense GL Account field",
-        "5. Enter <Interest_on_Savings_GL_Account> in the Interest on Savings GL Account field",
-        "6. Enter <Income_from_Fees_GL_Account> in the Income from Fees GL Account field",
-        "7. Enter <Income_from_Penalties_GL_Account> in the Income from Penalties GL Account field",
-        "8. Enter <Escheat_Liability_GL_Account> in the Escheat Liability GL Account field",
-        "9. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Accounting step is displayed",
+        "5. Select 'Cash-based' for Accounting Method",
+        "6. Verify that GL_Savings_Reference, GL_Savings_Control, GL_Transfers_in_Suspense, GL_Interest_on_Savings, GL_Income_from_Fees, GL_Income_from_Penalties and GL_Escheat_Liability fields are visible",
+        "7. In the GL Mappings repeating group click 'Add Row' and select <mapping name> and <GL account> for the new mapping",
+        "8. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Accounting step selecting 'Cash-based' reveals the GL account mapping fields and the GL Mappings repeating group shows the added mapping row; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Open Savings Product detail by clicking Name column in table",
+      "test_case": "Add a predefined charge to a Savings Product using the Charges search-and-add",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "At least one savings product <existing product> is present in the Savings Products table"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the Name cell of <existing product> in the Savings Products table"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Charges step is displayed",
+        "5. Enter <charge search term> in the Charges Search field",
+        "6. Select <matching charge> from the search results to add it to Selected Charges",
+        "7. Verify the <matching charge> appears in the Selected Charges list",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Navigation to Savings_Product_Detail occurs (Savings Product detail view opens)",
+      "expected_result": "On the Charges step the selected charge '<matching charge>' appears in the Selected Charges list; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Create Fixed Deposit Product with Pre-Closure and Interest Rate Chart entries",
+      "test_case": "Create a Fixed Deposit Product (happy path with required fields only)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Fixed Deposit Product wizard is open"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Enter <Product_Name> in the Product Name field on the Details step",
-        "2. Enter <Short_Name> in the Short Name field on the Details step",
-        "3. Click Next to go to the Currency step",
-        "4. Click Next to go to the Terms step",
-        "5. Click Next to go to the Settings step",
-        "6. Click Next to go to the Pre-Closure step",
-        "7. Click the Pre Mature Closure Applicable checkbox",
-        "8. Enter <Pre_Closure_Penal_Interest> in the Pre-Closure Penal Interest field",
-        "9. Select <Pre_Closure_Penal_Interest_On> from the Pre-Closure Penal Interest On dropdown",
-        "10. Click Next to go to the Deposit Term step",
-        "11. Enter <Minimum_Deposit_Term_Value> and select <Minimum_Deposit_Term_Unit>",
-        "12. Enter <Maximum_Deposit_Term_Value> and select <Maximum_Deposit_Term_Unit>",
-        "13. Enter <Minimum_Deposit_Amount> in the Minimum Deposit Amount field",
-        "14. Click Next to go to the Interest Rate Chart step",
-        "15. Click 'Add Row' to add an Interest Rate Chart entry",
-        "16. Enter <Period_From> and <Period_To> in the new Interest Rate Chart row",
-        "17. Select <Period_Type> in the new Interest Rate Chart row",
-        "18. Enter <Interest_Rate> in the new Interest Rate Chart row",
-        "19. Click 'Add Row' inside Amount Range Slabs for that chart row (if present)",
-        "20. Enter <Amount_From>, <Amount_To>, and <Rate> for the Amount Range slab",
-        "21. Click Next to go to the Charges step",
-        "22. Click Next to go to the Accounting step",
-        "23. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
+        "4. Click Next through Currency, Terms and Settings steps",
+        "5. Click Next through Charges and Accounting steps",
+        "6. Click Next to reach Pre-Closure (if present) and then through Deposit Term and Interest Rate Chart steps as required",
+        "7. Click Save to finish creating the Fixed Deposit product"
       ],
-      "expected_result": "Product <Product_Name> appears in the Savings Products table",
+      "expected_result": "A success notification is displayed; Savings Products table shows a new row for the Fixed Deposit product with Name '<product name>' and Short Name '<short name>'",
       "priority": "high"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Create Recurring Deposit Product with mandatory deposit and recurring frequency",
+      "test_case": "Create Fixed Deposit Product with Pre-Mature Closure enabled (conditional pre-closure fields visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Recurring Deposit Product wizard is open"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Enter <Product_Name> in the Product Name field on the Details step",
-        "2. Enter <Short_Name> in the Short Name field on the Details step",
-        "3. Click Next to go to the Currency step",
-        "4. Click Next to go to the Terms step",
-        "5. Enter <Mandatory_Recommended_Deposit_Amount> in the Mandatory Recommended Deposit Amount field",
-        "6. Click the Is Mandatory Deposit checkbox",
-        "7. Enter <Recurring_Frequency_Value> and select <Recurring_Frequency_Unit>",
-        "8. Click Next to go to the Settings step",
-        "9. Click Next to go to the Charges step",
-        "10. Click Next to go to the Accounting step",
-        "11. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Pre-Closure step is displayed",
+        "5. Check the 'Pre-Mature Closure Applicable' checkbox",
+        "6. Enter <pre-closure penal interest> in Pre-Closure Penal Interest and select <pre-closure penal interest on> in Pre-Closure Penal Interest On dropdown",
+        "7. Click Next to proceed through remaining steps and Click Save to finish creating the product"
       ],
-      "expected_result": "Product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Pre-Closure step the Pre-Closure Penal Interest and Pre-Closure Penal Interest On fields became visible when 'Pre-Mature Closure Applicable' was checked and show the entered values; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Create a Recurring Deposit Product (required Recurring Frequency filled)",
+      "preconditions": [
+        "User logged in as <Admin>"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Recurring Deposit Product' to open the Recurring Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
+        "4. Click Next repeatedly until the Settings step is displayed",
+        "5. Enter <recurring frequency> in Recurring Frequency and select <recurring frequency unit> if applicable",
+        "6. Click Next through Charges and Accounting steps",
+        "7. Click Next through Deposit Term and Interest Rate Chart steps as required",
+        "8. Click Save to finish creating the Recurring Deposit product"
+      ],
+      "expected_result": "A success notification is displayed; Savings Products table shows a new Recurring Deposit product row with Name '<product name>' and Short Name '<short name>' and the Recurring Frequency value is part of the product's settings summary",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Add an Interest Rate Chart entry for a Fixed Deposit Product using repeating groups",
+      "preconditions": [
+        "User logged in as <Admin>"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Interest Rate Chart step is displayed",
+        "5. In the Interest Rate Chart repeating group click 'Add Row'",
+        "6. Enter <period from> in Period From, <period to> in Period To, select <period type> for Period Type and enter <interest rate> in Interest Rate",
+        "7. In Amount Range Slabs for that chart row click 'Add Row' and enter <amount from> and <amount to>",
+        "8. Click Save to finish creating the product"
+      ],
+      "expected_result": "On the Interest Rate Chart step the newly added chart row is visible with the entered Period From/To, Period Type and Interest Rate and the Amount Range slab appears under that chart row; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 11,
-    "high_priority": 5,
-    "medium_priority": 6,
+    "total": 13,
+    "high_priority": 6,
+    "medium_priority": 7,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[14:23:57] Test-Positive - PARSED JSON
+[16:18:51] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Savings Products",
@@ -1302,233 +1438,250 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Create Savings Product wizard",
+      "test_case": "Filter Savings Products by name",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button"
+        "1. Navigate to the Savings Products page",
+        "2. Enter <filter term> into the filter/search bar and apply the filter"
       ],
-      "expected_result": "Create Savings Product wizard opens showing the 'Details' step",
-      "priority": "medium"
+      "expected_result": "Savings Products table displays only rows matching <filter term>; unrelated rows are no longer visible",
+      "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new Savings Product using minimal required fields",
+      "test_case": "Open a product from the table via Name link",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>",
+        "At least one savings product exists: <existing product> with Short Name <existing short name>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
-        "4. Click Next to go to the Currency step",
-        "5. Click Next to go to the Terms step",
-        "6. Click Next to go to the Settings step",
-        "7. Click Next to go to the Charges step",
-        "8. Click Next to go to the Accounting step",
-        "9. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click the <existing product> entry in the Name column"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "Product detail view is displayed showing the product name '<existing product>' and Short Name '<existing short name>'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create Savings Product with Enforce Minimum Required Balance enabled",
+      "test_case": "Create a Savings Product (happy path with required fields only)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Enforce Minimum Required Balance checkbox",
-        "6. Enter <Minimum_Required_Balance> in the Minimum Required Balance field",
-        "7. Click Next until the Accounting step is displayed",
-        "8. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name",
+        "4. Enter <short name> in Short Name",
+        "5. Click Next to proceed to the Currency step",
+        "6. Click Next to proceed to the Terms step",
+        "7. Click Next to proceed to the Settings step",
+        "8. Click Next to proceed to the Charges step",
+        "9. Click Next to proceed to the Accounting step",
+        "10. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
-      "priority": "medium"
+      "expected_result": "A success notification is displayed; Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Create Savings Product with Overdraft enabled and fields filled",
+      "test_case": "Create Savings Product with Enforce Minimum Required Balance enabled (conditional field visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
         "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Is Overdraft Allowed checkbox",
-        "6. Enter <Maximum_Overdraft_Amount> in the Maximum Overdraft Amount field",
-        "7. Enter <Overdraft_Interest_Rate> in the Overdraft Interest Rate field",
-        "8. Click Next until the Accounting step is displayed",
-        "9. Click the wizard's final Save action to submit the wizard"
+        "5. Check the 'Enforce Minimum Required Balance' checkbox",
+        "6. Enter <minimum required balance> in Minimum Required Balance",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Settings step the Minimum Required Balance field became visible when 'Enforce Minimum Required Balance' was checked and shows the entered value; after saving, Savings Products table shows a new row with Name '<product name>' and short name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Create Savings Product with Withhold Tax enabled and Tax Group selected",
+      "test_case": "Create Savings Product with Overdraft allowed (Max Overdraft & Overdraft Interest visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
         "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Enable Withhold Tax checkbox",
-        "6. Select <Tax_Group> from the Tax Group dropdown",
-        "7. Click Next until the Accounting step is displayed",
-        "8. Click the wizard's final Save action to submit the wizard"
+        "5. Check the 'Is Overdraft Allowed' checkbox",
+        "6. Enter <maximum overdraft amount> in Maximum Overdraft Amount and <overdraft interest rate> in Overdraft Interest Rate",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Settings step the Maximum Overdraft Amount and Overdraft Interest Rate fields became visible when 'Is Overdraft Allowed' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create Savings Product with Dormancy Tracking enabled and dormancy periods filled",
+      "test_case": "Create Savings Product with Withhold Tax enabled (Tax Group visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Savings Products page is visible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the '+ Create Savings Product' button",
-        "2. Enter <Product_Name> in the Product Name field on the Details step",
-        "3. Enter <Short_Name> in the Short Name field on the Details step",
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
         "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Click the Enable Dormancy Tracking checkbox",
-        "6. Enter <Days_to_Inactive> in the Days to Inactive field",
-        "7. Enter <Days_to_Dormancy> in the Days to Dormancy field",
-        "8. Enter <Days_to_Escheat> in the Days to Escheat field",
-        "9. Click Next until the Accounting step is displayed",
-        "10. Click the wizard's final Save action to submit the wizard"
+        "5. Check the 'Enable Withhold Tax' checkbox",
+        "6. Select <tax group> from the Tax Group dropdown",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Settings step the Tax Group dropdown became visible when 'Enable Withhold Tax' was checked and displays the selected <tax group>; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Add a charge from Charges search results into Selected Charges in the wizard",
+      "test_case": "Create Savings Product with Dormancy Tracking enabled (dormancy fields visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Savings Product wizard is open and on the Charges step"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Enter <search term> in the Charge Search field",
-        "2. Select a matching result from the Charge Search Results table by clicking its Add Charge row action",
-        "3. Verify the added charge appears as an item in the Selected Charges repeating group"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Settings step is displayed",
+        "5. Check the 'Enable Dormancy Tracking' checkbox",
+        "6. Enter <days to inactive> in Days to Inactive, <days to dormancy> in Days to Dormancy and <days to escheat> in Days to Escheat",
+        "7. Click Next to proceed to the Charges step",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Selected Charges repeating group lists the added charge within the wizard",
-      "priority": "high"
+      "expected_result": "On the Settings step the Days to Inactive, Days to Dormancy and Days to Escheat fields became visible when 'Enable Dormancy Tracking' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Select Cash-based accounting and fill GL account mappings",
+      "test_case": "Create Savings Product and enable Cash-based accounting to reveal GL mappings",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Savings Product wizard is open and on the Accounting step"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Select 'Cash-based' from the Accounting Method radio options",
-        "2. Verify Savings Reference GL Account field becomes visible and enter <Savings_Reference_GL_Account>",
-        "3. Enter <Savings_Control_GL_Account> in the Savings Control GL Account field",
-        "4. Enter <Transfers_in_Suspense_GL_Account> in the Transfers in Suspense GL Account field",
-        "5. Enter <Interest_on_Savings_GL_Account> in the Interest on Savings GL Account field",
-        "6. Enter <Income_from_Fees_GL_Account> in the Income from Fees GL Account field",
-        "7. Enter <Income_from_Penalties_GL_Account> in the Income from Penalties GL Account field",
-        "8. Enter <Escheat_Liability_GL_Account> in the Escheat Liability GL Account field",
-        "9. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Accounting step is displayed",
+        "5. Select 'Cash-based' for Accounting Method",
+        "6. Verify that GL_Savings_Reference, GL_Savings_Control, GL_Transfers_in_Suspense, GL_Interest_on_Savings, GL_Income_from_Fees, GL_Income_from_Penalties and GL_Escheat_Liability fields are visible",
+        "7. In the GL Mappings repeating group click 'Add Row' and select <mapping name> and <GL account> for the new mapping",
+        "8. Click Save to finish creating the product"
       ],
-      "expected_result": "Savings product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Accounting step selecting 'Cash-based' reveals the GL account mapping fields and the GL Mappings repeating group shows the added mapping row; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Open Savings Product detail by clicking Name column in table",
+      "test_case": "Add a predefined charge to a Savings Product using the Charges search-and-add",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "At least one savings product <existing product> is present in the Savings Products table"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Click the Name cell of <existing product> in the Savings Products table"
+        "1. Navigate to the Savings Products page",
+        "2. Click '+ Create Savings Product' to open the product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Charges step is displayed",
+        "5. Enter <charge search term> in the Charges Search field",
+        "6. Select <matching charge> from the search results to add it to Selected Charges",
+        "7. Verify the <matching charge> appears in the Selected Charges list",
+        "8. Click Next to proceed to the Accounting step",
+        "9. Click Save to finish creating the product"
       ],
-      "expected_result": "Navigation to Savings_Product_Detail occurs (Savings Product detail view opens)",
+      "expected_result": "On the Charges step the selected charge '<matching charge>' appears in the Selected Charges list; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Create Fixed Deposit Product with Pre-Closure and Interest Rate Chart entries",
+      "test_case": "Create a Fixed Deposit Product (happy path with required fields only)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Fixed Deposit Product wizard is open"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Enter <Product_Name> in the Product Name field on the Details step",
-        "2. Enter <Short_Name> in the Short Name field on the Details step",
-        "3. Click Next to go to the Currency step",
-        "4. Click Next to go to the Terms step",
-        "5. Click Next to go to the Settings step",
-        "6. Click Next to go to the Pre-Closure step",
-        "7. Click the Pre Mature Closure Applicable checkbox",
-        "8. Enter <Pre_Closure_Penal_Interest> in the Pre-Closure Penal Interest field",
-        "9. Select <Pre_Closure_Penal_Interest_On> from the Pre-Closure Penal Interest On dropdown",
-        "10. Click Next to go to the Deposit Term step",
-        "11. Enter <Minimum_Deposit_Term_Value> and select <Minimum_Deposit_Term_Unit>",
-        "12. Enter <Maximum_Deposit_Term_Value> and select <Maximum_Deposit_Term_Unit>",
-        "13. Enter <Minimum_Deposit_Amount> in the Minimum Deposit Amount field",
-        "14. Click Next to go to the Interest Rate Chart step",
-        "15. Click 'Add Row' to add an Interest Rate Chart entry",
-        "16. Enter <Period_From> and <Period_To> in the new Interest Rate Chart row",
-        "17. Select <Period_Type> in the new Interest Rate Chart row",
-        "18. Enter <Interest_Rate> in the new Interest Rate Chart row",
-        "19. Click 'Add Row' inside Amount Range Slabs for that chart row (if present)",
-        "20. Enter <Amount_From>, <Amount_To>, and <Rate> for the Amount Range slab",
-        "21. Click Next to go to the Charges step",
-        "22. Click Next to go to the Accounting step",
-        "23. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
+        "4. Click Next through Currency, Terms and Settings steps",
+        "5. Click Next through Charges and Accounting steps",
+        "6. Click Next to reach Pre-Closure (if present) and then through Deposit Term and Interest Rate Chart steps as required",
+        "7. Click Save to finish creating the Fixed Deposit product"
       ],
-      "expected_result": "Product <Product_Name> appears in the Savings Products table",
+      "expected_result": "A success notification is displayed; Savings Products table shows a new row for the Fixed Deposit product with Name '<product name>' and Short Name '<short name>'",
       "priority": "high"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Create Recurring Deposit Product with mandatory deposit and recurring frequency",
+      "test_case": "Create Fixed Deposit Product with Pre-Mature Closure enabled (conditional pre-closure fields visible)",
       "preconditions": [
-        "User logged in as <Administrator>",
-        "Create Recurring Deposit Product wizard is open"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Enter <Product_Name> in the Product Name field on the Details step",
-        "2. Enter <Short_Name> in the Short Name field on the Details step",
-        "3. Click Next to go to the Currency step",
-        "4. Click Next to go to the Terms step",
-        "5. Enter <Mandatory_Recommended_Deposit_Amount> in the Mandatory Recommended Deposit Amount field",
-        "6. Click the Is Mandatory Deposit checkbox",
-        "7. Enter <Recurring_Frequency_Value> and select <Recurring_Frequency_Unit>",
-        "8. Click Next to go to the Settings step",
-        "9. Click Next to go to the Charges step",
-        "10. Click Next to go to the Accounting step",
-        "11. Click the wizard's final Save action to submit the wizard"
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Pre-Closure step is displayed",
+        "5. Check the 'Pre-Mature Closure Applicable' checkbox",
+        "6. Enter <pre-closure penal interest> in Pre-Closure Penal Interest and select <pre-closure penal interest on> in Pre-Closure Penal Interest On dropdown",
+        "7. Click Next to proceed through remaining steps and Click Save to finish creating the product"
       ],
-      "expected_result": "Product <Product_Name> appears in the Savings Products table",
+      "expected_result": "On the Pre-Closure step the Pre-Closure Penal Interest and Pre-Closure Penal Interest On fields became visible when 'Pre-Mature Closure Applicable' was checked and show the entered values; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Create a Recurring Deposit Product (required Recurring Frequency filled)",
+      "preconditions": [
+        "User logged in as <Admin>"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Recurring Deposit Product' to open the Recurring Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
+        "4. Click Next repeatedly until the Settings step is displayed",
+        "5. Enter <recurring frequency> in Recurring Frequency and select <recurring frequency unit> if applicable",
+        "6. Click Next through Charges and Accounting steps",
+        "7. Click Next through Deposit Term and Interest Rate Chart steps as required",
+        "8. Click Save to finish creating the Recurring Deposit product"
+      ],
+      "expected_result": "A success notification is displayed; Savings Products table shows a new Recurring Deposit product row with Name '<product name>' and Short Name '<short name>' and the Recurring Frequency value is part of the product's settings summary",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Add an Interest Rate Chart entry for a Fixed Deposit Product using repeating groups",
+      "preconditions": [
+        "User logged in as <Admin>"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Products page",
+        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
+        "3. Enter <product name> in Product Name and <short name> in Short Name",
+        "4. Click Next repeatedly until the Interest Rate Chart step is displayed",
+        "5. In the Interest Rate Chart repeating group click 'Add Row'",
+        "6. Enter <period from> in Period From, <period to> in Period To, select <period type> for Period Type and enter <interest rate> in Interest Rate",
+        "7. In Amount Range Slabs for that chart row click 'Add Row' and enter <amount from> and <amount to>",
+        "8. Click Save to finish creating the product"
+      ],
+      "expected_result": "On the Interest Rate Chart step the newly added chart row is visible with the entered Period From/To, Period Type and Interest Rate and the Amount Range slab appears under that chart row; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 11,
-    "high_priority": 5,
-    "medium_priority": 6,
+    "total": 13,
+    "high_priority": 6,
+    "medium_priority": 7,
     "low_priority": 0
   }
 }

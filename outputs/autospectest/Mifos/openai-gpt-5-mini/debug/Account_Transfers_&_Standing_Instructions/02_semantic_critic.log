@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.599309
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.760798
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:13:21] Semantic Critic - SYSTEM PROMPT
+[16:07:21] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:13:21] Semantic Critic - USER PROMPT
+[16:07:21] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -127,11 +127,11 @@ The Standing Instructions page displays a data table with columns for Name, From
       "type": "form",
       "fields": {
         "From_Office": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": false
         },
         "From_Client": {
-          "type": "search",
+          "type": "unspecified",
           "required": false
         },
         "From_Account_Type": {
@@ -143,15 +143,15 @@ The Standing Instructions page displays a data table with columns for Name, From
           ]
         },
         "From_Account": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": false
         },
         "To_Office": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": false
         },
         "To_Client": {
-          "type": "search",
+          "type": "unspecified",
           "required": false
         },
         "To_Account_Type": {
@@ -163,14 +163,14 @@ The Standing Instructions page displays a data table with columns for Name, From
           ]
         },
         "To_Account": {
-          "type": "dropdown",
+          "type": "unspecified",
           "required": false
         },
         "Transfer_Amount": {
           "type": "number",
           "required": true,
           "constraints": [
-            "must not exceed available balance of From_Account"
+            "must not exceed available balance"
           ]
         },
         "Transfer_Date": {
@@ -185,11 +185,13 @@ The Standing Instructions page displays a data table with columns for Name, From
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "debits source and credits destination"
+          "on_success": "processes the transfer, debiting the source and crediting the destination",
+          "constraints": [],
+          "preconditions": []
         }
       ]
     },
-    "Standing_Instructions_Table": {
+    "Standing_Instructions_List": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -202,29 +204,25 @@ The Standing Instructions page displays a data table with columns for Name, From
         "Validity Till",
         "Status"
       ],
-      "status_values": [
-        "Active",
-        "Disabled"
-      ],
       "top_actions": [
         {
           "element_name": "+ Create Standing Instruction",
-          "action": "open_form",
-          "opens_component": "Create_Standing_Instruction_Form"
+          "action": "opens_form",
+          "opens": "Create_Standing_Instruction_Form"
         }
       ],
       "row_actions": [
         {
           "action_name": "Enable",
           "preconditions": [
-            "status must be Disabled"
+            "Status == Disabled"
           ],
           "on_success": "sets status to Active"
         },
         {
           "action_name": "Disable",
           "preconditions": [
-            "status must be Active"
+            "Status == Active"
           ],
           "on_success": "sets status to Disabled"
         },
@@ -241,9 +239,41 @@ The Standing Instructions page displays a data table with columns for Name, From
           "type": "unspecified",
           "required": true
         },
+        "From_Office": {
+          "type": "unspecified",
+          "required": false
+        },
+        "From_Client": {
+          "type": "unspecified",
+          "required": false
+        },
+        "From_Account_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Savings Account",
+            "Loan Account"
+          ]
+        },
         "From_Account": {
           "type": "unspecified",
           "required": false
+        },
+        "To_Office": {
+          "type": "unspecified",
+          "required": false
+        },
+        "To_Client": {
+          "type": "unspecified",
+          "required": false
+        },
+        "To_Account_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Savings Account",
+            "Loan Account"
+          ]
         },
         "To_Account": {
           "type": "unspecified",
@@ -290,7 +320,7 @@ The Standing Instructions page displays a data table with columns for Name, From
           "required": false
         },
         "Recurrence_Interval": {
-          "type": "number",
+          "type": "unspecified",
           "required": false
         }
       },
@@ -298,47 +328,8 @@ The Standing Instructions page displays a data table with columns for Name, From
         {
           "element_name": "Create",
           "on_success": "creates standing instruction"
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "closes form without creating"
         }
       ]
-    },
-    "Standing_Instruction_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Disable",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "sets status to Disabled"
-            },
-            {
-              "action_name": "Delete",
-              "on_success": "deletes standing instruction"
-            }
-          ]
-        },
-        "Disabled": {
-          "available_actions": [
-            {
-              "action_name": "Enable",
-              "preconditions": [
-                "status must be Disabled"
-              ],
-              "on_success": "sets status to Active"
-            },
-            {
-              "action_name": "Delete",
-              "on_success": "deletes standing instruction"
-            }
-          ]
-        }
-      }
     }
   }
 }
@@ -347,29 +338,29 @@ The Standing Instructions page displays a data table with columns for Name, From
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:14:59] Semantic Critic - LLM RESPONSE
+[16:08:44] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the described interactive elements; only minor extras (a Cancel action and an explicit state_bound_action_bar component) are present but non-critical.",
+  "summary": "AST accurately captures the described interactive elements; only minor inferred preconditions for enable/disable row actions were added but are acceptable.",
   "missing": [],
   "phantoms": [
-    "Create_Standing_Instruction_Form.submit_actions[1] (Cancel button not mentioned in the description)",
-    "Standing_Instruction_Actions (explicit state_bound_action_bar component not named in the description; actions were described on the listing)"
+    "Standing_Instructions_List.row_actions[0].preconditions (Status == Disabled) - not explicitly stated in description",
+    "Standing_Instructions_List.row_actions[1].preconditions (Status == Active) - not explicitly stated in description"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:14:59] Semantic Critic - PARSED JSON
+[16:08:44] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the described interactive elements; only minor extras (a Cancel action and an explicit state_bound_action_bar component) are present but non-critical.",
+  "summary": "AST accurately captures the described interactive elements; only minor inferred preconditions for enable/disable row actions were added but are acceptable.",
   "missing": [],
   "phantoms": [
-    "Create_Standing_Instruction_Form.submit_actions[1] (Cancel button not mentioned in the description)",
-    "Standing_Instruction_Actions (explicit state_bound_action_bar component not named in the description; actions were described on the listing)"
+    "Standing_Instructions_List.row_actions[0].preconditions (Status == Disabled) - not explicitly stated in description",
+    "Standing_Instructions_List.row_actions[1].preconditions (Status == Active) - not explicitly stated in description"
   ],
   "fixes": []
 }

@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.597673
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.759386
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:12:35] Semantic Critic - SYSTEM PROMPT
+[16:06:25] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:12:35] Semantic Critic - USER PROMPT
+[16:06:25] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -135,549 +135,108 @@ The Closing Entries page displays a table with columns for Office, Closing Date,
         "GL Account",
         "Amount"
       ],
-      "filters": {
-        "Office": {
-          "type": "dropdown",
-          "required": false
-        },
-        "GL_Account": {
-          "type": "dropdown",
-          "required": false
-        },
-        "Transaction_Date_From": {
-          "type": "date",
-          "required": false
-        },
-        "Transaction_Date_To": {
-          "type": "date",
-          "required": false
-        },
-        "Transaction_ID": {
-          "type": "search",
-          "required": false
-        },
-        "Entry_Type": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Debit",
-            "Credit"
-          ]
-        }
-      },
-      "actions": [
-        {
-          "element_name": "+ Add Journal Entry",
-          "triggers": "opens Add_Journal_Entry_Form"
-        }
-      ]
-    },
-    "Add_Journal_Entry_Form": {
-      "type": "form",
-      "fields": {
-        "Office": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Currency": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Reference_Number": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Transaction_Date": {
-          "type": "date",
-          "required": true
-        },
-        "Payment_Type": {
-          "type": "dropdown",
-          "required": false
-        },
-        "Payment_Details": {
-          "type": "unspecified",
-          "required": false,
-          "visible_when": "Payment_Type != ''"
-        },
-        "Entry_Lines": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Line_Type": {
-              "type": "dropdown",
-              "required": true,
-              "options": [
-                "Debit",
-                "Credit"
-              ]
-            },
-            "GL_Account": {
-              "type": "dropdown",
-              "required": true
-            },
-            "Amount": {
-              "type": "number",
-              "required": true
-            }
-          }
-        },
-        "Comments": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "constraints": [
-        "sum of Amount where Line_Type == Debit must equal sum of Amount where Line_Type == Credit"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates journal entry",
-          "preconditions": [
-            "transaction date must be after the most recent closure for selected Office"
-          ],
-          "constraints": [
-            "blocks submission if total debits != total credits"
-          ]
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "dismisses form"
-        }
-      ]
-    },
-    "Closing_Entries_Table": {
-      "type": "data_table",
-      "columns": [
-        "Office",
-        "Closing Date",
-        "Created Date",
-        "Comments"
-      ],
-      "actions": [
-        {
-          "element_name": "+ Create Closure",
-          "triggers": "opens Create_Closure_Form"
-        }
-      ]
-    },
-    "Create_Closure_Form": {
-      "type": "form",
-      "fields": {
-        "Office": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Closing_Date": {
-          "type": "date",
-          "required": true
-        },
-        "Comments": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates closure and prevents journal entries from being posted for dates on or before the closing date"
-        },
-        {
-          "element_name": "Cancel",
-          "on_success": "dismisses form"
-        }
-      ]
-    }
-  }
-}
-</ast>
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:14:28] Semantic Critic - LLM RESPONSE
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST mostly matches the description but includes inferred fields/conditions and omits explicit Add Row and running total displays; regenerate after removing inferred per-line Type and the implicit visibility rule or explicitly align them with the spec, and add the Add Row control plus running total fields.",
-  "missing": [
-    "Add_Journal_Entry_Form.fields.Entry_Lines.add_action (Add Row button to add additional entry lines)",
-    "Add_Journal_Entry_Form.display_fields.Running_Total.Debit_Total",
-    "Add_Journal_Entry_Form.display_fields.Running_Total.Credit_Total",
-    "Add_Journal_Entry_Form.display_fields.Running_Total.Difference"
-  ],
-  "phantoms": [
-    "Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Line_Type (per-line Debit/Credit field not specified in the description)",
-    "Add_Journal_Entry_Form.fields.Payment_Details.visible_when (conditional visibility was inferred but the description does not state payment details are conditional)"
-  ],
-  "fixes": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines: add an explicit add_action property representing the '+ Add Row' button, e.g. add_action: { \"element_name\": \"Add Row\", \"action\": \"adds new entry line to repeating_group\" }.",
-    "components.Add_Journal_Entry_Form.display_fields: add a Running_Total object with fields Debit_Total, Credit_Total, and Difference (read-only numeric/display fields updated as entry lines change), e.g. display_fields.Running_Total = { \"Debit_Total\": {\"type\":\"number\",\"read_only\":true}, \"Credit_Total\": {...}, \"Difference\": {...} }.",
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Line_Type: remove this field unless the description is updated to explicitly require a per-line Debit/Credit selector; entry lines should only include GL_Account and Amount per the spec.",
-    "components.Add_Journal_Entry_Form.fields.Payment_Details.visible_when: remove the visible_when conditional (make Payment_Details a plain field) unless the description is updated to explicitly state that payment detail fields are shown only when a Payment Type is selected; if conditional behavior is required, change wording in the description to explicitly state the trigger."
-  ]
-}
-
-------------------------------------------------------------
-[14:14:28] Semantic Critic - PARSED JSON
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST mostly matches the description but includes inferred fields/conditions and omits explicit Add Row and running total displays; regenerate after removing inferred per-line Type and the implicit visibility rule or explicitly align them with the spec, and add the Add Row control plus running total fields.",
-  "missing": [
-    "Add_Journal_Entry_Form.fields.Entry_Lines.add_action (Add Row button to add additional entry lines)",
-    "Add_Journal_Entry_Form.display_fields.Running_Total.Debit_Total",
-    "Add_Journal_Entry_Form.display_fields.Running_Total.Credit_Total",
-    "Add_Journal_Entry_Form.display_fields.Running_Total.Difference"
-  ],
-  "phantoms": [
-    "Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Line_Type (per-line Debit/Credit field not specified in the description)",
-    "Add_Journal_Entry_Form.fields.Payment_Details.visible_when (conditional visibility was inferred but the description does not state payment details are conditional)"
-  ],
-  "fixes": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines: add an explicit add_action property representing the '+ Add Row' button, e.g. add_action: { \"element_name\": \"Add Row\", \"action\": \"adds new entry line to repeating_group\" }.",
-    "components.Add_Journal_Entry_Form.display_fields: add a Running_Total object with fields Debit_Total, Credit_Total, and Difference (read-only numeric/display fields updated as entry lines change), e.g. display_fields.Running_Total = { \"Debit_Total\": {\"type\":\"number\",\"read_only\":true}, \"Credit_Total\": {...}, \"Difference\": {...} }.",
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Line_Type: remove this field unless the description is updated to explicitly require a per-line Debit/Credit selector; entry lines should only include GL_Account and Amount per the spec.",
-    "components.Add_Journal_Entry_Form.fields.Payment_Details.visible_when: remove the visible_when conditional (make Payment_Details a plain field) unless the description is updated to explicitly state that payment detail fields are shown only when a Payment Type is selected; if conditional behavior is required, change wording in the description to explicitly state the trigger."
-  ]
-}
-
-------------------------------------------------------------
-[14:15:43] Semantic Critic - USER PROMPT
-------------------------------------------------------------
-<description>
-
-The Journal Entries page displays a data table with columns for Entry ID, Office, Transaction Date, Created Date, Transaction ID, Type (Debit/Credit), GL Account, and Amount. A filter bar allows filtering by Office, GL Account, Date Range, Transaction ID, and Entry Type. A "+ Add Journal Entry" button opens the creation form containing Office (required), Currency (required), Reference Number, Transaction Date (required), Payment Type and payment detail fields, entry lines (each with a GL Account dropdown and Amount — an "Add Row" button adds additional lines), and Comments. A running total shows debit total, credit total, and difference; total debits must equal total credits or a validation error blocks submission.
-
-The Closing Entries page displays a table with columns for Office, Closing Date, Created Date, and Comments. A "+ Create Closure" button opens the form with Office (required), Closing Date (required), and Comments. Creating a closure prevents journal entries from being posted for dates on or before the closing date, protecting completed accounting periods.
-
----
-
-
-</description>
-
-<ast>
-{
-  "module_name": "Accounting \u2014 Journal Entries & Closures",
-  "components": {
-    "Journal_Entries_Table": {
-      "type": "data_table",
-      "columns": [
-        "Entry ID",
-        "Office",
-        "Transaction Date",
-        "Created Date",
-        "Transaction ID",
-        "Type",
-        "GL Account",
-        "Amount"
-      ],
-      "filters": {
-        "Office": {
-          "type": "unspecified"
-        },
-        "GL_Account": {
-          "type": "dropdown"
-        },
-        "Date_Range": {
-          "type": "date_range"
-        },
-        "Transaction_ID": {
-          "type": "unspecified"
-        },
-        "Entry_Type": {
-          "type": "dropdown",
-          "options": [
-            "Debit",
-            "Credit"
-          ]
-        }
-      },
-      "add_action": {
-        "element_name": "+ Add Journal Entry",
-        "opens": "Add_Journal_Entry_Form"
-      }
-    },
-    "Add_Journal_Entry_Form": {
-      "type": "form",
-      "fields": {
-        "Office": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Currency": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Reference_Number": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Transaction_Date": {
-          "type": "date",
-          "required": true
-        },
-        "Payment_Type": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Payment_Details": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Entry_Lines": {
-          "type": "repeating_group",
-          "min": 1,
-          "item_fields": {
-            "GL_Account": {
-              "type": "dropdown",
-              "required": true
-            },
-            "Amount": {
-              "type": "number",
-              "required": true
+      "filter_bar": {
+        "fields": {
+          "Office": {
+            "type": "dropdown",
+            "required": false
+          },
+          "GL_Account": {
+            "type": "dropdown",
+            "required": false
+          },
+          "Date_Range": {
+            "type": "unspecified",
+            "fields": {
+              "Start_Date": {
+                "type": "date",
+                "required": false
+              },
+              "End_Date": {
+                "type": "date",
+                "required": false
+              }
             }
           },
-          "add_action": {
-            "element_name": "Add Row",
-            "action": "adds new entry line to repeating_group"
+          "Transaction_ID": {
+            "type": "unspecified",
+            "required": false
+          },
+          "Entry_Type": {
+            "type": "dropdown",
+            "required": false,
+            "options": [
+              "Debit",
+              "Credit"
+            ]
           }
-        },
-        "Comments": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Running_Total": {
-          "type": "group",
-          "fields": {
-            "Debit_Total": {
-              "type": "number",
-              "read_only": true
-            },
-            "Credit_Total": {
-              "type": "number",
-              "read_only": true
-            },
-            "Difference": {
-              "type": "number",
-              "read_only": true
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create Journal Entry",
-          "on_success": "creates journal entry",
-          "constraints": [
-            "total debits must equal total credits"
-          ],
-          "preconditions": [
-            "transaction date must be after last closing date for the selected office"
-          ]
-        }
-      ]
-    },
-    "Closing_Entries_Table": {
-      "type": "data_table",
-      "columns": [
-        "Office",
-        "Closing Date",
-        "Created Date",
-        "Comments"
-      ],
-      "add_action": {
-        "element_name": "+ Create Closure",
-        "opens": "Create_Closure_Form"
-      }
-    },
-    "Create_Closure_Form": {
-      "type": "form",
-      "fields": {
-        "Office": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Closing_Date": {
-          "type": "date",
-          "required": true
-        },
-        "Comments": {
-          "type": "unspecified",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create Closure",
-          "on_success": "creates closure and prevents journal entries from being posted for dates on or before the closing date"
-        }
-      ]
-    }
-  }
-}
-</ast>
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:16:35] Semantic Critic - LLM RESPONSE
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST mostly matches the description but contains several inferred attributes (phantoms) that were not explicitly specified and should be removed or clarified.",
-  "missing": [],
-  "phantoms": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.min (min inferred but not specified in description)",
-    "components.Add_Journal_Entry_Form.fields.Running_Total.fields.Debit_Total.read_only (read_only inferred)",
-    "components.Add_Journal_Entry_Form.fields.Running_Total.fields.Credit_Total.read_only (read_only inferred)",
-    "components.Add_Journal_Entry_Form.fields.Running_Total.fields.Difference.read_only (read_only inferred)"
-  ],
-  "fixes": [
-    "Remove the inferred minimum constraint on entry lines: delete components.Add_Journal_Entry_Form.fields.Entry_Lines.min or make it unspecified unless the description is updated to state a required minimum number of entry lines.",
-    "Remove the inferred read-only attributes from running total fields: delete components.Add_Journal_Entry_Form.fields.Running_Total.fields.Debit_Total.read_only, components.Add_Journal_Entry_Form.fields.Running_Total.fields.Credit_Total.read_only, and components.Add_Journal_Entry_Form.fields.Running_Total.fields.Difference.read_only; if the spec should mark these as computed/display-only, replace the read_only flags with an explicit note in the description so it can be represented explicitly (e.g., a computed/display field type)."
-  ]
-}
-
-------------------------------------------------------------
-[14:16:35] Semantic Critic - PARSED JSON
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST mostly matches the description but contains several inferred attributes (phantoms) that were not explicitly specified and should be removed or clarified.",
-  "missing": [],
-  "phantoms": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.min (min inferred but not specified in description)",
-    "components.Add_Journal_Entry_Form.fields.Running_Total.fields.Debit_Total.read_only (read_only inferred)",
-    "components.Add_Journal_Entry_Form.fields.Running_Total.fields.Credit_Total.read_only (read_only inferred)",
-    "components.Add_Journal_Entry_Form.fields.Running_Total.fields.Difference.read_only (read_only inferred)"
-  ],
-  "fixes": [
-    "Remove the inferred minimum constraint on entry lines: delete components.Add_Journal_Entry_Form.fields.Entry_Lines.min or make it unspecified unless the description is updated to state a required minimum number of entry lines.",
-    "Remove the inferred read-only attributes from running total fields: delete components.Add_Journal_Entry_Form.fields.Running_Total.fields.Debit_Total.read_only, components.Add_Journal_Entry_Form.fields.Running_Total.fields.Credit_Total.read_only, and components.Add_Journal_Entry_Form.fields.Running_Total.fields.Difference.read_only; if the spec should mark these as computed/display-only, replace the read_only flags with an explicit note in the description so it can be represented explicitly (e.g., a computed/display field type)."
-  ]
-}
-
-------------------------------------------------------------
-[14:17:19] Semantic Critic - USER PROMPT
-------------------------------------------------------------
-<description>
-
-The Journal Entries page displays a data table with columns for Entry ID, Office, Transaction Date, Created Date, Transaction ID, Type (Debit/Credit), GL Account, and Amount. A filter bar allows filtering by Office, GL Account, Date Range, Transaction ID, and Entry Type. A "+ Add Journal Entry" button opens the creation form containing Office (required), Currency (required), Reference Number, Transaction Date (required), Payment Type and payment detail fields, entry lines (each with a GL Account dropdown and Amount — an "Add Row" button adds additional lines), and Comments. A running total shows debit total, credit total, and difference; total debits must equal total credits or a validation error blocks submission.
-
-The Closing Entries page displays a table with columns for Office, Closing Date, Created Date, and Comments. A "+ Create Closure" button opens the form with Office (required), Closing Date (required), and Comments. Creating a closure prevents journal entries from being posted for dates on or before the closing date, protecting completed accounting periods.
-
----
-
-
-</description>
-
-<ast>
-{
-  "module_name": "Accounting \u2014 Journal Entries & Closures",
-  "components": {
-    "Journal_Entries_Table": {
-      "type": "data_table",
-      "columns": [
-        "Entry ID",
-        "Office",
-        "Transaction Date",
-        "Created Date",
-        "Transaction ID",
-        "Type",
-        "GL Account",
-        "Amount"
-      ],
-      "filter_fields": {
-        "Office": {
-          "type": "unspecified"
-        },
-        "GL_Account": {
-          "type": "unspecified"
-        },
-        "Date_Range": {
-          "type": "group",
-          "fields": {
-            "Start_Date": {
-              "type": "date"
-            },
-            "End_Date": {
-              "type": "date"
-            }
-          }
-        },
-        "Transaction_ID": {
-          "type": "unspecified"
-        },
-        "Entry_Type": {
-          "type": "dropdown",
-          "options": [
-            "Debit",
-            "Credit"
-          ]
         }
       },
       "actions": [
         {
           "element_name": "+ Add Journal Entry",
-          "opens_form": "Add_Journal_Entry_Form"
+          "action": "open_form",
+          "opens": "Journal_Entry_Form"
         }
       ]
     },
-    "Add_Journal_Entry_Form": {
+    "Journal_Entry_Form": {
       "type": "form",
       "fields": {
         "Office": {
-          "type": "unspecified",
+          "type": "dropdown",
           "required": true
         },
         "Currency": {
-          "type": "unspecified",
+          "type": "dropdown",
           "required": true
         },
         "Reference_Number": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Transaction_Date": {
           "type": "date",
           "required": true
         },
         "Payment_Type": {
-          "type": "dropdown"
+          "type": "unspecified",
+          "required": false
         },
         "Payment_Details": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Entry_Lines": {
           "type": "repeating_group",
           "item_fields": {
             "GL_Account": {
-              "type": "dropdown"
-            },
-            "Type": {
               "type": "dropdown",
-              "options": [
-                "Debit",
-                "Credit"
-              ]
+              "required": true
             },
             "Amount": {
-              "type": "number"
+              "type": "number",
+              "required": true
             }
           }
         },
         "Comments": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "constraints": [
-        "total debits must equal total credits (blocks submission)",
-        "Transaction_Date must be after latest closing date for the selected Office"
+        "total debits must equal total credits (validation error blocks submission)",
+        "transaction date must not be on or before a closing date already created for the selected Office"
       ],
       "submit_actions": [
         {
           "element_name": "Create Journal Entry",
-          "on_success": "creates journal entry"
+          "on_success": "creates journal entry",
+          "preconditions": [
+            "form constraints must be satisfied (including total debits == total credits)",
+            "transaction date must be after latest closure date for the selected Office"
+          ]
         }
       ]
     },
@@ -692,7 +251,8 @@ The Closing Entries page displays a table with columns for Office, Closing Date,
       "actions": [
         {
           "element_name": "+ Create Closure",
-          "opens_form": "Create_Closure_Form"
+          "action": "open_form",
+          "opens": "Create_Closure_Form"
         }
       ]
     },
@@ -700,7 +260,7 @@ The Closing Entries page displays a table with columns for Office, Closing Date,
       "type": "form",
       "fields": {
         "Office": {
-          "type": "unspecified",
+          "type": "dropdown",
           "required": true
         },
         "Closing_Date": {
@@ -708,13 +268,14 @@ The Closing Entries page displays a table with columns for Office, Closing Date,
           "required": true
         },
         "Comments": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
           "element_name": "Create Closure",
-          "on_success": "prevents journal entries from being posted for dates on or before the closing date"
+          "on_success": "creates closure; prevents journal entries from being posted for dates on or before the closing date"
         }
       ]
     }
@@ -725,47 +286,35 @@ The Closing Entries page displays a table with columns for Office, Closing Date,
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:17:57] Semantic Critic - LLM RESPONSE
+[16:07:59] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
-  "verdict": "retry",
-  "summary": "The AST is mostly complete but is missing the repeating-group 'Add Row' action and the running-total display fields (debit, credit, difference); it also adds a per-line 'Type' field that is not stated in the description.",
+  "verdict": "yes",
+  "summary": "AST matches the description with two minor omissions (Add Row control and running totals display) and two minor inferred submit button labels.",
   "missing": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.actions[0] (Add Row button to add additional entry lines)",
-    "components.Add_Journal_Entry_Form.display_fields.Debit_Total (running total display for debit total)",
-    "components.Add_Journal_Entry_Form.display_fields.Credit_Total (running total display for credit total)",
-    "components.Add_Journal_Entry_Form.display_fields.Difference (running total display for debit/credit difference)"
+    "Journal_Entry_Form.fields.Entry_Lines.Add_Row_Button",
+    "Journal_Entry_Form.display_fields.Running_Total (Debit_Total, Credit_Total, Difference)"
   ],
   "phantoms": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Type (per-line Debit/Credit Type was not specified in the description — only GL Account and Amount were described)"
+    "Journal_Entry_Form.submit_actions[0].element_name (Create Journal Entry) - label not specified in description",
+    "Create_Closure_Form.submit_actions[0].element_name (Create Closure) - label not specified in description"
   ],
-  "fixes": [
-    "Remove the phantom field: delete components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Type unless the functional spec is updated to explicitly require a per-line Debit/Credit selector.",
-    "Add the missing 'Add Row' action for the repeating entry lines: add components.Add_Journal_Entry_Form.fields.Entry_Lines.actions[0] with { \"element_name\": \"Add Row\", \"type\": \"button\", \"behavior\": \"adds another item to the repeating_group\" }",
-    "Expose running totals in the form UI: add components.Add_Journal_Entry_Form.display_fields with entries Debit_Total, Credit_Total, and Difference, each typed (number/currency) and updated live; e.g. add components.Add_Journal_Entry_Form.display_fields.Debit_Total { \"type\": \"number\" } (and similarly for Credit_Total and Difference).",
-    "Ensure the equality validation remains and is tied to these running totals: keep components.Add_Journal_Entry_Form.constraints entry 'total debits must equal total credits (blocks submission)' and make it reference the new display fields."
-  ]
+  "fixes": []
 }
 
 ------------------------------------------------------------
-[14:17:57] Semantic Critic - PARSED JSON
+[16:07:59] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
-  "verdict": "retry",
-  "summary": "The AST is mostly complete but is missing the repeating-group 'Add Row' action and the running-total display fields (debit, credit, difference); it also adds a per-line 'Type' field that is not stated in the description.",
+  "verdict": "yes",
+  "summary": "AST matches the description with two minor omissions (Add Row control and running totals display) and two minor inferred submit button labels.",
   "missing": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.actions[0] (Add Row button to add additional entry lines)",
-    "components.Add_Journal_Entry_Form.display_fields.Debit_Total (running total display for debit total)",
-    "components.Add_Journal_Entry_Form.display_fields.Credit_Total (running total display for credit total)",
-    "components.Add_Journal_Entry_Form.display_fields.Difference (running total display for debit/credit difference)"
+    "Journal_Entry_Form.fields.Entry_Lines.Add_Row_Button",
+    "Journal_Entry_Form.display_fields.Running_Total (Debit_Total, Credit_Total, Difference)"
   ],
   "phantoms": [
-    "components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Type (per-line Debit/Credit Type was not specified in the description \u2014 only GL Account and Amount were described)"
+    "Journal_Entry_Form.submit_actions[0].element_name (Create Journal Entry) - label not specified in description",
+    "Create_Closure_Form.submit_actions[0].element_name (Create Closure) - label not specified in description"
   ],
-  "fixes": [
-    "Remove the phantom field: delete components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Type unless the functional spec is updated to explicitly require a per-line Debit/Credit selector.",
-    "Add the missing 'Add Row' action for the repeating entry lines: add components.Add_Journal_Entry_Form.fields.Entry_Lines.actions[0] with { \"element_name\": \"Add Row\", \"type\": \"button\", \"behavior\": \"adds another item to the repeating_group\" }",
-    "Expose running totals in the form UI: add components.Add_Journal_Entry_Form.display_fields with entries Debit_Total, Credit_Total, and Difference, each typed (number/currency) and updated live; e.g. add components.Add_Journal_Entry_Form.display_fields.Debit_Total { \"type\": \"number\" } (and similarly for Credit_Total and Difference).",
-    "Ensure the equality validation remains and is tied to these running totals: keep components.Add_Journal_Entry_Form.constraints entry 'total debits must equal total credits (blocks submission)' and make it reference the new display fields."
-  ]
+  "fixes": []
 }

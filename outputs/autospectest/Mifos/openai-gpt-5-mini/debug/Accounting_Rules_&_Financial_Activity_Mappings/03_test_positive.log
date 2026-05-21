@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.438854
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.370217
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Accounting Rules & Financial Activity Mappings</module_name>
 
@@ -149,7 +232,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Table": {
+    "Accounting_Rules_Page": {
       "type": "data_table",
       "columns": [
         "Rule Name",
@@ -157,22 +240,22 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         "Debit Account(s)",
         "Credit Account(s)"
       ],
-      "link_column": "Rule Name",
       "row_actions": [
         {
-          "action_name": "Open",
-          "action_type": "link",
-          "opens": "Rule_Detail_View"
+          "action_name": "Open Detail",
+          "description": "triggered by clicking the Rule Name link; opens Rule detail view"
         }
       ],
-      "bulk_actions": []
+      "actions": [
+        {
+          "element_name": "+ Create Rule",
+          "type": "button",
+          "opens": "Create_Rule_Form"
+        }
+      ]
     },
     "Create_Rule_Form": {
       "type": "form",
-      "triggered_by": {
-        "element_name": "+ Create Rule",
-        "element_type": "button"
-      },
       "fields": {
         "Office": {
           "type": "dropdown",
@@ -182,67 +265,49 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           ]
         },
         "Rule_Name": {
-          "type": "unspecified",
+          "type": "text",
           "required": true
         },
-        "Debit_Tags_Debit_Account": {
+        "Debit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Tags_Credit_Account": {
+        "Credit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates accounting rule"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      }
     },
     "Rule_Detail_View": {
       "type": "detail_view",
-      "opened_from": "Accounting_Rules_Table.Rule Name",
-      "fields": {},
       "actions": [
         {
-          "action_name": "Edit",
-          "opens": "Edit_Rule_Form",
-          "on_success": "updates accounting rule"
+          "element_name": "Edit",
+          "type": "button",
+          "opens": "Edit_Rule_Form"
         },
         {
-          "action_name": "Delete",
-          "on_success": "deletes accounting rule"
+          "element_name": "Delete",
+          "type": "button",
+          "constraints": [],
+          "on_success": "deletes rule"
         }
       ]
     },
     "Edit_Rule_Form": {
       "type": "form",
-      "triggered_by": {
-        "element_name": "Edit",
-        "element_type": "button",
-        "context": "Rule_Detail_View"
-      },
       "fields": {
         "Office": {
           "type": "dropdown",
@@ -252,59 +317,48 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           ]
         },
         "Rule_Name": {
-          "type": "unspecified",
+          "type": "text",
           "required": true
         },
-        "Debit_Tags_Debit_Account": {
+        "Debit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Tags_Credit_Account": {
+        "Credit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates accounting rule"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      }
     },
-    "Financial_Activity_Mappings_Table": {
+    "Financial_Activity_Mappings_Page": {
       "type": "data_table",
       "columns": [
         "Financial Activity",
         "GL Account"
       ],
-      "row_actions": [],
-      "bulk_actions": []
+      "rows_description": "each row maps a single Financial Activity to a GL Account",
+      "actions": [
+        {
+          "element_name": "+ Create Mapping",
+          "type": "button",
+          "opens": "Create_Mapping_Form"
+        }
+      ]
     },
     "Create_Mapping_Form": {
       "type": "form",
-      "triggered_by": {
-        "element_name": "+ Create Mapping",
-        "element_type": "button"
-      },
       "fields": {
         "Financial_Activity": {
           "type": "dropdown",
@@ -321,8 +375,8 @@ Do not drop functionally unique code paths (like a specific state transition) ju
             "Overdraft Portfolio"
           ],
           "constraints": [
-            "options presented should be only activities not already mapped",
-            "must select an activity that is not already mapped"
+            "selection must be currently unmapped",
+            "each financial activity may only be mapped once"
           ]
         },
         "GL_Account": {
@@ -330,18 +384,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
           "required": true
         }
       },
-      "constraints": [
-        "each financial activity can only be mapped once"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates mapping and enables automatic postings for the selected activity"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      "on_success": "creates mapping and enables automatic posting for the selected financial activity"
     }
   }
 }
@@ -361,7 +404,7 @@ The Financial Activity Mappings page displays a table mapping financial activiti
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:24:38] Test-Positive - LLM RESPONSE
+[16:19:34] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Accounting Rules & Financial Activity Mappings",
@@ -369,143 +412,153 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create accounting rule with Office selected and multiple debit/credit accounts",
+      "test_case": "Create a new accounting rule with an Office selected",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "No existing rule with name <valid rule name>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open"
       ],
       "steps": [
-        "1. Click '+ Create Rule' button",
-        "2. Enter <valid rule name> in the Rule Name field",
-        "3. Select <office> from the Office dropdown",
-        "4. Open the Debit Tags / Debit Account dropdown",
-        "5. Select <GL account 1> from the Debit Tags / Debit Account dropdown",
-        "6. Select <GL account 2> from the Debit Tags / Debit Account dropdown",
-        "7. Click the Allow Multiple Debit Entries checkbox",
-        "8. Open the Credit Tags / Credit Account dropdown",
-        "9. Select <GL account 3> from the Credit Tags / Credit Account dropdown",
-        "10. Select <GL account 4> from the Credit Tags / Credit Account dropdown",
-        "11. Click the Allow Multiple Credit Entries checkbox",
-        "12. Click the 'Create' button"
+        "1. Click '+ Create Rule'",
+        "2. Select <Office> from the Office dropdown",
+        "3. Enter <valid rule name> in the Rule Name field",
+        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
+        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
+        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
+        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
+        "8. Click Save"
       ],
-      "expected_result": "creates accounting rule; the Accounting Rules table shows a new row with Rule Name <valid rule name> and Office <office> and the selected Debit and Credit accounts visible in their respective columns",
+      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office = <Office>, Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create accounting rule with blank Office (applies to all offices)",
+      "test_case": "Create a new accounting rule with Office left blank (applies to all offices)",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "No existing rule with name <valid rule name>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open"
       ],
       "steps": [
-        "1. Click '+ Create Rule' button",
-        "2. Enter <valid rule name> in the Rule Name field",
-        "3. Leave the Office dropdown blank",
-        "4. Open the Debit Tags / Debit Account dropdown",
-        "5. Select <GL account> from the Debit Tags / Debit Account dropdown",
-        "6. Open the Credit Tags / Credit Account dropdown",
-        "7. Select <GL account> from the Credit Tags / Credit Account dropdown",
-        "8. Click the 'Create' button"
+        "1. Click '+ Create Rule'",
+        "2. Leave the Office dropdown blank",
+        "3. Enter <valid rule name> in the Rule Name field",
+        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
+        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
+        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
+        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
+        "8. Click Save"
       ],
-      "expected_result": "creates accounting rule; the Accounting Rules table shows a new row with Rule Name <valid rule name> and the Office column is blank (applies to all offices)",
+      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office cell blank (indicating applies to all offices), Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
       "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open rule detail view from the Accounting Rules table",
+      "test_case": "Open an accounting rule detail by clicking its Rule Name link",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Accounting Rules table contains an existing rule with name <existing rule>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open",
+        "A rule exists with Rule Name = <existing rule name>"
       ],
       "steps": [
-        "1. Click the Rule Name link for <existing rule> in the Accounting Rules table"
+        "1. Click the <existing rule name> link in the Rule Name column"
       ],
-      "expected_result": "Rule_Detail_View is displayed for <existing rule> showing the Edit and Delete actions",
+      "expected_result": "Rule Detail page opens and displays Rule Name = <existing rule name>, Office = <Office or blank>, and the configured Debit Account(s) and Credit Account(s) as shown on the table row",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit an existing accounting rule and save updates",
+      "test_case": "Edit an existing accounting rule and save changes",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Accounting Rules table contains an existing rule with name <existing rule>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open",
+        "A rule exists with Rule Name = <existing rule name>"
       ],
       "steps": [
-        "1. Click the Rule Name link for <existing rule> in the Accounting Rules table",
-        "2. Click the 'Edit' button in the Rule_Detail_View",
-        "3. Enter <updated rule name> in the Rule Name field in the Edit form",
-        "4. Open the Debit Tags / Debit Account dropdown in the Edit form",
-        "5. Select <GL account updated> from the Debit Tags / Debit Account dropdown",
-        "6. Click the 'Save' button"
+        "1. Click the <existing rule name> link to open the Rule Detail page",
+        "2. Click 'Edit' on the Rule Detail page",
+        "3. Change Rule Name to <updated rule name>",
+        "4. Modify Debit Account or Tags to include <additional Debit GL account(s)> or remove as needed",
+        "5. (Optional) Toggle Allow Multiple Debit Entries as needed",
+        "6. Modify Credit Account or Tags to include <additional Credit GL account(s)> or remove as needed",
+        "7. (Optional) Toggle Allow Multiple Credit Entries as needed",
+        "8. Click Save"
       ],
-      "expected_result": "updates accounting rule; the Accounting Rules table shows the rule updated to Rule Name <updated rule name> and displays the updated Debit/Credit account selections",
-      "priority": "high"
+      "expected_result": "The Rule Detail page displays the updated values with Rule Name = <updated rule name> and the updated Debit Account(s)/Credit Account(s); the Accounting Rules table row for the rule shows Rule Name = <updated rule name> and reflects the same account selections",
+      "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Delete an existing accounting rule from the detail view",
+      "test_case": "Delete an existing accounting rule from its detail view",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Accounting Rules table contains an existing rule with name <existing rule>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open",
+        "A rule exists with Rule Name = <rule to delete>"
       ],
       "steps": [
-        "1. Click the Rule Name link for <existing rule> in the Accounting Rules table",
-        "2. Click the 'Delete' action in the Rule_Detail_View"
+        "1. Click the <rule to delete> link to open the Rule Detail page",
+        "2. Click 'Delete' on the Rule Detail page",
+        "3. Click Confirm on the Delete dialog"
       ],
-      "expected_result": "deletes accounting rule; the Accounting Rules table no longer contains a row with Rule Name <existing rule>",
+      "expected_result": "The Rule Detail page closes and the Accounting Rules table no longer contains any row with Rule Name = <rule to delete>",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create a financial activity mapping for an unmapped activity",
+      "test_case": "Create a Financial Activity mapping for an unmapped activity (happy path)",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Financial Activity Mappings list does not contain a mapping for <financial activity>"
+        "User logged in as <User with accounting permissions>",
+        "Financial Activity Mappings page is open",
+        "At least one financial activity is currently unmapped"
       ],
       "steps": [
-        "1. Click '+ Create Mapping' button",
-        "2. Open the Financial Activity dropdown",
-        "3. Select <financial activity> from the Financial Activity dropdown",
-        "4. Open the GL Account dropdown",
-        "5. Select <GL account> from the GL Account dropdown",
-        "6. Click the 'Create' button"
+        "1. Click '+ Create Mapping'",
+        "2. Select <an unmapped financial activity> from the Financial Activity dropdown",
+        "3. Select <GL account> from the GL Account dropdown",
+        "4. Click Save"
       ],
-      "expected_result": "creates mapping and enables automatic postings for the selected activity; the Financial Activity Mappings table shows a row with Financial Activity <financial activity> and GL Account <GL account>",
+      "expected_result": "\"creates mapping and enables automatic posting for the selected financial activity\" and a new row appears in the Financial Activity Mappings table with Financial Activity = <an unmapped financial activity> and GL Account = <GL account>",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Create Mapping form excludes activities that are already mapped",
+      "test_case": "Create Mapping form only lists currently unmapped financial activities",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Financial Activity Mappings list contains a mapping for <mapped financial activity>"
+        "User logged in as <User with accounting permissions>",
+        "Financial Activity Mappings page is open",
+        "Financial Activity <already mapped activity> is already mapped to a GL account"
       ],
       "steps": [
-        "1. Click '+ Create Mapping' button",
+        "1. Click '+ Create Mapping' to open the Create Mapping form",
         "2. Open the Financial Activity dropdown"
       ],
-      "expected_result": "The Financial Activity dropdown does not include <mapped financial activity>",
+      "expected_result": "The Financial Activity dropdown does not include <already mapped activity> and lists only financial activities that are currently unmapped (e.g., <unmapped financial activity placeholders>)",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-008",
+      "test_case": "Filter the Financial Activity Mappings table using the search/filter to narrow results",
+      "preconditions": [
+        "User logged in as <User with accounting permissions>",
+        "Financial Activity Mappings page is open",
+        "Multiple mappings exist with distinguishable Financial Activity names or GL Accounts"
+      ],
+      "steps": [
+        "1. Enter <filter term> in the mappings search box or filter control",
+        "2. Apply the filter"
+      ],
+      "expected_result": "The Financial Activity Mappings table displays only rows matching <filter term>; unrelated mapping rows are no longer visible",
+      "priority": "low"
     }
   ],
   "summary": {
-    "total": 7,
-    "high_priority": 4,
-    "medium_priority": 3,
-    "low_priority": 0
+    "total": 8,
+    "high_priority": 3,
+    "medium_priority": 4,
+    "low_priority": 1
   }
 }
 
 ------------------------------------------------------------
-[14:24:38] Test-Positive - PARSED JSON
+[16:19:34] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Accounting Rules & Financial Activity Mappings",
@@ -513,137 +566,147 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create accounting rule with Office selected and multiple debit/credit accounts",
+      "test_case": "Create a new accounting rule with an Office selected",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "No existing rule with name <valid rule name>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open"
       ],
       "steps": [
-        "1. Click '+ Create Rule' button",
-        "2. Enter <valid rule name> in the Rule Name field",
-        "3. Select <office> from the Office dropdown",
-        "4. Open the Debit Tags / Debit Account dropdown",
-        "5. Select <GL account 1> from the Debit Tags / Debit Account dropdown",
-        "6. Select <GL account 2> from the Debit Tags / Debit Account dropdown",
-        "7. Click the Allow Multiple Debit Entries checkbox",
-        "8. Open the Credit Tags / Credit Account dropdown",
-        "9. Select <GL account 3> from the Credit Tags / Credit Account dropdown",
-        "10. Select <GL account 4> from the Credit Tags / Credit Account dropdown",
-        "11. Click the Allow Multiple Credit Entries checkbox",
-        "12. Click the 'Create' button"
+        "1. Click '+ Create Rule'",
+        "2. Select <Office> from the Office dropdown",
+        "3. Enter <valid rule name> in the Rule Name field",
+        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
+        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
+        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
+        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
+        "8. Click Save"
       ],
-      "expected_result": "creates accounting rule; the Accounting Rules table shows a new row with Rule Name <valid rule name> and Office <office> and the selected Debit and Credit accounts visible in their respective columns",
+      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office = <Office>, Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create accounting rule with blank Office (applies to all offices)",
+      "test_case": "Create a new accounting rule with Office left blank (applies to all offices)",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "No existing rule with name <valid rule name>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open"
       ],
       "steps": [
-        "1. Click '+ Create Rule' button",
-        "2. Enter <valid rule name> in the Rule Name field",
-        "3. Leave the Office dropdown blank",
-        "4. Open the Debit Tags / Debit Account dropdown",
-        "5. Select <GL account> from the Debit Tags / Debit Account dropdown",
-        "6. Open the Credit Tags / Credit Account dropdown",
-        "7. Select <GL account> from the Credit Tags / Credit Account dropdown",
-        "8. Click the 'Create' button"
+        "1. Click '+ Create Rule'",
+        "2. Leave the Office dropdown blank",
+        "3. Enter <valid rule name> in the Rule Name field",
+        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
+        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
+        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
+        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
+        "8. Click Save"
       ],
-      "expected_result": "creates accounting rule; the Accounting Rules table shows a new row with Rule Name <valid rule name> and the Office column is blank (applies to all offices)",
+      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office cell blank (indicating applies to all offices), Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
       "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open rule detail view from the Accounting Rules table",
+      "test_case": "Open an accounting rule detail by clicking its Rule Name link",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Accounting Rules table contains an existing rule with name <existing rule>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open",
+        "A rule exists with Rule Name = <existing rule name>"
       ],
       "steps": [
-        "1. Click the Rule Name link for <existing rule> in the Accounting Rules table"
+        "1. Click the <existing rule name> link in the Rule Name column"
       ],
-      "expected_result": "Rule_Detail_View is displayed for <existing rule> showing the Edit and Delete actions",
+      "expected_result": "Rule Detail page opens and displays Rule Name = <existing rule name>, Office = <Office or blank>, and the configured Debit Account(s) and Credit Account(s) as shown on the table row",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit an existing accounting rule and save updates",
+      "test_case": "Edit an existing accounting rule and save changes",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Accounting Rules table contains an existing rule with name <existing rule>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open",
+        "A rule exists with Rule Name = <existing rule name>"
       ],
       "steps": [
-        "1. Click the Rule Name link for <existing rule> in the Accounting Rules table",
-        "2. Click the 'Edit' button in the Rule_Detail_View",
-        "3. Enter <updated rule name> in the Rule Name field in the Edit form",
-        "4. Open the Debit Tags / Debit Account dropdown in the Edit form",
-        "5. Select <GL account updated> from the Debit Tags / Debit Account dropdown",
-        "6. Click the 'Save' button"
+        "1. Click the <existing rule name> link to open the Rule Detail page",
+        "2. Click 'Edit' on the Rule Detail page",
+        "3. Change Rule Name to <updated rule name>",
+        "4. Modify Debit Account or Tags to include <additional Debit GL account(s)> or remove as needed",
+        "5. (Optional) Toggle Allow Multiple Debit Entries as needed",
+        "6. Modify Credit Account or Tags to include <additional Credit GL account(s)> or remove as needed",
+        "7. (Optional) Toggle Allow Multiple Credit Entries as needed",
+        "8. Click Save"
       ],
-      "expected_result": "updates accounting rule; the Accounting Rules table shows the rule updated to Rule Name <updated rule name> and displays the updated Debit/Credit account selections",
-      "priority": "high"
+      "expected_result": "The Rule Detail page displays the updated values with Rule Name = <updated rule name> and the updated Debit Account(s)/Credit Account(s); the Accounting Rules table row for the rule shows Rule Name = <updated rule name> and reflects the same account selections",
+      "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Delete an existing accounting rule from the detail view",
+      "test_case": "Delete an existing accounting rule from its detail view",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Accounting Rules table contains an existing rule with name <existing rule>"
+        "User logged in as <User with accounting permissions>",
+        "Accounting Rules page is open",
+        "A rule exists with Rule Name = <rule to delete>"
       ],
       "steps": [
-        "1. Click the Rule Name link for <existing rule> in the Accounting Rules table",
-        "2. Click the 'Delete' action in the Rule_Detail_View"
+        "1. Click the <rule to delete> link to open the Rule Detail page",
+        "2. Click 'Delete' on the Rule Detail page",
+        "3. Click Confirm on the Delete dialog"
       ],
-      "expected_result": "deletes accounting rule; the Accounting Rules table no longer contains a row with Rule Name <existing rule>",
+      "expected_result": "The Rule Detail page closes and the Accounting Rules table no longer contains any row with Rule Name = <rule to delete>",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create a financial activity mapping for an unmapped activity",
+      "test_case": "Create a Financial Activity mapping for an unmapped activity (happy path)",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Financial Activity Mappings list does not contain a mapping for <financial activity>"
+        "User logged in as <User with accounting permissions>",
+        "Financial Activity Mappings page is open",
+        "At least one financial activity is currently unmapped"
       ],
       "steps": [
-        "1. Click '+ Create Mapping' button",
-        "2. Open the Financial Activity dropdown",
-        "3. Select <financial activity> from the Financial Activity dropdown",
-        "4. Open the GL Account dropdown",
-        "5. Select <GL account> from the GL Account dropdown",
-        "6. Click the 'Create' button"
+        "1. Click '+ Create Mapping'",
+        "2. Select <an unmapped financial activity> from the Financial Activity dropdown",
+        "3. Select <GL account> from the GL Account dropdown",
+        "4. Click Save"
       ],
-      "expected_result": "creates mapping and enables automatic postings for the selected activity; the Financial Activity Mappings table shows a row with Financial Activity <financial activity> and GL Account <GL account>",
+      "expected_result": "\"creates mapping and enables automatic posting for the selected financial activity\" and a new row appears in the Financial Activity Mappings table with Financial Activity = <an unmapped financial activity> and GL Account = <GL account>",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Create Mapping form excludes activities that are already mapped",
+      "test_case": "Create Mapping form only lists currently unmapped financial activities",
       "preconditions": [
-        "User logged in as <Finance Admin>",
-        "Accounting Rules & Financial Activity Mappings module is open",
-        "Financial Activity Mappings list contains a mapping for <mapped financial activity>"
+        "User logged in as <User with accounting permissions>",
+        "Financial Activity Mappings page is open",
+        "Financial Activity <already mapped activity> is already mapped to a GL account"
       ],
       "steps": [
-        "1. Click '+ Create Mapping' button",
+        "1. Click '+ Create Mapping' to open the Create Mapping form",
         "2. Open the Financial Activity dropdown"
       ],
-      "expected_result": "The Financial Activity dropdown does not include <mapped financial activity>",
+      "expected_result": "The Financial Activity dropdown does not include <already mapped activity> and lists only financial activities that are currently unmapped (e.g., <unmapped financial activity placeholders>)",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-008",
+      "test_case": "Filter the Financial Activity Mappings table using the search/filter to narrow results",
+      "preconditions": [
+        "User logged in as <User with accounting permissions>",
+        "Financial Activity Mappings page is open",
+        "Multiple mappings exist with distinguishable Financial Activity names or GL Accounts"
+      ],
+      "steps": [
+        "1. Enter <filter term> in the mappings search box or filter control",
+        "2. Apply the filter"
+      ],
+      "expected_result": "The Financial Activity Mappings table displays only rows matching <filter term>; unrelated mapping rows are no longer visible",
+      "priority": "low"
     }
   ],
   "summary": {
-    "total": 7,
-    "high_priority": 4,
-    "medium_priority": 3,
-    "low_priority": 0
+    "total": 8,
+    "high_priority": 3,
+    "medium_priority": 4,
+    "low_priority": 1
   }
 }

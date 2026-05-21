@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.597851
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.759565
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:12:58] Semantic Critic - SYSTEM PROMPT
+[16:06:29] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:12:58] Semantic Critic - USER PROMPT
+[16:06:29] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -123,7 +123,280 @@ The Financial Activity Mappings page displays a table mapping financial activiti
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Table": {
+    "Accounting_Rules_Page": {
+      "type": "page",
+      "components": {
+        "Accounting_Rules_Table": {
+          "type": "data_table",
+          "columns": [
+            "Rule Name",
+            "Office",
+            "Debit Account(s)",
+            "Credit Account(s)"
+          ],
+          "clickable_columns": {
+            "Rule Name": "opens Rule_Detail_View"
+          },
+          "row_actions": [
+            {
+              "action_name": "Open Rule (via Rule Name link)",
+              "type": "link",
+              "on_click": "opens Rule_Detail_View"
+            }
+          ]
+        },
+        "Create_Rule_Button": {
+          "type": "button",
+          "element_name": "+ Create Rule",
+          "on_click": "opens Create_Rule_Form"
+        },
+        "Create_Rule_Form": {
+          "type": "form",
+          "fields": {
+            "Office": {
+              "type": "dropdown",
+              "required": false,
+              "constraints": [
+                "blank applies to all offices"
+              ]
+            },
+            "Rule_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Debit_Tags_or_Debit_Account": {
+              "type": "dropdown",
+              "required": false,
+              "multi_select": true,
+              "constraints": []
+            },
+            "Allow_Multiple_Debit_Entries": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Credit_Tags_or_Credit_Account": {
+              "type": "dropdown",
+              "required": false,
+              "multi_select": true,
+              "constraints": []
+            },
+            "Allow_Multiple_Credit_Entries": {
+              "type": "checkbox",
+              "required": false
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "Create",
+              "on_success": "creates accounting rule"
+            },
+            {
+              "element_name": "Cancel",
+              "on_success": "dismisses form"
+            }
+          ]
+        },
+        "Rule_Detail_View": {
+          "type": "detail_view",
+          "fields": {},
+          "actions": [
+            {
+              "action_name": "Edit",
+              "type": "button",
+              "on_click": "opens Edit_Rule_Form"
+            },
+            {
+              "action_name": "Delete",
+              "type": "button",
+              "on_success": "deletes rule"
+            }
+          ]
+        },
+        "Edit_Rule_Form": {
+          "type": "form",
+          "fields": {
+            "Office": {
+              "type": "dropdown",
+              "required": false,
+              "constraints": [
+                "blank applies to all offices"
+              ]
+            },
+            "Rule_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Debit_Tags_or_Debit_Account": {
+              "type": "dropdown",
+              "required": false,
+              "multi_select": true,
+              "constraints": []
+            },
+            "Allow_Multiple_Debit_Entries": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Credit_Tags_or_Credit_Account": {
+              "type": "dropdown",
+              "required": false,
+              "multi_select": true,
+              "constraints": []
+            },
+            "Allow_Multiple_Credit_Entries": {
+              "type": "checkbox",
+              "required": false
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "Save",
+              "on_success": "saves changes to accounting rule"
+            },
+            {
+              "element_name": "Cancel",
+              "on_success": "dismisses edit form"
+            }
+          ]
+        }
+      }
+    },
+    "Financial_Activity_Mappings_Page": {
+      "type": "page",
+      "components": {
+        "Mappings_Table": {
+          "type": "data_table",
+          "columns": [
+            "Financial Activity",
+            "Mapped GL Account"
+          ],
+          "rows_note": "each financial activity appears at most once; mappings drive automatic posting",
+          "row_actions": []
+        },
+        "Create_Mapping_Button": {
+          "type": "button",
+          "element_name": "+ Create Mapping",
+          "on_click": "opens Create_Mapping_Form"
+        },
+        "Create_Mapping_Form": {
+          "type": "form",
+          "fields": {
+            "Financial_Activity": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "Asset Transfer",
+                "Liability Transfer",
+                "Cash at Mainvault",
+                "Cash at Teller",
+                "Opening Balances Transfer",
+                "Fund Source",
+                "Payable Dividends",
+                "Asset Fund Source",
+                "Overdraft Portfolio"
+              ],
+              "constraints": [
+                "dropdown lists only activities that are currently unmapped",
+                "each financial activity can only be mapped once",
+                "selected value must not already exist in mappings"
+              ]
+            },
+            "GL_Account": {
+              "type": "dropdown",
+              "required": true
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "Create",
+              "on_success": "creates mapping and enables system to auto-post accounting entries for internal transfers, teller operations, and other system-level financial activities"
+            },
+            {
+              "element_name": "Cancel",
+              "on_success": "dismisses form"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:08:29] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains a few inferred UI elements (form submit buttons) and one missing explicit field type for Rule_Name; remove the phantom submit actions or align them to the description and set Rule_Name field types.",
+  "missing": [
+    "components.Accounting_Rules_Page.components.Create_Rule_Form.fields.Rule_Name.type",
+    "components.Accounting_Rules_Page.components.Edit_Rule_Form.fields.Rule_Name.type"
+  ],
+  "phantoms": [
+    "components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions[0] (Create button not named in description)",
+    "components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions[1] (Cancel button not named in description)",
+    "components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions[0] (Save button not named in description)",
+    "components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions[1] (Cancel button not named in description)",
+    "components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions[0] (Create button not named in description)",
+    "components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions[1] (Cancel button not named in description)"
+  ],
+  "fixes": [
+    "Set a concrete input type for the rule name fields: components.Accounting_Rules_Page.components.Create_Rule_Form.fields.Rule_Name.type -> \"text\"",
+    "Set a concrete input type for the rule name fields: components.Accounting_Rules_Page.components.Edit_Rule_Form.fields.Rule_Name.type -> \"text\"",
+    "Remove inferred form submit actions that are not specified in the description: delete components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)",
+    "Remove inferred form submit actions that are not specified in the description: delete components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)",
+    "Remove inferred form submit actions that are not specified in the description: delete components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)"
+  ]
+}
+
+------------------------------------------------------------
+[16:08:29] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains a few inferred UI elements (form submit buttons) and one missing explicit field type for Rule_Name; remove the phantom submit actions or align them to the description and set Rule_Name field types.",
+  "missing": [
+    "components.Accounting_Rules_Page.components.Create_Rule_Form.fields.Rule_Name.type",
+    "components.Accounting_Rules_Page.components.Edit_Rule_Form.fields.Rule_Name.type"
+  ],
+  "phantoms": [
+    "components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions[0] (Create button not named in description)",
+    "components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions[1] (Cancel button not named in description)",
+    "components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions[0] (Save button not named in description)",
+    "components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions[1] (Cancel button not named in description)",
+    "components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions[0] (Create button not named in description)",
+    "components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions[1] (Cancel button not named in description)"
+  ],
+  "fixes": [
+    "Set a concrete input type for the rule name fields: components.Accounting_Rules_Page.components.Create_Rule_Form.fields.Rule_Name.type -> \"text\"",
+    "Set a concrete input type for the rule name fields: components.Accounting_Rules_Page.components.Edit_Rule_Form.fields.Rule_Name.type -> \"text\"",
+    "Remove inferred form submit actions that are not specified in the description: delete components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)",
+    "Remove inferred form submit actions that are not specified in the description: delete components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)",
+    "Remove inferred form submit actions that are not specified in the description: delete components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)"
+  ]
+}
+
+------------------------------------------------------------
+[16:10:02] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Accounting Rules page displays a data table with columns for Rule Name (clickable link), Office, Debit Account(s), and Credit Account(s). A "+ Create Rule" button opens the creation form containing Office (dropdown — blank applies to all offices), Rule Name (required), Debit Tags/Debit Account (GL account dropdown or multi-select), Allow Multiple Debit Entries checkbox, Credit Tags/Credit Account, and Allow Multiple Credit Entries checkbox. Clicking a rule opens its detail view with Edit and Delete options.
+
+The Financial Activity Mappings page displays a table mapping financial activities to GL accounts, where each row shows the Financial Activity (e.g., Asset Transfer, Liability Transfer, Cash at Mainvault, Cash at Teller, Opening Balances Transfer, Fund Source, Payable Dividends, Asset Fund Source, Overdraft Portfolio) and its mapped GL Account. A "+ Create Mapping" button opens the form with Financial Activity dropdown (listing unmapped activities) and GL Account dropdown. Each financial activity can only be mapped once; these mappings enable the system to automatically post accounting entries for internal transfers, teller operations, and other system-level financial activities.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Accounting Rules & Financial Activity Mappings",
+  "components": {
+    "Accounting_Rules_Page": {
       "type": "data_table",
       "columns": [
         "Rule Name",
@@ -131,22 +404,22 @@ The Financial Activity Mappings page displays a table mapping financial activiti
         "Debit Account(s)",
         "Credit Account(s)"
       ],
-      "link_column": "Rule Name",
       "row_actions": [
         {
-          "action_name": "Open",
-          "action_type": "link",
-          "opens": "Rule_Detail_View"
+          "action_name": "Open Detail",
+          "description": "triggered by clicking the Rule Name link; opens Rule detail view"
         }
       ],
-      "bulk_actions": []
+      "actions": [
+        {
+          "element_name": "+ Create Rule",
+          "type": "button",
+          "opens": "Create_Rule_Form"
+        }
+      ]
     },
     "Create_Rule_Form": {
       "type": "form",
-      "triggered_by": {
-        "element_name": "+ Create Rule",
-        "element_type": "button"
-      },
       "fields": {
         "Office": {
           "type": "dropdown",
@@ -156,67 +429,49 @@ The Financial Activity Mappings page displays a table mapping financial activiti
           ]
         },
         "Rule_Name": {
-          "type": "unspecified",
+          "type": "text",
           "required": true
         },
-        "Debit_Tags_Debit_Account": {
+        "Debit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Tags_Credit_Account": {
+        "Credit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates accounting rule"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      }
     },
     "Rule_Detail_View": {
       "type": "detail_view",
-      "opened_from": "Accounting_Rules_Table.Rule Name",
-      "fields": {},
       "actions": [
         {
-          "action_name": "Edit",
-          "opens": "Edit_Rule_Form",
-          "on_success": "updates accounting rule"
+          "element_name": "Edit",
+          "type": "button",
+          "opens": "Edit_Rule_Form"
         },
         {
-          "action_name": "Delete",
-          "on_success": "deletes accounting rule"
+          "element_name": "Delete",
+          "type": "button",
+          "constraints": [],
+          "on_success": "deletes rule"
         }
       ]
     },
     "Edit_Rule_Form": {
       "type": "form",
-      "triggered_by": {
-        "element_name": "Edit",
-        "element_type": "button",
-        "context": "Rule_Detail_View"
-      },
       "fields": {
         "Office": {
           "type": "dropdown",
@@ -226,59 +481,48 @@ The Financial Activity Mappings page displays a table mapping financial activiti
           ]
         },
         "Rule_Name": {
-          "type": "unspecified",
+          "type": "text",
           "required": true
         },
-        "Debit_Tags_Debit_Account": {
+        "Debit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Tags_Credit_Account": {
+        "Credit_Account_or_Tags": {
           "type": "dropdown",
-          "multiple": true,
           "required": false,
-          "constraints": [
-            "select one or more GL accounts or tags"
-          ]
+          "multiple": true,
+          "description": "GL account selection; may allow multi-select"
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates accounting rule"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      }
     },
-    "Financial_Activity_Mappings_Table": {
+    "Financial_Activity_Mappings_Page": {
       "type": "data_table",
       "columns": [
         "Financial Activity",
         "GL Account"
       ],
-      "row_actions": [],
-      "bulk_actions": []
+      "rows_description": "each row maps a single Financial Activity to a GL Account",
+      "actions": [
+        {
+          "element_name": "+ Create Mapping",
+          "type": "button",
+          "opens": "Create_Mapping_Form"
+        }
+      ]
     },
     "Create_Mapping_Form": {
       "type": "form",
-      "triggered_by": {
-        "element_name": "+ Create Mapping",
-        "element_type": "button"
-      },
       "fields": {
         "Financial_Activity": {
           "type": "dropdown",
@@ -295,8 +539,8 @@ The Financial Activity Mappings page displays a table mapping financial activiti
             "Overdraft Portfolio"
           ],
           "constraints": [
-            "options presented should be only activities not already mapped",
-            "must select an activity that is not already mapped"
+            "selection must be currently unmapped",
+            "each financial activity may only be mapped once"
           ]
         },
         "GL_Account": {
@@ -304,18 +548,7 @@ The Financial Activity Mappings page displays a table mapping financial activiti
           "required": true
         }
       },
-      "constraints": [
-        "each financial activity can only be mapped once"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates mapping and enables automatic postings for the selected activity"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      "on_success": "creates mapping and enables automatic posting for the selected financial activity"
     }
   }
 }
@@ -324,22 +557,22 @@ The Financial Activity Mappings page displays a table mapping financial activiti
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:14:31] Semantic Critic - LLM RESPONSE
+[16:10:43] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately represents the interactive elements described (tables, clickable rule name, create/edit/delete flows, forms with specified fields and constraints, and mapping uniqueness), with no missing or extraneous interactive items.",
+  "summary": "AST accurately represents the interactive elements described (tables, create/edit forms, fields, buttons, and mapping constraints) with no missing items or extraneous phantoms.",
   "missing": [],
   "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:14:31] Semantic Critic - PARSED JSON
+[16:10:43] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately represents the interactive elements described (tables, clickable rule name, create/edit/delete flows, forms with specified fields and constraints, and mapping uniqueness), with no missing or extraneous interactive items.",
+  "summary": "AST accurately represents the interactive elements described (tables, create/edit forms, fields, buttons, and mapping constraints) with no missing items or extraneous phantoms.",
   "missing": [],
   "phantoms": [],
   "fixes": []

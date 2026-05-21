@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.428497
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.358212
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Center Management</module_name>
 
@@ -149,7 +232,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 {
   "module_name": "Center Management",
   "components": {
-    "Centers_Page": {
+    "Centers_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -158,52 +241,61 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         "Status",
         "Office Name"
       ],
-      "clickable_link_column": "Name",
-      "top_right_actions": [
+      "row_actions": [
         {
-          "element_name": "Import Center",
-          "opens": "Bulk_Import_Centers"
-        },
-        {
-          "element_name": "Create Center",
-          "opens": "Create_Center_Form"
+          "action_name": "View",
+          "element_name": "Name",
+          "on_trigger": "navigates to Center Detail"
         }
       ],
-      "row_actions": []
+      "page_actions": [
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
+        },
+        {
+          "element_name": "Import Center",
+          "type": "button",
+          "on_trigger": "navigates to Bulk_Import_Centers"
+        }
+      ]
     },
     "Create_Center_Form": {
       "type": "form",
       "fields": {
         "Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Office": {
           "type": "dropdown",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Staff": {
-          "type": "search",
-          "required": false
+          "type": "search"
         },
         "Active": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "External_Id": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         },
         "Submitted_On": {
           "type": "date",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Groups": {
           "type": "repeating_group",
           "item_fields": {
             "Group": {
-              "type": "search",
-              "required": false
+              "type": "search"
             }
           }
         }
@@ -211,70 +303,28 @@ Do not drop functionally unique code paths (like a specific state transition) ju
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "creates the center"
+          "on_success": "creates center"
         }
       ]
     },
     "Bulk_Import_Centers": {
       "type": "form",
       "fields": {
-        "File": {
+        "Download_Template": {
+          "type": "link",
+          "element_name": "Download Template"
+        },
+        "Import_File": {
           "type": "file_upload",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         }
       },
-      "actions": [
-        {
-          "element_name": "Download Template"
-        }
-      ],
       "submit_actions": [
         {
           "element_name": "Upload",
-          "on_success": "imports centers"
-        }
-      ]
-    },
-    "Center_Detail_Actions": {
-      "type": "action_bar",
-      "actions": [
-        {
-          "action_name": "Activate",
-          "on_success": "activates center"
-        },
-        {
-          "action_name": "Edit",
-          "opens": "Edit_Center_Form",
-          "on_success": "opens edit form"
-        },
-        {
-          "action_name": "Close",
-          "on_success": "closes center"
-        },
-        {
-          "action_name": "Assign Staff",
-          "opens": "Assign_Staff_Dialog",
-          "on_success": "opens assign staff dialog"
-        }
-      ]
-    },
-    "Edit_Center_Form": {
-      "type": "form",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates center"
-        }
-      ]
-    },
-    "Assign_Staff_Dialog": {
-      "type": "dialog",
-      "fields": {},
-      "submit_actions": [
-        {
-          "element_name": "Assign",
-          "on_success": "assigns staff"
+          "on_success": "imports centers from file"
         }
       ]
     },
@@ -284,13 +334,18 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         {
           "tab_name": "Groups",
           "fields": {
-            "Groups_List": {
+            "Member_Groups_Table": {
               "type": "data_table",
               "columns": [
                 "Group Name"
               ],
-              "clickable_link_column": "Group Name",
-              "row_actions": []
+              "row_actions": [
+                {
+                  "action_name": "View Group",
+                  "element_name": "Group Name",
+                  "on_trigger": "navigates to Group Detail"
+                }
+              ]
             }
           }
         },
@@ -312,41 +367,110 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         }
       ]
     },
-    "Collection_Sheet": {
+    "Center_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Activate",
+          "type": "button",
+          "on_success": "sets center status to Active"
+        },
+        {
+          "action_name": "Edit",
+          "type": "button",
+          "on_trigger": "opens Edit_Center_Form"
+        },
+        {
+          "action_name": "Close",
+          "type": "button",
+          "on_success": "sets center status to Closed"
+        },
+        {
+          "action_name": "Assign Staff",
+          "type": "button",
+          "fields": {
+            "Staff": {
+              "type": "search"
+            }
+          }
+        }
+      ]
+    },
+    "Edit_Center_Form": {
       "type": "form",
-      "description": "Generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry",
       "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Office": {
+          "type": "dropdown",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Staff": {
+          "type": "search"
+        },
+        "Active": {
+          "type": "checkbox"
+        },
+        "External_Id": {
+          "type": "unspecified"
+        },
+        "Submitted_On": {
+          "type": "date",
+          "constraints": [
+            "required"
+          ]
+        },
         "Groups": {
           "type": "repeating_group",
           "item_fields": {
-            "Group_Name": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Clients": {
-              "type": "repeating_group",
-              "item_fields": {
-                "Client_Name": {
-                  "type": "unspecified",
-                  "required": false
-                },
-                "Loan_Repayment_Amount": {
-                  "type": "number",
-                  "required": false
-                },
-                "Savings_Deposit_Amount": {
-                  "type": "number",
-                  "required": false
-                }
-              }
+            "Group": {
+              "type": "search"
             }
           }
         }
       },
       "submit_actions": [
         {
-          "element_name": "Generate Sheet",
-          "on_success": "renders collection sheet for batch data entry"
+          "element_name": "Save",
+          "on_success": "updates center"
+        }
+      ]
+    },
+    "Collection_Sheet_Generator": {
+      "type": "button",
+      "element_name": "Generate Collection Sheet",
+      "on_trigger": "opens Collection_Sheet for batch data entry"
+    },
+    "Collection_Sheet": {
+      "type": "data_table",
+      "row_fields": {
+        "Group_Name": {
+          "type": "unspecified"
+        },
+        "Client_Name": {
+          "type": "unspecified"
+        },
+        "Loan_Repayment": {
+          "type": "number"
+        },
+        "Savings_Deposit": {
+          "type": "number"
+        }
+      },
+      "editable_columns": [
+        "Loan_Repayment",
+        "Savings_Deposit"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Submit Collection Sheet",
+          "on_success": "records repayments and deposits"
         }
       ]
     }
@@ -368,7 +492,7 @@ The Center Detail page displays the center name, status, office, and staff with 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:23:47] Test-Positive - LLM RESPONSE
+[16:18:33] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Center Management",
@@ -376,143 +500,219 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Center - happy path with one group",
+      "test_case": "Open Center detail from Centers table",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Centers page is displayed"
+        "User logged in as <User with center view permission>",
+        "A center with name <center name> exists"
       ],
       "steps": [
-        "1. Click 'Create Center' in the top-right actions",
-        "2. Enter <valid center name> in the Name field",
-        "3. Select <office> from the Office dropdown",
-        "4. Enter <valid date> in the Submitted On field",
-        "5. Click the Active checkbox",
-        "6. Click 'Add Row' in the Groups repeating group",
-        "7. Enter <group search term> in the Group search inside the new row",
-        "8. Select <group> from the Group search dropdown",
-        "9. Click 'Submit'"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> in the Centers table"
       ],
-      "expected_result": "creates the center",
-      "priority": "high"
+      "expected_result": "Center Detail page is shown for '<center name>' and displays the center name, Status badge, Office Name, and action buttons Activate, Edit, Close, and Assign Staff",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Bulk import centers - download template and upload file",
+      "test_case": "Create a new center with groups via Create Center form",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Centers page is displayed"
+        "User logged in as <User with center creation permission>",
+        "Centers page is accessible"
       ],
       "steps": [
-        "1. Click 'Import Center' in the top-right actions",
-        "2. Click 'Download Template'",
-        "3. Click the File upload control",
-        "4. Select a <valid CSV file> from the OS file dialog",
-        "5. Click 'Upload'"
+        "1. Navigate to the Centers page",
+        "2. Click the Create Center button",
+        "3. Enter <new center name> in the Name field",
+        "4. Select <office> from the Office dropdown",
+        "5. Enter/select <staff> in the Staff search field (optional)",
+        "6. Check the Active checkbox (optional)",
+        "7. Enter <external id> in the External Id field (optional)",
+        "8. Enter <submitted on date> in the Submitted On field",
+        "9. Click Add Row in the Groups section",
+        "10. Enter/select <group> in the new Group search field",
+        "11. Click Submit"
       ],
-      "expected_result": "imports centers",
+      "expected_result": "A new row appears in the Centers table with the Name '<new center name>' and Office '<office>'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open Center detail and view Groups tab",
+      "test_case": "Download template from Bulk Import Centers page",
       "preconditions": [
-        "User logged in as <User>",
-        "Centers page is displayed",
-        "A center is listed in the Centers table"
+        "User logged in as <User with center import permission>",
+        "Centers page is accessible"
       ],
       "steps": [
-        "1. Click the center Name link for <center> in the Centers table",
-        "2. Click the 'Groups' tab in the Center Detail tabs"
+        "1. Navigate to the Centers page",
+        "2. Click the Import Center button",
+        "3. Click the Download Template link on the Bulk Import Centers page"
       ],
-      "expected_result": "Groups tab displays a Groups list table with the 'Group Name' column and clickable group links",
-      "priority": "medium"
+      "expected_result": "A template file download is triggered in the browser",
+      "priority": "low"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Activate center from Center Detail action bar",
+      "test_case": "Upload valid import file and import centers",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Center detail page is displayed for a center in Inactive status"
+        "User logged in as <User with center import permission>",
+        "A valid import file <valid import file> is available"
       ],
       "steps": [
-        "1. Click the 'Activate' action in the Center Detail action bar"
+        "1. Navigate to the Centers page",
+        "2. Click the Import Center button to open Bulk Import Centers",
+        "3. Click the Import_File upload control and select <valid import file>",
+        "4. Click Upload"
       ],
-      "expected_result": "activates center",
+      "expected_result": "A success notification is displayed confirming the import and the Centers table shows rows corresponding to the centers from the uploaded file",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Open Edit Center form from action bar",
+      "test_case": "Navigate through all tabs on Center Detail page",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Center detail page is displayed"
+        "User logged in as <User>",
+        "A center with name <center name> exists"
       ],
       "steps": [
-        "1. Click the 'Edit' action in the Center Detail action bar"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the 'Groups' tab",
+        "4. Click the 'Loan Accounts' tab",
+        "5. Click the 'Savings Accounts' tab",
+        "6. Click the 'Notes' tab",
+        "7. Click the 'Calendar/Meeting' tab"
       ],
-      "expected_result": "opens edit form",
+      "expected_result": "Each tab's panel becomes visible when selected; the Groups tab displays the Member Groups table with group names and the other tabs display their respective content panels",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Save changes in Edit Center form updates center",
+      "test_case": "Open Group Detail from Member Groups table on Groups tab",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Edit Center form is open"
+        "User logged in as <User>",
+        "A center with name <center name> exists that has a member group <group name>"
       ],
       "steps": [
-        "1. Enter <updated value> in an editable field on the Edit Center form (if present)",
-        "2. Click 'Save'"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the 'Groups' tab",
+        "4. Click the Group Name link for <group name> in the Member Groups table"
       ],
-      "expected_result": "updates center",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-007",
-      "test_case": "Assign staff to center via Assign Staff dialog",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "Center detail page is displayed"
-      ],
-      "steps": [
-        "1. Click the 'Assign Staff' action in the Center Detail action bar",
-        "2. Enter <staff search term> in the staff search inside the Assign Staff dialog",
-        "3. Select <staff> from the staff search dropdown",
-        "4. Click 'Assign'"
-      ],
-      "expected_result": "assigns staff",
+      "expected_result": "Group Detail page is shown for '<group name>' and displays the group name",
       "priority": "medium"
     },
     {
-      "tc_id": "P-008",
-      "test_case": "Generate Collection Sheet for groups and clients",
+      "tc_id": "P-007",
+      "test_case": "Activate a center updates the status badge to Active",
       "preconditions": [
-        "User logged in as <Field Officer>",
-        "Collection Sheet form is open"
+        "User logged in as <User with center action permission>",
+        "A center with name <center name> exists and is not Active"
       ],
       "steps": [
-        "1. Click 'Add Row' in the Groups repeating group",
-        "2. Enter <group name> in the Group_Name field for the new row",
-        "3. Click 'Add Row' in the Clients repeating group inside the new Group row",
-        "4. Enter <client name> in the Client_Name field for the new client row",
-        "5. Enter <amount> in the Loan_Repayment_Amount field for the client row",
-        "6. Enter <amount> in the Savings_Deposit_Amount field for the client row",
-        "7. Click 'Generate Sheet'"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Activate button"
       ],
-      "expected_result": "renders collection sheet for batch data entry",
+      "expected_result": "Status badge updates to 'Active' on the Center Detail page",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-008",
+      "test_case": "Close a center updates the status badge to Closed",
+      "preconditions": [
+        "User logged in as <User with center action permission>",
+        "A center with name <center name> exists and is Active"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Close button"
+      ],
+      "expected_result": "Status badge updates to 'Closed' on the Center Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Edit center details via Edit Center form and save",
+      "preconditions": [
+        "User logged in as <User with center edit permission>",
+        "A center with name <center name> exists"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Edit button to open the Edit Center form",
+        "4. Enter <new name> in the Name field",
+        "5. Select <new office> from the Office dropdown",
+        "6. Enter/select <new staff> in the Staff search field (optional)",
+        "7. Click Save"
+      ],
+      "expected_result": "Center Detail page shows the updated Name as '<new name>' and Office as '<new office>'",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Assign staff to a center using Assign Staff action",
+      "preconditions": [
+        "User logged in as <User with assign staff permission>",
+        "A center with name <center name> exists",
+        "<staff> exists and is assignable"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Assign Staff button",
+        "4. Enter <staff> in the Staff search field",
+        "5. Select <staff> from the search results",
+        "6. Click Assign (or Confirm) on the Assign Staff dialog"
+      ],
+      "expected_result": "Center Detail page displays the assigned staff as '<staff>' in the staff area",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-011",
+      "test_case": "Generate Collection Sheet, enter repayments/deposits and submit",
+      "preconditions": [
+        "User logged in as <User with collection sheet permission>",
+        "A center with name <center name> exists that has groups and clients"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Generate Collection Sheet button",
+        "4. In the Collection Sheet, enter <loan repayment amount> in Loan_Repayment for a client row",
+        "5. Enter <savings deposit amount> in Savings_Deposit for the same client row",
+        "6. Repeat edits for any additional client rows as needed",
+        "7. Click Submit Collection Sheet"
+      ],
+      "expected_result": "A success notification is displayed and the Collection Sheet lists the entered Loan Repayment and Savings Deposit amounts for the edited client rows",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Search Centers table filters results by center name",
+      "preconditions": [
+        "User logged in as <User>",
+        "Centers page contains multiple centers including one named <center name>"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Enter <center name> in the Centers table search/filter control and apply the filter"
+      ],
+      "expected_result": "Centers table displays only rows matching <center name>; unrelated rows are no longer visible",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 5,
-    "medium_priority": 3,
-    "low_priority": 0
+    "total": 12,
+    "high_priority": 7,
+    "medium_priority": 4,
+    "low_priority": 1
   }
 }
 
 ------------------------------------------------------------
-[14:23:47] Test-Positive - PARSED JSON
+[16:18:33] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Center Management",
@@ -520,137 +720,213 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Center - happy path with one group",
+      "test_case": "Open Center detail from Centers table",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Centers page is displayed"
+        "User logged in as <User with center view permission>",
+        "A center with name <center name> exists"
       ],
       "steps": [
-        "1. Click 'Create Center' in the top-right actions",
-        "2. Enter <valid center name> in the Name field",
-        "3. Select <office> from the Office dropdown",
-        "4. Enter <valid date> in the Submitted On field",
-        "5. Click the Active checkbox",
-        "6. Click 'Add Row' in the Groups repeating group",
-        "7. Enter <group search term> in the Group search inside the new row",
-        "8. Select <group> from the Group search dropdown",
-        "9. Click 'Submit'"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> in the Centers table"
       ],
-      "expected_result": "creates the center",
-      "priority": "high"
+      "expected_result": "Center Detail page is shown for '<center name>' and displays the center name, Status badge, Office Name, and action buttons Activate, Edit, Close, and Assign Staff",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Bulk import centers - download template and upload file",
+      "test_case": "Create a new center with groups via Create Center form",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Centers page is displayed"
+        "User logged in as <User with center creation permission>",
+        "Centers page is accessible"
       ],
       "steps": [
-        "1. Click 'Import Center' in the top-right actions",
-        "2. Click 'Download Template'",
-        "3. Click the File upload control",
-        "4. Select a <valid CSV file> from the OS file dialog",
-        "5. Click 'Upload'"
+        "1. Navigate to the Centers page",
+        "2. Click the Create Center button",
+        "3. Enter <new center name> in the Name field",
+        "4. Select <office> from the Office dropdown",
+        "5. Enter/select <staff> in the Staff search field (optional)",
+        "6. Check the Active checkbox (optional)",
+        "7. Enter <external id> in the External Id field (optional)",
+        "8. Enter <submitted on date> in the Submitted On field",
+        "9. Click Add Row in the Groups section",
+        "10. Enter/select <group> in the new Group search field",
+        "11. Click Submit"
       ],
-      "expected_result": "imports centers",
+      "expected_result": "A new row appears in the Centers table with the Name '<new center name>' and Office '<office>'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open Center detail and view Groups tab",
+      "test_case": "Download template from Bulk Import Centers page",
       "preconditions": [
-        "User logged in as <User>",
-        "Centers page is displayed",
-        "A center is listed in the Centers table"
+        "User logged in as <User with center import permission>",
+        "Centers page is accessible"
       ],
       "steps": [
-        "1. Click the center Name link for <center> in the Centers table",
-        "2. Click the 'Groups' tab in the Center Detail tabs"
+        "1. Navigate to the Centers page",
+        "2. Click the Import Center button",
+        "3. Click the Download Template link on the Bulk Import Centers page"
       ],
-      "expected_result": "Groups tab displays a Groups list table with the 'Group Name' column and clickable group links",
-      "priority": "medium"
+      "expected_result": "A template file download is triggered in the browser",
+      "priority": "low"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Activate center from Center Detail action bar",
+      "test_case": "Upload valid import file and import centers",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Center detail page is displayed for a center in Inactive status"
+        "User logged in as <User with center import permission>",
+        "A valid import file <valid import file> is available"
       ],
       "steps": [
-        "1. Click the 'Activate' action in the Center Detail action bar"
+        "1. Navigate to the Centers page",
+        "2. Click the Import Center button to open Bulk Import Centers",
+        "3. Click the Import_File upload control and select <valid import file>",
+        "4. Click Upload"
       ],
-      "expected_result": "activates center",
+      "expected_result": "A success notification is displayed confirming the import and the Centers table shows rows corresponding to the centers from the uploaded file",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Open Edit Center form from action bar",
+      "test_case": "Navigate through all tabs on Center Detail page",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Center detail page is displayed"
+        "User logged in as <User>",
+        "A center with name <center name> exists"
       ],
       "steps": [
-        "1. Click the 'Edit' action in the Center Detail action bar"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the 'Groups' tab",
+        "4. Click the 'Loan Accounts' tab",
+        "5. Click the 'Savings Accounts' tab",
+        "6. Click the 'Notes' tab",
+        "7. Click the 'Calendar/Meeting' tab"
       ],
-      "expected_result": "opens edit form",
+      "expected_result": "Each tab's panel becomes visible when selected; the Groups tab displays the Member Groups table with group names and the other tabs display their respective content panels",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Save changes in Edit Center form updates center",
+      "test_case": "Open Group Detail from Member Groups table on Groups tab",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Edit Center form is open"
+        "User logged in as <User>",
+        "A center with name <center name> exists that has a member group <group name>"
       ],
       "steps": [
-        "1. Enter <updated value> in an editable field on the Edit Center form (if present)",
-        "2. Click 'Save'"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the 'Groups' tab",
+        "4. Click the Group Name link for <group name> in the Member Groups table"
       ],
-      "expected_result": "updates center",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-007",
-      "test_case": "Assign staff to center via Assign Staff dialog",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "Center detail page is displayed"
-      ],
-      "steps": [
-        "1. Click the 'Assign Staff' action in the Center Detail action bar",
-        "2. Enter <staff search term> in the staff search inside the Assign Staff dialog",
-        "3. Select <staff> from the staff search dropdown",
-        "4. Click 'Assign'"
-      ],
-      "expected_result": "assigns staff",
+      "expected_result": "Group Detail page is shown for '<group name>' and displays the group name",
       "priority": "medium"
     },
     {
-      "tc_id": "P-008",
-      "test_case": "Generate Collection Sheet for groups and clients",
+      "tc_id": "P-007",
+      "test_case": "Activate a center updates the status badge to Active",
       "preconditions": [
-        "User logged in as <Field Officer>",
-        "Collection Sheet form is open"
+        "User logged in as <User with center action permission>",
+        "A center with name <center name> exists and is not Active"
       ],
       "steps": [
-        "1. Click 'Add Row' in the Groups repeating group",
-        "2. Enter <group name> in the Group_Name field for the new row",
-        "3. Click 'Add Row' in the Clients repeating group inside the new Group row",
-        "4. Enter <client name> in the Client_Name field for the new client row",
-        "5. Enter <amount> in the Loan_Repayment_Amount field for the client row",
-        "6. Enter <amount> in the Savings_Deposit_Amount field for the client row",
-        "7. Click 'Generate Sheet'"
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Activate button"
       ],
-      "expected_result": "renders collection sheet for batch data entry",
+      "expected_result": "Status badge updates to 'Active' on the Center Detail page",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-008",
+      "test_case": "Close a center updates the status badge to Closed",
+      "preconditions": [
+        "User logged in as <User with center action permission>",
+        "A center with name <center name> exists and is Active"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Close button"
+      ],
+      "expected_result": "Status badge updates to 'Closed' on the Center Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Edit center details via Edit Center form and save",
+      "preconditions": [
+        "User logged in as <User with center edit permission>",
+        "A center with name <center name> exists"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Edit button to open the Edit Center form",
+        "4. Enter <new name> in the Name field",
+        "5. Select <new office> from the Office dropdown",
+        "6. Enter/select <new staff> in the Staff search field (optional)",
+        "7. Click Save"
+      ],
+      "expected_result": "Center Detail page shows the updated Name as '<new name>' and Office as '<new office>'",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Assign staff to a center using Assign Staff action",
+      "preconditions": [
+        "User logged in as <User with assign staff permission>",
+        "A center with name <center name> exists",
+        "<staff> exists and is assignable"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Assign Staff button",
+        "4. Enter <staff> in the Staff search field",
+        "5. Select <staff> from the search results",
+        "6. Click Assign (or Confirm) on the Assign Staff dialog"
+      ],
+      "expected_result": "Center Detail page displays the assigned staff as '<staff>' in the staff area",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-011",
+      "test_case": "Generate Collection Sheet, enter repayments/deposits and submit",
+      "preconditions": [
+        "User logged in as <User with collection sheet permission>",
+        "A center with name <center name> exists that has groups and clients"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Click the Name link for <center name> to open Center Detail",
+        "3. Click the Generate Collection Sheet button",
+        "4. In the Collection Sheet, enter <loan repayment amount> in Loan_Repayment for a client row",
+        "5. Enter <savings deposit amount> in Savings_Deposit for the same client row",
+        "6. Repeat edits for any additional client rows as needed",
+        "7. Click Submit Collection Sheet"
+      ],
+      "expected_result": "A success notification is displayed and the Collection Sheet lists the entered Loan Repayment and Savings Deposit amounts for the edited client rows",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Search Centers table filters results by center name",
+      "preconditions": [
+        "User logged in as <User>",
+        "Centers page contains multiple centers including one named <center name>"
+      ],
+      "steps": [
+        "1. Navigate to the Centers page",
+        "2. Enter <center name> in the Centers table search/filter control and apply the filter"
+      ],
+      "expected_result": "Centers table displays only rows matching <center name>; unrelated rows are no longer visible",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 5,
-    "medium_priority": 3,
-    "low_priority": 0
+    "total": 12,
+    "high_priority": 7,
+    "medium_priority": 4,
+    "low_priority": 1
   }
 }

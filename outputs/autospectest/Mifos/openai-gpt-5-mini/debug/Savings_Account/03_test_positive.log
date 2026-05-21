@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.437247
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.368410
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Savings Account</module_name>
 
@@ -151,38 +234,46 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   "components": {
     "Savings_Account_Creation_Form": {
       "type": "form",
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates account in Submitted and Pending Approval status"
-        }
-      ],
+      "location_hint": "Client Detail page",
       "fields": {
         "Product_Name": {
           "type": "dropdown",
           "required": true,
-          "on_change": "auto-populates default values"
+          "on_change": "auto-populates default values for interest and charges",
+          "affects": [
+            "Nominal_Annual_Interest_Rate",
+            "Interest_Compounding_Period",
+            "Interest_Posting_Period",
+            "Interest_Calculated_Using",
+            "Days_in_Year",
+            "Charges"
+          ]
         },
         "Field_Officer": {
-          "type": "unspecified"
+          "type": "dropdown"
         },
         "Submitted_On": {
           "type": "date"
         },
         "Nominal_Annual_Interest_Rate": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Compounding_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Posting_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Calculated_Using": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Days_in_Year": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Minimum_Opening_Balance": {
           "type": "number"
@@ -195,16 +286,17 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         },
         "Charges": {
           "type": "repeating_group",
-          "min": 0,
-          "item_fields": {
-            "Product_Charge": {
-              "type": "unspecified"
-            }
-          },
-          "constraints": [],
-          "description": "lists product charges with an option to add more; product charges are populated from selected product"
+          "description": "lists product charges and allows adding more",
+          "pre_filled_from_product": true,
+          "item_fields": {}
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates account in Submitted and Pending Approval status"
+        }
+      ]
     },
     "Savings_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -223,7 +315,9 @@ Do not drop functionally unique code paths (like a specific state transition) ju
                 "Type",
                 "Amount",
                 "Running Balance"
-              ]
+              ],
+              "row_actions": [],
+              "bulk_actions": []
             }
           }
         },
@@ -243,23 +337,27 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         "Submitted and Pending Approval": {
           "available_actions": [
             {
-              "action_name": "Approve"
+              "action_name": "Approve",
+              "on_success": "changes status to Approved"
             },
             {
               "action_name": "Reject"
             },
             {
-              "action_name": "Withdraw Application"
+              "action_name": "Withdraw Application",
+              "on_success": "withdraws the application"
             }
           ]
         },
         "Approved": {
           "available_actions": [
             {
-              "action_name": "Activate"
+              "action_name": "Activate",
+              "on_success": "changes status to Active"
             },
             {
-              "action_name": "Undo Approval"
+              "action_name": "Undo Approval",
+              "on_success": "changes status to Submitted and Pending Approval"
             }
           ]
         },
@@ -269,12 +367,10 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               "action_name": "Deposit",
               "fields": {
                 "Transaction_Date": {
-                  "type": "date",
-                  "required": false
+                  "type": "date"
                 },
                 "Transaction_Amount": {
-                  "type": "number",
-                  "required": false
+                  "type": "number"
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -294,12 +390,10 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               "action_name": "Withdraw",
               "fields": {
                 "Transaction_Date": {
-                  "type": "date",
-                  "required": false
+                  "type": "date"
                 },
                 "Transaction_Amount": {
-                  "type": "number",
-                  "required": false
+                  "type": "number"
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -315,27 +409,33 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               },
               "constraints": [
                 "withdrawal must not exceed available balance unless overdraft is enabled",
-                "if minimum opening balance is enforced and the withdrawal would breach it, an error is shown"
+                "if minimum balance is enforced, withdrawal that would breach minimum balance is disallowed and returns an error"
               ],
               "on_success": "debits the account"
             },
             {
-              "action_name": "Post Interest"
+              "action_name": "Post Interest",
+              "on_success": "posts accrued interest to the account"
             },
             {
-              "action_name": "Calculate Interest"
+              "action_name": "Calculate Interest",
+              "on_success": "calculates accrued interest"
             },
             {
-              "action_name": "Close"
+              "action_name": "Close",
+              "on_success": "changes status to Closed"
             },
             {
-              "action_name": "Block Account"
+              "action_name": "Block Account",
+              "on_success": "changes status to Blocked"
             },
             {
-              "action_name": "Block Debit"
+              "action_name": "Block Debit",
+              "on_success": "blocks debits on the account"
             },
             {
-              "action_name": "Block Credit"
+              "action_name": "Block Credit",
+              "on_success": "blocks credits on the account"
             }
           ]
         },
@@ -368,7 +468,7 @@ The Savings Account Detail page displays the account number, product name, clien
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:24:47] Test-Positive - LLM RESPONSE
+[16:19:36] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Savings Account",
@@ -376,172 +476,241 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create savings account - happy path submits application",
-      "preconditions": ["User logged in as <Officer>", "Client Detail page with Savings Account Creation form open"],
-      "steps": [
-        "1. Click the Product Name dropdown",
-        "2. Select <product> from the Product Name dropdown",
-        "3. Enter <field officer> in the Field Officer field",
-        "4. Enter <submission date> in the Submitted On date field",
-        "5. Select <nominal annual interest rate> from the Nominal Annual Interest Rate dropdown",
-        "6. Select <interest compounding period> from the Interest Compounding Period dropdown",
-        "7. Select <interest posting period> from the Interest Posting Period dropdown",
-        "8. Select <interest calculated using> from the Interest Calculated Using dropdown",
-        "9. Select <days in year> from the Days in Year dropdown",
-        "10. Enter <minimum opening balance> in the Minimum Opening Balance field",
-        "11. Enter <lock-in period> in the Lock-in Period field",
-        "12. Toggle the Allow Overdraft checkbox to <on|off>",
-        "13. (Optional) Click 'Add Row' in Charges and select <product charge> in the new row",
-        "14. Click Submit"
+      "test_case": "Create savings account from Client Detail (happy path) and verify pre-filled product defaults",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Client Detail page for <client> is open"
       ],
-      "expected_result": "creates account in Submitted and Pending Approval status",
+      "steps": [
+        "1. Click to open the Savings Account creation form on the Client Detail page",
+        "2. Select <Product Name> from the Product Name dropdown",
+        "3. Observe that Nominal Annual Interest Rate, Interest Compounding Period, Interest Posting Period, Interest Calculated Using, Days in Year and Charges are populated with the selected product's default values",
+        "4. Select <Field Officer> from the Field Officer dropdown",
+        "5. Enter <Submitted On date> in the Submitted On field",
+        "6. Enter <Minimum Opening Balance> in the Minimum Opening Balance field (if required by product)",
+        "7. Optionally check or uncheck Allow Overdraft as needed",
+        "8. Click Submit on the creation form"
+      ],
+      "expected_result": "A new account row appears on the Client Detail page's Accounts list showing <Product Name> and a status badge 'Submitted and Pending Approval' and the account is visible in the client's accounts",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Selecting a product auto-populates product default fields and allows submission",
-      "preconditions": ["User logged in as <Officer>", "Client Detail page with Savings Account Creation form open"],
-      "steps": [
-        "1. Click the Product Name dropdown",
-        "2. Select <product> from the Product Name dropdown",
-        "3. Observe that Nominal Annual Interest Rate is populated",
-        "4. Observe that Interest Compounding Period is populated",
-        "5. Observe that Interest Posting Period is populated",
-        "6. Observe that Interest Calculated Using is populated",
-        "7. Observe that Days in Year is populated",
-        "8. Enter any other required fields using placeholders (e.g., <field officer>, <submission date>)",
-        "9. Click Submit"
+      "test_case": "Navigate between Summary, Transactions, Charges and Documents tabs on Savings Account detail",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for <account> is open"
       ],
-      "expected_result": "creates account in Submitted and Pending Approval status",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-003",
-      "test_case": "Approve a submitted application updates status to Approved",
-      "preconditions": ["User logged in as <Approver>", "Savings account is in Submitted and Pending Approval state and Savings Account Detail page is open"],
       "steps": [
-        "1. Verify the status badge shows 'Submitted and Pending Approval'",
-        "2. Click the Approve action button"
+        "1. Click the 'Summary' tab",
+        "2. Click the 'Transactions' tab",
+        "3. Click the 'Charges' tab",
+        "4. Click the 'Documents' tab"
       ],
-      "expected_result": "Status badge updates to 'Approved' on the Savings Account Detail page",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-004",
-      "test_case": "Reject a submitted application updates visible status away from Submitted and Pending Approval",
-      "preconditions": ["User logged in as <Approver>", "Savings account is in Submitted and Pending Approval state and Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Submitted and Pending Approval'",
-        "2. Click the Reject action button"
-      ],
-      "expected_result": "Status badge no longer shows 'Submitted and Pending Approval' and displays an updated status on the Savings Account Detail page",
+      "expected_result": "Selecting each tab displays its content: the Summary tab shows account overview information; the Transactions tab displays the Transactions table; the Charges tab displays account charges; the Documents tab displays related documents",
       "priority": "medium"
     },
     {
-      "tc_id": "P-005",
-      "test_case": "Withdraw application from pending moves application out of Submitted and Pending Approval",
-      "preconditions": ["User logged in as <Applicant>", "Savings account is in Submitted and Pending Approval state and Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Submitted and Pending Approval'",
-        "2. Click the Withdraw Application action button"
+      "tc_id": "P-003",
+      "test_case": "Filter Transactions table to show only matching results",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for <account> with multiple transactions is open",
+        "Transactions tab is selected"
       ],
-      "expected_result": "Status badge no longer shows 'Submitted and Pending Approval' and displays an updated status on the Savings Account Detail page",
+      "steps": [
+        "1. Enter <filter criterion> in the Transactions table search or filter control (for example filter by Type or Date)",
+        "2. Click Apply / search"
+      ],
+      "expected_result": "Transactions table displays only rows matching <filter criterion>; unrelated rows are no longer visible",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "Approve a Submitted and Pending Approval savings account",
+      "preconditions": [
+        "User logged in as <Approver>",
+        "Savings Account detail page for an account in 'Submitted and Pending Approval' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Approve' action button in the action bar",
+        "2. Click Confirm on the Approve confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Approved'",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "test_case": "Withdraw a Submitted savings application",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Submitted and Pending Approval' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Withdraw Application' action button in the action bar",
+        "2. Click Confirm on the Withdraw Application confirmation dialog"
+      ],
+      "expected_result": "The account is removed from active submitted applications and the account detail shows that the application has been withdrawn (status or indicator shows the application is withdrawn)",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Activate an approved account updates status to Active",
-      "preconditions": ["User logged in as <Officer>", "Savings account is in Approved state and Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Approved'",
-        "2. Click the Activate action button"
+      "test_case": "Activate an Approved savings account",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Approved' status is open"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Savings Account Detail page",
+      "steps": [
+        "1. Click the 'Activate' action button in the action bar",
+        "2. Click Confirm on the Activate confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Undo Approval on an approved account returns status to Submitted and Pending Approval",
-      "preconditions": ["User logged in as <Officer>", "Savings account is in Approved state and Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Approved'",
-        "2. Click the Undo Approval action button"
+      "test_case": "Undo Approval to return Approved account to Submitted and Pending Approval",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Approved' status is open"
       ],
-      "expected_result": "Status badge updates to 'Submitted and Pending Approval' on the Savings Account Detail page",
+      "steps": [
+        "1. Click the 'Undo Approval' action button in the action bar",
+        "2. Click Confirm on the Undo Approval confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Submitted and Pending Approval'",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Deposit to an active account credits the account and shows transaction",
-      "preconditions": ["User logged in as <Teller>", "Savings account is in Active state and has an existing balance; Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Active'",
-        "2. Click the Deposit action button",
-        "3. Enter <transaction date> in the Transaction Date field",
-        "4. Enter <transaction amount> in the Transaction Amount field",
-        "5. Select <payment type> from the Payment Type dropdown",
-        "6. Enter <payment details> in the Payment Details field",
-        "7. Click Submit on the Deposit form"
+      "test_case": "Deposit to an Active account (credits the account) and verify transaction and balance update",
+      "preconditions": [
+        "User logged in as <Teller>",
+        "Savings Account detail page for an account in 'Active' status with available balance >= 0 is open"
       ],
-      "expected_result": "credits the account; Account balance and available balance visually update to reflect the deposit and the Transactions tab shows a row with Type 'Deposit' and the entered Transaction Amount",
+      "steps": [
+        "1. Click the 'Deposit' action button in the action bar",
+        "2. In the Deposit form enter <Transaction_Date> in Transaction Date",
+        "3. Enter <Transaction_Amount> in Transaction Amount",
+        "4. Select <Payment_Type> from Payment Type",
+        "5. Enter <Payment_Details> as needed",
+        "6. Click Submit on the Deposit form"
+      ],
+      "expected_result": "A new transaction row of Type 'Deposit' appears in the Transactions table showing the entered <Transaction_Amount> and the Running Balance updates accordingly; the account balance displayed on the detail page increases to reflect the credit",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Withdraw from an active account debits the account when amount is within available balance",
-      "preconditions": ["User logged in as <Teller>", "Savings account is in Active state and available balance is >= <withdraw amount>; Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Active'",
-        "2. Click the Withdraw action button",
-        "3. Enter <transaction date> in the Transaction Date field",
-        "4. Enter <withdraw amount less than or equal to available balance> in the Transaction Amount field",
-        "5. Select <payment type> from the Payment Type dropdown",
-        "6. Enter <payment details> in the Payment Details field",
-        "7. Click Submit on the Withdraw form"
+      "test_case": "Withdraw from an Active account with sufficient available balance (debits the account) and verify transaction and balance update",
+      "preconditions": [
+        "User logged in as <Teller>",
+        "Savings Account detail page for an account in 'Active' status with available balance >= <Transaction_Amount> is open"
       ],
-      "expected_result": "debits the account; Account balance and available balance visually update to reflect the withdrawal and the Transactions tab shows a row with Type 'Withdrawal' and the entered Transaction Amount",
+      "steps": [
+        "1. Click the 'Withdraw' action button in the action bar",
+        "2. In the Withdraw form enter <Transaction_Date> in Transaction Date",
+        "3. Enter <Transaction_Amount> in Transaction Amount that does not breach minimum balance",
+        "4. Select <Payment_Type> from Payment Type",
+        "5. Enter <Payment_Details> as needed",
+        "6. Click Submit on the Withdraw form"
+      ],
+      "expected_result": "A new transaction row of Type 'Withdraw' appears in the Transactions table showing the entered <Transaction_Amount> and the Running Balance updates accordingly; the account balance displayed on the detail page decreases to reflect the debit",
       "priority": "high"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Post Interest on an active account creates an interest posting and updates balances",
-      "preconditions": ["User logged in as <Teller>", "Savings account is in Active state and Savings Account Detail page is open"],
-      "steps": [
-        "1. Verify the status badge shows 'Active'",
-        "2. Click the Post Interest action button"
+      "test_case": "Post Interest on an Active account and verify interest posting appears in Transactions",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status with accrued interest is open"
       ],
-      "expected_result": "Interest posting appears in the Transactions table and account balance and available balance visually update to reflect the posted interest",
+      "steps": [
+        "1. Click the 'Post Interest' action button in the action bar",
+        "2. Click Confirm on the Post Interest confirmation dialog"
+      ],
+      "expected_result": "A new transaction row of Type 'Interest Posting' appears in the Transactions table and the account balance on the detail page increases to include the posted interest",
       "priority": "medium"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Navigate Savings Account detail tabs and verify Transactions table columns",
-      "preconditions": ["User logged in as <User>", "Savings Account Detail page is open for any account"],
-      "steps": [
-        "1. Click the Summary tab",
-        "2. Verify Summary tab content is visible",
-        "3. Click the Transactions tab",
-        "4. Verify the Transactions tab content is visible",
-        "5. Verify the Transactions table displays columns: 'Date', 'Type', 'Amount', 'Running Balance'",
-        "6. Click the Charges tab",
-        "7. Verify the Charges tab content is visible",
-        "8. Click the Documents tab",
-        "9. Verify the Documents tab content is visible"
+      "test_case": "Calculate Interest for an Active account and verify accrued interest is displayed",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
       ],
-      "expected_result": "Each tab displays its corresponding content and the Transactions table shows columns 'Date', 'Type', 'Amount', and 'Running Balance' on the Transactions tab",
+      "steps": [
+        "1. Click the 'Calculate Interest' action button in the action bar"
+      ],
+      "expected_result": "The Summary section displays an updated 'Accrued Interest' amount reflecting the calculated interest",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Close an Active account and verify status changes to Closed",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Close' action button in the action bar",
+        "2. Click Confirm on the Close confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Closed'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Block an Active account and verify status changes to Blocked",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Block Account' action button in the action bar",
+        "2. Click Confirm on the Block Account confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Blocked'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-014",
+      "test_case": "Block Debits on an Active account and verify debit blocking indicator",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Block Debit' action button in the action bar",
+        "2. Click Confirm on the Block Debit confirmation dialog"
+      ],
+      "expected_result": "A visible indicator on the account detail page shows 'Debits blocked' (debit operations are indicated as blocked)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-015",
+      "test_case": "Block Credits on an Active account and verify credit blocking indicator",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Block Credit' action button in the action bar",
+        "2. Click Confirm on the Block Credit confirmation dialog"
+      ],
+      "expected_result": "A visible indicator on the account detail page shows 'Credits blocked' (credit operations are indicated as blocked)",
+      "priority": "low"
     }
   ],
   "summary": {
-    "total": 11,
+    "total": 15,
     "high_priority": 5,
-    "medium_priority": 6,
-    "low_priority": 0
+    "medium_priority": 8,
+    "low_priority": 2
   }
 }
 
 ------------------------------------------------------------
-[14:24:47] Test-Positive - PARSED JSON
+[16:19:36] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Savings Account",
@@ -549,199 +718,235 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create savings account - happy path submits application",
+      "test_case": "Create savings account from Client Detail (happy path) and verify pre-filled product defaults",
       "preconditions": [
-        "User logged in as <Officer>",
-        "Client Detail page with Savings Account Creation form open"
+        "User logged in as <Staff>",
+        "Client Detail page for <client> is open"
       ],
       "steps": [
-        "1. Click the Product Name dropdown",
-        "2. Select <product> from the Product Name dropdown",
-        "3. Enter <field officer> in the Field Officer field",
-        "4. Enter <submission date> in the Submitted On date field",
-        "5. Select <nominal annual interest rate> from the Nominal Annual Interest Rate dropdown",
-        "6. Select <interest compounding period> from the Interest Compounding Period dropdown",
-        "7. Select <interest posting period> from the Interest Posting Period dropdown",
-        "8. Select <interest calculated using> from the Interest Calculated Using dropdown",
-        "9. Select <days in year> from the Days in Year dropdown",
-        "10. Enter <minimum opening balance> in the Minimum Opening Balance field",
-        "11. Enter <lock-in period> in the Lock-in Period field",
-        "12. Toggle the Allow Overdraft checkbox to <on|off>",
-        "13. (Optional) Click 'Add Row' in Charges and select <product charge> in the new row",
-        "14. Click Submit"
+        "1. Click to open the Savings Account creation form on the Client Detail page",
+        "2. Select <Product Name> from the Product Name dropdown",
+        "3. Observe that Nominal Annual Interest Rate, Interest Compounding Period, Interest Posting Period, Interest Calculated Using, Days in Year and Charges are populated with the selected product's default values",
+        "4. Select <Field Officer> from the Field Officer dropdown",
+        "5. Enter <Submitted On date> in the Submitted On field",
+        "6. Enter <Minimum Opening Balance> in the Minimum Opening Balance field (if required by product)",
+        "7. Optionally check or uncheck Allow Overdraft as needed",
+        "8. Click Submit on the creation form"
       ],
-      "expected_result": "creates account in Submitted and Pending Approval status",
+      "expected_result": "A new account row appears on the Client Detail page's Accounts list showing <Product Name> and a status badge 'Submitted and Pending Approval' and the account is visible in the client's accounts",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Selecting a product auto-populates product default fields and allows submission",
+      "test_case": "Navigate between Summary, Transactions, Charges and Documents tabs on Savings Account detail",
       "preconditions": [
-        "User logged in as <Officer>",
-        "Client Detail page with Savings Account Creation form open"
+        "User logged in as <Staff>",
+        "Savings Account detail page for <account> is open"
       ],
       "steps": [
-        "1. Click the Product Name dropdown",
-        "2. Select <product> from the Product Name dropdown",
-        "3. Observe that Nominal Annual Interest Rate is populated",
-        "4. Observe that Interest Compounding Period is populated",
-        "5. Observe that Interest Posting Period is populated",
-        "6. Observe that Interest Calculated Using is populated",
-        "7. Observe that Days in Year is populated",
-        "8. Enter any other required fields using placeholders (e.g., <field officer>, <submission date>)",
-        "9. Click Submit"
+        "1. Click the 'Summary' tab",
+        "2. Click the 'Transactions' tab",
+        "3. Click the 'Charges' tab",
+        "4. Click the 'Documents' tab"
       ],
-      "expected_result": "creates account in Submitted and Pending Approval status",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-003",
-      "test_case": "Approve a submitted application updates status to Approved",
-      "preconditions": [
-        "User logged in as <Approver>",
-        "Savings account is in Submitted and Pending Approval state and Savings Account Detail page is open"
-      ],
-      "steps": [
-        "1. Verify the status badge shows 'Submitted and Pending Approval'",
-        "2. Click the Approve action button"
-      ],
-      "expected_result": "Status badge updates to 'Approved' on the Savings Account Detail page",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-004",
-      "test_case": "Reject a submitted application updates visible status away from Submitted and Pending Approval",
-      "preconditions": [
-        "User logged in as <Approver>",
-        "Savings account is in Submitted and Pending Approval state and Savings Account Detail page is open"
-      ],
-      "steps": [
-        "1. Verify the status badge shows 'Submitted and Pending Approval'",
-        "2. Click the Reject action button"
-      ],
-      "expected_result": "Status badge no longer shows 'Submitted and Pending Approval' and displays an updated status on the Savings Account Detail page",
+      "expected_result": "Selecting each tab displays its content: the Summary tab shows account overview information; the Transactions tab displays the Transactions table; the Charges tab displays account charges; the Documents tab displays related documents",
       "priority": "medium"
     },
     {
-      "tc_id": "P-005",
-      "test_case": "Withdraw application from pending moves application out of Submitted and Pending Approval",
+      "tc_id": "P-003",
+      "test_case": "Filter Transactions table to show only matching results",
       "preconditions": [
-        "User logged in as <Applicant>",
-        "Savings account is in Submitted and Pending Approval state and Savings Account Detail page is open"
+        "User logged in as <Staff>",
+        "Savings Account detail page for <account> with multiple transactions is open",
+        "Transactions tab is selected"
       ],
       "steps": [
-        "1. Verify the status badge shows 'Submitted and Pending Approval'",
-        "2. Click the Withdraw Application action button"
+        "1. Enter <filter criterion> in the Transactions table search or filter control (for example filter by Type or Date)",
+        "2. Click Apply / search"
       ],
-      "expected_result": "Status badge no longer shows 'Submitted and Pending Approval' and displays an updated status on the Savings Account Detail page",
+      "expected_result": "Transactions table displays only rows matching <filter criterion>; unrelated rows are no longer visible",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "Approve a Submitted and Pending Approval savings account",
+      "preconditions": [
+        "User logged in as <Approver>",
+        "Savings Account detail page for an account in 'Submitted and Pending Approval' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Approve' action button in the action bar",
+        "2. Click Confirm on the Approve confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Approved'",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "test_case": "Withdraw a Submitted savings application",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Submitted and Pending Approval' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Withdraw Application' action button in the action bar",
+        "2. Click Confirm on the Withdraw Application confirmation dialog"
+      ],
+      "expected_result": "The account is removed from active submitted applications and the account detail shows that the application has been withdrawn (status or indicator shows the application is withdrawn)",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Activate an approved account updates status to Active",
+      "test_case": "Activate an Approved savings account",
       "preconditions": [
-        "User logged in as <Officer>",
-        "Savings account is in Approved state and Savings Account Detail page is open"
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Approved' status is open"
       ],
       "steps": [
-        "1. Verify the status badge shows 'Approved'",
-        "2. Click the Activate action button"
+        "1. Click the 'Activate' action button in the action bar",
+        "2. Click Confirm on the Activate confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Savings Account Detail page",
+      "expected_result": "Status badge on the account detail updates to 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Undo Approval on an approved account returns status to Submitted and Pending Approval",
+      "test_case": "Undo Approval to return Approved account to Submitted and Pending Approval",
       "preconditions": [
-        "User logged in as <Officer>",
-        "Savings account is in Approved state and Savings Account Detail page is open"
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Approved' status is open"
       ],
       "steps": [
-        "1. Verify the status badge shows 'Approved'",
-        "2. Click the Undo Approval action button"
+        "1. Click the 'Undo Approval' action button in the action bar",
+        "2. Click Confirm on the Undo Approval confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Submitted and Pending Approval' on the Savings Account Detail page",
+      "expected_result": "Status badge on the account detail updates to 'Submitted and Pending Approval'",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Deposit to an active account credits the account and shows transaction",
+      "test_case": "Deposit to an Active account (credits the account) and verify transaction and balance update",
       "preconditions": [
         "User logged in as <Teller>",
-        "Savings account is in Active state and has an existing balance; Savings Account Detail page is open"
+        "Savings Account detail page for an account in 'Active' status with available balance >= 0 is open"
       ],
       "steps": [
-        "1. Verify the status badge shows 'Active'",
-        "2. Click the Deposit action button",
-        "3. Enter <transaction date> in the Transaction Date field",
-        "4. Enter <transaction amount> in the Transaction Amount field",
-        "5. Select <payment type> from the Payment Type dropdown",
-        "6. Enter <payment details> in the Payment Details field",
-        "7. Click Submit on the Deposit form"
+        "1. Click the 'Deposit' action button in the action bar",
+        "2. In the Deposit form enter <Transaction_Date> in Transaction Date",
+        "3. Enter <Transaction_Amount> in Transaction Amount",
+        "4. Select <Payment_Type> from Payment Type",
+        "5. Enter <Payment_Details> as needed",
+        "6. Click Submit on the Deposit form"
       ],
-      "expected_result": "credits the account; Account balance and available balance visually update to reflect the deposit and the Transactions tab shows a row with Type 'Deposit' and the entered Transaction Amount",
+      "expected_result": "A new transaction row of Type 'Deposit' appears in the Transactions table showing the entered <Transaction_Amount> and the Running Balance updates accordingly; the account balance displayed on the detail page increases to reflect the credit",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Withdraw from an active account debits the account when amount is within available balance",
+      "test_case": "Withdraw from an Active account with sufficient available balance (debits the account) and verify transaction and balance update",
       "preconditions": [
         "User logged in as <Teller>",
-        "Savings account is in Active state and available balance is >= <withdraw amount>; Savings Account Detail page is open"
+        "Savings Account detail page for an account in 'Active' status with available balance >= <Transaction_Amount> is open"
       ],
       "steps": [
-        "1. Verify the status badge shows 'Active'",
-        "2. Click the Withdraw action button",
-        "3. Enter <transaction date> in the Transaction Date field",
-        "4. Enter <withdraw amount less than or equal to available balance> in the Transaction Amount field",
-        "5. Select <payment type> from the Payment Type dropdown",
-        "6. Enter <payment details> in the Payment Details field",
-        "7. Click Submit on the Withdraw form"
+        "1. Click the 'Withdraw' action button in the action bar",
+        "2. In the Withdraw form enter <Transaction_Date> in Transaction Date",
+        "3. Enter <Transaction_Amount> in Transaction Amount that does not breach minimum balance",
+        "4. Select <Payment_Type> from Payment Type",
+        "5. Enter <Payment_Details> as needed",
+        "6. Click Submit on the Withdraw form"
       ],
-      "expected_result": "debits the account; Account balance and available balance visually update to reflect the withdrawal and the Transactions tab shows a row with Type 'Withdrawal' and the entered Transaction Amount",
+      "expected_result": "A new transaction row of Type 'Withdraw' appears in the Transactions table showing the entered <Transaction_Amount> and the Running Balance updates accordingly; the account balance displayed on the detail page decreases to reflect the debit",
       "priority": "high"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Post Interest on an active account creates an interest posting and updates balances",
+      "test_case": "Post Interest on an Active account and verify interest posting appears in Transactions",
       "preconditions": [
-        "User logged in as <Teller>",
-        "Savings account is in Active state and Savings Account Detail page is open"
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status with accrued interest is open"
       ],
       "steps": [
-        "1. Verify the status badge shows 'Active'",
-        "2. Click the Post Interest action button"
+        "1. Click the 'Post Interest' action button in the action bar",
+        "2. Click Confirm on the Post Interest confirmation dialog"
       ],
-      "expected_result": "Interest posting appears in the Transactions table and account balance and available balance visually update to reflect the posted interest",
+      "expected_result": "A new transaction row of Type 'Interest Posting' appears in the Transactions table and the account balance on the detail page increases to include the posted interest",
       "priority": "medium"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Navigate Savings Account detail tabs and verify Transactions table columns",
+      "test_case": "Calculate Interest for an Active account and verify accrued interest is displayed",
       "preconditions": [
-        "User logged in as <User>",
-        "Savings Account Detail page is open for any account"
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
       ],
       "steps": [
-        "1. Click the Summary tab",
-        "2. Verify Summary tab content is visible",
-        "3. Click the Transactions tab",
-        "4. Verify the Transactions tab content is visible",
-        "5. Verify the Transactions table displays columns: 'Date', 'Type', 'Amount', 'Running Balance'",
-        "6. Click the Charges tab",
-        "7. Verify the Charges tab content is visible",
-        "8. Click the Documents tab",
-        "9. Verify the Documents tab content is visible"
+        "1. Click the 'Calculate Interest' action button in the action bar"
       ],
-      "expected_result": "Each tab displays its corresponding content and the Transactions table shows columns 'Date', 'Type', 'Amount', and 'Running Balance' on the Transactions tab",
+      "expected_result": "The Summary section displays an updated 'Accrued Interest' amount reflecting the calculated interest",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "test_case": "Close an Active account and verify status changes to Closed",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Close' action button in the action bar",
+        "2. Click Confirm on the Close confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Closed'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Block an Active account and verify status changes to Blocked",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Block Account' action button in the action bar",
+        "2. Click Confirm on the Block Account confirmation dialog"
+      ],
+      "expected_result": "Status badge on the account detail updates to 'Blocked'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-014",
+      "test_case": "Block Debits on an Active account and verify debit blocking indicator",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Block Debit' action button in the action bar",
+        "2. Click Confirm on the Block Debit confirmation dialog"
+      ],
+      "expected_result": "A visible indicator on the account detail page shows 'Debits blocked' (debit operations are indicated as blocked)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-015",
+      "test_case": "Block Credits on an Active account and verify credit blocking indicator",
+      "preconditions": [
+        "User logged in as <Staff>",
+        "Savings Account detail page for an account in 'Active' status is open"
+      ],
+      "steps": [
+        "1. Click the 'Block Credit' action button in the action bar",
+        "2. Click Confirm on the Block Credit confirmation dialog"
+      ],
+      "expected_result": "A visible indicator on the account detail page shows 'Credits blocked' (credit operations are indicated as blocked)",
+      "priority": "low"
     }
   ],
   "summary": {
-    "total": 11,
+    "total": 15,
     "high_priority": 5,
-    "medium_priority": 6,
-    "low_priority": 0
+    "medium_priority": 8,
+    "low_priority": 2
   }
 }

@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.596908
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.758533
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Savings Account
 
@@ -220,71 +220,58 @@ The Savings Account Detail page displays the account number, product name, clien
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:12:34] UI-AST Agent - LLM RESPONSE
+[16:06:11] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Savings Account",
   "components": {
     "Savings_Account_Creation_Form": {
       "type": "form",
+      "context": "created_from_client_detail_page",
       "fields": {
         "Product_Name": {
           "type": "dropdown",
-          "required": true,
-          "on_change": "auto-populates default values for product-bound fields"
+          "required": false,
+          "on_change": "auto-populates default values for fields: Field_Officer, Nominal_Annual_Interest_Rate, Interest_Compounding_Period, Interest_Posting_Period, Interest_Calculated_Using, Days_in_Year, Minimum_Opening_Balance, Lock_in_Period, Charges"
         },
         "Field_Officer": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         },
         "Submitted_On": {
-          "type": "date",
-          "required": true
+          "type": "date"
         },
         "Nominal_Annual_Interest_Rate": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
+          "type": "number"
         },
         "Interest_Compounding_Period": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
+          "type": "dropdown"
         },
         "Interest_Posting_Period": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
+          "type": "dropdown"
         },
         "Interest_Calculated_Using": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
+          "type": "dropdown"
         },
         "Days_in_Year": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
+          "type": "dropdown"
         },
         "Minimum_Opening_Balance": {
-          "type": "number",
-          "required": false
+          "type": "number"
         },
         "Lock_in_Period": {
-          "type": "unspecified",
-          "required": false
+          "type": "unspecified"
         },
         "Allow_Overdraft": {
-          "type": "checkbox",
-          "required": false
+          "type": "checkbox"
         },
         "Charges": {
           "type": "repeating_group",
           "item_fields": {
-            "Product_Charge_Name": { "type": "unspecified", "required": true },
-            "Product_Charge_Amount": { "type": "number", "required": true }
+            "Charge": {
+              "type": "unspecified"
+            }
           },
-          "description": "lists product charges with option to add more"
+          "description": "lists product charges with option to add additional charges"
         }
       },
       "submit_actions": [
@@ -292,25 +279,6 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "element_name": "Submit",
           "on_success": "creates account in Submitted and Pending Approval status"
         }
-      ]
-    },
-    "Savings_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        { "tab_name": "Summary", "fields": {} },
-        {
-          "tab_name": "Transactions",
-          "fields": {
-            "Transactions_Table": {
-              "type": "data_table",
-              "columns": ["Date", "Type", "Amount", "Running Balance"],
-              "row_actions": [],
-              "bulk_actions": []
-            }
-          }
-        },
-        { "tab_name": "Charges", "fields": {} },
-        { "tab_name": "Documents", "fields": {} }
       ]
     },
     "Savings_Account_Detail_Actions": {
@@ -323,10 +291,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "on_success": "changes status to Approved"
             },
             {
-              "action_name": "Reject"
+              "action_name": "Reject",
+              "on_success": "changes status to Rejected"
             },
             {
-              "action_name": "Withdraw Application"
+              "action_name": "Withdraw Application",
+              "on_success": "withdraws application"
             }
           ]
         },
@@ -338,7 +308,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             },
             {
               "action_name": "Undo Approval",
-              "on_success": "changes status to Submitted and Pending Approval"
+              "on_success": "reverts status to Submitted and Pending Approval"
             }
           ]
         },
@@ -347,17 +317,25 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             {
               "action_name": "Deposit",
               "fields": {
-                "Transaction_Date": { "type": "date", "required": true },
-                "Transaction_Amount": { "type": "number", "required": true },
+                "Transaction_Date": {
+                  "type": "date",
+                  "required": false
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": false
+                },
                 "Payment_Type": {
                   "type": "dropdown",
-                  "required": true,
-                  "options": ["Cash", "Check", "Mobile Money"]
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money"
+                  ]
                 },
                 "Payment_Details": {
                   "type": "unspecified",
-                  "required": false,
-                  "visible_when": "Payment_Type != Cash"
+                  "visible_when": "Payment_Type == Check OR Payment_Type == Mobile Money"
                 }
               },
               "on_success": "credits the account"
@@ -365,30 +343,44 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             {
               "action_name": "Withdraw",
               "fields": {
-                "Transaction_Date": { "type": "date", "required": true },
-                "Transaction_Amount": { "type": "number", "required": true },
+                "Transaction_Date": {
+                  "type": "date",
+                  "required": false
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": false
+                },
                 "Payment_Type": {
                   "type": "dropdown",
-                  "required": true,
-                  "options": ["Cash", "Check", "Mobile Money"]
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money"
+                  ]
                 },
                 "Payment_Details": {
                   "type": "unspecified",
-                  "required": false,
-                  "visible_when": "Payment_Type != Cash"
+                  "visible_when": "Payment_Type == Check OR Payment_Type == Mobile Money"
                 }
               },
               "constraints": [
-                "system validates the withdrawal does not exceed available balance unless overdraft is enabled",
-                "if minimum balance is enforced and the withdrawal would breach it, an error is shown"
+                "transaction amount must not exceed available balance unless Allow_Overdraft is enabled on the account",
+                "if minimum balance enforcement is enabled, withdrawal that would result in balance below the enforced minimum is rejected with an error"
               ],
               "on_success": "debits the account"
             },
-            { "action_name": "Post Interest" },
-            { "action_name": "Calculate Interest" },
+            {
+              "action_name": "Post Interest",
+              "on_success": "posts calculated interest to account"
+            },
+            {
+              "action_name": "Calculate Interest",
+              "on_success": "calculates interest (no posting)"
+            },
             {
               "action_name": "Close",
-              "on_success": "changes status to Closed"
+              "on_success": "closes the account"
             },
             {
               "action_name": "Block Account",
@@ -396,11 +388,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             },
             {
               "action_name": "Block Debit",
-              "on_success": "blocks debit transactions"
+              "on_success": "blocks debit transactions on the account"
             },
             {
               "action_name": "Block Credit",
-              "on_success": "blocks credit transactions"
+              "on_success": "blocks credit transactions on the account"
             }
           ]
         },
@@ -414,90 +406,6 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": []
         }
       }
-    }
-  }
-}
-
-------------------------------------------------------------
-[14:12:34] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Savings Account",
-  "components": {
-    "Savings_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Product_Name": {
-          "type": "dropdown",
-          "required": true,
-          "on_change": "auto-populates default values for product-bound fields"
-        },
-        "Field_Officer": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Submitted_On": {
-          "type": "date",
-          "required": true
-        },
-        "Nominal_Annual_Interest_Rate": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
-        },
-        "Interest_Compounding_Period": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
-        },
-        "Interest_Posting_Period": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
-        },
-        "Interest_Calculated_Using": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
-        },
-        "Days_in_Year": {
-          "type": "dropdown",
-          "required": false,
-          "pre_filled_from_product": true
-        },
-        "Minimum_Opening_Balance": {
-          "type": "number",
-          "required": false
-        },
-        "Lock_in_Period": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Allow_Overdraft": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Charges": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Product_Charge_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Product_Charge_Amount": {
-              "type": "number",
-              "required": true
-            }
-          },
-          "description": "lists product charges with option to add more"
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates account in Submitted and Pending Approval status"
-        }
-      ]
     },
     "Savings_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -516,9 +424,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
                 "Type",
                 "Amount",
                 "Running Balance"
-              ],
-              "row_actions": [],
-              "bulk_actions": []
+              ]
             }
           }
         },
@@ -529,6 +435,71 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "tab_name": "Documents",
           "fields": {}
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:06:11] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Savings Account",
+  "components": {
+    "Savings_Account_Creation_Form": {
+      "type": "form",
+      "context": "created_from_client_detail_page",
+      "fields": {
+        "Product_Name": {
+          "type": "dropdown",
+          "required": false,
+          "on_change": "auto-populates default values for fields: Field_Officer, Nominal_Annual_Interest_Rate, Interest_Compounding_Period, Interest_Posting_Period, Interest_Calculated_Using, Days_in_Year, Minimum_Opening_Balance, Lock_in_Period, Charges"
+        },
+        "Field_Officer": {
+          "type": "unspecified"
+        },
+        "Submitted_On": {
+          "type": "date"
+        },
+        "Nominal_Annual_Interest_Rate": {
+          "type": "number"
+        },
+        "Interest_Compounding_Period": {
+          "type": "dropdown"
+        },
+        "Interest_Posting_Period": {
+          "type": "dropdown"
+        },
+        "Interest_Calculated_Using": {
+          "type": "dropdown"
+        },
+        "Days_in_Year": {
+          "type": "dropdown"
+        },
+        "Minimum_Opening_Balance": {
+          "type": "number"
+        },
+        "Lock_in_Period": {
+          "type": "unspecified"
+        },
+        "Allow_Overdraft": {
+          "type": "checkbox"
+        },
+        "Charges": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Charge": {
+              "type": "unspecified"
+            }
+          },
+          "description": "lists product charges with option to add additional charges"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates account in Submitted and Pending Approval status"
         }
       ]
     },
@@ -542,10 +513,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "on_success": "changes status to Approved"
             },
             {
-              "action_name": "Reject"
+              "action_name": "Reject",
+              "on_success": "changes status to Rejected"
             },
             {
-              "action_name": "Withdraw Application"
+              "action_name": "Withdraw Application",
+              "on_success": "withdraws application"
             }
           ]
         },
@@ -557,7 +530,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             },
             {
               "action_name": "Undo Approval",
-              "on_success": "changes status to Submitted and Pending Approval"
+              "on_success": "reverts status to Submitted and Pending Approval"
             }
           ]
         },
@@ -568,15 +541,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "fields": {
                 "Transaction_Date": {
                   "type": "date",
-                  "required": true
+                  "required": false
                 },
                 "Transaction_Amount": {
                   "type": "number",
-                  "required": true
+                  "required": false
                 },
                 "Payment_Type": {
                   "type": "dropdown",
-                  "required": true,
                   "options": [
                     "Cash",
                     "Check",
@@ -585,8 +557,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
                 },
                 "Payment_Details": {
                   "type": "unspecified",
-                  "required": false,
-                  "visible_when": "Payment_Type != Cash"
+                  "visible_when": "Payment_Type == Check OR Payment_Type == Mobile Money"
                 }
               },
               "on_success": "credits the account"
@@ -596,15 +567,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "fields": {
                 "Transaction_Date": {
                   "type": "date",
-                  "required": true
+                  "required": false
                 },
                 "Transaction_Amount": {
                   "type": "number",
-                  "required": true
+                  "required": false
                 },
                 "Payment_Type": {
                   "type": "dropdown",
-                  "required": true,
                   "options": [
                     "Cash",
                     "Check",
@@ -613,25 +583,26 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
                 },
                 "Payment_Details": {
                   "type": "unspecified",
-                  "required": false,
-                  "visible_when": "Payment_Type != Cash"
+                  "visible_when": "Payment_Type == Check OR Payment_Type == Mobile Money"
                 }
               },
               "constraints": [
-                "system validates the withdrawal does not exceed available balance unless overdraft is enabled",
-                "if minimum balance is enforced and the withdrawal would breach it, an error is shown"
+                "transaction amount must not exceed available balance unless Allow_Overdraft is enabled on the account",
+                "if minimum balance enforcement is enabled, withdrawal that would result in balance below the enforced minimum is rejected with an error"
               ],
               "on_success": "debits the account"
             },
             {
-              "action_name": "Post Interest"
+              "action_name": "Post Interest",
+              "on_success": "posts calculated interest to account"
             },
             {
-              "action_name": "Calculate Interest"
+              "action_name": "Calculate Interest",
+              "on_success": "calculates interest (no posting)"
             },
             {
               "action_name": "Close",
-              "on_success": "changes status to Closed"
+              "on_success": "closes the account"
             },
             {
               "action_name": "Block Account",
@@ -639,11 +610,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             },
             {
               "action_name": "Block Debit",
-              "on_success": "blocks debit transactions"
+              "on_success": "blocks debit transactions on the account"
             },
             {
               "action_name": "Block Credit",
-              "on_success": "blocks credit transactions"
+              "on_success": "blocks credit transactions on the account"
             }
           ]
         },
@@ -657,12 +628,43 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": []
         }
       }
+    },
+    "Savings_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {
+            "Transactions_Table": {
+              "type": "data_table",
+              "columns": [
+                "Date",
+                "Type",
+                "Amount",
+                "Running Balance"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ]
     }
   }
 }
 
 ------------------------------------------------------------
-[14:14:15] UI-AST Agent - USER PROMPT
+[16:08:02] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Savings Account
 
@@ -676,54 +678,63 @@ The Savings Account Detail page displays the account number, product name, clien
 
 
 **CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove the inferred conditional visibility for payment detail fields: delete components.Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Details.visible_when and components.Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Payment_Details.visible_when so the AST only reflects the described 'payment detail fields' without added conditionals.
-2. Remove the unused/unspecified table action placeholders from the Transactions table: delete components.Savings_Account_Detail_Tabs.tabs[1].fields.Transactions_Table.row_actions and components.Savings_Account_Detail_Tabs.tabs[1].fields.Transactions_Table.bulk_actions (the description did not mention row or bulk actions).
-3. Remove the inferred on_success consequence for Undo Approval since the description only names the action: delete components.Savings_Account_Detail_Actions.states.Approved.available_actions[1].on_success or replace it with a neutral placeholder (e.g., unspecified) if a consequence must be provided explicitly in the regenerated AST.
-4. Optional improvement (not required by description): explicitly set types for unspecified creation form fields if intended (e.g., components.Savings_Account_Creation_Form.fields.Field_Officer.type => 'dropdown' and components.Savings_Account_Creation_Form.fields.Lock_in_Period.type => 'number' or 'duration') only if the source spec provides those details; otherwise keep them as unspecified.
+1. Savings_Account_Detail_Actions.states['Submitted and Pending Approval'].available_actions[1].on_success — remove the explicit change-to-'Rejected' status; the description names a 'Reject' action but does not introduce a 'Rejected' badge/state, so either omit the resulting status or phrase it as a generic reject action without adding a new state.
+2. Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Details — remove the visible_when conditional; the description mentions payment detail fields but does not specify conditional logic, so do not infer visibility rules unless explicitly stated.
+3. Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Payment_Details — remove the visible_when conditional; do not infer conditional visibility for withdraw payment details unless description explicitly states triggers.
+4. Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.type — change to 'dropdown' (the description lists this among the dropdowns pre-filled from product).
+5. Savings_Account_Creation_Form.fields.Field_Officer.type — set an explicit control type (e.g., 'dropdown' or 'select') instead of 'unspecified' to match typical UX and the description's context.
 
 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:15:39] UI-AST Agent - LLM RESPONSE
+[16:09:44] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Savings Account",
   "components": {
     "Savings_Account_Creation_Form": {
       "type": "form",
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates account in Submitted and Pending Approval status"
-        }
-      ],
+      "location_hint": "Client Detail page",
       "fields": {
         "Product_Name": {
           "type": "dropdown",
           "required": true,
-          "on_change": "auto-populates default values"
+          "on_change": "auto-populates default values for interest and charges",
+          "affects": [
+            "Nominal_Annual_Interest_Rate",
+            "Interest_Compounding_Period",
+            "Interest_Posting_Period",
+            "Interest_Calculated_Using",
+            "Days_in_Year",
+            "Charges"
+          ]
         },
         "Field_Officer": {
-          "type": "unspecified"
+          "type": "dropdown"
         },
         "Submitted_On": {
           "type": "date"
         },
         "Nominal_Annual_Interest_Rate": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Compounding_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Posting_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Calculated_Using": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Days_in_Year": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Minimum_Opening_Balance": {
           "type": "number"
@@ -736,16 +747,17 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Charges": {
           "type": "repeating_group",
-          "min": 0,
-          "item_fields": {
-            "Product_Charge": {
-              "type": "unspecified"
-            }
-          },
-          "constraints": [],
-          "description": "lists product charges with an option to add more; product charges are populated from selected product"
+          "description": "lists product charges and allows adding more",
+          "pre_filled_from_product": true,
+          "item_fields": {}
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates account in Submitted and Pending Approval status"
+        }
+      ]
     },
     "Savings_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -759,12 +771,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "fields": {
             "Transactions_Table": {
               "type": "data_table",
-              "columns": [
-                "Date",
-                "Type",
-                "Amount",
-                "Running Balance"
-              ]
+              "columns": ["Date", "Type", "Amount", "Running Balance"],
+              "row_actions": [],
+              "bulk_actions": []
             }
           }
         },
@@ -784,23 +793,27 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Submitted and Pending Approval": {
           "available_actions": [
             {
-              "action_name": "Approve"
+              "action_name": "Approve",
+              "on_success": "changes status to Approved"
             },
             {
               "action_name": "Reject"
             },
             {
-              "action_name": "Withdraw Application"
+              "action_name": "Withdraw Application",
+              "on_success": "withdraws the application"
             }
           ]
         },
         "Approved": {
           "available_actions": [
             {
-              "action_name": "Activate"
+              "action_name": "Activate",
+              "on_success": "changes status to Active"
             },
             {
-              "action_name": "Undo Approval"
+              "action_name": "Undo Approval",
+              "on_success": "changes status to Submitted and Pending Approval"
             }
           ]
         },
@@ -809,74 +822,56 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             {
               "action_name": "Deposit",
               "fields": {
-                "Transaction_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Transaction_Amount": {
-                  "type": "number",
-                  "required": false
-                },
+                "Transaction_Date": { "type": "date" },
+                "Transaction_Amount": { "type": "number" },
                 "Payment_Type": {
                   "type": "dropdown",
-                  "options": [
-                    "Cash",
-                    "Check",
-                    "Mobile Money"
-                  ]
+                  "options": ["Cash", "Check", "Mobile Money"]
                 },
-                "Payment_Details": {
-                  "type": "unspecified"
-                }
+                "Payment_Details": { "type": "unspecified" }
               },
               "on_success": "credits the account"
             },
             {
               "action_name": "Withdraw",
               "fields": {
-                "Transaction_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Transaction_Amount": {
-                  "type": "number",
-                  "required": false
-                },
+                "Transaction_Date": { "type": "date" },
+                "Transaction_Amount": { "type": "number" },
                 "Payment_Type": {
                   "type": "dropdown",
-                  "options": [
-                    "Cash",
-                    "Check",
-                    "Mobile Money"
-                  ]
+                  "options": ["Cash", "Check", "Mobile Money"]
                 },
-                "Payment_Details": {
-                  "type": "unspecified"
-                }
+                "Payment_Details": { "type": "unspecified" }
               },
               "constraints": [
                 "withdrawal must not exceed available balance unless overdraft is enabled",
-                "if minimum opening balance is enforced and the withdrawal would breach it, an error is shown"
+                "if minimum balance is enforced, withdrawal that would breach minimum balance is disallowed and returns an error"
               ],
               "on_success": "debits the account"
             },
             {
-              "action_name": "Post Interest"
+              "action_name": "Post Interest",
+              "on_success": "posts accrued interest to the account"
             },
             {
-              "action_name": "Calculate Interest"
+              "action_name": "Calculate Interest",
+              "on_success": "calculates accrued interest"
             },
             {
-              "action_name": "Close"
+              "action_name": "Close",
+              "on_success": "changes status to Closed"
             },
             {
-              "action_name": "Block Account"
+              "action_name": "Block Account",
+              "on_success": "changes status to Blocked"
             },
             {
-              "action_name": "Block Debit"
+              "action_name": "Block Debit",
+              "on_success": "blocks debits on the account"
             },
             {
-              "action_name": "Block Credit"
+              "action_name": "Block Credit",
+              "on_success": "blocks credits on the account"
             }
           ]
         },
@@ -895,45 +890,53 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:15:39] UI-AST Agent - PARSED JSON
+[16:09:44] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Savings Account",
   "components": {
     "Savings_Account_Creation_Form": {
       "type": "form",
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates account in Submitted and Pending Approval status"
-        }
-      ],
+      "location_hint": "Client Detail page",
       "fields": {
         "Product_Name": {
           "type": "dropdown",
           "required": true,
-          "on_change": "auto-populates default values"
+          "on_change": "auto-populates default values for interest and charges",
+          "affects": [
+            "Nominal_Annual_Interest_Rate",
+            "Interest_Compounding_Period",
+            "Interest_Posting_Period",
+            "Interest_Calculated_Using",
+            "Days_in_Year",
+            "Charges"
+          ]
         },
         "Field_Officer": {
-          "type": "unspecified"
+          "type": "dropdown"
         },
         "Submitted_On": {
           "type": "date"
         },
         "Nominal_Annual_Interest_Rate": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Compounding_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Posting_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Interest_Calculated_Using": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Days_in_Year": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "description": "pre-filled from selected product"
         },
         "Minimum_Opening_Balance": {
           "type": "number"
@@ -946,16 +949,17 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Charges": {
           "type": "repeating_group",
-          "min": 0,
-          "item_fields": {
-            "Product_Charge": {
-              "type": "unspecified"
-            }
-          },
-          "constraints": [],
-          "description": "lists product charges with an option to add more; product charges are populated from selected product"
+          "description": "lists product charges and allows adding more",
+          "pre_filled_from_product": true,
+          "item_fields": {}
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates account in Submitted and Pending Approval status"
+        }
+      ]
     },
     "Savings_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -974,7 +978,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
                 "Type",
                 "Amount",
                 "Running Balance"
-              ]
+              ],
+              "row_actions": [],
+              "bulk_actions": []
             }
           }
         },
@@ -994,23 +1000,27 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Submitted and Pending Approval": {
           "available_actions": [
             {
-              "action_name": "Approve"
+              "action_name": "Approve",
+              "on_success": "changes status to Approved"
             },
             {
               "action_name": "Reject"
             },
             {
-              "action_name": "Withdraw Application"
+              "action_name": "Withdraw Application",
+              "on_success": "withdraws the application"
             }
           ]
         },
         "Approved": {
           "available_actions": [
             {
-              "action_name": "Activate"
+              "action_name": "Activate",
+              "on_success": "changes status to Active"
             },
             {
-              "action_name": "Undo Approval"
+              "action_name": "Undo Approval",
+              "on_success": "changes status to Submitted and Pending Approval"
             }
           ]
         },
@@ -1020,12 +1030,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "action_name": "Deposit",
               "fields": {
                 "Transaction_Date": {
-                  "type": "date",
-                  "required": false
+                  "type": "date"
                 },
                 "Transaction_Amount": {
-                  "type": "number",
-                  "required": false
+                  "type": "number"
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -1045,12 +1053,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "action_name": "Withdraw",
               "fields": {
                 "Transaction_Date": {
-                  "type": "date",
-                  "required": false
+                  "type": "date"
                 },
                 "Transaction_Amount": {
-                  "type": "number",
-                  "required": false
+                  "type": "number"
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -1066,27 +1072,33 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               },
               "constraints": [
                 "withdrawal must not exceed available balance unless overdraft is enabled",
-                "if minimum opening balance is enforced and the withdrawal would breach it, an error is shown"
+                "if minimum balance is enforced, withdrawal that would breach minimum balance is disallowed and returns an error"
               ],
               "on_success": "debits the account"
             },
             {
-              "action_name": "Post Interest"
+              "action_name": "Post Interest",
+              "on_success": "posts accrued interest to the account"
             },
             {
-              "action_name": "Calculate Interest"
+              "action_name": "Calculate Interest",
+              "on_success": "calculates accrued interest"
             },
             {
-              "action_name": "Close"
+              "action_name": "Close",
+              "on_success": "changes status to Closed"
             },
             {
-              "action_name": "Block Account"
+              "action_name": "Block Account",
+              "on_success": "changes status to Blocked"
             },
             {
-              "action_name": "Block Debit"
+              "action_name": "Block Debit",
+              "on_success": "blocks debits on the account"
             },
             {
-              "action_name": "Block Credit"
+              "action_name": "Block Credit",
+              "on_success": "blocks credits on the account"
             }
           ]
         },

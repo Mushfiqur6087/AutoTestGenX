@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.584050
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.747645
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:11:17] Semantic Critic - SYSTEM PROMPT
+[16:05:14] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:11:17] Semantic Critic - USER PROMPT
+[16:05:14] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -121,7 +121,7 @@ Global search is accessible from the search icon in the top toolbar from any pag
 {
   "module_name": "Global Search",
   "components": {
-    "Toolbar_Search_Icon": {
+    "Topbar_Search_Icon": {
       "type": "button",
       "element_name": "Search Icon",
       "preconditions": [
@@ -131,100 +131,136 @@ Global search is accessible from the search icon in the top toolbar from any pag
     },
     "Global_Search_Input": {
       "type": "search",
-      "element_name": "Global Search Input",
-      "visible_when": "Toolbar_Search_Icon == clicked",
+      "element_name": "Search Input",
+      "visible_when": "Topbar_Search_Icon == clicked",
       "preconditions": [
         "user must be logged in"
       ],
-      "search_on_type": true,
-      "search_scope": [
+      "constraints": [
+        "supports partial matching",
+        "case-insensitive"
+      ],
+      "triggers": [
+        "on_input"
+      ],
+      "search_scopes": [
         "Clients",
         "Groups",
         "Loans",
         "Savings accounts"
       ],
-      "constraints": [
-        "partial matching",
-        "case-insensitive"
-      ],
       "results_dropdown": {
-        "type": "dropdown_grouped",
-        "group_by": "entity_type",
+        "type": "dropdown",
+        "element_name": "Search Results Dropdown",
+        "visible_when": "Global_Search_Input != ''",
+        "grouped_by": [
+          "Clients",
+          "Groups",
+          "Loans",
+          "Savings accounts"
+        ],
         "groups": [
           {
-            "entity_type": "Clients",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Clients",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Client detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Client detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Groups",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Groups",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Group detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Group detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Loans",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Loans",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Loan detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Loan detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           },
           {
-            "entity_type": "Savings accounts",
-            "result_item_template": {
-              "type": "link",
-              "result_item_fields": {
-                "entity_name": {
-                  "type": "unspecified"
-                },
-                "identifier": {
-                  "type": "unspecified"
-                },
-                "status": {
-                  "type": "unspecified"
-                }
+            "group_name": "Savings accounts",
+            "type": "repeating_group",
+            "item_fields": {
+              "Entity_Name": {
+                "type": "unspecified"
               },
-              "on_select": "navigates to Savings account detail page"
-            }
+              "Identifier": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Result",
+                "on_success": "navigates to Savings account detail page",
+                "params": [
+                  "Identifier"
+                ]
+              }
+            ]
           }
         ],
-        "no_results_message": "No results found"
+        "no_results_message": {
+          "text": "No results found",
+          "visible_when": "Results_Count == 0 and Global_Search_Input != ''"
+        }
       }
     }
   }
@@ -234,22 +270,22 @@ Global search is accessible from the search icon in the top toolbar from any pag
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:31] Semantic Critic - LLM RESPONSE
+[16:07:03] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements: search icon button, search input (visible on click), live search across Clients/Groups/Loans/Savings, grouped results with entity name/identifier/status, selection navigation, and no-results message.",
+  "summary": "AST accurately models the global search icon, input, scoped live search, grouped results with name/identifier/status, selection navigation, no-results message, and stated search constraints.",
   "missing": [],
   "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:13:31] Semantic Critic - PARSED JSON
+[16:07:03] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements: search icon button, search input (visible on click), live search across Clients/Groups/Loans/Savings, grouped results with entity name/identifier/status, selection navigation, and no-results message.",
+  "summary": "AST accurately models the global search icon, input, scoped live search, grouped results with name/identifier/status, selection navigation, no-results message, and stated search constraints.",
   "missing": [],
   "phantoms": [],
   "fixes": []

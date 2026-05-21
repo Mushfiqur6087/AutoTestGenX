@@ -1,13 +1,13 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:22:48.435939
+DEBUG SESSION STARTED: 2026-05-21T16:17:21.366797
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - SYSTEM PROMPT
+[16:17:21] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
-You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module. 
+You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
 Your job is to produce ONLY positive/functional UI test cases — tests where valid input is provided and the specific module behaves correctly in isolation.
 
@@ -27,8 +27,32 @@ Your job is to produce ONLY positive/functional UI test cases — tests where va
 
 ---
 
+**UI-AST REFERENCE — How to Read the AST Input:**
+
+The AST JSON you receive is a structured representation of every **interactive** element in the module. Each top-level key under `"components"` is a named UI component. Learn these node types before generating tests:
+
+| AST `type` | What it represents | What to test |
+|---|---|---|
+| `form` | A flat input form with a submit action | One happy-path TC per distinct `on_success` outcome; one extra TC per `visible_when` conditional field |
+| `wizard` | A multi-step form; `steps[]` = ordered panels | Navigate all steps in sequence; assert the final `on_success` from `submit_actions` |
+| `data_table` | A listing/grid of rows | One TC per entry in `row_actions`; one TC per `bulk_actions` entry; one TC for search/filter |
+| `tab_container` | Tabbed layout; `tabs[]` may nest sub-tabs | One navigation TC across all tabs; if different tabs have different submission forms, one TC per tab |
+| `state_bound_action_bar` | Action buttons that change by entity status; `states{}` map keys are the statuses | One TC per `available_actions` entry per state; precondition = that state |
+| `repeating_group` | "Add Row" pattern for dynamic lists of items | Step: "Click Add Row", then fill `item_fields` for the new row |
+
+Key fields to pay attention to inside any node:
+- **`on_success`** — use its value verbatim as (or as the basis for) your `expected_result`
+- **`visible_when` / `required_when`** — each unique condition = a separate TC
+- **`preconditions`** — translate directly into your TC's `preconditions` array
+- **`constraints`** — use in expected_result or steps when they describe observable UI behavior (e.g., inline validation)
+- **`submit_actions[]`** — if a form has multiple submit buttons, generate one TC per distinct `on_success`
+
+> If the AST is missing an action that the functional description explicitly describes (e.g., an action verb in a state-machine paragraph), trust the description and generate the TC anyway (see Coverage Completeness Gate).
+
+---
+
 **STRICT MODULE BOUNDARY RULE (CRITICAL):**
-You are writing "unit tests" for the UI. You must test ONLY the module provided in the input. 
+You are writing "unit tests" for the UI. You must test ONLY the module provided in the input.
 - DO NOT write End-to-End (E2E) journeys across multiple pages.
 - DO NOT add steps to navigate to other modules to verify backend results.
 - **Cross-Module Redirects:** If clicking a submit button navigates the user to an entirely different module (e.g., from Booking to Payment, or Assignment Creation back to Course Page), the test ENDS with the assertion that the redirect occurred. Do not interact with the next page.
@@ -36,16 +60,44 @@ You are writing "unit tests" for the UI. You must test ONLY the module provided 
 
 ---
 
-**ASSERTION STYLE:**
-- When the description quotes exact success text → use it verbatim.
-- Always use the `on_success` value from the AST when available.
-- If the module performs calculations (e.g., running balances, class averages) or updates a status badge, explicitly assert that visual UI update.
-- Do not assert backend database saves; assert only the visible UI outcome.
+**ASSERTION STYLE (CRITICAL — read every rule before writing any expected_result):**
+
+**Rule A — Assert the visible UI change, never the action itself.**
+The `expected_result` must describe exactly what a tester can *see or read on the screen* after the last step. It must NOT restate the action just performed.
+
+Banned patterns — if your expected_result matches any of these, rewrite it:
+- ❌ `"creates [entity]"` → name the row, badge, or notification that appears
+- ❌ `"updates [entity]"` → name the field or value that visibly changed
+- ❌ `"deletes [entity]"` → state that the row is no longer present in the table
+- ❌ `"[system] adjusts automatically"` → that is a backend side effect; assert only what is visible on the current screen immediately after the last step
+- ❌ `"[field] contains <value>"` after a filter action → assert that the *list/table* is filtered, not that the input field holds a value
+
+Good pattern examples:
+- ✅ `"New row appears in the [Table] with the entered [Field A] and [Field B]"`
+- ✅ `"Status badge updates to '[Status]' ([color]) on the [Entity] Detail page"`
+- ✅ `"[Table] displays only rows matching <filter term>; unrelated rows are no longer visible"`
+- ✅ `"A success notification is displayed; the [Field] on the detail page shows the updated value"`
+- ✅ `"File download is triggered in the browser"` (for export actions)
+
+**Rule B — One TC = one specific outcome. Never combine conditional branches.**
+If a feature has two distinct output paths (e.g., on-screen result vs. file export), generate TWO separate test cases, each with its own expected_result describing only that one path. Never write `"when X, result A; when Y, result B"` inside a single expected_result.
+
+**Rule C — When the description quotes exact success text, use it verbatim.**
+Always use the `on_success` value from the AST when available.
+
+**Rule D — If the module performs calculations or updates a status badge, explicitly assert that visual update** (badge color, calculated value, running balance change).
+Additionally: if the spec describes a **running total, summary row, price breakdown, or auto-calculated field** that derives its value from other inputs, the expected_result must assert that the calculated field *updates visibly* after the dependent inputs are filled — e.g., `"The Total field updates to reflect Base Price + Taxes + Fees"` or `"The Course Total row displays the aggregated grade across all weighted items"`.
+
+**Rule E — Quote exact success messages verbatim. Never paraphrase.**
+If the spec provides a quoted success string (e.g., `"Account opened successfully!"`), copy it character-for-character into the expected_result — including punctuation and capitalisation.
+- ❌ `"a success message is shown"` when spec says `"Transfer completed successfully."`
+- ❌ `"a confirmation is displayed"` when spec says `"Payment submitted successfully."`
+- ✅ `"Page shows 'Transfer completed successfully.' with a transaction ID"`
 
 ---
 
 **GENERIC DATA RULE (CRITICAL):**
-Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., "Select 'Card' layout").
+Never invent specific data values in steps or preconditions unless the spec mandates a hardcoded system value (e.g., `"Select 'Card' layout"`).
 Always use generic role-based placeholders enclosed in angle brackets.
 
 Examples of CORRECT step wording:
@@ -60,11 +112,18 @@ Examples of WRONG step wording (never do this):
 
 ---
 
-**STEP GRANULARITY & COMPLEX WIDGET RULE (CRITICAL):**
-Each step in the `steps` array must be ONE atomic user action. Never consolidate multiple actions (e.g., never say "Fill all fields and submit").
+**PRECONDITIONS vs STEPS — BOUNDARY RULE (CRITICAL):**
+
+A **precondition** is a state the tester sets up *before* touching the module under test. A **step** is an action the tester performs *inside* the module.
+
+Apply this checklist to every TC before outputting:
+1. If a step says `"Ensure <X> is open"` or `"Verify <X> shows <Y>"` — it is a precondition, not a step. Move it.
+2. If a precondition says a form, dialog, or page is already open, there **must** be a step that opens it — unless the module's entry point is that page by definition. If the step is missing, add it as step 1.
+3. A TC with only one step that is an observation (`"Observe the page"`) is missing real user actions. Either add the navigation step that brings the user to this state, or fold the observation into the precondition.
 
 When dealing with complex AST components, format steps like this:
 - **Modals/Dialogs:** "1. Click <Button> to open modal", "2. Enter <value> inside modal"
+- **Confirmation Dialogs:** If the spec describes a confirmation dialog appearing after a state-change or destructive action, always add the step `"Click Confirm on the <Action> dialog"`. Never omit it, even if the spec only implies it.
 - **Inline Editing:** "1. Click the edit icon next to <item>", "2. Enter <new value>", "3. Click Save"
 - **Search-and-add (Autocomplete):** "1. Enter <search term> in the autocomplete", "2. Select <matching result> from the dropdown"
 - **Dynamic Rows (`repeating_group`):** "1. Click 'Add Row'", "2. Enter <value> in the new row"
@@ -78,27 +137,38 @@ Because you are testing a module in isolation, establish the required entry stat
 - **Roles:** "User logged in as <Teacher / Student / Admin>"
 - **State:** "[Entity] is in [Status]"
 - **Toggles/Modes:** "Edit mode is enabled" or "Requires active internet connection".
+- **Role-Specific Views:** If the spec explicitly states that a UI element (tab, button, control) is visible to one role but not another, generate a test that asserts the element's presence for the role that should see it. The expected_result must name the specific element — e.g., `"The Settings tab is visible in the course navigation bar"` or `"No Edit mode toggle is present on the Course page"`.
 
 ---
 
 **WHAT TO GENERATE (COVERAGE MAPPING TO AST):**
 
-**1. Forms & Wizards (`form`, `wizard`):** 
-- Generate ONE happy path per distinct success outcome. 
+**1. Forms & Wizards (`form`, `wizard`):**
+- Generate ONE happy path per distinct success outcome.
 - *Conditional UI Check:* If a toggle/dropdown reveals new mandatory fields (`visible_when`), generate a separate test for that conditional branch.
 
-**2. State Machines (`state_bound_action_bar`):** 
-- For each unique action available in a specific state, generate ONE test performing that action. 
+**2. State Machines (`state_bound_action_bar`):**
+- For each unique action available in a specific state, generate ONE test performing that action.
 - Do not split bidirectional transitions; test A→B.
 
-**3. Tabs (`tab_container`):** 
+**3. Tabs (`tab_container`):**
 - If tabs switch between entirely different forms (e.g., Hotels vs. Flights tabs), generate ONE submission test for EACH tab.
 - Otherwise, generate one test verifying navigation between the tabs.
 
-**4. Data Tables (`data_table`):** 
+**4. Data Tables (`data_table`):**
 - Generate ONE test per `row_actions` (e.g., clicking a three-dot menu).
 - Generate ONE test per `bulk_actions` (e.g., selecting multiple checkboxes).
-- Generate ONE test applying a search/filter if mentioned in the description.
+- Generate ONE test applying a search/filter. The expected_result must describe the **filtered content** (e.g., `"Only results matching <filter criterion> are shown; unrelated items are no longer visible"`) — never just the filter UI state (❌ `"filter is applied"`).
+- If the spec describes **active filter chips/tags with individual remove buttons**, generate ONE test removing a single chip and asserting the results expand back.
+- If the spec describes a **"Reset All" or "Clear Filters" control**, generate ONE test clicking it and asserting all filters are cleared and full unfiltered results are restored.
+
+**5. Empty / Zero-Result States:**
+If the spec explicitly describes an empty state, zero-results display, or "No Data" message (e.g., a filtered list with no matches, a timeline with no upcoming items, a dashboard with no financial data), generate ONE test that reaches that state through a valid user action and asserts the described empty-state message or UI element is visible. This is a valid positive test — the system correctly handles the absence of data.
+
+**6. COVERAGE COMPLETENESS GATE (run before outputting):**
+Enumerate every **action verb** listed in the description for each entity state (e.g., "Approve, Reject, Withdraw, Disburse, Waive Interest, Write Off, Reschedule, Block Debit, Reactivate…"). For each action verb:
+- If a TC already covers it → keep it.
+- If NO TC covers it → add a TC for it. Do not skip spec-described actions just because they lack a clear AST node.
 
 ---
 
@@ -108,12 +178,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
   - Medium module (standard CRUD form, data table): 4–8 tests
   - Complex module (Massive multi-panel forms, Tabbed Search Engines): 8–15 tests
 
+**Hard step cap — 15 steps per TC:**
+If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., basic form submission vs. adding optional repeating-group items). Each split becomes a separate TC with its own precondition establishing the required starting state. Never merge two distinct sub-features into one TC just to reduce TC count.
+
 ---
 
-**ANTI-HALLUCINATION & DEDUPLICATION GATE (Run before outputting):**
-1. Does this test trace back to a specific node in the AST or description? If no, delete it.
+**ANTI-HALLUCINATION & DEDUPLICATION GATE (run before outputting):**
+1. Does this test trace back to a specific node in the AST or a specific action/state in the description? If no → delete it.
 2. For each pair of tests: Do they reach a DIFFERENT success state, OR take a DIFFERENT conditional branch/form layout to reach the same state?
-   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them into one. Keep the more complete version.
+   - If two tests share the same code path (e.g., same form, just different optional fields filled) → merge them. Keep the more complete version.
+3. Read each `expected_result`. Does it match any **banned pattern** from the ASSERTION STYLE rules?
+   - ❌ `"creates/updates/deletes [entity]"` → rewrite to name the visible row, badge, or notification
+   - ❌ `"[system] adjusts/recalculates automatically"` → rewrite to describe the immediate visible screen state
+   - ❌ `"when X, result A; when Y, result B"` in a single TC → split into two TCs
+   - ❌ `"[field] contains <value>"` after a filter/search → rewrite to assert the filtered list/table state
+   - ❌ `"a success message is displayed"` when spec quotes exact text → replace with the verbatim quoted string
+   - ❌ `"filter is applied"` → rewrite to describe the filtered content visible in the results
+4. Check every TC: does its step count exceed 15? If yes → split it.
+5. Check every TC: does step 1 say "Ensure…" or "Verify…"? If yes → move it to preconditions and add a real action as step 1.
+6. Does the spec describe any empty/zero-result state? If yes, confirm a TC exists for it.
 
 ---
 
@@ -141,7 +224,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
 }
 
 ------------------------------------------------------------
-[14:22:48] Test-Positive - USER PROMPT
+[16:17:21] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Floating Rates</module_name>
 
@@ -157,30 +240,25 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         "Is Active",
         "Created By"
       ],
-      "link_columns": [
-        "Floating Rate Name"
-      ],
       "row_actions": [
         {
-          "action_name": "Open Detail",
-          "element_name": "Floating Rate Name",
-          "type": "link",
-          "navigates_to": "Floating_Rate_Detail"
-        }
-      ],
-      "page_actions": [
-        {
-          "element_name": "+ Create Floating Rate",
-          "type": "button",
-          "opens": "Create_Floating_Rate_Form"
+          "action_name": "Open Details",
+          "action": "navigate",
+          "navigates_to": "Floating_Rate_Detail_View"
         }
       ]
+    },
+    "Create_Floating_Rate_Button": {
+      "type": "button",
+      "element_name": "+ Create Floating Rate",
+      "action": "open_form",
+      "opens": "Create_Floating_Rate_Form"
     },
     "Create_Floating_Rate_Form": {
       "type": "form",
       "fields": {
         "Floating_Rate_Name": {
-          "type": "unspecified",
+          "type": "text",
           "required": true
         },
         "Is_Base_Lending_Rate": {
@@ -196,6 +274,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         },
         "Rate_Periods": {
           "type": "repeating_group",
+          "allow_multiple": true,
           "item_fields": {
             "From_Date": {
               "type": "date",
@@ -205,47 +284,32 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               "type": "number",
               "required": false,
               "constraints": [
-                "percentage value"
+                "expressed as percentage"
               ]
             },
             "Is_Differential_Rate": {
               "type": "checkbox",
               "required": false,
               "constraints": [
-                "when checked, this rate is applied relative to the base lending rate (added or subtracted) rather than used as an absolute value"
+                "if checked, this rate is applied as a differential to the base lending rate (added or subtracted) rather than used as an absolute rate"
               ]
             }
+          },
+          "add_row_action": {
+            "element_name": "Add Rate Period",
+            "action": "add_row"
           }
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      }
     },
-    "Floating_Rate_Detail": {
+    "Floating_Rate_Detail_View": {
       "type": "detail_view",
-      "components": {
-        "Rate_History": {
-          "type": "data_table",
-          "columns": [
-            "From Date",
-            "Interest Rate",
-            "Is Differential Rate"
-          ],
-          "row_actions": []
-        }
-      },
       "actions": [
         {
-          "element_name": "Edit",
-          "type": "button",
-          "opens": "Edit_Floating_Rate_Form"
+          "action_name": "Edit",
+          "action": "open_form",
+          "opens": "Edit_Floating_Rate_Form",
+          "on_success": "updates rate periods; linked loan products adjust automatically based on the applicable rate period"
         }
       ]
     },
@@ -253,7 +317,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
       "type": "form",
       "fields": {
         "Floating_Rate_Name": {
-          "type": "unspecified",
+          "type": "text",
           "required": true
         },
         "Is_Base_Lending_Rate": {
@@ -269,6 +333,7 @@ Do not drop functionally unique code paths (like a specific state transition) ju
         },
         "Rate_Periods": {
           "type": "repeating_group",
+          "allow_multiple": true,
           "item_fields": {
             "From_Date": {
               "type": "date",
@@ -278,28 +343,23 @@ Do not drop functionally unique code paths (like a specific state transition) ju
               "type": "number",
               "required": false,
               "constraints": [
-                "percentage value"
+                "expressed as percentage"
               ]
             },
             "Is_Differential_Rate": {
               "type": "checkbox",
               "required": false,
               "constraints": [
-                "when checked, this rate is applied relative to the base lending rate (added or subtracted) rather than used as an absolute value"
+                "if checked, this rate is applied as a differential to the base lending rate (added or subtracted) rather than used as an absolute rate"
               ]
             }
+          },
+          "add_row_action": {
+            "element_name": "Add Rate Period",
+            "action": "add_row"
           }
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods"
-        },
-        {
-          "element_name": "Cancel"
-        }
-      ]
+      }
     }
   }
 }
@@ -317,7 +377,7 @@ The Floating Rates page displays a data table with columns for Floating Rate Nam
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:23:49] Test-Positive - LLM RESPONSE
+[16:18:41] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Floating Rates",
@@ -325,104 +385,99 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Create Floating Rate form from table",
+      "test_case": "Open Create Floating Rate form",
       "preconditions": [
-        "User logged in as <Product Manager>",
+        "User logged in as <Administrator>",
         "Floating Rates page is open"
       ],
       "steps": [
-        "1. Click the '+ Create Floating Rate' button"
+        "1. Click '+ Create Floating Rate' button",
+        "2. Observe the Create Floating Rate form"
       ],
-      "expected_result": "The Create Floating Rate form is displayed with the 'Floating Rate Name' input and the 'Rate Periods' repeating group visible",
+      "expected_result": "Create Floating Rate form is displayed showing fields: Floating Rate Name (required), Is Base Lending Rate checkbox, Is Active checkbox, and a Rate Periods section with an 'Add Rate Period' button",
       "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new active floating rate with multiple rate periods including a differential rate",
+      "test_case": "Create a new Floating Rate with one rate period and set Active",
       "preconditions": [
-        "User logged in as <Product Manager>",
-        "Floating Rates page is open"
+        "User logged in as <Administrator>",
+        "Floating Rates page is open",
+        "No specific Floating Rate is selected"
       ],
       "steps": [
-        "1. Click the '+ Create Floating Rate' button",
-        "2. Enter <valid floating rate name> in the Floating Rate Name field",
+        "1. Click '+ Create Floating Rate' button to open the form",
+        "2. Enter <Floating Rate Name> in the Floating Rate Name field",
         "3. Check the 'Is Active' checkbox",
-        "4. In the Rate Periods section click 'Add Row'",
-        "5. Enter <valid date> in the From Date of the first row",
-        "6. Enter <valid percentage> in the Interest Rate of the first row",
-        "7. In the Rate Periods section click 'Add Row' to add a second row",
-        "8. Enter <valid date> in the From Date of the second row",
-        "9. Enter <valid percentage> in the Interest Rate of the second row",
-        "10. Check the 'Is Differential Rate' checkbox in the second row",
-        "11. Click the 'Create' button"
+        "4. Click 'Add Rate Period' to add a new rate period row",
+        "5. Enter <From Date> in the From Date field of the new row",
+        "6. Enter <Interest Rate> in the Interest Rate field of the new row",
+        "7. Leave 'Is Differential Rate' unchecked for the new row",
+        "8. Click Save to submit the form"
       ],
-      "expected_result": "creates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods",
-      "priority": "high"
+      "expected_result": "New row appears in the Floating Rates table with the entered <Floating Rate Name>, 'Is Active' checked, and 'Created By' shows <current user>",
+      "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a new base lending rate when no other base exists",
+      "test_case": "Create a new Floating Rate and set it as the Base Lending Rate when no base exists",
       "preconditions": [
-        "User logged in as <Product Manager>",
+        "User logged in as <Administrator>",
         "Floating Rates page is open",
-        "No other base lending rate exists"
+        "No other Floating Rate is set as the base lending rate"
       ],
       "steps": [
-        "1. Click the '+ Create Floating Rate' button",
-        "2. Enter <valid floating rate name> in the Floating Rate Name field",
+        "1. Click '+ Create Floating Rate' button to open the form",
+        "2. Enter <Floating Rate Name> in the Floating Rate Name field",
         "3. Check the 'Is Base Lending Rate' checkbox",
-        "4. In the Rate Periods section click 'Add Row'",
-        "5. Enter <valid date> in the From Date of the row",
-        "6. Enter <valid percentage> in the Interest Rate of the row",
-        "7. Click the 'Create' button"
+        "4. Click Save to submit the form"
       ],
-      "expected_result": "creates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods",
+      "expected_result": "New row appears in the Floating Rates table with the entered <Floating Rate Name> and 'Is Base Lending Rate' checked",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Open Floating Rate detail view from table and verify rate history is shown",
+      "test_case": "Open Floating Rate detail view from the table",
       "preconditions": [
-        "User logged in as <Product Manager>",
-        "Floating Rates page is open",
-        "At least one floating rate with rate periods exists in the table"
+        "User logged in as <Administrator>",
+        "At least one Floating Rate named <existing floating rate> exists and is visible in the Floating Rates table"
       ],
       "steps": [
-        "1. Click the Floating Rate Name link for an existing row in the Floating Rates table"
+        "1. Click the <existing floating rate> name link in the Floating Rates table (or invoke the Open Details row action)"
       ],
-      "expected_result": "The Floating Rate detail view is displayed showing the Rate History table with columns 'From Date', 'Interest Rate', and 'Is Differential Rate' and an 'Edit' button is visible",
+      "expected_result": "Floating Rate Detail view for <existing floating rate> is displayed showing the full rate history and the Edit action is visible",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Edit a floating rate by adding a new rate period and saving",
+      "test_case": "Edit a Floating Rate to add a new rate period and submit",
       "preconditions": [
-        "User logged in as <Product Manager>",
-        "Floating Rates page is open",
-        "User is viewing a Floating Rate detail page"
+        "User logged in as <Administrator>",
+        "A Floating Rate named <existing floating rate> exists in the table"
       ],
       "steps": [
-        "1. Click the 'Edit' button on the Floating Rate detail view",
-        "2. In the Edit Floating Rate form click 'Add Row' in the Rate Periods section",
-        "3. Enter <valid date> in the From Date of the new row",
-        "4. Enter <valid percentage> in the Interest Rate of the new row",
-        "5. Optionally check the 'Is Differential Rate' checkbox in the new row",
-        "6. Click the 'Save' button"
+        "1. Open the Floating Rate's detail view by clicking the <existing floating rate> name in the table",
+        "2. Click the Edit action on the Floating Rate Detail view to open the Edit Floating Rate form",
+        "3. Click 'Add Rate Period' to add a new rate period row",
+        "4. Enter <From Date> in the From Date field of the new row",
+        "5. Enter <Interest Rate> in the Interest Rate field of the new row",
+        "6. Optionally check or leave 'Is Differential Rate' as needed",
+        "7. Click Save to submit the Edit form"
       ],
-      "expected_result": "updates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods",
+      "expected_result": "updates rate periods; linked loan products adjust automatically based on the applicable rate period",
       "priority": "high"
     }
   ],
   "summary": {
     "total": 5,
-    "high_priority": 3,
-    "medium_priority": 2,
+    "high_priority": 2,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[14:23:49] Test-Positive - PARSED JSON
+[16:18:41] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Floating Rates",
@@ -430,98 +485,93 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Create Floating Rate form from table",
+      "test_case": "Open Create Floating Rate form",
       "preconditions": [
-        "User logged in as <Product Manager>",
+        "User logged in as <Administrator>",
         "Floating Rates page is open"
       ],
       "steps": [
-        "1. Click the '+ Create Floating Rate' button"
+        "1. Click '+ Create Floating Rate' button",
+        "2. Observe the Create Floating Rate form"
       ],
-      "expected_result": "The Create Floating Rate form is displayed with the 'Floating Rate Name' input and the 'Rate Periods' repeating group visible",
+      "expected_result": "Create Floating Rate form is displayed showing fields: Floating Rate Name (required), Is Base Lending Rate checkbox, Is Active checkbox, and a Rate Periods section with an 'Add Rate Period' button",
       "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new active floating rate with multiple rate periods including a differential rate",
+      "test_case": "Create a new Floating Rate with one rate period and set Active",
       "preconditions": [
-        "User logged in as <Product Manager>",
-        "Floating Rates page is open"
+        "User logged in as <Administrator>",
+        "Floating Rates page is open",
+        "No specific Floating Rate is selected"
       ],
       "steps": [
-        "1. Click the '+ Create Floating Rate' button",
-        "2. Enter <valid floating rate name> in the Floating Rate Name field",
+        "1. Click '+ Create Floating Rate' button to open the form",
+        "2. Enter <Floating Rate Name> in the Floating Rate Name field",
         "3. Check the 'Is Active' checkbox",
-        "4. In the Rate Periods section click 'Add Row'",
-        "5. Enter <valid date> in the From Date of the first row",
-        "6. Enter <valid percentage> in the Interest Rate of the first row",
-        "7. In the Rate Periods section click 'Add Row' to add a second row",
-        "8. Enter <valid date> in the From Date of the second row",
-        "9. Enter <valid percentage> in the Interest Rate of the second row",
-        "10. Check the 'Is Differential Rate' checkbox in the second row",
-        "11. Click the 'Create' button"
+        "4. Click 'Add Rate Period' to add a new rate period row",
+        "5. Enter <From Date> in the From Date field of the new row",
+        "6. Enter <Interest Rate> in the Interest Rate field of the new row",
+        "7. Leave 'Is Differential Rate' unchecked for the new row",
+        "8. Click Save to submit the form"
       ],
-      "expected_result": "creates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods",
-      "priority": "high"
+      "expected_result": "New row appears in the Floating Rates table with the entered <Floating Rate Name>, 'Is Active' checked, and 'Created By' shows <current user>",
+      "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a new base lending rate when no other base exists",
+      "test_case": "Create a new Floating Rate and set it as the Base Lending Rate when no base exists",
       "preconditions": [
-        "User logged in as <Product Manager>",
+        "User logged in as <Administrator>",
         "Floating Rates page is open",
-        "No other base lending rate exists"
+        "No other Floating Rate is set as the base lending rate"
       ],
       "steps": [
-        "1. Click the '+ Create Floating Rate' button",
-        "2. Enter <valid floating rate name> in the Floating Rate Name field",
+        "1. Click '+ Create Floating Rate' button to open the form",
+        "2. Enter <Floating Rate Name> in the Floating Rate Name field",
         "3. Check the 'Is Base Lending Rate' checkbox",
-        "4. In the Rate Periods section click 'Add Row'",
-        "5. Enter <valid date> in the From Date of the row",
-        "6. Enter <valid percentage> in the Interest Rate of the row",
-        "7. Click the 'Create' button"
+        "4. Click Save to submit the form"
       ],
-      "expected_result": "creates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods",
+      "expected_result": "New row appears in the Floating Rates table with the entered <Floating Rate Name> and 'Is Base Lending Rate' checked",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Open Floating Rate detail view from table and verify rate history is shown",
+      "test_case": "Open Floating Rate detail view from the table",
       "preconditions": [
-        "User logged in as <Product Manager>",
-        "Floating Rates page is open",
-        "At least one floating rate with rate periods exists in the table"
+        "User logged in as <Administrator>",
+        "At least one Floating Rate named <existing floating rate> exists and is visible in the Floating Rates table"
       ],
       "steps": [
-        "1. Click the Floating Rate Name link for an existing row in the Floating Rates table"
+        "1. Click the <existing floating rate> name link in the Floating Rates table (or invoke the Open Details row action)"
       ],
-      "expected_result": "The Floating Rate detail view is displayed showing the Rate History table with columns 'From Date', 'Interest Rate', and 'Is Differential Rate' and an 'Edit' button is visible",
+      "expected_result": "Floating Rate Detail view for <existing floating rate> is displayed showing the full rate history and the Edit action is visible",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Edit a floating rate by adding a new rate period and saving",
+      "test_case": "Edit a Floating Rate to add a new rate period and submit",
       "preconditions": [
-        "User logged in as <Product Manager>",
-        "Floating Rates page is open",
-        "User is viewing a Floating Rate detail page"
+        "User logged in as <Administrator>",
+        "A Floating Rate named <existing floating rate> exists in the table"
       ],
       "steps": [
-        "1. Click the 'Edit' button on the Floating Rate detail view",
-        "2. In the Edit Floating Rate form click 'Add Row' in the Rate Periods section",
-        "3. Enter <valid date> in the From Date of the new row",
-        "4. Enter <valid percentage> in the Interest Rate of the new row",
-        "5. Optionally check the 'Is Differential Rate' checkbox in the new row",
-        "6. Click the 'Save' button"
+        "1. Open the Floating Rate's detail view by clicking the <existing floating rate> name in the table",
+        "2. Click the Edit action on the Floating Rate Detail view to open the Edit Floating Rate form",
+        "3. Click 'Add Rate Period' to add a new rate period row",
+        "4. Enter <From Date> in the From Date field of the new row",
+        "5. Enter <Interest Rate> in the Interest Rate field of the new row",
+        "6. Optionally check or leave 'Is Differential Rate' as needed",
+        "7. Click Save to submit the Edit form"
       ],
-      "expected_result": "updates floating rate; linked loan products' interest rates adjust automatically based on applicable rate periods",
+      "expected_result": "updates rate periods; linked loan products adjust automatically based on the applicable rate period",
       "priority": "high"
     }
   ],
   "summary": {
     "total": 5,
-    "high_priority": 3,
-    "medium_priority": 2,
+    "high_priority": 2,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }

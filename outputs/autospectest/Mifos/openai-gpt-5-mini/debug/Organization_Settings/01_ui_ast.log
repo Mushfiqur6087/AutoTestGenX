@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.599714
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.761148
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Organization Settings
 
@@ -220,20 +220,19 @@ The Working Days page allows configuring which days of the week are working days
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:45] UI-AST Agent - LLM RESPONSE
+[16:07:14] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Organization Settings",
   "components": {
-    "Holidays_Page": {
+    "Holidays_Table": {
       "type": "data_table",
       "columns": ["Name", "Start Date", "To Date", "Status", "Rescheduling Type"],
-      "row_selection": false,
-      "toolbar_actions": [
+      "actions": [
         {
           "element_name": "+ Create Holiday",
-          "type": "button",
-          "opens_form": "Create_Holiday_Form"
+          "action": "open_form",
+          "target": "Create_Holiday_Form"
         }
       ]
     },
@@ -245,22 +244,22 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true,
           "constraints": []
         },
-        "From Date": {
+        "From_Date": {
           "type": "date",
           "required": true,
           "constraints": []
         },
-        "To Date": {
+        "To_Date": {
           "type": "date",
           "required": true,
           "constraints": []
         },
-        "Repayments Rescheduled To date": {
+        "Repayments_Rescheduled_To_Date": {
           "type": "date",
           "required": false,
           "constraints": []
         },
-        "Rescheduling Type": {
+        "Rescheduling_Type": {
           "type": "dropdown",
           "required": false,
           "constraints": []
@@ -270,9 +269,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": false,
           "constraints": []
         },
-        "Applicable Offices": {
+        "Applicable_Offices": {
           "type": "dropdown",
-          "multi": true,
+          "multi_select": true,
           "required": false,
           "constraints": []
         }
@@ -280,14 +279,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "creates holiday and reschedules installments per Rescheduling Type"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "creates holiday and affects loan repayment schedules: installments falling on holidays are automatically rescheduled per the configured type"
         }
       ]
     },
-    "Working_Days_Page": {
+    "Working_Days_Form": {
       "type": "form",
       "fields": {
         "Monday": { "type": "checkbox", "required": false, "constraints": [] },
@@ -297,7 +293,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Friday": { "type": "checkbox", "required": false, "constraints": [] },
         "Saturday": { "type": "checkbox", "required": false, "constraints": [] },
         "Sunday": { "type": "checkbox", "required": false, "constraints": [] },
-        "Repayment Rescheduling": {
+        "Repayment_Rescheduling": {
           "type": "dropdown",
           "required": false,
           "constraints": []
@@ -306,200 +302,120 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates working days; repayments that fall on non-working days will be rescheduled per selected rule"
-        },
-        { "element_name": "Cancel" }
-      ]
-    },
-    "Currencies_Page": {
-      "type": "data_table",
-      "columns": ["Code", "Name", "Decimal Places", "Active"],
-      "row_fields": {
-        "Active": { "type": "checkbox" }
-      },
-      "toolbar_actions": [],
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates active currencies"
+          "on_success": "updates which days are working days and adjusts repayment rescheduling behavior for repayments falling on non-working days"
         }
       ]
     },
-    "Funds_Page": {
+    "Currencies_List": {
+      "type": "data_table",
+      "columns": ["Code", "Name", "Decimal Places", "Active"],
+      "row_editable_columns": ["Active"],
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates active currencies selection"
+        }
+      ]
+    },
+    "Funds_Table": {
       "type": "data_table",
       "columns": ["Fund Name", "External ID"],
-      "toolbar_actions": [
+      "actions": [
         {
-          "element_name": "+ Create Fund",
-          "type": "button",
-          "opens_form": "Create_Fund_Form"
+          "element_name": "Create Fund",
+          "action": "open_form",
+          "target": "Create_Fund_Form"
         }
       ]
     },
     "Create_Fund_Form": {
       "type": "form",
       "fields": {
-        "Fund Name": { "type": "unspecified", "required": false, "constraints": [] },
-        "External ID": { "type": "unspecified", "required": false, "constraints": [] }
+        "Fund_Name": {
+          "type": "unspecified",
+          "required": false,
+          "constraints": []
+        },
+        "External_ID": {
+          "type": "unspecified",
+          "required": false,
+          "constraints": []
+        }
       },
       "submit_actions": [
         {
           "element_name": "Create",
           "on_success": "creates fund"
-        },
-        { "element_name": "Cancel" }
+        }
       ]
     },
-    "Payment_Types_Page": {
+    "Payment_Types_Table": {
       "type": "data_table",
       "columns": ["Name", "Description", "Is Cash Payment", "Position"],
-      "row_fields": {
-        "Is Cash Payment": { "type": "checkbox" },
-        "Position": { "type": "number" }
-      },
-      "toolbar_actions": [
+      "actions": [
         {
           "element_name": "+ Create",
-          "type": "button",
-          "opens_form": "Create_Payment_Type_Form"
+          "action": "open_form",
+          "target": "Create_Payment_Type_Form"
         }
       ]
     },
     "Create_Payment_Type_Form": {
       "type": "form",
       "fields": {
-        "Name": { "type": "unspecified", "required": false, "constraints": [] },
-        "Description": { "type": "unspecified", "required": false, "constraints": [] },
-        "Is Cash Payment": { "type": "checkbox", "required": false, "constraints": [] },
-        "Position": { "type": "number", "required": false, "constraints": [] }
+        "Name": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": []
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false,
+          "constraints": []
+        },
+        "Is_Cash_Payment": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": []
+        },
+        "Position": {
+          "type": "number",
+          "required": false,
+          "constraints": []
+        }
       },
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "adds payment type; new type appears as dropdown option in all transaction forms"
-        },
-        { "element_name": "Cancel" }
+          "on_success": "creates payment type and appears as a dropdown option in all transaction forms"
+        }
       ]
     },
-    "Bulk_Import_Page": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Clients",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Clients from uploaded file"
-            }
-          ]
+    "Bulk_Import": {
+      "type": "form",
+      "fields": {
+        "Entity_Type": {
+          "type": "dropdown",
+          "required": true,
+          "options": ["Clients", "Groups", "Centers", "Offices", "Staff", "Users", "Loans", "Savings"],
+          "constraints": []
         },
-        {
-          "tab_name": "Groups",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Groups from uploaded file"
-            }
-          ]
+        "Template_Download": {
+          "type": "button",
+          "action": "download_template",
+          "preconditions": ["Entity_Type must be selected"]
         },
+        "Upload_File": {
+          "type": "file_upload",
+          "required": true,
+          "constraints": []
+        }
+      },
+      "submit_actions": [
         {
-          "tab_name": "Centers",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Centers from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Offices",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Offices from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Staff",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Staff from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Users",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Users from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Loans",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Loans from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Savings",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Savings from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Other",
-          "fields": {
-            "Download Template": { "type": "button" },
-            "Upload File": { "type": "file_upload", "required": false, "constraints": [] }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports selected entity type from uploaded file"
-            }
-          ]
+          "element_name": "Import",
+          "preconditions": ["Upload_File is present", "Entity_Type must be selected"],
+          "on_success": "imports data for the selected entity type according to the uploaded template"
         }
       ]
     }
@@ -507,12 +423,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:13:45] UI-AST Agent - PARSED JSON
+[16:07:14] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Organization Settings",
   "components": {
-    "Holidays_Page": {
+    "Holidays_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -521,12 +437,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Status",
         "Rescheduling Type"
       ],
-      "row_selection": false,
-      "toolbar_actions": [
+      "actions": [
         {
           "element_name": "+ Create Holiday",
-          "type": "button",
-          "opens_form": "Create_Holiday_Form"
+          "action": "open_form",
+          "target": "Create_Holiday_Form"
         }
       ]
     },
@@ -538,22 +453,22 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true,
           "constraints": []
         },
-        "From Date": {
+        "From_Date": {
           "type": "date",
           "required": true,
           "constraints": []
         },
-        "To Date": {
+        "To_Date": {
           "type": "date",
           "required": true,
           "constraints": []
         },
-        "Repayments Rescheduled To date": {
+        "Repayments_Rescheduled_To_Date": {
           "type": "date",
           "required": false,
           "constraints": []
         },
-        "Rescheduling Type": {
+        "Rescheduling_Type": {
           "type": "dropdown",
           "required": false,
           "constraints": []
@@ -563,9 +478,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": false,
           "constraints": []
         },
-        "Applicable Offices": {
+        "Applicable_Offices": {
           "type": "dropdown",
-          "multi": true,
+          "multi_select": true,
           "required": false,
           "constraints": []
         }
@@ -573,14 +488,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "creates holiday and reschedules installments per Rescheduling Type"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "creates holiday and affects loan repayment schedules: installments falling on holidays are automatically rescheduled per the configured type"
         }
       ]
     },
-    "Working_Days_Page": {
+    "Working_Days_Form": {
       "type": "form",
       "fields": {
         "Monday": {
@@ -618,7 +530,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": false,
           "constraints": []
         },
-        "Repayment Rescheduling": {
+        "Repayment_Rescheduling": {
           "type": "dropdown",
           "required": false,
           "constraints": []
@@ -627,14 +539,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates working days; repayments that fall on non-working days will be rescheduled per selected rule"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "updates which days are working days and adjusts repayment rescheduling behavior for repayments falling on non-working days"
         }
       ]
     },
-    "Currencies_Page": {
+    "Currencies_List": {
       "type": "data_table",
       "columns": [
         "Code",
@@ -642,42 +551,39 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Decimal Places",
         "Active"
       ],
-      "row_fields": {
-        "Active": {
-          "type": "checkbox"
-        }
-      },
-      "toolbar_actions": [],
+      "row_editable_columns": [
+        "Active"
+      ],
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "updates active currencies"
+          "on_success": "updates active currencies selection"
         }
       ]
     },
-    "Funds_Page": {
+    "Funds_Table": {
       "type": "data_table",
       "columns": [
         "Fund Name",
         "External ID"
       ],
-      "toolbar_actions": [
+      "actions": [
         {
-          "element_name": "+ Create Fund",
-          "type": "button",
-          "opens_form": "Create_Fund_Form"
+          "element_name": "Create Fund",
+          "action": "open_form",
+          "target": "Create_Fund_Form"
         }
       ]
     },
     "Create_Fund_Form": {
       "type": "form",
       "fields": {
-        "Fund Name": {
+        "Fund_Name": {
           "type": "unspecified",
           "required": false,
           "constraints": []
         },
-        "External ID": {
+        "External_ID": {
           "type": "unspecified",
           "required": false,
           "constraints": []
@@ -687,13 +593,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         {
           "element_name": "Create",
           "on_success": "creates fund"
-        },
-        {
-          "element_name": "Cancel"
         }
       ]
     },
-    "Payment_Types_Page": {
+    "Payment_Types_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -701,19 +604,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Is Cash Payment",
         "Position"
       ],
-      "row_fields": {
-        "Is Cash Payment": {
-          "type": "checkbox"
-        },
-        "Position": {
-          "type": "number"
-        }
-      },
-      "toolbar_actions": [
+      "actions": [
         {
           "element_name": "+ Create",
-          "type": "button",
-          "opens_form": "Create_Payment_Type_Form"
+          "action": "open_form",
+          "target": "Create_Payment_Type_Form"
         }
       ]
     },
@@ -722,7 +617,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Name": {
           "type": "unspecified",
-          "required": false,
+          "required": true,
           "constraints": []
         },
         "Description": {
@@ -730,7 +625,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": false,
           "constraints": []
         },
-        "Is Cash Payment": {
+        "Is_Cash_Payment": {
           "type": "checkbox",
           "required": false,
           "constraints": []
@@ -744,186 +639,49 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "adds payment type; new type appears as dropdown option in all transaction forms"
-        },
-        {
-          "element_name": "Cancel"
+          "on_success": "creates payment type and appears as a dropdown option in all transaction forms"
         }
       ]
     },
-    "Bulk_Import_Page": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Clients",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Clients from uploaded file"
-            }
+    "Bulk_Import": {
+      "type": "form",
+      "fields": {
+        "Entity_Type": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Clients",
+            "Groups",
+            "Centers",
+            "Offices",
+            "Staff",
+            "Users",
+            "Loans",
+            "Savings"
+          ],
+          "constraints": []
+        },
+        "Template_Download": {
+          "type": "button",
+          "action": "download_template",
+          "preconditions": [
+            "Entity_Type must be selected"
           ]
         },
+        "Upload_File": {
+          "type": "file_upload",
+          "required": true,
+          "constraints": []
+        }
+      },
+      "submit_actions": [
         {
-          "tab_name": "Groups",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Groups from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Centers",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Centers from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Offices",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Offices from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Staff",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Staff from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Users",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Users from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Loans",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Loans from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Savings",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports Savings from uploaded file"
-            }
-          ]
-        },
-        {
-          "tab_name": "Other",
-          "fields": {
-            "Download Template": {
-              "type": "button"
-            },
-            "Upload File": {
-              "type": "file_upload",
-              "required": false,
-              "constraints": []
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Upload",
-              "on_success": "imports selected entity type from uploaded file"
-            }
-          ]
+          "element_name": "Import",
+          "preconditions": [
+            "Upload_File is present",
+            "Entity_Type must be selected"
+          ],
+          "on_success": "imports data for the selected entity type according to the uploaded template"
         }
       ]
     }
@@ -931,7 +689,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[14:15:12] UI-AST Agent - USER PROMPT
+[16:08:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Organization Settings
 
@@ -945,18 +703,19 @@ The Working Days page allows configuring which days of the week are working days
 
 
 **CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove or justify implicit Cancel buttons: delete Create_Holiday_Form.submit_actions[1] or update description to mention a Cancel action.
-2. Remove or justify implicit Cancel buttons: delete Working_Days_Page.submit_actions[1] or update description to mention a Cancel action.
-3. Remove or justify implicit Save on Currencies page: delete Currencies_Page.submit_actions[0] or update description to explicitly state there is a Save/Apply action for active currency selection.
-4. Remove or justify implicit Cancel in Fund creation: delete Create_Fund_Form.submit_actions[1] or update description to include a Cancel action in the Create Fund form.
-5. Remove or justify implicit Cancel in Payment Type creation: delete Create_Payment_Type_Form.submit_actions[1] or update description to include a Cancel action in the Create Payment Type form.
-6. Clarify active-currency UI: either remove Currencies_Page.row_fields.Active entry or update description to explicitly state an 'Active' column/checkbox is present for selecting currencies.
+1. Remove components.Currencies_List.row_editable_columns or derive it only if the description explicitly states per-row in-place editing; otherwise omit this metadata.
+2. Remove components.Currencies_List.submit_actions array or change submit action to an unspecified/unnamed action unless the description names a Save/Submit button; update path: components.Currencies_List.submit_actions
+3. Remove components.Create_Holiday_Form.submit_actions[0].element_name (do not invent a submit button label); if a submit action must be present, set element_name to null or 'unspecified' at components.Create_Holiday_Form.submit_actions[0].element_name
+4. Remove components.Working_Days_Form.submit_actions[0].element_name or set it to 'unspecified' at components.Working_Days_Form.submit_actions[0].element_name since no button name is provided in the description
+5. Remove components.Create_Payment_Type_Form.submit_actions[0].element_name or set to 'unspecified' at components.Create_Payment_Type_Form.submit_actions[0].element_name because the description does not name the submit button
+6. Remove components.Bulk_Import.Template_Download.preconditions or only include them if the description explicitly requires selecting an entity type before downloading; update path: components.Bulk_Import.Template_Download.preconditions
+7. Unset components.Bulk_Import.fields.Upload_File.required (set required to 'unspecified' or remove the flag) unless the description explicitly states the upload is required; update path: components.Bulk_Import.fields.Upload_File.required
 
 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:16:43] UI-AST Agent - LLM RESPONSE
+[16:10:24] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Organization Settings",
@@ -967,45 +726,25 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "actions": [
         {
           "element_name": "+ Create Holiday",
-          "type": "button",
-          "opens": "Create_Holiday_Form"
+          "opens_form": "Create_Holiday_Form"
         }
       ]
     },
     "Create_Holiday_Form": {
       "type": "form",
       "fields": {
-        "Name": {
-          "type": "unspecified",
-          "constraints": ["required"]
-        },
-        "From_Date": {
-          "type": "date",
-          "constraints": ["required"]
-        },
-        "To_Date": {
-          "type": "date",
-          "constraints": ["required"]
-        },
-        "Repayments_Rescheduled_To_Date": {
-          "type": "date"
-        },
-        "Rescheduling_Type": {
-          "type": "dropdown"
-        },
-        "Description": {
-          "type": "unspecified"
-        },
-        "Applicable_Offices": {
-          "type": "dropdown",
-          "multiple": true
-        }
+        "Name": { "type": "unspecified", "required": true },
+        "From_Date": { "type": "date", "required": true },
+        "To_Date": { "type": "date", "required": true },
+        "Repayments_Rescheduled_To_Date": { "type": "date" },
+        "Rescheduling_Type": { "type": "dropdown" },
+        "Description": { "type": "unspecified" },
+        "Applicable_Offices": { "type": "dropdown", "multi_select": true }
       },
       "submit_actions": [
         {
-          "element_name": "Create Holiday",
-          "type": "button",
-          "on_success": "creates holiday; installments falling on holidays are automatically rescheduled per the configured type"
+          "element_name": "unspecified",
+          "on_success": "creates holiday and reschedules installments falling on holidays per Rescheduling Type"
         }
       ]
     },
@@ -1020,20 +759,26 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Saturday": { "type": "checkbox" },
         "Sunday": { "type": "checkbox" },
         "Repayment_Rescheduling": { "type": "dropdown" }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "updates working days and repayment rescheduling behavior"
+        }
+      ]
     },
-    "Currencies_Page": {
+    "Currencies_List": {
       "type": "data_table",
-      "columns": ["Code", "Name", "Decimal Places"]
+      "columns": ["Code", "Name", "Decimal Places"],
+      "selectable_rows": true
     },
     "Funds_Page": {
       "type": "data_table",
       "columns": ["Fund Name", "External ID"],
       "actions": [
         {
-          "element_name": "+ Create Fund",
-          "type": "button",
-          "opens": "Create_Fund_Form"
+          "element_name": "Create Fund",
+          "opens_form": "Create_Fund_Form"
         }
       ]
     },
@@ -1045,8 +790,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "Create Fund",
-          "type": "button",
+          "element_name": "unspecified",
           "on_success": "creates fund"
         }
       ]
@@ -1054,12 +798,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
     "Payment_Types_Page": {
       "type": "data_table",
       "columns": ["Name", "Description", "Is Cash Payment", "Position"],
-      "row_entries": ["Cash", "Bank Transfer", "Mobile Money", "Check", "Receipt"],
       "actions": [
         {
           "element_name": "+ Create",
-          "type": "button",
-          "opens": "Create_Payment_Type_Form"
+          "opens_form": "Create_Payment_Type_Form"
         }
       ]
     },
@@ -1073,114 +815,157 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "Create Payment Type",
-          "type": "button",
-          "on_success": "adds new payment type; appears as dropdown option in all transaction forms"
+          "element_name": "unspecified",
+          "on_success": "creates payment type and makes it available in transaction form dropdowns"
         }
       ]
     },
-    "Bulk_Import_Page": {
-      "type": "panel",
-      "import_types": {
-        "Clients": {
-          "actions": [
-            { "element_name": "Download template", "type": "button" }
-          ],
+    "Bulk_Import": {
+      "type": "container",
+      "entity_types": [
+        {
+          "entity_name": "Clients",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
           "fields": {
-            "Upload_File": { "type": "file_upload" }
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Client records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Clients data"
             }
           ]
         },
-        "Groups": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Groups",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Group records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Groups data"
             }
           ]
         },
-        "Centers": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Centers",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Center records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Centers data"
             }
           ]
         },
-        "Offices": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Offices",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Office records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Offices data"
             }
           ]
         },
-        "Staff": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Staff",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Staff records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Staff data"
             }
           ]
         },
-        "Users": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Users",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports User records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Users data"
             }
           ]
         },
-        "Loans": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Loans",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Loan records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Loans data"
             }
           ]
         },
-        "Savings": {
-          "actions": [{ "element_name": "Download template", "type": "button" }],
-          "fields": { "Upload_File": { "type": "file_upload" } },
+        {
+          "entity_name": "Savings",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Savings records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Savings data"
+            }
+          ]
+        },
+        {
+          "entity_name": "Other",
+          "description": "additional importable entity types",
+          "actions": {
+            "Download_Template": { "element_name": "Download template" }
+          },
+          "fields": {
+            "Upload_File": { "type": "file_upload", "required": "unspecified" }
+          },
+          "submit_actions": [
+            {
+              "element_name": "unspecified",
+              "on_success": "imports selected entity data"
             }
           ]
         }
-      }
+      ]
     }
   }
 }
 
 ------------------------------------------------------------
-[14:16:43] UI-AST Agent - PARSED JSON
+[16:10:24] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Organization Settings",
@@ -1197,8 +982,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "actions": [
         {
           "element_name": "+ Create Holiday",
-          "type": "button",
-          "opens": "Create_Holiday_Form"
+          "opens_form": "Create_Holiday_Form"
         }
       ]
     },
@@ -1207,21 +991,15 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "From_Date": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "To_Date": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Repayments_Rescheduled_To_Date": {
           "type": "date"
@@ -1234,14 +1012,13 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Applicable_Offices": {
           "type": "dropdown",
-          "multiple": true
+          "multi_select": true
         }
       },
       "submit_actions": [
         {
-          "element_name": "Create Holiday",
-          "type": "button",
-          "on_success": "creates holiday; installments falling on holidays are automatically rescheduled per the configured type"
+          "element_name": "unspecified",
+          "on_success": "creates holiday and reschedules installments falling on holidays per Rescheduling Type"
         }
       ]
     },
@@ -1272,15 +1049,22 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Repayment_Rescheduling": {
           "type": "dropdown"
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "updates working days and repayment rescheduling behavior"
+        }
+      ]
     },
-    "Currencies_Page": {
+    "Currencies_List": {
       "type": "data_table",
       "columns": [
         "Code",
         "Name",
         "Decimal Places"
-      ]
+      ],
+      "selectable_rows": true
     },
     "Funds_Page": {
       "type": "data_table",
@@ -1290,9 +1074,8 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       ],
       "actions": [
         {
-          "element_name": "+ Create Fund",
-          "type": "button",
-          "opens": "Create_Fund_Form"
+          "element_name": "Create Fund",
+          "opens_form": "Create_Fund_Form"
         }
       ]
     },
@@ -1308,8 +1091,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "Create Fund",
-          "type": "button",
+          "element_name": "unspecified",
           "on_success": "creates fund"
         }
       ]
@@ -1322,18 +1104,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Is Cash Payment",
         "Position"
       ],
-      "row_entries": [
-        "Cash",
-        "Bank Transfer",
-        "Mobile Money",
-        "Check",
-        "Receipt"
-      ],
       "actions": [
         {
           "element_name": "+ Create",
-          "type": "button",
-          "opens": "Create_Payment_Type_Form"
+          "opens_form": "Create_Payment_Type_Form"
         }
       ]
     },
@@ -1355,176 +1129,196 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "Create Payment Type",
-          "type": "button",
-          "on_success": "adds new payment type; appears as dropdown option in all transaction forms"
+          "element_name": "unspecified",
+          "on_success": "creates payment type and makes it available in transaction form dropdowns"
         }
       ]
     },
-    "Bulk_Import_Page": {
-      "type": "panel",
-      "import_types": {
-        "Clients": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+    "Bulk_Import": {
+      "type": "container",
+      "entity_types": [
+        {
+          "entity_name": "Clients",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Client records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Clients data"
             }
           ]
         },
-        "Groups": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Groups",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Group records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Groups data"
             }
           ]
         },
-        "Centers": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Centers",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Center records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Centers data"
             }
           ]
         },
-        "Offices": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Offices",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Office records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Offices data"
             }
           ]
         },
-        "Staff": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Staff",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Staff records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Staff data"
             }
           ]
         },
-        "Users": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Users",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports User records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Users data"
             }
           ]
         },
-        "Loans": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Loans",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Loan records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Loans data"
             }
           ]
         },
-        "Savings": {
-          "actions": [
-            {
-              "element_name": "Download template",
-              "type": "button"
+        {
+          "entity_name": "Savings",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
             }
-          ],
+          },
           "fields": {
             "Upload_File": {
-              "type": "file_upload"
+              "type": "file_upload",
+              "required": "unspecified"
             }
           },
           "submit_actions": [
             {
-              "element_name": "Upload",
-              "type": "button",
-              "on_success": "imports Savings records from uploaded file"
+              "element_name": "unspecified",
+              "on_success": "imports Savings data"
+            }
+          ]
+        },
+        {
+          "entity_name": "Other",
+          "description": "additional importable entity types",
+          "actions": {
+            "Download_Template": {
+              "element_name": "Download template"
+            }
+          },
+          "fields": {
+            "Upload_File": {
+              "type": "file_upload",
+              "required": "unspecified"
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "unspecified",
+              "on_success": "imports selected entity data"
             }
           ]
         }
-      }
+      ]
     }
   }
 }

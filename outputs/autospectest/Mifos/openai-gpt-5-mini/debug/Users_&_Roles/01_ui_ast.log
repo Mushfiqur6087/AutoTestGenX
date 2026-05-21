@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.598902
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.760411
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - SYSTEM PROMPT
+[16:04:30] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[14:10:47] UI-AST Agent - USER PROMPT
+[16:04:30] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Users & Roles
 
@@ -220,29 +220,23 @@ The Roles page displays all roles with Name and Description columns. A "+ Create
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:13:25] UI-AST Agent - LLM RESPONSE
+[16:07:11] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Users & Roles",
   "components": {
-    "Users_Page": {
+    "Users_Table": {
       "type": "data_table",
-      "columns": {
-        "Username": {
+      "clickable_columns": ["Username"],
+      "row_actions": [
+        {
+          "action_name": "Open_User_Detail",
           "type": "link",
-          "notes": "clickable link navigates to user detail"
-        },
-        "First_Name": { "type": "unspecified" },
-        "Last_Name": { "type": "unspecified" },
-        "Email": { "type": "email" },
-        "Office": { "type": "unspecified" },
-        "Status": { "type": "unspecified" }
-      }
-    },
-    "Create_User_Button": {
-      "type": "button",
-      "element_name": "+ Create User",
-      "opens": "Create_User_Form"
+          "trigger_column": "Username",
+          "description": "Navigate to the selected user's detail page"
+        }
+      ],
+      "bulk_actions": []
     },
     "Create_User_Form": {
       "type": "form",
@@ -262,8 +256,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Email": {
           "type": "email",
-          "required": true,
-          "constraints": ["must be valid email format"]
+          "required": true
         },
         "Office": {
           "type": "unspecified",
@@ -272,7 +265,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Staff": {
           "type": "dropdown",
           "required": false,
-          "notes": "links the user to an existing staff record"
+          "on_select": "associates selected staff record to the user"
         },
         "Password": {
           "type": "password",
@@ -281,14 +274,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Repeat_Password": {
           "type": "password",
-          "required": true,
+          "required": false,
           "constraints": ["must match Password"]
         },
         "Roles": {
           "type": "checkbox",
-          "multiple": true,
+          "multi_select": true,
           "required": false,
-          "notes": "multi-select checkboxes for assigning roles; options not enumerated"
+          "on_change": "assigns selected roles to the user"
         },
         "Override_Password_Expiry_Policy": {
           "type": "checkbox",
@@ -298,97 +291,110 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create User",
+          "on_success": "creates user"
+        }
+      ]
     },
-    "Roles_Page": {
+    "Roles_Table": {
       "type": "data_table",
-      "columns": {
-        "Name": { "type": "unspecified" },
-        "Description": { "type": "unspecified" }
-      }
-    },
-    "Create_Role_Button": {
-      "type": "button",
-      "element_name": "+ Create Role",
-      "opens": "Create_Role_Form"
+      "clickable_columns": ["Name"],
+      "row_actions": [
+        {
+          "action_name": "Configure_Permissions",
+          "type": "link",
+          "trigger_column": "Name",
+          "description": "Open permissions matrix for this role"
+        }
+      ],
+      "bulk_actions": []
     },
     "Create_Role_Form": {
       "type": "form",
       "fields": {
-        "Role_Name": { "type": "unspecified" },
-        "Description": { "type": "unspecified" }
+        "Role_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
       },
       "submit_actions": [
         {
           "element_name": "Create Role",
-          "on_success": "opens Role Permissions page for the created role"
+          "on_success": "opens Permissions configuration for the new role"
         }
       ]
     },
     "Role_Permissions_Page": {
       "type": "form",
-      "notes": "categorized matrix of all system permissions; enabling/disabling controls access",
       "fields": {
-        "Permission_Categories": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Category_Name": {
-              "type": "unspecified",
-              "options": ["User Management", "Portfolio", "Organization", "Accounting", "Reports"],
-              "required": false
-            },
-            "Permissions": {
-              "type": "repeating_group",
-              "item_fields": {
-                "Permission_Name": { "type": "unspecified" },
-                "Enabled": {
-                  "type": "checkbox",
-                  "required": false,
-                  "on_change": "controls access to menu items, pages, and actions"
-                }
-              }
-            }
-          }
+        "User_Management": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each User Management permission in this category"
+        },
+        "Portfolio": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Portfolio permission in this category"
+        },
+        "Organization": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Organization permission in this category"
+        },
+        "Accounting": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Accounting permission in this category"
+        },
+        "Reports": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Reports permission in this category"
+        },
+        "Other_Categories": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for any additional permission categories (e.g., etc.)"
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Permissions",
+          "on_success": "applies permissions to role and controls what menu items, pages, and actions the role can access"
+        }
+      ]
     }
   }
 }
 
 ------------------------------------------------------------
-[14:13:25] UI-AST Agent - PARSED JSON
+[16:07:11] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Users & Roles",
   "components": {
-    "Users_Page": {
+    "Users_Table": {
       "type": "data_table",
-      "columns": {
-        "Username": {
+      "clickable_columns": [
+        "Username"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open_User_Detail",
           "type": "link",
-          "notes": "clickable link navigates to user detail"
-        },
-        "First_Name": {
-          "type": "unspecified"
-        },
-        "Last_Name": {
-          "type": "unspecified"
-        },
-        "Email": {
-          "type": "email"
-        },
-        "Office": {
-          "type": "unspecified"
-        },
-        "Status": {
-          "type": "unspecified"
+          "trigger_column": "Username",
+          "description": "Navigate to the selected user's detail page"
         }
-      }
-    },
-    "Create_User_Button": {
-      "type": "button",
-      "element_name": "+ Create User",
-      "opens": "Create_User_Form"
+      ],
+      "bulk_actions": []
     },
     "Create_User_Form": {
       "type": "form",
@@ -410,6 +416,375 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Email": {
           "type": "email",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false,
+          "on_select": "associates selected staff record to the user"
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must meet password policy"
+          ]
+        },
+        "Repeat_Password": {
+          "type": "password",
+          "required": false,
+          "constraints": [
+            "must match Password"
+          ]
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multi_select": true,
+          "required": false,
+          "on_change": "assigns selected roles to the user"
+        },
+        "Override_Password_Expiry_Policy": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Send_Password_to_Email": {
+          "type": "checkbox",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create User",
+          "on_success": "creates user"
+        }
+      ]
+    },
+    "Roles_Table": {
+      "type": "data_table",
+      "clickable_columns": [
+        "Name"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Configure_Permissions",
+          "type": "link",
+          "trigger_column": "Name",
+          "description": "Open permissions matrix for this role"
+        }
+      ],
+      "bulk_actions": []
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Role",
+          "on_success": "opens Permissions configuration for the new role"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "fields": {
+        "User_Management": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each User Management permission in this category"
+        },
+        "Portfolio": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Portfolio permission in this category"
+        },
+        "Organization": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Organization permission in this category"
+        },
+        "Accounting": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Accounting permission in this category"
+        },
+        "Reports": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for each Reports permission in this category"
+        },
+        "Other_Categories": {
+          "type": "checkbox",
+          "multi_select": true,
+          "description": "matrix of checkboxes for any additional permission categories (e.g., etc.)"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Permissions",
+          "on_success": "applies permissions to role and controls what menu items, pages, and actions the role can access"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:08:41] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Users & Roles
+
+
+The Users page displays a data table with columns for Username (clickable link), First Name, Last Name, Email, Office, and Status. A "+ Create User" button opens the creation form containing Username (required, must be unique), First Name (required), Last Name (required), Email (required, validated for email format), Office (required), Staff dropdown (links the user to a staff record), Password (required, must meet password policy), Repeat Password (must match — shows a validation error if they differ), Roles (multi-select checkboxes), Override Password Expiry Policy checkbox, and Send Password to Email checkbox.
+
+The Roles page displays all roles with Name and Description columns. A "+ Create Role" button opens a form with Role Name and Description. After creation, a permissions page displays a categorized matrix of all system permissions (User Management, Portfolio, Organization, Accounting, Reports, etc.) with checkboxes for each permission. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Users_Table.create_button: Add an explicit create button entry under components.Users_Table, e.g. { "element_name": "+ Create User", "type": "button", "opens": "components.Create_User_Form" } so the AST models the described action to open the creation form.
+2. components.Roles_Table.create_button: Add an explicit create button entry under components.Roles_Table, e.g. { "element_name": "+ Create Role", "type": "button", "opens": "components.Create_Role_Form" } so the AST models the described action to open the role creation form.
+3. components.Create_User_Form.fields.Repeat_Password.required: Set this to true to reflect that Repeat Password is expected to be provided and validated (currently false).
+4. components.Roles_Table.clickable_columns: Remove the 'Name' clickable column entry and the associated row action (components.Roles_Table.row_actions[0]) unless the description is updated to explicitly state that clicking a role name opens a permissions page. The description only specified that after creation the permissions page displays.
+5. components.Role_Permissions_Page.fields.Other_Categories: Remove the 'Other_Categories' field (or replace it with only explicitly listed categories) because it was an inference not present in the description. Include only the categories explicitly named (User Management, Portfolio, Organization, Accounting, Reports, etc.) or add explicit category names in the description to retain it.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:10:05] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": ["Username", "First Name", "Last Name", "Email", "Office", "Status"],
+      "clickable_columns": ["Username"],
+      "create_button": {
+        "element_name": "+ Create User",
+        "type": "button",
+        "opens": "components.Create_User_Form"
+      }
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": ["must be unique"]
+        },
+        "First Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true,
+          "constraints": ["must be valid email format"]
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false,
+          "options_source": "Staff_Records",
+          "description": "links the user to a staff record"
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": ["must meet password policy"]
+        },
+        "Repeat Password": {
+          "type": "password",
+          "required": true,
+          "constraints": ["must match Password"]
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multiple": true,
+          "required": false,
+          "options_source": "Roles_List"
+        },
+        "Override Password Expiry Policy": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Send Password to Email": {
+          "type": "checkbox",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "type": "button",
+          "on_success": "creates user"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ],
+      "constraints": []
+    },
+    "Roles_Table": {
+      "type": "data_table",
+      "columns": ["Name", "Description"],
+      "create_button": {
+        "element_name": "+ Create Role",
+        "type": "button",
+        "opens": "components.Create_Role_Form"
+      }
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "type": "button",
+          "on_success": "opens Role_Permissions_Page",
+          "opens": "components.Role_Permissions_Page"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "description": "Categorized matrix of system permissions. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.",
+      "on_change": "modifies role access to menu items, pages, and actions",
+      "fields": {
+        "User Management": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": { "type": "unspecified" },
+            "Enabled": { "type": "checkbox" }
+          }
+        },
+        "Portfolio": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": { "type": "unspecified" },
+            "Enabled": { "type": "checkbox" }
+          }
+        },
+        "Organization": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": { "type": "unspecified" },
+            "Enabled": { "type": "checkbox" }
+          }
+        },
+        "Accounting": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": { "type": "unspecified" },
+            "Enabled": { "type": "checkbox" }
+          }
+        },
+        "Reports": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": { "type": "unspecified" },
+            "Enabled": { "type": "checkbox" }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Permissions",
+          "type": "button",
+          "on_success": "updates role permissions"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:10:05] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": [
+        "Username",
+        "First Name",
+        "Last Name",
+        "Email",
+        "Office",
+        "Status"
+      ],
+      "clickable_columns": [
+        "Username"
+      ],
+      "create_button": {
+        "element_name": "+ Create User",
+        "type": "button",
+        "opens": "components.Create_User_Form"
+      }
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": [
+            "must be unique"
+          ]
+        },
+        "First Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
           "required": true,
           "constraints": [
             "must be valid email format"
@@ -422,7 +797,8 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Staff": {
           "type": "dropdown",
           "required": false,
-          "notes": "links the user to an existing staff record"
+          "options_source": "Staff_Records",
+          "description": "links the user to a staff record"
         },
         "Password": {
           "type": "password",
@@ -431,7 +807,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "must meet password policy"
           ]
         },
-        "Repeat_Password": {
+        "Repeat Password": {
           "type": "password",
           "required": true,
           "constraints": [
@@ -442,38 +818,273 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "checkbox",
           "multiple": true,
           "required": false,
-          "notes": "multi-select checkboxes for assigning roles; options not enumerated"
+          "options_source": "Roles_List"
         },
-        "Override_Password_Expiry_Policy": {
+        "Override Password Expiry Policy": {
           "type": "checkbox",
           "required": false
         },
-        "Send_Password_to_Email": {
+        "Send Password to Email": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "type": "button",
+          "on_success": "creates user"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ],
+      "constraints": []
     },
-    "Roles_Page": {
+    "Roles_Table": {
       "type": "data_table",
-      "columns": {
-        "Name": {
-          "type": "unspecified"
-        },
-        "Description": {
-          "type": "unspecified"
-        }
+      "columns": [
+        "Name",
+        "Description"
+      ],
+      "create_button": {
+        "element_name": "+ Create Role",
+        "type": "button",
+        "opens": "components.Create_Role_Form"
       }
-    },
-    "Create_Role_Button": {
-      "type": "button",
-      "element_name": "+ Create Role",
-      "opens": "Create_Role_Form"
     },
     "Create_Role_Form": {
       "type": "form",
       "fields": {
-        "Role_Name": {
+        "Role Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "type": "button",
+          "on_success": "opens Role_Permissions_Page",
+          "opens": "components.Role_Permissions_Page"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "description": "Categorized matrix of system permissions. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.",
+      "on_change": "modifies role access to menu items, pages, and actions",
+      "fields": {
+        "User Management": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Portfolio": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Organization": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Accounting": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        },
+        "Reports": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Permission": {
+              "type": "unspecified"
+            },
+            "Enabled": {
+              "type": "checkbox"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Permissions",
+          "type": "button",
+          "on_success": "updates role permissions"
+        },
+        {
+          "element_name": "Cancel",
+          "type": "button"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:11:11] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Users & Roles
+
+
+The Users page displays a data table with columns for Username (clickable link), First Name, Last Name, Email, Office, and Status. A "+ Create User" button opens the creation form containing Username (required, must be unique), First Name (required), Last Name (required), Email (required, validated for email format), Office (required), Staff dropdown (links the user to a staff record), Password (required, must meet password policy), Repeat Password (must match — shows a validation error if they differ), Roles (multi-select checkboxes), Override Password Expiry Policy checkbox, and Send Password to Email checkbox.
+
+The Roles page displays all roles with Name and Description columns. A "+ Create Role" button opens a form with Role Name and Description. After creation, a permissions page displays a categorized matrix of all system permissions (User Management, Portfolio, Organization, Accounting, Reports, etc.) with checkboxes for each permission. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. Remove or mark explicit only-if-described Cancel buttons: delete Create_User_Form.submit_actions[1], Create_Role_Form.submit_actions[1], and Role_Permissions_Page.submit_actions[1] unless the description is updated to mention them.
+2. Remove inferred options_source properties that were not in the description: delete Create_User_Form.fields.Staff.options_source and Create_User_Form.fields.Roles.options_source (or set them to unspecified) so the AST does not invent data sources.
+3. Avoid inventing unlabeled form submit button names: either (a) keep a single submit action but set element_name to a neutral value like "submit" or leave element_name unspecified for Create_User_Form.submit_actions[0] and Create_Role_Form.submit_actions[0], or (b) update the description to explicitly name those buttons if specific labels are required (update paths Create_User_Form.submit_actions[0] and Create_Role_Form.submit_actions[0]).
+4. Add explicit validation error mapping for the Repeat Password field to reflect the described behavior: add Create_User_Form.fields['Repeat Password'].validation { "trigger": "mismatch_with_Password", "message": "Passwords do not match" } so the AST captures the described validation consequence.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[16:12:00] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": [
+        { "name": "Username", "is_link": true },
+        { "name": "First Name" },
+        { "name": "Last Name" },
+        { "name": "Email" },
+        { "name": "Office" },
+        { "name": "Status" }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create User",
+          "opens": "Create_User_Form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open User",
+          "trigger": "click_Username"
+        }
+      ]
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": [
+            "must be unique"
+          ]
+        },
+        "First Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must meet password policy"
+          ]
+        },
+        "Repeat Password": {
+          "type": "password",
+          "required": true,
+          "validation": {
+            "trigger": "mismatch_with_Password",
+            "message": "Passwords do not match"
+          }
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multiple": true
+        },
+        "Override Password Expiry Policy": {
+          "type": "checkbox"
+        },
+        "Send Password to Email": {
+          "type": "checkbox"
+        }
+      },
+      "submit_actions": [
+        {
+        }
+      ]
+    },
+    "Roles_Page": {
+      "type": "data_table",
+      "columns": [
+        { "name": "Name" },
+        { "name": "Description" }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create Role",
+          "opens": "Create_Role_Form"
+        }
+      ]
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role Name": {
           "type": "unspecified"
         },
         "Description": {
@@ -482,45 +1093,199 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "Create Role",
-          "on_success": "opens Role Permissions page for the created role"
+          "on_success": "navigates to Role_Permissions_Page"
         }
       ]
     },
     "Role_Permissions_Page": {
       "type": "form",
-      "notes": "categorized matrix of all system permissions; enabling/disabling controls access",
       "fields": {
-        "Permission_Categories": {
+        "Permissions": {
           "type": "repeating_group",
           "item_fields": {
-            "Category_Name": {
-              "type": "unspecified",
-              "options": [
-                "User Management",
-                "Portfolio",
-                "Organization",
-                "Accounting",
-                "Reports"
-              ],
-              "required": false
+            "Category Name": {
+              "type": "unspecified"
             },
             "Permissions": {
               "type": "repeating_group",
               "item_fields": {
-                "Permission_Name": {
+                "Permission Name": { "type": "unspecified" },
+                "Enabled": { "type": "checkbox" }
+              }
+            }
+          }
+        }
+      },
+      "notes": [
+        "Categories include User Management, Portfolio, Organization, Accounting, Reports, etc.",
+        "Enabling or disabling permissions controls what menu items, pages, and actions the role can access"
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[16:12:00] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Username",
+          "is_link": true
+        },
+        {
+          "name": "First Name"
+        },
+        {
+          "name": "Last Name"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Office"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create User",
+          "opens": "Create_User_Form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open User",
+          "trigger": "click_Username"
+        }
+      ]
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": [
+            "must be unique"
+          ]
+        },
+        "First Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must meet password policy"
+          ]
+        },
+        "Repeat Password": {
+          "type": "password",
+          "required": true,
+          "validation": {
+            "trigger": "mismatch_with_Password",
+            "message": "Passwords do not match"
+          }
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multiple": true
+        },
+        "Override Password Expiry Policy": {
+          "type": "checkbox"
+        },
+        "Send Password to Email": {
+          "type": "checkbox"
+        }
+      },
+      "submit_actions": [
+        {}
+      ]
+    },
+    "Roles_Page": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "+ Create Role",
+          "opens": "Create_Role_Form"
+        }
+      ]
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role Name": {
+          "type": "unspecified"
+        },
+        "Description": {
+          "type": "unspecified"
+        }
+      },
+      "submit_actions": [
+        {
+          "on_success": "navigates to Role_Permissions_Page"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "fields": {
+        "Permissions": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Category Name": {
+              "type": "unspecified"
+            },
+            "Permissions": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Permission Name": {
                   "type": "unspecified"
                 },
                 "Enabled": {
-                  "type": "checkbox",
-                  "required": false,
-                  "on_change": "controls access to menu items, pages, and actions"
+                  "type": "checkbox"
                 }
               }
             }
           }
         }
-      }
+      },
+      "notes": [
+        "Categories include User Management, Portfolio, Organization, Accounting, Reports, etc.",
+        "Enabling or disabling permissions controls what menu items, pages, and actions the role can access"
+      ]
     }
   }
 }

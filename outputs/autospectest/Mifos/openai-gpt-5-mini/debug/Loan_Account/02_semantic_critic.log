@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T14:10:47.596758
+DEBUG SESSION STARTED: 2026-05-21T16:04:30.758368
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[14:12:45] Semantic Critic - SYSTEM PROMPT
+[16:06:35] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[14:12:45] Semantic Critic - USER PROMPT
+[16:06:35] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -125,19 +125,6 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
 {
   "module_name": "Loan Account",
   "components": {
-    "Client_Detail_Actions": {
-      "type": "component",
-      "actions": [
-        {
-          "element_name": "Initiate Loan Application",
-          "type": "button",
-          "on_click": "opens Loan_Application_Wizard",
-          "preconditions": [
-            "must be on Client Detail page"
-          ]
-        }
-      ]
-    },
     "Loan_Application_Wizard": {
       "type": "wizard",
       "submit_actions": [
@@ -155,10 +142,10 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
               "type": "dropdown",
               "required": true,
               "constraints": [],
-              "on_change_effect": "populates default values for dependent fields from selected product"
+              "notes": "selecting a product auto-populates default values on other fields"
             },
             "Loan_Officer": {
-              "type": "dropdown",
+              "type": "unspecified",
               "required": false
             },
             "Loan_Purpose": {
@@ -166,7 +153,7 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
               "required": false
             },
             "Fund": {
-              "type": "dropdown",
+              "type": "unspecified",
               "required": false
             },
             "Submitted_On": {
@@ -181,28 +168,28 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
               "type": "number",
               "required": true,
               "constraints": [
-                ">= product.min_principal",
-                "<= product.max_principal"
+                "minimum: product.min_principal",
+                "maximum: product.max_principal"
               ]
             },
             "Number_of_Repayments": {
               "type": "number",
               "required": true
             },
-            "Repaid_Every": {
+            "Repaid_Every_Frequency": {
               "type": "number",
               "required": true
             },
             "Repaid_Every_Unit": {
-              "type": "dropdown",
+              "type": "unspecified",
               "required": true
             },
             "Interest_Rate": {
               "type": "number",
               "required": true,
               "constraints": [
-                ">= product.min_interest_rate",
-                "<= product.max_interest_rate"
+                "minimum: product.min_interest_rate",
+                "maximum: product.max_interest_rate"
               ]
             },
             "External_ID": {
@@ -218,30 +205,27 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
             "Repayment_Strategy": {
               "type": "dropdown",
               "required": false,
-              "default_source": "product"
+              "pre_filled_from_product": true
             },
             "Amortization": {
               "type": "dropdown",
               "required": false,
-              "default_source": "product"
+              "pre_filled_from_product": true
             },
             "Interest_Method": {
               "type": "dropdown",
               "required": false,
-              "default_source": "product"
+              "pre_filled_from_product": true
             },
             "Interest_Calculation_Period": {
               "type": "dropdown",
               "required": false,
-              "default_source": "product"
+              "pre_filled_from_product": true
             },
-            "Grace_Period_Principal": {
-              "type": "number",
-              "required": false
-            },
-            "Grace_Period_Interest": {
-              "type": "number",
-              "required": false
+            "Grace_Period_Fields": {
+              "type": "unspecified",
+              "required": false,
+              "notes": "one or more grace period fields as provided by product; adjustable"
             }
           }
         },
@@ -251,44 +235,26 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
           "fields": {
             "Charges": {
               "type": "repeating_group",
-              "item_fields": {
-                "Charge_Name": {
-                  "type": "unspecified",
-                  "required": true
-                },
-                "Amount": {
-                  "type": "number",
-                  "required": true
-                },
-                "Due_Date": {
-                  "type": "date",
-                  "required": false
-                }
-              }
-            }
-          },
-          "actions": [
-            {
-              "element_name": "Add Charge",
+              "item_fields": {},
+              "notes": "lists charges inherited from the product; user may add additional charges"
+            },
+            "Add_Charge": {
               "type": "button",
-              "on_click": "adds a row to Charges repeating_group",
-              "on_success": "adds additional charge to application"
+              "element_name": "Add Charge",
+              "on_success": "adds an additional charge row to Charges"
             }
-          ],
-          "notes": [
-            "Charges inherited from selected product are pre-populated into Charges repeating_group"
-          ]
+          }
         },
         {
           "step_index": 4,
           "step_name": "Collateral",
-          "optional": true,
           "fields": {
             "Collateral_Items": {
               "type": "repeating_group",
+              "min": 0,
               "item_fields": {
                 "Collateral_Type": {
-                  "type": "dropdown",
+                  "type": "unspecified",
                   "required": true
                 },
                 "Value": {
@@ -306,18 +272,12 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
       ]
     },
     "Loan_Detail_Header": {
-      "type": "component",
-      "interactive_elements": {
+      "type": "header",
+      "fields": {
         "Client_Name_Link": {
           "type": "link",
-          "element_name": "Client Name",
-          "on_click": "navigates to Client Detail page"
-        }
-      },
-      "state_fields": {
-        "Status": {
-          "type": "unspecified",
-          "required": false
+          "required": false,
+          "notes": "navigates to client detail page"
         }
       }
     },
@@ -346,25 +306,37 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                   "required": false
                 }
               },
-              "on_success": "status changes to Approved"
+              "on_success": "moves to Approved"
             },
             {
               "action_name": "Reject",
-              "type": "button",
-              "on_success": "marks application as Rejected"
+              "fields": {
+                "Rejection_Reason": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              },
+              "on_success": "moves to Rejected"
             },
             {
               "action_name": "Withdraw",
-              "type": "button",
-              "on_success": "withdraws application"
+              "fields": {
+                "Withdraw_Reason": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              },
+              "on_success": "moves to Withdrawn"
             },
             {
               "action_name": "Delete",
-              "type": "button",
-              "preconditions": [
-                "user must have delete permission"
-              ],
-              "on_success": "deletes loan application"
+              "fields": {
+                "Delete_Confirmation": {
+                  "type": "checkbox",
+                  "required": true
+                }
+              },
+              "on_success": "deletes loan record"
             }
           ]
         },
@@ -394,24 +366,31 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 "Payment_Details": {
                   "type": "unspecified",
                   "required": false,
-                  "visible_when": "Payment_Type != Cash"
+                  "visible_when": "Payment_Type != Cash",
+                  "notes": "payment detail fields (e.g., check number, bank reference) shown when applicable"
                 },
                 "Disburse_to_Savings": {
                   "type": "checkbox",
                   "required": false
                 },
                 "Savings_Account": {
-                  "type": "unspecified",
-                  "required": true,
-                  "visible_when": "Disburse_to_Savings == true"
+                  "type": "dropdown",
+                  "required": false,
+                  "visible_when": "Disburse_to_Savings == true",
+                  "notes": "selects one of client's linked savings accounts"
                 }
               },
-              "on_success": "status changes to Active"
+              "on_success": "moves to Active"
             },
             {
               "action_name": "Undo Approval",
-              "type": "button",
-              "on_success": "reverts status to Submitted and Pending Approval"
+              "fields": {
+                "Undo_Approval_Reason": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "moves to Submitted and Pending Approval"
             }
           ]
         },
@@ -427,7 +406,8 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 "Transaction_Amount": {
                   "type": "number",
                   "required": true,
-                  "default_from": "amount_due"
+                  "notes": "pre-filled with amount due",
+                  "constraints": []
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -446,24 +426,52 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 }
               },
               "constraints": [
-                "partial repayments are applied per configured repayment strategy"
+                "partial repayments applied according to configured repayment strategy",
+                "if Transaction_Amount == outstanding balance then on_success: moves to Closed (obligations met)"
               ],
-              "on_success": "if full settlement then status changes to Closed (obligations met)"
+              "on_success": "records transaction (may change status to Closed when full settlement)"
             },
             {
               "action_name": "Waive Interest",
-              "type": "button",
-              "on_success": "applies interest waiver as configured"
+              "fields": {
+                "Waive_Interest_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "reduces interest due"
             },
             {
               "action_name": "Write Off",
-              "type": "button",
-              "on_success": "marks loan as Written Off"
+              "fields": {
+                "Write_Off_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "moves to Written Off"
             },
             {
               "action_name": "Close",
-              "type": "button",
-              "on_success": "marks loan as Closed"
+              "fields": {
+                "Close_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "moves to Closed"
             },
             {
               "action_name": "Reschedule",
@@ -493,32 +501,63 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                   "required": false
                 }
               },
-              "on_success": "creates a pending reschedule request requiring separate approval"
+              "on_success": "creates pending reschedule request requiring separate approval"
             },
             {
               "action_name": "Prepay Loan",
-              "type": "button",
-              "on_success": "initiates prepayment flow as configured"
+              "fields": {
+                "Prepay_On_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Prepayment_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "processes prepayment according to product rules"
             },
             {
               "action_name": "Foreclosure",
-              "type": "button",
-              "on_success": "initiates foreclosure process"
+              "fields": {
+                "Foreclosure_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "processes foreclosure per product rules"
             },
             {
               "action_name": "Charge Off",
-              "type": "button",
-              "on_success": "records charge off action"
+              "fields": {
+                "Charge_Off_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "moves to Closed"
             },
             {
               "action_name": "Assign Loan Officer",
               "fields": {
                 "Loan_Officer": {
-                  "type": "dropdown",
+                  "type": "unspecified",
                   "required": true
                 }
               },
-              "on_success": "assigns selected loan officer to loan"
+              "on_success": "assigns loan officer"
             }
           ]
         },
@@ -529,6 +568,12 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
           "available_actions": []
         },
         "Written Off": {
+          "available_actions": []
+        },
+        "Rejected": {
+          "available_actions": []
+        },
+        "Withdrawn": {
           "available_actions": []
         }
       }
@@ -542,72 +587,60 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
         },
         {
           "tab_name": "Repayment Schedule",
-          "fields": {
-            "Repayment_Schedule_Table": {
-              "type": "data_table",
-              "columns": [
-                "Installment Number",
-                "Due Date",
-                "Principal Due",
-                "Interest Due",
-                "Fees Due",
-                "Penalties Due",
-                "Total Due",
-                "Amount Paid (Principal)",
-                "Amount Paid (Interest)",
-                "Amount Paid (Fees)",
-                "Amount Paid (Penalties)",
-                "Total Outstanding",
-                "Status Indicator"
-              ],
-              "row_actions": []
-            }
-          }
+          "type": "data_table",
+          "fields": {},
+          "columns": [
+            "Installment Number",
+            "Due Date",
+            "Principal Due",
+            "Interest Due",
+            "Fees Due",
+            "Penalties Due",
+            "Total Due",
+            "Principal Paid",
+            "Interest Paid",
+            "Fees Paid",
+            "Penalties Paid",
+            "Total Outstanding",
+            "Status"
+          ],
+          "row_actions": []
         },
         {
           "tab_name": "Transactions",
-          "fields": {
-            "Transactions_Table": {
-              "type": "data_table",
-              "columns": [
-                "Date",
-                "Type",
-                "Amount",
-                "Principal Portion",
-                "Interest Portion",
-                "Fees Portion",
-                "Penalties Portion",
-                "Outstanding Balance"
-              ],
-              "row_actions": [
-                {
-                  "action_name": "Undo",
-                  "type": "link",
-                  "preconditions": [
-                    "transaction is eligible for undo"
-                  ],
-                  "on_success": "reverses transaction per system rules"
-                }
-              ]
+          "type": "data_table",
+          "fields": {},
+          "columns": [
+            "Date",
+            "Type",
+            "Amount",
+            "Principal Portion",
+            "Interest Portion",
+            "Fees Portion",
+            "Penalties Portion",
+            "Outstanding Balance"
+          ],
+          "row_actions": [
+            {
+              "action_name": "Undo",
+              "preconditions": [],
+              "on_success": "reverses the transaction and updates balances"
             }
-          }
+          ]
         },
         {
           "tab_name": "Charges",
-          "fields": {
-            "Charges_Table": {
-              "type": "data_table",
-              "columns": [
-                "Charge Name",
-                "Amount",
-                "Due Date",
-                "Paid",
-                "Waived",
-                "Outstanding"
-              ],
-              "row_actions": []
-            }
-          }
+          "type": "data_table",
+          "fields": {},
+          "columns": [
+            "Charge Name",
+            "Amount",
+            "Due Date",
+            "Paid",
+            "Waived",
+            "Outstanding"
+          ],
+          "row_actions": []
         },
         {
           "tab_name": "Collateral",
@@ -630,49 +663,61 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:14:37] Semantic Critic - LLM RESPONSE
+[16:09:02] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST contains several inferred/phantom conditional/precondition elements not present in the description and should be regenerated after removing or aligning them to the spec.",
-  "missing": [],
+  "summary": "AST includes most required interactive elements but contains multiple inferred/phantom fields/conditions and is missing the explicit initiation action from the Client Detail page, so regenerate after removing inferred items and adding the start action.",
+  "missing": [
+    "components.Client_Detail_Page.Start_Loan_Application_Button (Start/initiate loan application action on Client Detail page)"
+  ],
   "phantoms": [
-    "components.Loan_Detail_Actions.states['Submitted and Pending Approval'].available_actions[3].preconditions[0] (\"user must have delete permission\" precondition not mentioned in description)",
-    "components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Payment_Details.visible_when (visibility condition on Payment_Type inferred but not specified in description)",
-    "components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.visible_when (visibility condition inferred; description only states a \"Disburse to Savings\" option deposits to linked account, without an explicit conditional visibility rule)",
-    "components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.required (marked required in AST but description does not state it must be required)"
+    "components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[1].fields.Rejection_Reason (Rejection reason field not specified in description)",
+    "components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[2].fields.Withdraw_Reason (Withdraw reason field not specified in description)",
+    "components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[3].fields.Delete_Confirmation (Delete confirmation checkbox not described)",
+    "components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Payment_Details.visible_when (conditional visibility inferred, not described)",
+    "components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Savings_Account.visible_when (conditional visibility inferred, not described)",
+    "components.Loan_Detail_Actions.states[\"Active\"].available_actions[0].fields.Payment_Details.visible_when (conditional visibility inferred, not described)"
   ],
   "fixes": [
-    "Remove the inferred permission precondition: delete components.Loan_Detail_Actions.states['Submitted and Pending Approval'].available_actions[3].preconditions[0]. If permission requirements are required, they must be explicitly stated in the description.",
-    "Remove the inferred visibility condition on payment details: delete components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Payment_Details.visible_when. If the UI should conditionally show payment detail fields by payment type, state that explicitly in the description.",
-    "Remove the inferred visibility condition on savings account: delete components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.visible_when. If Savings_Account should only appear when Disburse_to_Savings is selected, include that explicit trigger in the description.",
-    "Make Savings_Account optional (or explicitly state required): change components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.required from true to false unless the description explicitly requires it to be mandatory."
+    "Add an explicit start action on the Client Detail page: add component at components.Client_Detail_Page with a Start_Loan_Application_Button entry, e.g. components.Client_Detail_Page.start_actions[0] = { \"element_name\": \"Start Loan Application\", \"type\": \"button\", \"triggers\": \"components.Loan_Application_Wizard\" }",
+    "Remove the inferred Rejection_Reason field: delete components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[1].fields.Rejection_Reason (or only include it if the description is updated to explicitly require a rejection reason)",
+    "Remove the inferred Withdraw_Reason field: delete components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[2].fields.Withdraw_Reason (or only include it if the description is updated to explicitly require a withdraw reason)",
+    "Remove the inferred Delete confirmation checkbox: delete components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[3].fields.Delete_Confirmation (keep a Delete action entry only if described)",
+    "Remove conditional visibility attributes that were inferred (unless explicitly specified in the description): delete visible_when from components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Payment_Details and from components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Savings_Account",
+    "Remove conditional visibility attribute from Make Repayment payment details: delete visible_when from components.Loan_Detail_Actions.states[\"Active\"].available_actions[0].fields.Payment_Details"
   ]
 }
 
 ------------------------------------------------------------
-[14:14:37] Semantic Critic - PARSED JSON
+[16:09:02] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST contains several inferred/phantom conditional/precondition elements not present in the description and should be regenerated after removing or aligning them to the spec.",
-  "missing": [],
+  "summary": "AST includes most required interactive elements but contains multiple inferred/phantom fields/conditions and is missing the explicit initiation action from the Client Detail page, so regenerate after removing inferred items and adding the start action.",
+  "missing": [
+    "components.Client_Detail_Page.Start_Loan_Application_Button (Start/initiate loan application action on Client Detail page)"
+  ],
   "phantoms": [
-    "components.Loan_Detail_Actions.states['Submitted and Pending Approval'].available_actions[3].preconditions[0] (\"user must have delete permission\" precondition not mentioned in description)",
-    "components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Payment_Details.visible_when (visibility condition on Payment_Type inferred but not specified in description)",
-    "components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.visible_when (visibility condition inferred; description only states a \"Disburse to Savings\" option deposits to linked account, without an explicit conditional visibility rule)",
-    "components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.required (marked required in AST but description does not state it must be required)"
+    "components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[1].fields.Rejection_Reason (Rejection reason field not specified in description)",
+    "components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[2].fields.Withdraw_Reason (Withdraw reason field not specified in description)",
+    "components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[3].fields.Delete_Confirmation (Delete confirmation checkbox not described)",
+    "components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Payment_Details.visible_when (conditional visibility inferred, not described)",
+    "components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Savings_Account.visible_when (conditional visibility inferred, not described)",
+    "components.Loan_Detail_Actions.states[\"Active\"].available_actions[0].fields.Payment_Details.visible_when (conditional visibility inferred, not described)"
   ],
   "fixes": [
-    "Remove the inferred permission precondition: delete components.Loan_Detail_Actions.states['Submitted and Pending Approval'].available_actions[3].preconditions[0]. If permission requirements are required, they must be explicitly stated in the description.",
-    "Remove the inferred visibility condition on payment details: delete components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Payment_Details.visible_when. If the UI should conditionally show payment detail fields by payment type, state that explicitly in the description.",
-    "Remove the inferred visibility condition on savings account: delete components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.visible_when. If Savings_Account should only appear when Disburse_to_Savings is selected, include that explicit trigger in the description.",
-    "Make Savings_Account optional (or explicitly state required): change components.Loan_Detail_Actions.states['Approved'].available_actions[0].fields.Savings_Account.required from true to false unless the description explicitly requires it to be mandatory."
+    "Add an explicit start action on the Client Detail page: add component at components.Client_Detail_Page with a Start_Loan_Application_Button entry, e.g. components.Client_Detail_Page.start_actions[0] = { \"element_name\": \"Start Loan Application\", \"type\": \"button\", \"triggers\": \"components.Loan_Application_Wizard\" }",
+    "Remove the inferred Rejection_Reason field: delete components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[1].fields.Rejection_Reason (or only include it if the description is updated to explicitly require a rejection reason)",
+    "Remove the inferred Withdraw_Reason field: delete components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[2].fields.Withdraw_Reason (or only include it if the description is updated to explicitly require a withdraw reason)",
+    "Remove the inferred Delete confirmation checkbox: delete components.Loan_Detail_Actions.states[\"Submitted and Pending Approval\"].available_actions[3].fields.Delete_Confirmation (keep a Delete action entry only if described)",
+    "Remove conditional visibility attributes that were inferred (unless explicitly specified in the description): delete visible_when from components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Payment_Details and from components.Loan_Detail_Actions.states[\"Approved\"].available_actions[0].fields.Savings_Account",
+    "Remove conditional visibility attribute from Make Repayment payment details: delete visible_when from components.Loan_Detail_Actions.states[\"Active\"].available_actions[0].fields.Payment_Details"
   ]
 }
 
 ------------------------------------------------------------
-[14:16:35] Semantic Critic - USER PROMPT
+[16:10:54] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -691,6 +736,16 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
 {
   "module_name": "Loan Account",
   "components": {
+    "Client_Detail_Page": {
+      "type": "detail_page",
+      "start_actions": [
+        {
+          "element_name": "Start Loan Application",
+          "type": "button",
+          "triggers": "components.Loan_Application_Wizard"
+        }
+      ]
+    },
     "Loan_Application_Wizard": {
       "type": "wizard",
       "submit_actions": [
@@ -707,7 +762,7 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
             "Product_Name": {
               "type": "dropdown",
               "required": true,
-              "on_change": "auto_populates_default_values_from_product"
+              "on_change": "auto-populate default values from selected product"
             },
             "Loan_Officer": {
               "type": "unspecified",
@@ -731,7 +786,7 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
             },
             "Principal": {
               "type": "number",
-              "required": false,
+              "required": true,
               "constraints": [
                 "min: product.min_principal",
                 "max: product.max_principal"
@@ -739,19 +794,19 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
             },
             "Number_of_Repayments": {
               "type": "number",
-              "required": false
+              "required": true
             },
-            "Repaid_Every_Frequency": {
+            "Repaid_Every": {
               "type": "number",
-              "required": false
+              "required": true
             },
             "Repaid_Every_Unit": {
               "type": "dropdown",
-              "required": false
+              "required": true
             },
             "Interest_Rate": {
               "type": "number",
-              "required": false,
+              "required": true,
               "constraints": [
                 "min: product.min_interest_rate",
                 "max: product.max_interest_rate"
@@ -770,24 +825,24 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
             "Repayment_Strategy": {
               "type": "dropdown",
               "required": false,
-              "pre_filled_from_product": true
+              "prefill_from_product": true
             },
             "Amortization": {
               "type": "dropdown",
               "required": false,
-              "pre_filled_from_product": true
+              "prefill_from_product": true
             },
             "Interest_Method": {
               "type": "dropdown",
               "required": false,
-              "pre_filled_from_product": true
+              "prefill_from_product": true
             },
             "Interest_Calculation_Period": {
               "type": "dropdown",
               "required": false,
-              "pre_filled_from_product": true
+              "prefill_from_product": true
             },
-            "Grace_Periods": {
+            "Grace_Period": {
               "type": "unspecified",
               "required": false
             }
@@ -797,34 +852,26 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
           "step_index": 3,
           "step_name": "Charges",
           "fields": {
-            "Inherited_Charges": {
-              "type": "data_table",
-              "required": false
-            },
-            "Additional_Charges": {
+            "Charges": {
               "type": "repeating_group",
-              "min": 0,
-              "item_fields": {
-                "Charge_Item": {
-                  "type": "unspecified",
-                  "required": true
-                }
-              }
-            },
-            "Add_Charge": {
-              "type": "button",
-              "element_name": "Add Charge",
-              "on_success": "adds a row to Additional_Charges"
+              "item_fields": {}
             }
-          }
+          },
+          "actions": [
+            {
+              "element_name": "Add Charge",
+              "type": "button",
+              "triggers": "adds row to Charges"
+            }
+          ]
         },
         {
           "step_index": 4,
-          "step_name": "Collateral (optional)",
+          "step_name": "Collateral",
           "fields": {
             "Collateral_Items": {
               "type": "repeating_group",
-              "min": 0,
+              "required": false,
               "item_fields": {
                 "Collateral_Type": {
                   "type": "unspecified",
@@ -844,12 +891,12 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
         }
       ]
     },
-    "Loan_Detail_Header": {
-      "type": "header",
-      "fields": {
-        "Client_Name_Link": {
+    "Loan_Detail_Page": {
+      "type": "detail_page",
+      "header_links": {
+        "Client": {
           "type": "link",
-          "required": false
+          "target": "components.Client_Detail_Page"
         }
       }
     },
@@ -871,14 +918,13 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 },
                 "Expected_Disbursement_Date": {
                   "type": "date",
-                  "required": true
+                  "required": false
                 },
                 "Note": {
                   "type": "unspecified",
                   "required": false
                 }
-              },
-              "on_success": "changes status to Approved"
+              }
             },
             {
               "action_name": "Reject"
@@ -921,17 +967,11 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 "Disburse_to_Savings": {
                   "type": "checkbox",
                   "required": false
-                },
-                "Savings_Account": {
-                  "type": "unspecified",
-                  "required": false
                 }
-              },
-              "on_success": "creates disbursement transaction; changes status to Active"
+              }
             },
             {
-              "action_name": "Undo Approval",
-              "on_success": "reverts status to Submitted and Pending Approval"
+              "action_name": "Undo Approval"
             }
           ]
         },
@@ -947,7 +987,7 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 "Transaction_Amount": {
                   "type": "number",
                   "required": true,
-                  "pre_filled_from": "amount_due"
+                  "prefill": "amount_due"
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -958,12 +998,16 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                     "Mobile Money",
                     "Bank Transfer"
                   ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false
                 }
               },
               "constraints": [
-                "partial repayments applied per configured repayment strategy"
+                "partial repayments are applied per the configured repayment strategy"
               ],
-              "on_success": "if full settlement then status changes to Closed (obligations met)"
+              "on_success": "if full settlement then status changes to Closed obligations met"
             },
             {
               "action_name": "Waive Interest"
@@ -983,13 +1027,13 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 },
                 "Reason": {
                   "type": "unspecified",
-                  "required": false
+                  "required": true
                 },
                 "Adjusted_Due_Date": {
                   "type": "date",
-                  "required": false
+                  "required": true
                 },
-                "Grace_Periods": {
+                "Grace_Period": {
                   "type": "unspecified",
                   "required": false
                 },
@@ -1002,7 +1046,7 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                   "required": false
                 }
               },
-              "on_success": "creates a pending reschedule request requiring separate approval"
+              "on_success": "creates a pending request requiring separate approval"
             },
             {
               "action_name": "Prepay Loan"
@@ -1024,18 +1068,10 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
             }
           ]
         },
-        "Approved (no_actions_defined)": {
-          "available_actions": []
-        },
-        "Closed": {
-          "available_actions": []
-        },
-        "Overpaid": {
-          "available_actions": []
-        },
-        "Written Off": {
-          "available_actions": []
-        }
+        "Approved (no further actions)": {},
+        "Closed": {},
+        "Overpaid": {},
+        "Written Off": {}
       }
     },
     "Loan_Detail_Tabs": {
@@ -1047,9 +1083,8 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
         },
         {
           "tab_name": "Repayment Schedule",
-          "type": "tab",
           "fields": {
-            "Schedule_Table": {
+            "Repayment_Schedule_Table": {
               "type": "data_table",
               "columns": [
                 "Installment Number",
@@ -1065,7 +1100,8 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 "Penalties Paid",
                 "Total Outstanding",
                 "Status"
-              ]
+              ],
+              "row_actions": []
             }
           }
         },
@@ -1104,597 +1140,6 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
                 "Paid",
                 "Waived",
                 "Outstanding"
-              ]
-            }
-          }
-        },
-        {
-          "tab_name": "Collateral",
-          "fields": {}
-        },
-        {
-          "tab_name": "Notes",
-          "fields": {}
-        },
-        {
-          "tab_name": "Documents",
-          "fields": {}
-        }
-      ]
-    }
-  }
-}
-</ast>
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[14:17:42] Semantic Critic - LLM RESPONSE
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "Wizard and actions mostly covered but the AST is missing the Client Detail initiation trigger and contains a phantom duplicate state; also grace-period fields should be explicit rather than a single unspecified field.",
-  "missing": [
-    "Client_Detail_Page.New_Loan_Application_Button (trigger to open Loan_Application_Wizard from the Client Detail page)"
-  ],
-  "phantoms": [
-    "components.Loan_Detail_Actions.states[\"Approved (no_actions_defined)\"] (duplicate/extra state not present in the description)"
-  ],
-  "fixes": [
-    "Add the initiation trigger: components.Client_Detail_Page.New_Loan_Application_Button — add a button element with element_name: \"New Loan Application\" and an on_click/on_trigger that opens components.Loan_Application_Wizard (or links to it).",
-    "Remove the phantom duplicate state: delete components.Loan_Detail_Actions.states[\"Approved (no_actions_defined)\"] so only the described statuses remain.",
-    "Expand grace period fields in the wizard Terms step: replace components.Loan_Application_Wizard.steps[1].fields.Grace_Periods with explicit fields, e.g. components.Loan_Application_Wizard.steps[1].fields.Principal_Grace_Period (type: number, required: false) and components.Loan_Application_Wizard.steps[1].fields.Interest_Grace_Period (type: number, required: false) — or otherwise represent the plural 'grace period fields' as a structured object rather than a single unspecified field."
-  ]
-}
-
-------------------------------------------------------------
-[14:17:42] Semantic Critic - PARSED JSON
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "Wizard and actions mostly covered but the AST is missing the Client Detail initiation trigger and contains a phantom duplicate state; also grace-period fields should be explicit rather than a single unspecified field.",
-  "missing": [
-    "Client_Detail_Page.New_Loan_Application_Button (trigger to open Loan_Application_Wizard from the Client Detail page)"
-  ],
-  "phantoms": [
-    "components.Loan_Detail_Actions.states[\"Approved (no_actions_defined)\"] (duplicate/extra state not present in the description)"
-  ],
-  "fixes": [
-    "Add the initiation trigger: components.Client_Detail_Page.New_Loan_Application_Button \u2014 add a button element with element_name: \"New Loan Application\" and an on_click/on_trigger that opens components.Loan_Application_Wizard (or links to it).",
-    "Remove the phantom duplicate state: delete components.Loan_Detail_Actions.states[\"Approved (no_actions_defined)\"] so only the described statuses remain.",
-    "Expand grace period fields in the wizard Terms step: replace components.Loan_Application_Wizard.steps[1].fields.Grace_Periods with explicit fields, e.g. components.Loan_Application_Wizard.steps[1].fields.Principal_Grace_Period (type: number, required: false) and components.Loan_Application_Wizard.steps[1].fields.Interest_Grace_Period (type: number, required: false) \u2014 or otherwise represent the plural 'grace period fields' as a structured object rather than a single unspecified field."
-  ]
-}
-
-------------------------------------------------------------
-[14:18:52] Semantic Critic - USER PROMPT
-------------------------------------------------------------
-<description>
-
-A new loan application is initiated from the Client Detail page. The Loan Application form is a multi-step wizard. Step 1 (Details) contains Product Name dropdown (selecting a product auto-populates default values), Loan Officer, Loan Purpose, Fund, Submitted On date, Expected Disbursement Date, Principal (bounded by product min/max), Number of Repayments, Repaid Every frequency and unit, Interest Rate (bounded by product min/max), and External ID. Step 2 (Terms) contains Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period dropdowns (pre-filled from the product but adjustable), plus grace period fields. Step 3 (Charges) lists charges inherited from the product and includes an "Add Charge" button for additional charges. Step 4 (Collateral, optional) allows adding collateral items with Collateral Type, Value, and Description. Clicking "Submit" creates the loan in "Submitted and Pending Approval" status.
-
-The Loan Detail page header displays the loan account number, product name, client name (clickable link), status badge, and loan balance. Status badges are color-coded: Submitted and Pending Approval (yellow), Approved (blue), Active (green), Closed (gray), Overpaid (purple), Written Off (red). Action buttons change based on status: Pending Approval offers Approve (dialog with Approved On Date, Approved Amount, Expected Disbursement Date, and Note), Reject, Withdraw, and Delete; Approved offers Disburse (form with Disbursed On Date, Transaction Amount, Payment Type — Cash, Check, Mobile Money, Bank Transfer — and payment detail fields; a "Disburse to Savings" option deposits directly into the client's linked savings account) and Undo Approval; Active offers Make Repayment (form with Transaction Date, Transaction Amount pre-filled with amount due, and Payment Type — partial repayments are applied per the configured repayment strategy; full settlement changes status to "Closed obligations met"), Waive Interest, Write Off, Close, Reschedule (form with Reschedule From Date, Reason, Adjusted Due Date, grace fields, Extra Terms, and New Interest Rate — creates a pending request requiring separate approval), Prepay Loan, Foreclosure, Charge Off, and Assign Loan Officer.
-
-Tabs on the detail page show Summary (disbursement details, repayment schedule summary, total paid, total outstanding, total overdue, and charges summary), Repayment Schedule (table with Installment Number, Due Date, Principal Due, Interest Due, Fees Due, Penalties Due, Total Due, amounts paid, Total Outstanding, and status indicators), Transactions (table with Date, Type, Amount, Principal/Interest/Fees/Penalties portions, Outstanding Balance, and undo link), Charges (Charge Name, Amount, Due Date, Paid, Waived, Outstanding), Collateral, Notes, and Documents.
-
----
-
-
-</description>
-
-<ast>
-{
-  "module_name": "Loan Account",
-  "components": {
-    "Client_Detail_Page": {
-      "type": "page",
-      "fields": {},
-      "actions": {
-        "New_Loan_Application_Button": {
-          "type": "button",
-          "element_name": "New Loan Application",
-          "on_trigger": "opens Loan_Application_Wizard"
-        }
-      }
-    },
-    "Loan_Application_Wizard": {
-      "type": "wizard",
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates loan in Submitted and Pending Approval status"
-        }
-      ],
-      "steps": [
-        {
-          "step_index": 1,
-          "step_name": "Details",
-          "fields": {
-            "Product_Name": {
-              "type": "dropdown",
-              "required": true,
-              "on_change": "auto_populates_product_defaults",
-              "notes": "selecting a product auto-populates default values for bounded fields"
-            },
-            "Loan_Officer": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Loan_Purpose": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Fund": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Submitted_On": {
-              "type": "date",
-              "required": false
-            },
-            "Expected_Disbursement_Date": {
-              "type": "date",
-              "required": false
-            },
-            "Principal": {
-              "type": "number",
-              "required": false,
-              "constraints": [
-                ">= product.min_principal",
-                "<= product.max_principal"
-              ]
-            },
-            "Number_of_Repayments": {
-              "type": "number",
-              "required": false
-            },
-            "Repaid_Every": {
-              "type": "number",
-              "required": false
-            },
-            "Repaid_Every_Unit": {
-              "type": "unspecified",
-              "required": false
-            },
-            "Interest_Rate": {
-              "type": "number",
-              "required": false,
-              "constraints": [
-                ">= product.min_interest_rate",
-                "<= product.max_interest_rate"
-              ]
-            },
-            "External_ID": {
-              "type": "unspecified",
-              "required": false
-            }
-          }
-        },
-        {
-          "step_index": 2,
-          "step_name": "Terms",
-          "fields": {
-            "Repayment_Strategy": {
-              "type": "dropdown",
-              "required": false,
-              "prefilled_from_product": true
-            },
-            "Amortization": {
-              "type": "dropdown",
-              "required": false,
-              "prefilled_from_product": true
-            },
-            "Interest_Method": {
-              "type": "dropdown",
-              "required": false,
-              "prefilled_from_product": true
-            },
-            "Interest_Calculation_Period": {
-              "type": "dropdown",
-              "required": false,
-              "prefilled_from_product": true
-            },
-            "Principal_Grace_Period": {
-              "type": "number",
-              "required": false
-            },
-            "Interest_Grace_Period": {
-              "type": "number",
-              "required": false
-            }
-          }
-        },
-        {
-          "step_index": 3,
-          "step_name": "Charges",
-          "fields": {},
-          "actions": {
-            "Add_Charge": {
-              "type": "button",
-              "element_name": "Add Charge",
-              "on_trigger": "opens Add_Charge_Form"
-            }
-          }
-        },
-        {
-          "step_index": 4,
-          "step_name": "Collateral",
-          "fields": {
-            "Collateral_Items": {
-              "type": "repeating_group",
-              "required": false,
-              "item_fields": {
-                "Collateral_Type": {
-                  "type": "unspecified",
-                  "required": false
-                },
-                "Value": {
-                  "type": "number",
-                  "required": false
-                },
-                "Description": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "Add_Charge_Form": {
-      "type": "form",
-      "fields": {}
-    },
-    "Loan_Detail_Header": {
-      "type": "header",
-      "fields": {
-        "Client_Name_Link": {
-          "type": "link",
-          "element_name": "Client Name",
-          "on_trigger": "navigates to Client_Detail_Page"
-        }
-      }
-    },
-    "Loan_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Submitted and Pending Approval": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "fields": {
-                "Approved_On_Date": {
-                  "type": "date",
-                  "required": true
-                },
-                "Approved_Amount": {
-                  "type": "number",
-                  "required": true
-                },
-                "Expected_Disbursement_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Note": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "changes status to Approved"
-            },
-            {
-              "action_name": "Reject",
-              "fields": {
-                "Rejection_Reason": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "marks application as Rejected"
-            },
-            {
-              "action_name": "Withdraw",
-              "fields": {
-                "Withdrawal_Reason": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "marks application as Withdrawn"
-            },
-            {
-              "action_name": "Delete",
-              "preconditions": [],
-              "on_success": "deletes loan application"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Disburse",
-              "fields": {
-                "Disbursed_On_Date": {
-                  "type": "date",
-                  "required": true
-                },
-                "Transaction_Amount": {
-                  "type": "number",
-                  "required": true
-                },
-                "Payment_Type": {
-                  "type": "dropdown",
-                  "required": true,
-                  "options": [
-                    "Cash",
-                    "Check",
-                    "Mobile Money",
-                    "Bank Transfer"
-                  ]
-                },
-                "Payment_Details": {
-                  "type": "unspecified",
-                  "required": false
-                },
-                "Disburse_to_Savings": {
-                  "type": "checkbox",
-                  "required": false,
-                  "notes": "if checked, deposits directly into client's linked savings account"
-                }
-              },
-              "on_success": "changes status to Active and creates disbursement transaction"
-            },
-            {
-              "action_name": "Undo Approval",
-              "preconditions": [],
-              "on_success": "reverts status to Submitted and Pending Approval"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Make Repayment",
-              "fields": {
-                "Transaction_Date": {
-                  "type": "date",
-                  "required": true
-                },
-                "Transaction_Amount": {
-                  "type": "number",
-                  "required": true,
-                  "notes": "pre-filled with amount due",
-                  "constraints": [
-                    "pre_filled_with_amount_due"
-                  ]
-                },
-                "Payment_Type": {
-                  "type": "dropdown",
-                  "required": true,
-                  "options": [
-                    "Cash",
-                    "Check",
-                    "Mobile Money",
-                    "Bank Transfer"
-                  ]
-                },
-                "Payment_Details": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "constraints": [
-                "partial repayments are applied per configured repayment strategy"
-              ],
-              "on_success": "applies repayment; full settlement changes status to Closed and marks obligations met"
-            },
-            {
-              "action_name": "Waive Interest",
-              "fields": {
-                "Waive_Amount": {
-                  "type": "number",
-                  "required": false
-                },
-                "Note": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "reduces interest outstanding as specified"
-            },
-            {
-              "action_name": "Write Off",
-              "fields": {
-                "Write_Off_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Note": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "marks loan as Written Off"
-            },
-            {
-              "action_name": "Close",
-              "fields": {
-                "Close_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Note": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "marks loan as Closed"
-            },
-            {
-              "action_name": "Reschedule",
-              "fields": {
-                "Reschedule_From_Date": {
-                  "type": "date",
-                  "required": true
-                },
-                "Reason": {
-                  "type": "unspecified",
-                  "required": true
-                },
-                "Adjusted_Due_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Grace_Fields": {
-                  "type": "unspecified",
-                  "required": false,
-                  "notes": "grace period adjustments as applicable"
-                },
-                "Extra_Terms": {
-                  "type": "unspecified",
-                  "required": false
-                },
-                "New_Interest_Rate": {
-                  "type": "number",
-                  "required": false
-                }
-              },
-              "on_success": "creates a pending reschedule request requiring separate approval"
-            },
-            {
-              "action_name": "Prepay Loan",
-              "fields": {
-                "Prepay_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Prepay_Amount": {
-                  "type": "number",
-                  "required": true
-                }
-              },
-              "on_success": "applies prepayment per product configuration"
-            },
-            {
-              "action_name": "Foreclosure",
-              "fields": {
-                "Foreclosure_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Note": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "applies foreclosure processing"
-            },
-            {
-              "action_name": "Charge Off",
-              "fields": {
-                "Charge_Off_Date": {
-                  "type": "date",
-                  "required": false
-                },
-                "Note": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              },
-              "on_success": "marks loan as Charged Off"
-            },
-            {
-              "action_name": "Assign Loan Officer",
-              "fields": {
-                "Loan_Officer": {
-                  "type": "unspecified",
-                  "required": true
-                }
-              },
-              "on_success": "assigns loan officer to account"
-            }
-          ]
-        },
-        "Closed": {
-          "available_actions": []
-        },
-        "Overpaid": {
-          "available_actions": []
-        },
-        "Written Off": {
-          "available_actions": []
-        }
-      }
-    },
-    "Loan_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Repayment Schedule",
-          "fields": {},
-          "components": {
-            "Repayment_Schedule_Table": {
-              "type": "data_table",
-              "columns": [
-                "Installment Number",
-                "Due Date",
-                "Principal Due",
-                "Interest Due",
-                "Fees Due",
-                "Penalties Due",
-                "Total Due",
-                "Amounts Paid",
-                "Total Outstanding",
-                "Status Indicator"
-              ],
-              "row_actions": []
-            }
-          }
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {},
-          "components": {
-            "Transactions_Table": {
-              "type": "data_table",
-              "columns": [
-                "Date",
-                "Type",
-                "Amount",
-                "Principal Portion",
-                "Interest Portion",
-                "Fees Portion",
-                "Penalties Portion",
-                "Outstanding Balance"
-              ],
-              "row_actions": [
-                {
-                  "action_name": "Undo",
-                  "preconditions": [],
-                  "notes": "undo link available per transaction as described"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {},
-          "components": {
-            "Charges_Table": {
-              "type": "data_table",
-              "columns": [
-                "Charge Name",
-                "Amount",
-                "Due Date",
-                "Paid",
-                "Waived",
-                "Outstanding"
               ],
               "row_actions": []
             }
@@ -1721,27 +1166,27 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[14:19:24] Semantic Critic - LLM RESPONSE
+[16:11:27] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements from the description; only one minor inferred component (Add_Charge_Form) was added.",
+  "summary": "AST matches the described interactive elements; only a minor extra state entry was added that does not affect structure.",
   "missing": [],
   "phantoms": [
-    "Add_Charge_Form (inferred form component opened by Add Charge button — the description only named the Add Charge button, not the form)"
+    "Loan_Detail_Actions.states[\"Approved (no further actions)\"] (state label not present in the description)"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[14:19:24] Semantic Critic - PARSED JSON
+[16:11:27] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements from the description; only one minor inferred component (Add_Charge_Form) was added.",
+  "summary": "AST matches the described interactive elements; only a minor extra state entry was added that does not affect structure.",
   "missing": [],
   "phantoms": [
-    "Add_Charge_Form (inferred form component opened by Add Charge button \u2014 the description only named the Add Charge button, not the form)"
+    "Loan_Detail_Actions.states[\"Approved (no further actions)\"] (state label not present in the description)"
   ],
   "fixes": []
 }
