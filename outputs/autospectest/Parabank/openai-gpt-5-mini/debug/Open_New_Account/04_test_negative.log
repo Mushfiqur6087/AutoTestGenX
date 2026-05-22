@@ -1,0 +1,535 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-22T21:31:44.624241
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[21:31:44] Test-Negative - SYSTEM PROMPT
+------------------------------------------------------------
+You are a Negative Test Case Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY negative test cases — tests where invalid input is provided or business rules are violated, and the system correctly rejects or blocks the action.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Negative Testing:**
+
+The AST represents every interactive element in the module. Each node type has a corresponding failure category:
+
+| AST node / field | What to test for failure |
+|---|---|
+| `required: true` field | Leave it blank and submit — inline validation error |
+| `constraints: []` on a field or action | One TC per unique constraint: violate it specifically |
+| `preconditions: []` on an action | One TC attempting the action when the precondition is NOT met |
+| `visible_when` / `required_when` conditional field | Trigger the condition, then submit the revealed field blank or invalid |
+| `state_bound_action_bar` states | Attempt an action from the wrong state (e.g., Approve an already-Active entity) |
+| `on_success` with quoted text | The negative expected_result is the *blocking* behavior — the entity stays unchanged |
+| `submit_actions[]` | If any button has `preconditions`, test that button when precondition fails |
+
+> If a module has no `form`, no `wizard`, no `state_bound_action_bar`, and no `constraints` — it is display-only. Generate at most 1–2 tests (unauthenticated access, or a non-implemented link if described). Do not invent validation scenarios.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — Name the field, the violated rule, and the visible error indicator.**
+Never write a vague expected result. Always specify what the tester sees.
+
+- ❌ `"Validation error shown"` — too vague
+- ❌ `"Error is displayed"` — too vague
+- ✅ `"Inline validation error appears on the <Field Name> field indicating it is required"`
+- ✅ `"<Field Name> field displays an error: 'Must be a valid email address'"`
+- ✅ `"Submit button remains disabled / form does not submit; <Field> is highlighted"`
+
+**Rule B — Quote exact error text when the spec provides it.**
+If the description quotes a specific error string, copy it verbatim into the expected_result.
+- ❌ `"incorrect credentials error shown"` when spec says `"Incorrect email or password. Please try again."`
+- ✅ `"Page displays 'Incorrect email or password. Please try again.' and the Password field is cleared"`
+
+**Rule C — Assert the blocking behavior, not just the error.**
+The expected_result must confirm the action was blocked: the entity was not created, the status did not change, the user was not redirected.
+- ❌ `"Error shown"` (doesn't confirm the action was blocked)
+- ✅ `"Form does not submit; <Entity> is not created; error shown on <Field>"`
+- ✅ `"Status remains <Current State>; no transition occurs"`
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Use generic placeholders in angle brackets.
+
+- ✅ `"Enter <invalid email format> in the Email field"`
+- ✅ `"Enter <amount exceeding available balance> in the Amount field"`
+- ✅ `"Enter <password shorter than minimum length> in the Password field"`
+- ❌ `"Enter 'notanemail' in the Email field"`
+- ❌ `"Enter 'abc123' in the Password field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic user action — one field, one click, one navigation. No grouping.
+
+- ✅ `"1. Leave the <Required Field> blank"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill all fields except <Required Field> and submit"`
+
+---
+
+**SCOPE GATE (run before writing any test):**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact sentence in the description or field/constraint/state in the AST justifies this test? If you cannot point to one → delete it.
+2. **UI-executable:** Can a tester trigger this by clicking, typing, selecting, or navigating in a browser? If verification requires dev tools, DOM inspection, concurrent users, API calls, or server-side error simulation → out of scope.
+3. **Not a positive test in disguise:** Display-only behavior ("the page shows X") produces positive tests, not negative ones.
+
+Do NOT generate tests for: backend data integrity, security vulnerabilities, infrastructure failures, race conditions, or anything not described in the spec.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Required field representatives (deduplicated by field type):**
+
+Group required fields by type: `text/unspecified`, `email`, `password`, `number`, `date`, `dropdown`, `file_upload`. Generate:
+- ONE "leave blank and submit" test per **type group** (not per field) — use the most prominent field as representative
+- ONE "submit with ALL required fields empty" test
+
+Do NOT generate a separate blank-field test for every required field. If 5 text fields are all required, one representative covers them all.
+
+**2. Format violations:**
+
+For fields with type-specific format rules (from AST type or description):
+- `email` → one test with invalid format
+- `number` → one test with non-numeric input
+- `date` → one test with invalid/impossible date
+- `password` → ONE representative test for policy violation (not one per sub-rule — see Deduplication)
+
+Only generate if the spec or AST implies format validation for that field.
+
+**3. Numeric bounds and balance violations:**
+
+If the spec describes minimum/maximum values, amount ranges, or balance checks:
+- One test per distinct bound violation (e.g., amount below minimum, amount above maximum, amount exceeding available balance)
+- Use `<amount below minimum>`, `<amount exceeding available balance>` as placeholders
+
+Examples across the dataset:
+- Transfer amount > available balance → error
+- Loan amount outside product min/max → error
+- Deposit below minimum requirement → error
+
+**4. Constraint violations:**
+
+For each unique `constraints[]` entry in the AST, and for cross-field rules described in the spec:
+- `"must be unique"` → submit with a duplicate value
+- `"must match"` (confirm fields) → enter mismatched values
+- `"must not be same as current"` → select the current value
+- `"cannot perform <action> while <condition>"` → attempt the action when the condition is true
+- `"<date> must be after <other date>"` → enter reversed dates
+
+One test per unique constraint. Do not duplicate the same mechanism.
+
+**5. Precondition violations (auth, role, and state):**
+
+For each `preconditions[]` entry on any action — and for auth/role rules described in the spec:
+
+- **Unauthenticated access:** If any page or action requires login, generate one test: an unauthenticated user attempts to access it and is redirected to the login page.
+- **Wrong role:** If the spec explicitly states a feature is restricted to a specific role (e.g., Teacher only, Admin only), generate one test: a user of the wrong role attempts the action and is blocked or the control is not visible.
+- **Precondition not met:** For each AST `preconditions[]` entry, attempt the action when that precondition is not satisfied.
+
+**6. State-machine violations:**
+
+From `state_bound_action_bar` nodes:
+- For each state where an action is NOT listed in `available_actions`, generate one test attempting that action from that state. Example: attempting "Approve" on an entity already in "Active" state.
+- If a state has an empty `available_actions` array, generate one test verifying no action buttons are visible in that state.
+
+One test per unique wrong-state scenario — do not enumerate every action × every invalid state.
+
+---
+
+**DEDUPLICATION GATE (run before outputting):**
+
+1. **Required field dedup:** Multiple required text fields → ONE representative test, not one per field.
+2. **Sub-rule dedup:** A field with multiple validation sub-rules (e.g., password: length + uppercase + lowercase + number + special char) → ONE representative violation test, not one per sub-rule.
+3. **Cross-form dedup:** If two forms in the same module share the same validation mechanism (e.g., both have a required text field) → test it on the primary form only.
+4. **Uniqueness check:** Before outputting, ask for each TC: "Does this test catch a bug that NO other test in this module would catch?" If no → remove it.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (standard CRUD form, form with constraints): **4–8 tests**
+- Complex module (state machine, multi-form, wizard with many constraints): **8–12 tests**
+
+If you exceed these ranges, you are generating redundant tests. Apply the deduplication gate again before outputting.
+
+---
+
+**PRIORITY:**
+
+- **High:** State precondition violations, constraint violations that could corrupt data, unauthenticated access, required field representatives
+- **Medium:** Format violations, cross-field validation, numeric bounds, wrong-role access, wrong-state action attempts
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "What error/block should occur, naming the field and indicator",
+      "priority": "high | medium"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "high_priority": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[21:31:44] Test-Negative - USER PROMPT
+------------------------------------------------------------
+<module_name>Open New Account</module_name>
+
+<ast>
+{
+  "module_name": "Open New Account",
+  "components": {
+    "Open_New_Account_Form": {
+      "type": "form",
+      "fields": {
+        "Account_Type": {
+          "type": "radio",
+          "required": true,
+          "options": [
+            "Checking",
+            "Savings"
+          ],
+          "constraints": [
+            "selection is required"
+          ]
+        },
+        "Initial_Deposit_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "must be numeric",
+            "real-time validation errors displayed",
+            "must be >= 25 when Account_Type == Checking",
+            "must be >= 100 when Account_Type == Savings"
+          ]
+        },
+        "Funding_Source_Account": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "selected funding account must have sufficient balance >= Initial_Deposit_Amount",
+            "real-time validation errors displayed"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Open Account",
+          "type": "button",
+          "on_success": "Account opened successfully!; redirects to accounts overview",
+          "constraints": [
+            "Account_Type must be selected",
+            "Initial_Deposit_Amount must satisfy minimum for selected Account_Type",
+            "Funding_Source_Account must have sufficient balance"
+          ]
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+This page contains an account-opening form with interactive account type selection cards (Checking or Savings) showing features and minimum deposit requirements, Initial Deposit Amount field, Funding Source Account dropdown, and an "Open Account" button. The system validates that account type is selected, deposit amount is numeric and meets minimums ($25 for Checking, $100 for Savings), funding account has sufficient balance, and displays real-time validation errors. Success shows "Account opened successfully!" and redirects to accounts overview.
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[21:32:27] Test-Negative - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Open New Account",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Submit with Account Type not selected (required radio)",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Do not select any option in the Account Type radio control",
+        "2. Enter <valid amount meeting any minimum> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Account Type field displays an inline validation error indicating selection is required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Submit with Initial Deposit Amount left blank (required number)",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Leave the Initial Deposit Amount field blank",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating it is required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Submit with Funding Source Account not selected (required dropdown)",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Select 'Savings' in the Account Type radio control",
+        "2. Enter <valid amount >= Savings minimum> in the Initial Deposit Amount field",
+        "3. Do not select any option in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Funding Source Account dropdown displays an inline validation error indicating selection is required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Submit with all required fields empty",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Do not select any option in the Account Type radio control",
+        "2. Leave the Initial Deposit Amount field blank",
+        "3. Do not select any option in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Account Type, Initial Deposit Amount, and Funding Source Account each display inline validation errors indicating they are required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Enter non-numeric value into Initial Deposit Amount (format violation)",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Enter <non-numeric input> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating a numeric value is required (e.g., 'Must be numeric'); the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Enter Initial Deposit below Checking minimum ($25) when Account Type is Checking",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Enter <amount less than $25> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating the minimum for Checking is $25; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Enter Initial Deposit below Savings minimum ($100) when Account Type is Savings",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Select 'Savings' in the Account Type radio control",
+        "2. Enter <amount less than $100> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating the minimum for Savings is $100; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Select a Funding Source Account that has insufficient balance for the requested deposit",
+      "preconditions": ["User is on the Open New Account page"],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Enter <amount exceeding selected funding account balance> in the Initial Deposit Amount field (>= $25)",
+        "3. Select a Funding Source Account whose balance is less than the entered Initial Deposit Amount in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Funding Source Account dropdown displays an inline validation error indicating the selected funding account has insufficient balance to cover the Initial Deposit Amount; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 7,
+    "medium_priority": 1,
+    "low_priority": 0
+  }
+}
+
+------------------------------------------------------------
+[21:32:27] Test-Negative - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Open New Account",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Submit with Account Type not selected (required radio)",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Do not select any option in the Account Type radio control",
+        "2. Enter <valid amount meeting any minimum> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Account Type field displays an inline validation error indicating selection is required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Submit with Initial Deposit Amount left blank (required number)",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Leave the Initial Deposit Amount field blank",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating it is required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Submit with Funding Source Account not selected (required dropdown)",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Select 'Savings' in the Account Type radio control",
+        "2. Enter <valid amount >= Savings minimum> in the Initial Deposit Amount field",
+        "3. Do not select any option in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Funding Source Account dropdown displays an inline validation error indicating selection is required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Submit with all required fields empty",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Do not select any option in the Account Type radio control",
+        "2. Leave the Initial Deposit Amount field blank",
+        "3. Do not select any option in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Account Type, Initial Deposit Amount, and Funding Source Account each display inline validation errors indicating they are required; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Enter non-numeric value into Initial Deposit Amount (format violation)",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Enter <non-numeric input> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating a numeric value is required (e.g., 'Must be numeric'); the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Enter Initial Deposit below Checking minimum ($25) when Account Type is Checking",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Enter <amount less than $25> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating the minimum for Checking is $25; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Enter Initial Deposit below Savings minimum ($100) when Account Type is Savings",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Select 'Savings' in the Account Type radio control",
+        "2. Enter <amount less than $100> in the Initial Deposit Amount field",
+        "3. Select a Funding Source Account with sufficient balance in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Initial Deposit Amount field displays an inline validation error indicating the minimum for Savings is $100; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Select a Funding Source Account that has insufficient balance for the requested deposit",
+      "preconditions": [
+        "User is on the Open New Account page"
+      ],
+      "steps": [
+        "1. Select 'Checking' in the Account Type radio control",
+        "2. Enter <amount exceeding selected funding account balance> in the Initial Deposit Amount field (>= $25)",
+        "3. Select a Funding Source Account whose balance is less than the entered Initial Deposit Amount in the Funding Source Account dropdown",
+        "4. Click the 'Open Account' button"
+      ],
+      "expected_result": "Funding Source Account dropdown displays an inline validation error indicating the selected funding account has insufficient balance to cover the Initial Deposit Amount; the form does not submit; no account is created; user is not redirected to accounts overview.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 7,
+    "medium_priority": 1,
+    "low_priority": 0
+  }
+}

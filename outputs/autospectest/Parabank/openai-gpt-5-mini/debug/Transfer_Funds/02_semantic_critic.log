@@ -1,0 +1,477 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-22T21:29:56.922467
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[21:30:17] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[21:30:17] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+The transfer page presents a form with radio buttons to select transfer type (My ParaBank Account or External Account), Transfer Amount field, Source Account dropdown (filtered to Checking and Savings accounts only), and destination options that change based on transfer type. For internal transfers, users select from their own accounts; for external transfers, users enter and confirm the account number. The system validates transfer amount, sufficient funds, and account number matching for external transfers. Successful transfers show "Transfer completed successfully." with a transaction ID; failures display contextual errors such as "Insufficient funds" or "Account numbers do not match." 
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Transfer Funds",
+  "components": {
+    "Transfer_Form": {
+      "type": "form",
+      "fields": {
+        "Transfer_Type": {
+          "type": "radio",
+          "required": true,
+          "options": [
+            "My ParaBank Account",
+            "External Account"
+          ]
+        },
+        "Transfer_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "system validates transfer amount",
+            "sufficient funds check performed at submission"
+          ]
+        },
+        "Source_Account": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Checking",
+            "Savings"
+          ],
+          "constraints": [
+            "dropdown filtered to user's Checking and Savings accounts only"
+          ]
+        },
+        "Destination_Internal_Account": {
+          "type": "dropdown",
+          "visible_when": "Transfer_Type == My ParaBank Account",
+          "required_when": "Transfer_Type == My ParaBank Account"
+        },
+        "External_Account_Number": {
+          "type": "unspecified",
+          "visible_when": "Transfer_Type == External Account",
+          "required_when": "Transfer_Type == External Account"
+        },
+        "Confirm_External_Account_Number": {
+          "type": "unspecified",
+          "visible_when": "Transfer_Type == External Account",
+          "required_when": "Transfer_Type == External Account",
+          "constraints": [
+            "must match External_Account_Number",
+            "error_message: Account numbers do not match."
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit Transfer",
+          "on_success": "Transfer completed successfully. returns transaction ID",
+          "preconditions": [
+            "sufficient funds in Source_Account"
+          ],
+          "constraints": [
+            "if Transfer_Type == External Account then Confirm_External_Account_Number must match External_Account_Number"
+          ],
+          "failure_messages": [
+            "Insufficient funds",
+            "Account numbers do not match."
+          ]
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[21:30:41] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST captures most interactions but has missing details for destination/internal account options and explicit field types, and includes a few phantom values (literal Source_Account options and a named submit button) that are not present in the description.",
+  "missing": [
+    "Transfer_Form.fields.Destination_Internal_Account.options (should specify that this dropdown is populated with the user's ParaBank accounts / own accounts)",
+    "Transfer_Form.fields.External_Account_Number.type (field type unspecified; should be e.g., 'text' with appropriate numeric/string pattern)",
+    "Transfer_Form.fields.Confirm_External_Account_Number.type (field type unspecified; should be e.g., 'text' with appropriate numeric/string pattern)"
+  ],
+  "phantoms": [
+    "Transfer_Form.submit_actions[0].element_name (Submit Transfer button label is not specified in the description — button name was invented)",
+    "Transfer_Form.fields.Source_Account.options (literal options ['Checking','Savings'] are not present in the description; the dropdown should list the user's accounts filtered to Checking/Savings, not these static labels)"
+  ],
+  "fixes": [
+    "Transfer_Form.fields.Destination_Internal_Account.options: Replace the missing static options with a dynamic data source or a constraint: \"options: user's ParaBank accounts (list of user's accounts)\" and/or add a constraint: \"filtered to user's accounts (internal destinations)\" so the AST reflects that the internal destination choices are the user's own accounts.",
+    "Transfer_Form.fields.External_Account_Number.type: Set a concrete input type (e.g., \"text\" or \"number\") and include validation metadata (e.g., pattern or max_length) to reflect account-number format; do not leave type as 'unspecified'.",
+    "Transfer_Form.fields.Confirm_External_Account_Number.type: Set a concrete input type (e.g., \"text\" or \"number\") and include the matching validation rule referencing External_Account_Number; do not leave type as 'unspecified'.",
+    "Transfer_Form.fields.Source_Account.options: Remove the static option strings ['Checking','Savings'] and instead represent this as a dynamic list with a constraint such as: \"options: user's accounts filtered where account_type in [Checking, Savings]\" so the AST does not invent literal option values.",
+    "Transfer_Form.submit_actions[0].element_name: Do not invent a specific button label not present in the description — either remove the explicit element_name or set it to a generic unspecified action (e.g., leave element_name null or use 'Submit' only if the description had indicated a label). Ensure submit_actions remains to capture the submit behavior, but avoid asserting a label that wasn't provided."
+  ]
+}
+
+------------------------------------------------------------
+[21:30:41] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST captures most interactions but has missing details for destination/internal account options and explicit field types, and includes a few phantom values (literal Source_Account options and a named submit button) that are not present in the description.",
+  "missing": [
+    "Transfer_Form.fields.Destination_Internal_Account.options (should specify that this dropdown is populated with the user's ParaBank accounts / own accounts)",
+    "Transfer_Form.fields.External_Account_Number.type (field type unspecified; should be e.g., 'text' with appropriate numeric/string pattern)",
+    "Transfer_Form.fields.Confirm_External_Account_Number.type (field type unspecified; should be e.g., 'text' with appropriate numeric/string pattern)"
+  ],
+  "phantoms": [
+    "Transfer_Form.submit_actions[0].element_name (Submit Transfer button label is not specified in the description \u2014 button name was invented)",
+    "Transfer_Form.fields.Source_Account.options (literal options ['Checking','Savings'] are not present in the description; the dropdown should list the user's accounts filtered to Checking/Savings, not these static labels)"
+  ],
+  "fixes": [
+    "Transfer_Form.fields.Destination_Internal_Account.options: Replace the missing static options with a dynamic data source or a constraint: \"options: user's ParaBank accounts (list of user's accounts)\" and/or add a constraint: \"filtered to user's accounts (internal destinations)\" so the AST reflects that the internal destination choices are the user's own accounts.",
+    "Transfer_Form.fields.External_Account_Number.type: Set a concrete input type (e.g., \"text\" or \"number\") and include validation metadata (e.g., pattern or max_length) to reflect account-number format; do not leave type as 'unspecified'.",
+    "Transfer_Form.fields.Confirm_External_Account_Number.type: Set a concrete input type (e.g., \"text\" or \"number\") and include the matching validation rule referencing External_Account_Number; do not leave type as 'unspecified'.",
+    "Transfer_Form.fields.Source_Account.options: Remove the static option strings ['Checking','Savings'] and instead represent this as a dynamic list with a constraint such as: \"options: user's accounts filtered where account_type in [Checking, Savings]\" so the AST does not invent literal option values.",
+    "Transfer_Form.submit_actions[0].element_name: Do not invent a specific button label not present in the description \u2014 either remove the explicit element_name or set it to a generic unspecified action (e.g., leave element_name null or use 'Submit' only if the description had indicated a label). Ensure submit_actions remains to capture the submit behavior, but avoid asserting a label that wasn't provided."
+  ]
+}
+
+------------------------------------------------------------
+[21:30:59] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+The transfer page presents a form with radio buttons to select transfer type (My ParaBank Account or External Account), Transfer Amount field, Source Account dropdown (filtered to Checking and Savings accounts only), and destination options that change based on transfer type. For internal transfers, users select from their own accounts; for external transfers, users enter and confirm the account number. The system validates transfer amount, sufficient funds, and account number matching for external transfers. Successful transfers show "Transfer completed successfully." with a transaction ID; failures display contextual errors such as "Insufficient funds" or "Account numbers do not match." 
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Transfer Funds",
+  "components": {
+    "Transfer_Form": {
+      "type": "form",
+      "fields": {
+        "Transfer_Type": {
+          "type": "radio",
+          "required": true,
+          "options": [
+            "My ParaBank Account",
+            "External Account"
+          ]
+        },
+        "Source_Account": {
+          "type": "dropdown",
+          "required": true,
+          "options": "user's accounts filtered where account_type in [Checking, Savings]"
+        },
+        "Transfer_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "must be a positive number",
+            "must be a valid currency amount"
+          ]
+        },
+        "Destination_Internal_Account": {
+          "type": "dropdown",
+          "visible_when": "Transfer_Type == My ParaBank Account",
+          "required_when": "Transfer_Type == My ParaBank Account",
+          "options": "user's ParaBank accounts (list of user's accounts)",
+          "constraints": [
+            "filtered to user's accounts (internal destinations)"
+          ]
+        },
+        "External_Account_Number": {
+          "type": "text",
+          "visible_when": "Transfer_Type == External Account",
+          "required_when": "Transfer_Type == External Account",
+          "constraints": [
+            {
+              "pattern": "^[0-9]+$",
+              "max_length": 20,
+              "error_message": "Invalid account number format"
+            }
+          ]
+        },
+        "Confirm_External_Account_Number": {
+          "type": "text",
+          "visible_when": "Transfer_Type == External Account",
+          "required_when": "Transfer_Type == External Account",
+          "constraints": [
+            {
+              "matches_field": "External_Account_Number",
+              "error_message": "Account numbers do not match"
+            }
+          ]
+        }
+      },
+      "constraints": [
+        {
+          "rule": "Source_Account.balance >= Transfer_Amount",
+          "error_message": "Insufficient funds"
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": null,
+          "on_success": "Transfer completed successfully with transaction ID",
+          "on_failure": [
+            "Insufficient funds",
+            "Account numbers do not match",
+            "Invalid transfer amount",
+            "Invalid account number format"
+          ]
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[21:31:19] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST includes inferred validation details and extra failure messages that are not specified in the description (multiple phantoms); please remove or align those to the description.",
+  "missing": [],
+  "phantoms": [
+    "Transfer_Form.fields.Transfer_Amount.constraints (explicit 'must be a positive number' and 'must be a valid currency amount' constraints are inferred but not specified in the description)",
+    "Transfer_Form.fields.External_Account_Number.constraints (regex pattern and max_length are inferred and not in the description)",
+    "Transfer_Form.submit_actions[0].on_failure[2] (\"Invalid transfer amount\" error message is not in the description)",
+    "Transfer_Form.submit_actions[0].on_failure[3] (\"Invalid account number format\" error message is not in the description)"
+  ],
+  "fixes": [
+    "Transfer_Form.fields.Transfer_Amount.constraints — remove the explicit 'must be a positive number' and 'must be a valid currency amount' constraints or replace them with a single generic 'validated by system' placeholder since the description only states the system validates the transfer amount without specifying exact rules.",
+    "Transfer_Form.fields.External_Account_Number.constraints — remove the regex pattern and max_length entries (or replace with a generic 'validated by system' note). The description only requires entering and confirming the external account number and matching validation, not a specific format or length.",
+    "Transfer_Form.submit_actions[0].on_failure — remove the extra failure messages 'Invalid transfer amount' and 'Invalid account number format'; keep only failures explicitly mentioned in the description (e.g., 'Insufficient funds', 'Account numbers do not match')."
+  ]
+}
+
+------------------------------------------------------------
+[21:31:19] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST includes inferred validation details and extra failure messages that are not specified in the description (multiple phantoms); please remove or align those to the description.",
+  "missing": [],
+  "phantoms": [
+    "Transfer_Form.fields.Transfer_Amount.constraints (explicit 'must be a positive number' and 'must be a valid currency amount' constraints are inferred but not specified in the description)",
+    "Transfer_Form.fields.External_Account_Number.constraints (regex pattern and max_length are inferred and not in the description)",
+    "Transfer_Form.submit_actions[0].on_failure[2] (\"Invalid transfer amount\" error message is not in the description)",
+    "Transfer_Form.submit_actions[0].on_failure[3] (\"Invalid account number format\" error message is not in the description)"
+  ],
+  "fixes": [
+    "Transfer_Form.fields.Transfer_Amount.constraints \u2014 remove the explicit 'must be a positive number' and 'must be a valid currency amount' constraints or replace them with a single generic 'validated by system' placeholder since the description only states the system validates the transfer amount without specifying exact rules.",
+    "Transfer_Form.fields.External_Account_Number.constraints \u2014 remove the regex pattern and max_length entries (or replace with a generic 'validated by system' note). The description only requires entering and confirming the external account number and matching validation, not a specific format or length.",
+    "Transfer_Form.submit_actions[0].on_failure \u2014 remove the extra failure messages 'Invalid transfer amount' and 'Invalid account number format'; keep only failures explicitly mentioned in the description (e.g., 'Insufficient funds', 'Account numbers do not match')."
+  ]
+}
+
+------------------------------------------------------------
+[21:31:35] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+The transfer page presents a form with radio buttons to select transfer type (My ParaBank Account or External Account), Transfer Amount field, Source Account dropdown (filtered to Checking and Savings accounts only), and destination options that change based on transfer type. For internal transfers, users select from their own accounts; for external transfers, users enter and confirm the account number. The system validates transfer amount, sufficient funds, and account number matching for external transfers. Successful transfers show "Transfer completed successfully." with a transaction ID; failures display contextual errors such as "Insufficient funds" or "Account numbers do not match." 
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Transfer Funds",
+  "components": {
+    "Transfer_Form": {
+      "type": "form",
+      "fields": {
+        "Transfer_Type": {
+          "type": "radio",
+          "required": true,
+          "options": [
+            "My ParaBank Account",
+            "External Account"
+          ]
+        },
+        "Transfer_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "validated by system"
+          ]
+        },
+        "Source_Account": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "filtered to Checking and Savings accounts only"
+          ]
+        },
+        "Destination_Account": {
+          "type": "dropdown",
+          "required": true,
+          "visible_when": "Transfer_Type == My ParaBank Account"
+        },
+        "External_Account_Number": {
+          "type": "unspecified",
+          "required": true,
+          "visible_when": "Transfer_Type == External Account",
+          "constraints": [
+            "validated by system"
+          ]
+        },
+        "Confirm_External_Account_Number": {
+          "type": "unspecified",
+          "required_when": "Transfer_Type == External Account",
+          "visible_when": "Transfer_Type == External Account",
+          "constraints": [
+            "must match External_Account_Number"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Transfer",
+          "on_success": "Transfer completed successfully; returns transaction ID",
+          "on_failure": [
+            "Insufficient funds",
+            "Account numbers do not match."
+          ],
+          "constraints": [
+            "sufficient funds validated by system"
+          ]
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[21:31:44] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "yes",
+  "summary": "The AST correctly represents the described interactive elements, validations, and conditional destination logic with no missing or extraneous elements.",
+  "missing": [],
+  "phantoms": [],
+  "fixes": []
+}
+
+------------------------------------------------------------
+[21:31:44] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "yes",
+  "summary": "The AST correctly represents the described interactive elements, validations, and conditional destination logic with no missing or extraneous elements.",
+  "missing": [],
+  "phantoms": [],
+  "fixes": []
+}

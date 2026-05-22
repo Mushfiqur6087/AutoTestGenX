@@ -1,0 +1,560 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-22T21:31:44.625023
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[21:31:44] Test-Negative - SYSTEM PROMPT
+------------------------------------------------------------
+You are a Negative Test Case Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY negative test cases — tests where invalid input is provided or business rules are violated, and the system correctly rejects or blocks the action.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Negative Testing:**
+
+The AST represents every interactive element in the module. Each node type has a corresponding failure category:
+
+| AST node / field | What to test for failure |
+|---|---|
+| `required: true` field | Leave it blank and submit — inline validation error |
+| `constraints: []` on a field or action | One TC per unique constraint: violate it specifically |
+| `preconditions: []` on an action | One TC attempting the action when the precondition is NOT met |
+| `visible_when` / `required_when` conditional field | Trigger the condition, then submit the revealed field blank or invalid |
+| `state_bound_action_bar` states | Attempt an action from the wrong state (e.g., Approve an already-Active entity) |
+| `on_success` with quoted text | The negative expected_result is the *blocking* behavior — the entity stays unchanged |
+| `submit_actions[]` | If any button has `preconditions`, test that button when precondition fails |
+
+> If a module has no `form`, no `wizard`, no `state_bound_action_bar`, and no `constraints` — it is display-only. Generate at most 1–2 tests (unauthenticated access, or a non-implemented link if described). Do not invent validation scenarios.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — Name the field, the violated rule, and the visible error indicator.**
+Never write a vague expected result. Always specify what the tester sees.
+
+- ❌ `"Validation error shown"` — too vague
+- ❌ `"Error is displayed"` — too vague
+- ✅ `"Inline validation error appears on the <Field Name> field indicating it is required"`
+- ✅ `"<Field Name> field displays an error: 'Must be a valid email address'"`
+- ✅ `"Submit button remains disabled / form does not submit; <Field> is highlighted"`
+
+**Rule B — Quote exact error text when the spec provides it.**
+If the description quotes a specific error string, copy it verbatim into the expected_result.
+- ❌ `"incorrect credentials error shown"` when spec says `"Incorrect email or password. Please try again."`
+- ✅ `"Page displays 'Incorrect email or password. Please try again.' and the Password field is cleared"`
+
+**Rule C — Assert the blocking behavior, not just the error.**
+The expected_result must confirm the action was blocked: the entity was not created, the status did not change, the user was not redirected.
+- ❌ `"Error shown"` (doesn't confirm the action was blocked)
+- ✅ `"Form does not submit; <Entity> is not created; error shown on <Field>"`
+- ✅ `"Status remains <Current State>; no transition occurs"`
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Use generic placeholders in angle brackets.
+
+- ✅ `"Enter <invalid email format> in the Email field"`
+- ✅ `"Enter <amount exceeding available balance> in the Amount field"`
+- ✅ `"Enter <password shorter than minimum length> in the Password field"`
+- ❌ `"Enter 'notanemail' in the Email field"`
+- ❌ `"Enter 'abc123' in the Password field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic user action — one field, one click, one navigation. No grouping.
+
+- ✅ `"1. Leave the <Required Field> blank"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill all fields except <Required Field> and submit"`
+
+---
+
+**SCOPE GATE (run before writing any test):**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact sentence in the description or field/constraint/state in the AST justifies this test? If you cannot point to one → delete it.
+2. **UI-executable:** Can a tester trigger this by clicking, typing, selecting, or navigating in a browser? If verification requires dev tools, DOM inspection, concurrent users, API calls, or server-side error simulation → out of scope.
+3. **Not a positive test in disguise:** Display-only behavior ("the page shows X") produces positive tests, not negative ones.
+
+Do NOT generate tests for: backend data integrity, security vulnerabilities, infrastructure failures, race conditions, or anything not described in the spec.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Required field representatives (deduplicated by field type):**
+
+Group required fields by type: `text/unspecified`, `email`, `password`, `number`, `date`, `dropdown`, `file_upload`. Generate:
+- ONE "leave blank and submit" test per **type group** (not per field) — use the most prominent field as representative
+- ONE "submit with ALL required fields empty" test
+
+Do NOT generate a separate blank-field test for every required field. If 5 text fields are all required, one representative covers them all.
+
+**2. Format violations:**
+
+For fields with type-specific format rules (from AST type or description):
+- `email` → one test with invalid format
+- `number` → one test with non-numeric input
+- `date` → one test with invalid/impossible date
+- `password` → ONE representative test for policy violation (not one per sub-rule — see Deduplication)
+
+Only generate if the spec or AST implies format validation for that field.
+
+**3. Numeric bounds and balance violations:**
+
+If the spec describes minimum/maximum values, amount ranges, or balance checks:
+- One test per distinct bound violation (e.g., amount below minimum, amount above maximum, amount exceeding available balance)
+- Use `<amount below minimum>`, `<amount exceeding available balance>` as placeholders
+
+Examples across the dataset:
+- Transfer amount > available balance → error
+- Loan amount outside product min/max → error
+- Deposit below minimum requirement → error
+
+**4. Constraint violations:**
+
+For each unique `constraints[]` entry in the AST, and for cross-field rules described in the spec:
+- `"must be unique"` → submit with a duplicate value
+- `"must match"` (confirm fields) → enter mismatched values
+- `"must not be same as current"` → select the current value
+- `"cannot perform <action> while <condition>"` → attempt the action when the condition is true
+- `"<date> must be after <other date>"` → enter reversed dates
+
+One test per unique constraint. Do not duplicate the same mechanism.
+
+**5. Precondition violations (auth, role, and state):**
+
+For each `preconditions[]` entry on any action — and for auth/role rules described in the spec:
+
+- **Unauthenticated access:** If any page or action requires login, generate one test: an unauthenticated user attempts to access it and is redirected to the login page.
+- **Wrong role:** If the spec explicitly states a feature is restricted to a specific role (e.g., Teacher only, Admin only), generate one test: a user of the wrong role attempts the action and is blocked or the control is not visible.
+- **Precondition not met:** For each AST `preconditions[]` entry, attempt the action when that precondition is not satisfied.
+
+**6. State-machine violations:**
+
+From `state_bound_action_bar` nodes:
+- For each state where an action is NOT listed in `available_actions`, generate one test attempting that action from that state. Example: attempting "Approve" on an entity already in "Active" state.
+- If a state has an empty `available_actions` array, generate one test verifying no action buttons are visible in that state.
+
+One test per unique wrong-state scenario — do not enumerate every action × every invalid state.
+
+---
+
+**DEDUPLICATION GATE (run before outputting):**
+
+1. **Required field dedup:** Multiple required text fields → ONE representative test, not one per field.
+2. **Sub-rule dedup:** A field with multiple validation sub-rules (e.g., password: length + uppercase + lowercase + number + special char) → ONE representative violation test, not one per sub-rule.
+3. **Cross-form dedup:** If two forms in the same module share the same validation mechanism (e.g., both have a required text field) → test it on the primary form only.
+4. **Uniqueness check:** Before outputting, ask for each TC: "Does this test catch a bug that NO other test in this module would catch?" If no → remove it.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (standard CRUD form, form with constraints): **4–8 tests**
+- Complex module (state machine, multi-form, wizard with many constraints): **8–12 tests**
+
+If you exceed these ranges, you are generating redundant tests. Apply the deduplication gate again before outputting.
+
+---
+
+**PRIORITY:**
+
+- **High:** State precondition violations, constraint violations that could corrupt data, unauthenticated access, required field representatives
+- **Medium:** Format violations, cross-field validation, numeric bounds, wrong-role access, wrong-state action attempts
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "What error/block should occur, naming the field and indicator",
+      "priority": "high | medium"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "high_priority": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[21:31:44] Test-Negative - USER PROMPT
+------------------------------------------------------------
+<module_name>Transfer Funds</module_name>
+
+<ast>
+{
+  "module_name": "Transfer Funds",
+  "components": {
+    "Transfer_Form": {
+      "type": "form",
+      "fields": {
+        "Transfer_Type": {
+          "type": "radio",
+          "required": true,
+          "options": [
+            "My ParaBank Account",
+            "External Account"
+          ]
+        },
+        "Transfer_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "validated by system"
+          ]
+        },
+        "Source_Account": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "filtered to Checking and Savings accounts only"
+          ]
+        },
+        "Destination_Account": {
+          "type": "dropdown",
+          "required": true,
+          "visible_when": "Transfer_Type == My ParaBank Account"
+        },
+        "External_Account_Number": {
+          "type": "unspecified",
+          "required": true,
+          "visible_when": "Transfer_Type == External Account",
+          "constraints": [
+            "validated by system"
+          ]
+        },
+        "Confirm_External_Account_Number": {
+          "type": "unspecified",
+          "required_when": "Transfer_Type == External Account",
+          "visible_when": "Transfer_Type == External Account",
+          "constraints": [
+            "must match External_Account_Number"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Transfer",
+          "on_success": "Transfer completed successfully; returns transaction ID",
+          "on_failure": [
+            "Insufficient funds",
+            "Account numbers do not match."
+          ],
+          "constraints": [
+            "sufficient funds validated by system"
+          ]
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+The transfer page presents a form with radio buttons to select transfer type (My ParaBank Account or External Account), Transfer Amount field, Source Account dropdown (filtered to Checking and Savings accounts only), and destination options that change based on transfer type. For internal transfers, users select from their own accounts; for external transfers, users enter and confirm the account number. The system validates transfer amount, sufficient funds, and account number matching for external transfers. Successful transfers show "Transfer completed successfully." with a transaction ID; failures display contextual errors such as "Insufficient funds" or "Account numbers do not match." 
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[21:32:46] Test-Negative - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Transfer Funds",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Leave Transfer Type (radio) blank and submit",
+      "preconditions": ["User is on the Transfer Funds page with at least one Checking or Savings account available in Source Account dropdown"],
+      "steps": [
+        "1. Do not select any option in the Transfer_Type radio (leave it unselected)",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on the Transfer_Type field indicating it is required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Leave Transfer Amount (number) blank and submit",
+      "preconditions": ["User is on the Transfer Funds page and has selected Transfer_Type and Source_Account as required"],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Leave the Transfer_Amount field blank",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Select <a Destination_Account> if required by Transfer_Type",
+        "5. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on the Transfer_Amount field indicating it is required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Leave Source Account (dropdown) blank and submit",
+      "preconditions": ["User is on the Transfer Funds page and has selected Transfer_Type and entered Transfer_Amount"],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Do not select any option in Source_Account (leave blank)",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on the Source_Account field indicating it is required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Submit with ALL required fields empty",
+      "preconditions": ["User is on the Transfer Funds page"],
+      "steps": [
+        "1. Ensure Transfer_Type is unselected",
+        "2. Leave Transfer_Amount blank",
+        "3. Leave Source_Account unselected",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation errors appear on Transfer_Type, Transfer_Amount, and Source_Account indicating they are required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Enter non-numeric input into Transfer Amount (number) field",
+      "preconditions": ["User is on the Transfer Funds page and has selected Transfer_Type and Source_Account"],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Enter <non-numeric input> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Transfer_Amount field displays an inline validation error: 'Must be a valid number' (or equivalent numeric-format error); the form does not submit and no transaction is created.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Attempt transfer with amount exceeding available balance",
+      "preconditions": ["User is on the Transfer Funds page, has selected Transfer_Type and Source_Account, and the Source_Account has a known balance"],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Enter <amount exceeding available balance> in the Transfer_Amount field",
+        "3. Select <the Source Account with insufficient funds> from Source_Account",
+        "4. Select <a valid Destination_Account> if required",
+        "5. Click the Transfer button"
+      ],
+      "expected_result": "Form does not submit; page displays the error 'Insufficient funds'; no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "External transfer: leave External Account Number blank (conditional required)",
+      "preconditions": ["User is on the Transfer Funds page"],
+      "steps": [
+        "1. Select <Transfer Type: External Account> in Transfer_Type",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Leave External_Account_Number blank (do not enter a value)",
+        "5. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on External_Account_Number indicating it is required when Transfer_Type is 'External Account'; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "External transfer: external account number and confirmation do not match",
+      "preconditions": ["User is on the Transfer Funds page"],
+      "steps": [
+        "1. Select <Transfer Type: External Account> in Transfer_Type",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Enter <external account number> in External_Account_Number",
+        "5. Enter <a different external account number> in Confirm_External_Account_Number",
+        "6. Click the Transfer button"
+      ],
+      "expected_result": "Page displays the error 'Account numbers do not match.' and the form does not submit; no transaction is created.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 7,
+    "medium_priority": 1,
+    "low_priority": 0
+  }
+}
+
+------------------------------------------------------------
+[21:32:46] Test-Negative - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Transfer Funds",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Leave Transfer Type (radio) blank and submit",
+      "preconditions": [
+        "User is on the Transfer Funds page with at least one Checking or Savings account available in Source Account dropdown"
+      ],
+      "steps": [
+        "1. Do not select any option in the Transfer_Type radio (leave it unselected)",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on the Transfer_Type field indicating it is required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Leave Transfer Amount (number) blank and submit",
+      "preconditions": [
+        "User is on the Transfer Funds page and has selected Transfer_Type and Source_Account as required"
+      ],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Leave the Transfer_Amount field blank",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Select <a Destination_Account> if required by Transfer_Type",
+        "5. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on the Transfer_Amount field indicating it is required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Leave Source Account (dropdown) blank and submit",
+      "preconditions": [
+        "User is on the Transfer Funds page and has selected Transfer_Type and entered Transfer_Amount"
+      ],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Do not select any option in Source_Account (leave blank)",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on the Source_Account field indicating it is required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Submit with ALL required fields empty",
+      "preconditions": [
+        "User is on the Transfer Funds page"
+      ],
+      "steps": [
+        "1. Ensure Transfer_Type is unselected",
+        "2. Leave Transfer_Amount blank",
+        "3. Leave Source_Account unselected",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation errors appear on Transfer_Type, Transfer_Amount, and Source_Account indicating they are required; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Enter non-numeric input into Transfer Amount (number) field",
+      "preconditions": [
+        "User is on the Transfer Funds page and has selected Transfer_Type and Source_Account"
+      ],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Enter <non-numeric input> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Click the Transfer button"
+      ],
+      "expected_result": "Transfer_Amount field displays an inline validation error: 'Must be a valid number' (or equivalent numeric-format error); the form does not submit and no transaction is created.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Attempt transfer with amount exceeding available balance",
+      "preconditions": [
+        "User is on the Transfer Funds page, has selected Transfer_Type and Source_Account, and the Source_Account has a known balance"
+      ],
+      "steps": [
+        "1. Select <Transfer Type: My ParaBank Account> in Transfer_Type",
+        "2. Enter <amount exceeding available balance> in the Transfer_Amount field",
+        "3. Select <the Source Account with insufficient funds> from Source_Account",
+        "4. Select <a valid Destination_Account> if required",
+        "5. Click the Transfer button"
+      ],
+      "expected_result": "Form does not submit; page displays the error 'Insufficient funds'; no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "External transfer: leave External Account Number blank (conditional required)",
+      "preconditions": [
+        "User is on the Transfer Funds page"
+      ],
+      "steps": [
+        "1. Select <Transfer Type: External Account> in Transfer_Type",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Leave External_Account_Number blank (do not enter a value)",
+        "5. Click the Transfer button"
+      ],
+      "expected_result": "Inline validation error appears on External_Account_Number indicating it is required when Transfer_Type is 'External Account'; the form does not submit and no transaction is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "External transfer: external account number and confirmation do not match",
+      "preconditions": [
+        "User is on the Transfer Funds page"
+      ],
+      "steps": [
+        "1. Select <Transfer Type: External Account> in Transfer_Type",
+        "2. Enter <valid numeric amount> in the Transfer_Amount field",
+        "3. Select <a Checking or Savings account> from Source_Account",
+        "4. Enter <external account number> in External_Account_Number",
+        "5. Enter <a different external account number> in Confirm_External_Account_Number",
+        "6. Click the Transfer button"
+      ],
+      "expected_result": "Page displays the error 'Account numbers do not match.' and the form does not submit; no transaction is created.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 7,
+    "medium_priority": 1,
+    "low_priority": 0
+  }
+}

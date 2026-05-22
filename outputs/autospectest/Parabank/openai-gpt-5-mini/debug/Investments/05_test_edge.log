@@ -1,0 +1,751 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-22T21:31:44.630186
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[21:31:44] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[21:31:44] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Investments</module_name>
+
+<ast>
+{
+  "module_name": "Investments",
+  "components": {
+    "Trade_Funds_Form": {
+      "type": "form",
+      "fields": {
+        "Action": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Buy",
+            "Sell"
+          ]
+        },
+        "Fund_Symbol": {
+          "type": "search",
+          "required": true,
+          "constraints": [
+            "symbol must exist (validated against symbol directory)"
+          ]
+        },
+        "Quantity": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "must be greater than 0"
+          ]
+        },
+        "Funding_or_Destination_Account": {
+          "type": "dropdown",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Execute Trade",
+          "constraints": [
+            "if Action == Buy then funding account must have sufficient buying power",
+            "if Action == Sell then customer must have sufficient share balance"
+          ],
+          "on_success": "executes same-day trade, updates holdings, displays 'Trade executed successfully.' with order ID",
+          "on_error": "validation failures appear inline"
+        }
+      ]
+    },
+    "Recurring_Investment_Plan_Form": {
+      "type": "form",
+      "fields": {
+        "Fund_Symbol": {
+          "type": "search",
+          "required": true,
+          "constraints": [
+            "symbol must exist (validated against symbol directory)"
+          ]
+        },
+        "Contribution_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "must meet the minimum contribution"
+          ]
+        },
+        "Frequency": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Weekly",
+            "Monthly"
+          ]
+        },
+        "Start_Date": {
+          "type": "date",
+          "required": true,
+          "constraints": [
+            "start date must be in the future"
+          ]
+        },
+        "Funding_Account": {
+          "type": "dropdown",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Plan",
+          "constraints": [
+            "funding account must have adequate balance for initial contribution and scheduled debits"
+          ],
+          "on_success": "stores schedule and shows 'Plan created successfully.'",
+          "on_error": "validation failures highlight the problematic fields (e.g., 'Start date must be in the future')"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+The Investments page is a multi-section workspace.The portfolio snapshot is a read-only panel that shows current fund holdings, market value, and unrealised gain or loss.The trade funds form includes Action (Buy or Sell), Fund Symbol (autocomplete), Quantity, Funding or Destination Account (dropdown), and an “Execute Trade” button. The system checks that the symbol exists, quantity is greater than zero, and that the customer has sufficient buying power or share balance. A successful submission executes a same-day trade, updates holdings, and displays “Trade executed successfully.” with an order ID; validation failures appear inline.The recurring investment plan form includes Fund Symbol, Contribution Amount, Frequency (Weekly or Monthly), Start Date, Funding Account, and a “Create Plan” button. The system validates that the start date is in the future, the contribution meets the minimum, and that the funding account has adequate balance. Success stores the schedule and shows “Plan created successfully.”; errors highlight the problematic fields (for example, “Start date must be in the future”).
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[21:33:48] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Investments",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Quantity at smallest positive allowed value for Buy trade succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists and is known to have sufficient buying power for the chosen trade"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy'",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter <minimum allowed value> in Quantity",
+        "5. Select the funding account that has sufficient buying power",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Form submits successfully; trade executes same-day, holdings update, and the UI displays 'Trade executed successfully.' with an order ID — overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Quantity = 0 is blocked with inline error",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy' (or 'Sell')",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter 0 in Quantity",
+        "5. Select any Funding or Destination Account",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Quantity displays an inline validation error indicating the value must be greater than 0 and the trade is not executed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Recurring plan with Contribution Amount equal to minimum contribution succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists with adequate balance for the initial contribution and scheduled debits"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter <minimum contribution> in Contribution_Amount",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter a Start_Date that is in the future (e.g., one day after today)",
+        "6. Select the Funding_Account with adequate balance",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Form submits successfully; schedule is stored and the UI displays 'Plan created successfully.' — overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Recurring plan Contribution Amount one unit below minimum is blocked",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter <one unit below minimum contribution> in Contribution_Amount",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter a Start_Date that is in the future",
+        "6. Select any Funding_Account",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Contribution_Amount displays an inline validation error indicating the amount is below the minimum contribution and the plan is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Start Date set to the earliest allowed future date succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists with adequate balance for the initial contribution"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter a valid Contribution_Amount (meets minimum)",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter Start_Date = <one day after today> (the earliest allowed future date)",
+        "6. Select the Funding_Account",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Form submits successfully; 'Plan created successfully.' is shown and schedule is stored — overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "boundary",
+      "test_case": "Start Date set to today is blocked with explicit 'Start date must be in the future' error",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter a valid Contribution_Amount (meets minimum)",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter Start_Date = <today>",
+        "6. Select any Funding_Account",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Start_Date field displays an inline error 'Start date must be in the future' and the plan is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "boundary",
+      "test_case": "Buy trade with funding account having exactly sufficient buying power succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists that has exactly the required buying power for the intended trade"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy'",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter a Quantity such that the total cost equals the funding account's buying power (precondition account matches this)",
+        "5. Select the funding account that has exactly sufficient buying power",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Form submits successfully; trade executes same-day, holdings update, and the UI displays 'Trade executed successfully.' with an order ID — overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "boundary",
+      "test_case": "Buy trade with funding account one unit short of needed buying power is blocked",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists that is short by exactly one unit of buying power for the intended trade"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy'",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter a Quantity such that the total cost exceeds the funding account's buying power by one unit (precondition account matches this)",
+        "5. Select the funding account that is one unit short",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Funding or Destination Account displays an inline error indicating insufficient buying power and the trade is not executed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "input_edge",
+      "test_case": "Fund Symbol entry with leading/trailing whitespace is trimmed and accepted",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. In the Fund_Symbol autocomplete, type the valid symbol with leading and trailing whitespace (e.g., ' <valid symbol> ')",
+        "3. Select the matching result from the autocomplete",
+        "4. Fill remaining required fields (Action, Quantity > 0, Funding Account)",
+        "5. Click 'Execute Trade'"
+      ],
+      "expected_result": "Leading/trailing whitespace is trimmed; the selected Fund_Symbol value displayed in the form contains no extra spaces; form submission succeeds and 'Trade executed successfully.' with order ID is shown",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-010",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid re-submission after successful trade is prevented (no duplicate order)",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "Funding account has sufficient buying power"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Complete and submit a valid Buy trade (select Fund_Symbol, enter valid Quantity, select Funding Account) and click 'Execute Trade'",
+        "3. After success is shown with order ID, use the browser Back button to return to the Trade Funds form",
+        "4. Attempt to submit the same trade again immediately by clicking 'Execute Trade'"
+      ],
+      "expected_result": "Second submission attempt is blocked / error shown; only one order is created (no duplicate order appears in order history or holdings), and the UI prevents duplicate execution (no second order ID created)",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "boundary": 8,
+    "input_edge": 1,
+    "interaction_edge": 1,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 9,
+    "low_priority": 1
+  }
+}
+
+------------------------------------------------------------
+[21:33:48] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Investments",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Quantity at smallest positive allowed value for Buy trade succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists and is known to have sufficient buying power for the chosen trade"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy'",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter <minimum allowed value> in Quantity",
+        "5. Select the funding account that has sufficient buying power",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Form submits successfully; trade executes same-day, holdings update, and the UI displays 'Trade executed successfully.' with an order ID \u2014 overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Quantity = 0 is blocked with inline error",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy' (or 'Sell')",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter 0 in Quantity",
+        "5. Select any Funding or Destination Account",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Quantity displays an inline validation error indicating the value must be greater than 0 and the trade is not executed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Recurring plan with Contribution Amount equal to minimum contribution succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists with adequate balance for the initial contribution and scheduled debits"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter <minimum contribution> in Contribution_Amount",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter a Start_Date that is in the future (e.g., one day after today)",
+        "6. Select the Funding_Account with adequate balance",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Form submits successfully; schedule is stored and the UI displays 'Plan created successfully.' \u2014 overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Recurring plan Contribution Amount one unit below minimum is blocked",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter <one unit below minimum contribution> in Contribution_Amount",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter a Start_Date that is in the future",
+        "6. Select any Funding_Account",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Contribution_Amount displays an inline validation error indicating the amount is below the minimum contribution and the plan is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Start Date set to the earliest allowed future date succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists with adequate balance for the initial contribution"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter a valid Contribution_Amount (meets minimum)",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter Start_Date = <one day after today> (the earliest allowed future date)",
+        "6. Select the Funding_Account",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Form submits successfully; 'Plan created successfully.' is shown and schedule is stored \u2014 overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "boundary",
+      "test_case": "Start Date set to today is blocked with explicit 'Start date must be in the future' error",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Recurring Investment Plan form",
+        "2. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "3. Enter a valid Contribution_Amount (meets minimum)",
+        "4. Select Frequency (Weekly or Monthly)",
+        "5. Enter Start_Date = <today>",
+        "6. Select any Funding_Account",
+        "7. Click 'Create Plan'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Start_Date field displays an inline error 'Start date must be in the future' and the plan is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "boundary",
+      "test_case": "Buy trade with funding account having exactly sufficient buying power succeeds",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists that has exactly the required buying power for the intended trade"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy'",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter a Quantity such that the total cost equals the funding account's buying power (precondition account matches this)",
+        "5. Select the funding account that has exactly sufficient buying power",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Form submits successfully; trade executes same-day, holdings update, and the UI displays 'Trade executed successfully.' with an order ID \u2014 overall the submission succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "boundary",
+      "test_case": "Buy trade with funding account one unit short of needed buying power is blocked",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "A funding account exists that is short by exactly one unit of buying power for the intended trade"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Select Action = 'Buy'",
+        "3. Enter a valid Fund_Symbol (select the matching result from the autocomplete)",
+        "4. Enter a Quantity such that the total cost exceeds the funding account's buying power by one unit (precondition account matches this)",
+        "5. Select the funding account that is one unit short",
+        "6. Click 'Execute Trade'"
+      ],
+      "expected_result": "Submission is blocked / error shown; Funding or Destination Account displays an inline error indicating insufficient buying power and the trade is not executed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "input_edge",
+      "test_case": "Fund Symbol entry with leading/trailing whitespace is trimmed and accepted",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. In the Fund_Symbol autocomplete, type the valid symbol with leading and trailing whitespace (e.g., ' <valid symbol> ')",
+        "3. Select the matching result from the autocomplete",
+        "4. Fill remaining required fields (Action, Quantity > 0, Funding Account)",
+        "5. Click 'Execute Trade'"
+      ],
+      "expected_result": "Leading/trailing whitespace is trimmed; the selected Fund_Symbol value displayed in the form contains no extra spaces; form submission succeeds and 'Trade executed successfully.' with order ID is shown",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-010",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid re-submission after successful trade is prevented (no duplicate order)",
+      "preconditions": [
+        "User is authenticated and on the Investments page",
+        "A valid Fund Symbol exists in the symbol directory",
+        "Funding account has sufficient buying power"
+      ],
+      "steps": [
+        "1. Navigate to the Trade Funds form",
+        "2. Complete and submit a valid Buy trade (select Fund_Symbol, enter valid Quantity, select Funding Account) and click 'Execute Trade'",
+        "3. After success is shown with order ID, use the browser Back button to return to the Trade Funds form",
+        "4. Attempt to submit the same trade again immediately by clicking 'Execute Trade'"
+      ],
+      "expected_result": "Second submission attempt is blocked / error shown; only one order is created (no duplicate order appears in order history or holdings), and the UI prevents duplicate execution (no second order ID created)",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "boundary": 8,
+    "input_edge": 1,
+    "interaction_edge": 1,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 9,
+    "low_priority": 1
+  }
+}
