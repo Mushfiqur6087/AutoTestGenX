@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.761568
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.400031
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:06:56] Semantic Critic - SYSTEM PROMPT
+[22:22:15] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:06:56] Semantic Critic - USER PROMPT
+[22:22:15] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -118,26 +118,18 @@ The logout function is accessible from the user profile icon in the top-right co
 {
   "module_name": "Logout",
   "components": {
-    "User_Profile_Menu": {
+    "User_Profile_Icon": {
+      "type": "button",
+      "visible_when": "user is logged in",
+      "on_click": "toggles Profile_Dropdown"
+    },
+    "Profile_Dropdown": {
       "type": "dropdown",
-      "preconditions": [
-        "user must be logged in"
-      ],
-      "trigger": {
-        "element_name": "Profile Icon",
-        "type": "button",
-        "preconditions": [
-          "user must be logged in"
-        ],
-        "on_action": "reveals dropdown menu"
-      },
-      "menu_items": [
+      "visible_when": "User_Profile_Icon == clicked",
+      "items": [
         {
           "element_name": "Profile Settings",
           "type": "link",
-          "preconditions": [
-            "user must be logged in"
-          ],
           "on_click": "navigates to Profile Settings page"
         },
         {
@@ -146,25 +138,18 @@ The logout function is accessible from the user profile icon in the top-right co
           "preconditions": [
             "user must be logged in"
           ],
-          "on_click": "terminates authenticated session; clears authentication token; redirects to login page",
-          "on_success": "terminates authenticated session; clears authentication token; redirects to login page",
-          "state_change": {
-            "auth_state": "Logged_Out"
-          },
-          "postconditions": [
-            "subsequent navigation to authenticated pages redirects to login page"
-          ]
+          "on_click": "initiates logout flow",
+          "on_success": "terminates authenticated session; clears authentication token; redirects to login page"
         }
       ]
     },
-    "Authenticated_Page_Access_Guard": {
+    "Authenticated_Route_Guard": {
       "type": "unspecified",
-      "description": "Global guard applied to routes/pages that require authentication",
       "preconditions": [
         "user must be logged in"
       ],
       "on_failure": "redirects to login page",
-      "applies_to": "any authenticated page"
+      "description": "Global guard applied to all authenticated routes. After logout, attempts to navigate to an authenticated page will trigger this guard and redirect to the login page."
     }
   }
 }
@@ -173,22 +158,22 @@ The logout function is accessible from the user profile icon in the top-right co
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:08:18] Semantic Critic - LLM RESPONSE
+[22:23:48] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements (profile icon button, dropdown with Profile Settings and Log Out, log out consequences, and the authenticated-page redirect guard) with no missing or extraneous elements.",
+  "summary": "The AST accurately captures the interactive elements (profile icon button, dropdown with Profile Settings and Log Out, logout effects, and the authenticated route guard) described in the specification.",
   "missing": [],
   "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:08:18] Semantic Critic - PARSED JSON
+[22:23:48] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements (profile icon button, dropdown with Profile Settings and Log Out, log out consequences, and the authenticated-page redirect guard) with no missing or extraneous elements.",
+  "summary": "The AST accurately captures the interactive elements (profile icon button, dropdown with Profile Settings and Log Out, logout effects, and the authenticated route guard) described in the specification.",
   "missing": [],
   "phantoms": [],
   "fixes": []

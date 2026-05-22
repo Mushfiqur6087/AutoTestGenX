@@ -1,0 +1,851 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.559554
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Negative - SYSTEM PROMPT
+------------------------------------------------------------
+You are a Negative Test Case Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY negative test cases — tests where invalid input is provided or business rules are violated, and the system correctly rejects or blocks the action.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Negative Testing:**
+
+The AST represents every interactive element in the module. Each node type has a corresponding failure category:
+
+| AST node / field | What to test for failure |
+|---|---|
+| `required: true` field | Leave it blank and submit — inline validation error |
+| `constraints: []` on a field or action | One TC per unique constraint: violate it specifically |
+| `preconditions: []` on an action | One TC attempting the action when the precondition is NOT met |
+| `visible_when` / `required_when` conditional field | Trigger the condition, then submit the revealed field blank or invalid |
+| `state_bound_action_bar` states | Attempt an action from the wrong state (e.g., Approve an already-Active entity) |
+| `on_success` with quoted text | The negative expected_result is the *blocking* behavior — the entity stays unchanged |
+| `submit_actions[]` | If any button has `preconditions`, test that button when precondition fails |
+
+> If a module has no `form`, no `wizard`, no `state_bound_action_bar`, and no `constraints` — it is display-only. Generate at most 1–2 tests (unauthenticated access, or a non-implemented link if described). Do not invent validation scenarios.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — Name the field, the violated rule, and the visible error indicator.**
+Never write a vague expected result. Always specify what the tester sees.
+
+- ❌ `"Validation error shown"` — too vague
+- ❌ `"Error is displayed"` — too vague
+- ✅ `"Inline validation error appears on the <Field Name> field indicating it is required"`
+- ✅ `"<Field Name> field displays an error: 'Must be a valid email address'"`
+- ✅ `"Submit button remains disabled / form does not submit; <Field> is highlighted"`
+
+**Rule B — Quote exact error text when the spec provides it.**
+If the description quotes a specific error string, copy it verbatim into the expected_result.
+- ❌ `"incorrect credentials error shown"` when spec says `"Incorrect email or password. Please try again."`
+- ✅ `"Page displays 'Incorrect email or password. Please try again.' and the Password field is cleared"`
+
+**Rule C — Assert the blocking behavior, not just the error.**
+The expected_result must confirm the action was blocked: the entity was not created, the status did not change, the user was not redirected.
+- ❌ `"Error shown"` (doesn't confirm the action was blocked)
+- ✅ `"Form does not submit; <Entity> is not created; error shown on <Field>"`
+- ✅ `"Status remains <Current State>; no transition occurs"`
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Use generic placeholders in angle brackets.
+
+- ✅ `"Enter <invalid email format> in the Email field"`
+- ✅ `"Enter <amount exceeding available balance> in the Amount field"`
+- ✅ `"Enter <password shorter than minimum length> in the Password field"`
+- ❌ `"Enter 'notanemail' in the Email field"`
+- ❌ `"Enter 'abc123' in the Password field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic user action — one field, one click, one navigation. No grouping.
+
+- ✅ `"1. Leave the <Required Field> blank"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill all fields except <Required Field> and submit"`
+
+---
+
+**SCOPE GATE (run before writing any test):**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact sentence in the description or field/constraint/state in the AST justifies this test? If you cannot point to one → delete it.
+2. **UI-executable:** Can a tester trigger this by clicking, typing, selecting, or navigating in a browser? If verification requires dev tools, DOM inspection, concurrent users, API calls, or server-side error simulation → out of scope.
+3. **Not a positive test in disguise:** Display-only behavior ("the page shows X") produces positive tests, not negative ones.
+
+Do NOT generate tests for: backend data integrity, security vulnerabilities, infrastructure failures, race conditions, or anything not described in the spec.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Required field representatives (deduplicated by field type):**
+
+Group required fields by type: `text/unspecified`, `email`, `password`, `number`, `date`, `dropdown`, `file_upload`. Generate:
+- ONE "leave blank and submit" test per **type group** (not per field) — use the most prominent field as representative
+- ONE "submit with ALL required fields empty" test
+
+Do NOT generate a separate blank-field test for every required field. If 5 text fields are all required, one representative covers them all.
+
+**2. Format violations:**
+
+For fields with type-specific format rules (from AST type or description):
+- `email` → one test with invalid format
+- `number` → one test with non-numeric input
+- `date` → one test with invalid/impossible date
+- `password` → ONE representative test for policy violation (not one per sub-rule — see Deduplication)
+
+Only generate if the spec or AST implies format validation for that field.
+
+**3. Numeric bounds and balance violations:**
+
+If the spec describes minimum/maximum values, amount ranges, or balance checks:
+- One test per distinct bound violation (e.g., amount below minimum, amount above maximum, amount exceeding available balance)
+- Use `<amount below minimum>`, `<amount exceeding available balance>` as placeholders
+
+Examples across the dataset:
+- Transfer amount > available balance → error
+- Loan amount outside product min/max → error
+- Deposit below minimum requirement → error
+
+**4. Constraint violations:**
+
+For each unique `constraints[]` entry in the AST, and for cross-field rules described in the spec:
+- `"must be unique"` → submit with a duplicate value
+- `"must match"` (confirm fields) → enter mismatched values
+- `"must not be same as current"` → select the current value
+- `"cannot perform <action> while <condition>"` → attempt the action when the condition is true
+- `"<date> must be after <other date>"` → enter reversed dates
+
+One test per unique constraint. Do not duplicate the same mechanism.
+
+**5. Precondition violations (auth, role, and state):**
+
+For each `preconditions[]` entry on any action — and for auth/role rules described in the spec:
+
+- **Unauthenticated access:** If any page or action requires login, generate one test: an unauthenticated user attempts to access it and is redirected to the login page.
+- **Wrong role:** If the spec explicitly states a feature is restricted to a specific role (e.g., Teacher only, Admin only), generate one test: a user of the wrong role attempts the action and is blocked or the control is not visible.
+- **Precondition not met:** For each AST `preconditions[]` entry, attempt the action when that precondition is not satisfied.
+
+**6. State-machine violations:**
+
+From `state_bound_action_bar` nodes:
+- For each state where an action is NOT listed in `available_actions`, generate one test attempting that action from that state. Example: attempting "Approve" on an entity already in "Active" state.
+- If a state has an empty `available_actions` array, generate one test verifying no action buttons are visible in that state.
+
+One test per unique wrong-state scenario — do not enumerate every action × every invalid state.
+
+---
+
+**DEDUPLICATION GATE (run before outputting):**
+
+1. **Required field dedup:** Multiple required text fields → ONE representative test, not one per field.
+2. **Sub-rule dedup:** A field with multiple validation sub-rules (e.g., password: length + uppercase + lowercase + number + special char) → ONE representative violation test, not one per sub-rule.
+3. **Cross-form dedup:** If two forms in the same module share the same validation mechanism (e.g., both have a required text field) → test it on the primary form only.
+4. **Uniqueness check:** Before outputting, ask for each TC: "Does this test catch a bug that NO other test in this module would catch?" If no → remove it.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (standard CRUD form, form with constraints): **4–8 tests**
+- Complex module (state machine, multi-form, wizard with many constraints): **8–12 tests**
+
+If you exceed these ranges, you are generating redundant tests. Apply the deduplication gate again before outputting.
+
+---
+
+**PRIORITY:**
+
+- **High:** State precondition violations, constraint violations that could corrupt data, unauthenticated access, required field representatives
+- **Medium:** Format violations, cross-field validation, numeric bounds, wrong-role access, wrong-state action attempts
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "What error/block should occur, naming the field and indicator",
+      "priority": "high | medium"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "high_priority": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Negative - USER PROMPT
+------------------------------------------------------------
+<module_name>System Administration</module_name>
+
+<ast>
+{
+  "module_name": "System Administration",
+  "components": {
+    "Manage_Scheduler_Jobs_Table": {
+      "type": "data_table",
+      "description": "Table of all batch jobs. Per-row interactive elements: Is Active toggle and editable CRON expression. Global control to start/stop scheduler.",
+      "preset_rows": [
+        {
+          "Job_Name": "Apply Annual Fee"
+        },
+        {
+          "Job_Name": "Add Accrual Transactions"
+        },
+        {
+          "Job_Name": "Apply Penalty to Overdue Loans"
+        },
+        {
+          "Job_Name": "Update Loan Summary"
+        },
+        {
+          "Job_Name": "Post Interest for Savings"
+        },
+        {
+          "Job_Name": "Transfer Fees"
+        },
+        {
+          "Job_Name": "Generate Loan Loss Provisioning"
+        }
+      ],
+      "columns": {
+        "Job_Name": {
+          "type": "unspecified"
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "description": "toggle job active/inactive (per-row)"
+        },
+        "CRON_Expression": {
+          "type": "unspecified",
+          "editable": true,
+          "description": "editable CRON expression for the job"
+        },
+        "Previous_Run_Status": {
+          "type": "unspecified"
+        },
+        "Next_Run_Time": {
+          "type": "date"
+        },
+        "Currently_Running": {
+          "type": "unspecified"
+        },
+        "Action_Buttons": {
+          "type": "unspecified",
+          "description": "per-row action buttons (generic actions menu)"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Action_Buttons",
+          "description": "Opens job-specific actions menu (names of actions not specified in source)"
+        }
+      ],
+      "global_controls": {
+        "Start_Stop_Scheduler": {
+          "type": "checkbox",
+          "element_name": "Start/Stop Scheduler",
+          "on_change": "controls whether scheduled jobs execute globally"
+        }
+      }
+    },
+    "Global_Configuration_Table": {
+      "type": "data_table",
+      "description": "System-wide feature flags and configuration values.",
+      "preset_rows": [
+        {
+          "Configuration_Name": "maker-checker"
+        },
+        {
+          "Configuration_Name": "reschedule-future-repayments"
+        },
+        {
+          "Configuration_Name": "allow-transactions-on-non-workingday"
+        },
+        {
+          "Configuration_Name": "reschedule-repayments-on-holidays"
+        },
+        {
+          "Configuration_Name": "savings-interest-posting-current-period-end"
+        },
+        {
+          "Configuration_Name": "financial-year-beginning-month"
+        },
+        {
+          "Configuration_Name": "meetings-mandatory-for-jlg-loans"
+        }
+      ],
+      "columns": {
+        "Configuration_Name": {
+          "type": "unspecified"
+        },
+        "Enabled": {
+          "type": "checkbox",
+          "description": "toggle to enable/disable the configuration"
+        },
+        "Value": {
+          "type": "unspecified",
+          "description": "editable value field (type varies by configuration)"
+        },
+        "Description": {
+          "type": "unspecified"
+        }
+      }
+    },
+    "Manage_Codes_Table": {
+      "type": "data_table",
+      "description": "Lists all code lists. Clicking a row opens the code values detail view where entries can be added, edited, reordered, or deactivated.",
+      "preset_rows": [
+        {
+          "Name": "Client Type"
+        },
+        {
+          "Name": "Gender"
+        },
+        {
+          "Name": "Address Type"
+        },
+        {
+          "Name": "Loan Purpose"
+        }
+      ],
+      "columns": {
+        "Name": {
+          "type": "unspecified"
+        },
+        "Is_System_Defined": {
+          "type": "checkbox"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Open",
+          "on_success": "navigates to Code_List_Detail for the selected code list"
+        }
+      ]
+    },
+    "Code_List_Detail": {
+      "type": "form",
+      "description": "Detail view for a code list. Supports adding, editing, reordering, and deactivating entries that populate dropdowns system-wide.",
+      "fields": {
+        "Entries": {
+          "type": "repeating_group",
+          "item_fields": {}
+        }
+      },
+      "entry_actions": [
+        {
+          "action_name": "Add_Entry"
+        },
+        {
+          "action_name": "Edit_Entry"
+        },
+        {
+          "action_name": "Reorder_Entries"
+        },
+        {
+          "action_name": "Deactivate_Entry"
+        }
+      ]
+    },
+    "Manage_Data_Tables_Table": {
+      "type": "data_table",
+      "description": "Lists custom data tables that extend core entities (rows represent custom tables).",
+      "columns": {
+        "Data_Table_Name": {
+          "type": "unspecified"
+        },
+        "Application_Table_Name": {
+          "type": "unspecified"
+        },
+        "Multi_Row": {
+          "type": "checkbox"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Edit"
+        },
+        {
+          "action_name": "Delete"
+        }
+      ],
+      "page_actions": [
+        {
+          "action_name": "Create",
+          "on_success": "opens Create_Data_Table_Form"
+        }
+      ]
+    },
+    "Create_Data_Table_Form": {
+      "type": "form",
+      "description": "Form to create a new custom data table with column definitions.",
+      "fields": {
+        "Data_Table_Name": {
+          "type": "unspecified"
+        },
+        "Application_Table_Name": {
+          "type": "dropdown",
+          "options": [
+            "m_client",
+            "m_group",
+            "m_loan",
+            "m_office",
+            "m_saving_account",
+            "m_product_loan",
+            "m_savings_product"
+          ]
+        },
+        "Multi_Row": {
+          "type": "checkbox"
+        },
+        "Columns": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Name": {
+              "type": "unspecified"
+            },
+            "Type": {
+              "type": "dropdown",
+              "options": [
+                "string",
+                "number",
+                "boolean",
+                "decimal",
+                "date",
+                "datetime",
+                "text",
+                "dropdown"
+              ]
+            },
+            "Length": {
+              "type": "number"
+            },
+            "Is_Mandatory": {
+              "type": "checkbox"
+            },
+            "Is_Unique": {
+              "type": "checkbox"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "creates custom data table"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form without saving"
+        }
+      ]
+    },
+    "Audit_Trails_Table": {
+      "type": "data_table",
+      "description": "Displays system actions with filters. When maker-checker is enabled, pending commands expose Approve/Reject actions.",
+      "columns": {
+        "Action_Name": {
+          "type": "unspecified"
+        },
+        "Entity_Name": {
+          "type": "unspecified"
+        },
+        "Resource_ID": {
+          "type": "unspecified"
+        },
+        "Maker": {
+          "type": "unspecified"
+        },
+        "Made_On_Date": {
+          "type": "date"
+        },
+        "Checker": {
+          "type": "unspecified"
+        },
+        "Checked_On_Date": {
+          "type": "date"
+        },
+        "Processing_Result": {
+          "type": "unspecified",
+          "description": "Pending, Approved, Rejected"
+        },
+        "Office_Name": {
+          "type": "unspecified"
+        },
+        "Client_Loan_Savings_Details": {
+          "type": "unspecified"
+        }
+      },
+      "filters": {
+        "Action_Name": {
+          "type": "unspecified"
+        },
+        "Entity_Name": {
+          "type": "unspecified"
+        },
+        "Resource_ID": {
+          "type": "unspecified"
+        },
+        "Maker_ID": {
+          "type": "unspecified"
+        },
+        "Checker_ID": {
+          "type": "unspecified"
+        },
+        "Office": {
+          "type": "unspecified"
+        },
+        "Date_Range": {
+          "type": "date_range"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Approve",
+          "preconditions": [
+            "maker-checker must be enabled",
+            "Processing_Result == Pending"
+          ],
+          "on_success": "approves the pending command"
+        },
+        {
+          "action_name": "Reject",
+          "preconditions": [
+            "maker-checker must be enabled",
+            "Processing_Result == Pending"
+          ],
+          "on_success": "rejects the pending command"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Manage Scheduler Jobs page displays a table of all batch jobs with columns for Job Name, Is Active (toggle), CRON Expression, Previous Run Status (Success/Failed with start/end times), Next Run Time, Currently Running indicator, and action buttons. Jobs include Apply Annual Fee, Add Accrual Transactions, Apply Penalty to Overdue Loans, Update Loan Summary, Post Interest for Savings, Transfer Fees, and Generate Loan Loss Provisioning. Each job can be toggled active/inactive and its CRON expression edited. A global Start/Stop scheduler toggle controls whether all scheduled jobs execute.
+
+The Global Configuration page displays a table of system-wide feature flags with columns for Configuration Name, Enabled (toggle), Value, and Description. Key settings include maker-checker (4-eyes approval), reschedule-future-repayments, allow-transactions-on-non-workingday, reschedule-repayments-on-holidays, savings-interest-posting-current-period-end, financial-year-beginning-month, and meetings-mandatory-for-jlg-loans.
+
+The Manage Codes page lists all code lists (Client Type, Gender, Address Type, Loan Purpose, etc.) with Name and Is System Defined columns. Clicking a code opens its values for adding, editing, reordering, and deactivating entries that populate dropdown options throughout the system.
+
+The Manage Data Tables page lists custom data tables that extend core entities (m_client, m_group, m_loan, m_office, m_saving_account, m_product_loan, m_savings_product) with custom fields. The Create form includes Data Table Name, Application Table Name dropdown, Multi Row checkbox, and column definitions — each with Name, Type (string, number, boolean, decimal, date, datetime, text, dropdown), Length, Is Mandatory, and Is Unique checkboxes.
+
+The Audit Trails page displays all system actions with columns for Action Name, Entity Name, Resource ID, Maker, Made On Date, Checker, Checked On Date, Processing Result (Pending, Approved, Rejected), Office Name, and Client/Loan/Savings details. Filters allow searching by Action Name, Entity Name, Resource ID, Maker ID, Checker ID, Office, and Date Range. When maker-checker is enabled, pending commands appear with Approve and Reject buttons.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:36:26] Test-Negative - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "System Administration",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Edit job CRON with invalid format",
+      "preconditions": [
+        "Navigate to Manage Scheduler Jobs page",
+        "A job row (e.g., <Job Name>) is present"
+      ],
+      "steps": [
+        "1. Click the CRON Expression cell for the job row <Job Name>",
+        "2. Enter <invalid CRON expression> into the CRON Expression field",
+        "3. Click the per-row Save/confirm control (or blur the field to trigger validation)"
+      ],
+      "expected_result": "Inline validation error appears on the CRON Expression field indicating the value is not a valid cron expression (e.g. 'Invalid CRON expression'); the change is not saved and the job's CRON Expression remains unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Clear CRON expression (leave blank) and attempt save",
+      "preconditions": [
+        "Navigate to Manage Scheduler Jobs page",
+        "A job row (e.g., <Job Name>) currently has a CRON Expression"
+      ],
+      "steps": [
+        "1. Click the CRON Expression cell for the job row <Job Name>",
+        "2. Delete the CRON Expression value so the field is blank (<empty value>)",
+        "3. Click the per-row Save/confirm control (or press Enter)"
+      ],
+      "expected_result": "Inline validation error appears on the CRON Expression field indicating the field is required or cannot be blank (e.g. 'CRON Expression is required'); the blank value is not saved and the job's CRON Expression remains the previous value",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Enter non-numeric value into Column Length (number field)",
+      "preconditions": [
+        "Navigate to Manage Data Tables page",
+        "Click the Create action to open the Create Data Table form"
+      ],
+      "steps": [
+        "1. In the Create Data Table form, click to add a new column to the Columns repeating group",
+        "2. In the new column's Length field enter <non-numeric input>",
+        "3. Click the form Save button"
+      ],
+      "expected_result": "Inline validation error appears on the Columns -> Length field indicating it must be a number (e.g. 'Must be a number'); form does not submit and the custom data table is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Attempt to create a custom data table without any column definitions",
+      "preconditions": [
+        "Navigate to Manage Data Tables page",
+        "Click the Create action to open the Create Data Table form"
+      ],
+      "steps": [
+        "1. In the Create Data Table form, enter a value in the Data Table Name field: <valid Data Table Name>",
+        "2. Select an Application Table Name from the dropdown: <Application Table Name>",
+        "3. Do NOT add any entries to the Columns repeating group (leave <no columns added>)",
+        "4. Click the form Save button"
+      ],
+      "expected_result": "Inline validation error appears associated with the Columns section indicating at least one column definition is required (e.g. 'At least one column is required'); the form does not submit and no custom data table is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Apply Audit Trails Date Range with start date after end date",
+      "preconditions": [
+        "Navigate to Audit Trails page"
+      ],
+      "steps": [
+        "1. Open the Date Range filter control",
+        "2. Enter <start date after end date> where Start Date is later than End Date",
+        "3. Click Apply/Filter"
+      ],
+      "expected_result": "Inline validation error appears on the Date Range filter (Start Date) indicating the start must be before or equal to the end date (e.g. 'Start date must be before or equal to End date'); the filter is not applied and the results remain unchanged",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Attempt to Approve a pending Audit Trail when maker-checker is disabled",
+      "preconditions": [
+        "Navigate to Global Configuration page",
+        "Ensure the maker-checker configuration is Disabled (Enabled toggle is off)",
+        "Navigate to Audit Trails page with a row where Processing_Result == Pending (<Audit row with Processing_Result Pending>)"
+      ],
+      "steps": [
+        "1. Locate the Audit Trails row with Processing_Result == Pending",
+        "2. Attempt to click the Approve action for that row"
+      ],
+      "expected_result": "Approve action is not available or a blocking error is shown: an inline/global error message appears indicating approval is not permitted because maker-checker is disabled (e.g. 'Cannot approve: maker-checker is disabled'); the Processing_Result remains Pending and no approval occurs",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Attempt to Reject a pending Audit Trail when maker-checker is disabled",
+      "preconditions": [
+        "Navigate to Global Configuration page",
+        "Ensure the maker-checker configuration is Disabled (Enabled toggle is off)",
+        "Navigate to Audit Trails page with a row where Processing_Result == Pending (<Audit row with Processing_Result Pending>)"
+      ],
+      "steps": [
+        "1. Locate the Audit Trails row with Processing_Result == Pending",
+        "2. Attempt to click the Reject action for that row"
+      ],
+      "expected_result": "Reject action is not available or a blocking error is shown: an inline/global error message appears indicating rejection is not permitted because maker-checker is disabled (e.g. 'Cannot reject: maker-checker is disabled'); the Processing_Result remains Pending and no rejection occurs",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Attempt to Approve an Audit Trail item whose Processing_Result is not Pending",
+      "preconditions": [
+        "Navigate to Audit Trails page",
+        "Locate an Audit Trails row where Processing_Result == Approved (<Audit row with Processing_Result Approved>)"
+      ],
+      "steps": [
+        "1. Locate the Audit Trails row with Processing_Result == Approved",
+        "2. Attempt to click the Approve action for that row"
+      ],
+      "expected_result": "Approve action is either not visible or is disabled for the row; if clicked, an inline error is shown indicating the action is only available for Pending items (e.g. 'Action not available: item is not Pending'); the Processing_Result remains Approved and no transition occurs",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 5,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+------------------------------------------------------------
+[22:36:26] Test-Negative - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "System Administration",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Edit job CRON with invalid format",
+      "preconditions": [
+        "Navigate to Manage Scheduler Jobs page",
+        "A job row (e.g., <Job Name>) is present"
+      ],
+      "steps": [
+        "1. Click the CRON Expression cell for the job row <Job Name>",
+        "2. Enter <invalid CRON expression> into the CRON Expression field",
+        "3. Click the per-row Save/confirm control (or blur the field to trigger validation)"
+      ],
+      "expected_result": "Inline validation error appears on the CRON Expression field indicating the value is not a valid cron expression (e.g. 'Invalid CRON expression'); the change is not saved and the job's CRON Expression remains unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Clear CRON expression (leave blank) and attempt save",
+      "preconditions": [
+        "Navigate to Manage Scheduler Jobs page",
+        "A job row (e.g., <Job Name>) currently has a CRON Expression"
+      ],
+      "steps": [
+        "1. Click the CRON Expression cell for the job row <Job Name>",
+        "2. Delete the CRON Expression value so the field is blank (<empty value>)",
+        "3. Click the per-row Save/confirm control (or press Enter)"
+      ],
+      "expected_result": "Inline validation error appears on the CRON Expression field indicating the field is required or cannot be blank (e.g. 'CRON Expression is required'); the blank value is not saved and the job's CRON Expression remains the previous value",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Enter non-numeric value into Column Length (number field)",
+      "preconditions": [
+        "Navigate to Manage Data Tables page",
+        "Click the Create action to open the Create Data Table form"
+      ],
+      "steps": [
+        "1. In the Create Data Table form, click to add a new column to the Columns repeating group",
+        "2. In the new column's Length field enter <non-numeric input>",
+        "3. Click the form Save button"
+      ],
+      "expected_result": "Inline validation error appears on the Columns -> Length field indicating it must be a number (e.g. 'Must be a number'); form does not submit and the custom data table is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Attempt to create a custom data table without any column definitions",
+      "preconditions": [
+        "Navigate to Manage Data Tables page",
+        "Click the Create action to open the Create Data Table form"
+      ],
+      "steps": [
+        "1. In the Create Data Table form, enter a value in the Data Table Name field: <valid Data Table Name>",
+        "2. Select an Application Table Name from the dropdown: <Application Table Name>",
+        "3. Do NOT add any entries to the Columns repeating group (leave <no columns added>)",
+        "4. Click the form Save button"
+      ],
+      "expected_result": "Inline validation error appears associated with the Columns section indicating at least one column definition is required (e.g. 'At least one column is required'); the form does not submit and no custom data table is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Apply Audit Trails Date Range with start date after end date",
+      "preconditions": [
+        "Navigate to Audit Trails page"
+      ],
+      "steps": [
+        "1. Open the Date Range filter control",
+        "2. Enter <start date after end date> where Start Date is later than End Date",
+        "3. Click Apply/Filter"
+      ],
+      "expected_result": "Inline validation error appears on the Date Range filter (Start Date) indicating the start must be before or equal to the end date (e.g. 'Start date must be before or equal to End date'); the filter is not applied and the results remain unchanged",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Attempt to Approve a pending Audit Trail when maker-checker is disabled",
+      "preconditions": [
+        "Navigate to Global Configuration page",
+        "Ensure the maker-checker configuration is Disabled (Enabled toggle is off)",
+        "Navigate to Audit Trails page with a row where Processing_Result == Pending (<Audit row with Processing_Result Pending>)"
+      ],
+      "steps": [
+        "1. Locate the Audit Trails row with Processing_Result == Pending",
+        "2. Attempt to click the Approve action for that row"
+      ],
+      "expected_result": "Approve action is not available or a blocking error is shown: an inline/global error message appears indicating approval is not permitted because maker-checker is disabled (e.g. 'Cannot approve: maker-checker is disabled'); the Processing_Result remains Pending and no approval occurs",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Attempt to Reject a pending Audit Trail when maker-checker is disabled",
+      "preconditions": [
+        "Navigate to Global Configuration page",
+        "Ensure the maker-checker configuration is Disabled (Enabled toggle is off)",
+        "Navigate to Audit Trails page with a row where Processing_Result == Pending (<Audit row with Processing_Result Pending>)"
+      ],
+      "steps": [
+        "1. Locate the Audit Trails row with Processing_Result == Pending",
+        "2. Attempt to click the Reject action for that row"
+      ],
+      "expected_result": "Reject action is not available or a blocking error is shown: an inline/global error message appears indicating rejection is not permitted because maker-checker is disabled (e.g. 'Cannot reject: maker-checker is disabled'); the Processing_Result remains Pending and no rejection occurs",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Attempt to Approve an Audit Trail item whose Processing_Result is not Pending",
+      "preconditions": [
+        "Navigate to Audit Trails page",
+        "Locate an Audit Trails row where Processing_Result == Approved (<Audit row with Processing_Result Approved>)"
+      ],
+      "steps": [
+        "1. Locate the Audit Trails row with Processing_Result == Approved",
+        "2. Attempt to click the Approve action for that row"
+      ],
+      "expected_result": "Approve action is either not visible or is disabled for the row; if clicked, an inline error is shown indicating the action is only available for Pending items (e.g. 'Action not available: item is not Pending'); the Processing_Result remains Approved and no transition occurs",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 5,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}

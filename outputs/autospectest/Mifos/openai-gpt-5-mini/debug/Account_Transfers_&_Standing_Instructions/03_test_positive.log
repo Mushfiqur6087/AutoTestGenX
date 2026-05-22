@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.372566
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.554709
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Account Transfers & Standing Instructions</module_name>
 
@@ -279,7 +279,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "type": "number",
           "required": true,
           "constraints": [
-            "must not exceed available balance"
+            "error shown if amount exceeds available balance"
           ]
         },
         "Transfer_Date": {
@@ -294,13 +294,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "processes the transfer, debiting the source and crediting the destination",
-          "constraints": [],
-          "preconditions": []
+          "on_success": "processes transfer; debits the source account and credits the destination account"
         }
       ]
     },
-    "Standing_Instructions_List": {
+    "Standing_Instructions_Page": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -313,33 +311,30 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         "Validity Till",
         "Status"
       ],
-      "top_actions": [
-        {
-          "element_name": "+ Create Standing Instruction",
-          "action": "opens_form",
-          "opens": "Create_Standing_Instruction_Form"
-        }
+      "status_values": [
+        "Active",
+        "Disabled"
       ],
+      "create_button": {
+        "element_name": "+ Create Standing Instruction",
+        "action": "opens_form",
+        "opens_form": "Create_Standing_Instruction_Form"
+      },
       "row_actions": [
         {
           "action_name": "Enable",
-          "preconditions": [
-            "Status == Disabled"
-          ],
           "on_success": "sets status to Active"
         },
         {
           "action_name": "Disable",
-          "preconditions": [
-            "Status == Active"
-          ],
           "on_success": "sets status to Disabled"
         },
         {
           "action_name": "Delete",
-          "on_success": "deletes standing instruction"
+          "on_success": "removes standing instruction from listing"
         }
-      ]
+      ],
+      "bulk_actions": []
     },
     "Create_Standing_Instruction_Form": {
       "type": "form",
@@ -348,41 +343,9 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "type": "unspecified",
           "required": true
         },
-        "From_Office": {
-          "type": "unspecified",
-          "required": false
-        },
-        "From_Client": {
-          "type": "unspecified",
-          "required": false
-        },
-        "From_Account_Type": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Savings Account",
-            "Loan Account"
-          ]
-        },
         "From_Account": {
           "type": "unspecified",
           "required": false
-        },
-        "To_Office": {
-          "type": "unspecified",
-          "required": false
-        },
-        "To_Client": {
-          "type": "unspecified",
-          "required": false
-        },
-        "To_Account_Type": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Savings Account",
-            "Loan Account"
-          ]
         },
         "To_Account": {
           "type": "unspecified",
@@ -458,7 +421,7 @@ The Standing Instructions page displays a data table with columns for Name, From
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:20:19] Test-Positive - LLM RESPONSE
+[22:35:25] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Account Transfers & Standing Instructions",
@@ -466,124 +429,110 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Submit Account Transfer within available balance",
+      "test_case": "Submit an account transfer with amount within available balance",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "From Account exists with available balance >= <Transfer Amount>",
-        "To Account exists"
+        "User logged in as <Bank Staff>"
       ],
       "steps": [
-        "1. Open the Account Transfers page",
+        "1. Navigate to the Account Transfers page",
         "2. Select <From Office> in the From Office field",
         "3. Select <From Client> in the From Client field",
-        "4. Select <From Account Type> from the From Account Type dropdown",
+        "4. Select 'Savings Account' from the From Account Type dropdown",
         "5. Select <From Account> in the From Account field",
         "6. Select <To Office> in the To Office field",
         "7. Select <To Client> in the To Client field",
-        "8. Select <To Account Type> from the To Account Type dropdown",
+        "8. Select 'Savings Account' from the To Account Type dropdown",
         "9. Select <To Account> in the To Account field",
-        "10. Enter <Transfer Amount> in the Transfer Amount field (amount <= available balance)",
-        "11. Enter <Transfer Date> in the Transfer Date field",
-        "12. Enter <Description> in the Description field (optional)",
+        "10. Enter <valid amount within available balance> in the Transfer Amount field",
+        "11. Select <transfer date> in the Transfer Date field",
+        "12. Enter <optional description> in the Description field",
         "13. Click Submit"
       ],
-      "expected_result": "A success notification is displayed confirming the transfer; the Account Transfers form fields are cleared.",
+      "expected_result": "A success notification is displayed confirming the transfer was processed and the Account Transfers form is reset/cleared",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Open Create Standing Instruction form from Standing Instructions list",
+      "test_case": "Create a new standing instruction via the Create form",
       "preconditions": [
         "User logged in as <Bank Staff>"
       ],
       "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Click + Create Standing Instruction"
-      ],
-      "expected_result": "The Create Standing Instruction form is displayed with fields: Name, From Office, From Client, From Account Type, From Account, To Office, To Client, To Account Type, To Account, Transfer Type, Priority, Instruction Type, Amount, Validity From, Validity Till, Recurrence Type, Recurrence Frequency and Recurrence Interval visible.",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-003",
-      "test_case": "Create a Fixed-amount Standing Instruction (happy path)",
-      "preconditions": [
-        "User logged in as <Bank Staff>"
-      ],
-      "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Click + Create Standing Instruction",
+        "1. Navigate to the Standing Instructions page",
+        "2. Click the '+ Create Standing Instruction' button to open the Create Standing Instruction form",
         "3. Enter <Name> in the Name field",
-        "4. Select <From Office>, enter/select <From Client>, choose <From Account Type> and select <From Account>",
-        "5. Select <To Office>, enter/select <To Client>, choose <To Account Type> and select <To Account>",
-        "6. Select <Transfer Type> and <Priority> (optional)",
-        "7. Select Instruction Type = Fixed",
-        "8. Enter <Amount> in the Amount field",
-        "9. Enter <Validity_From> in the Validity From field and <Validity_Till> in the Validity Till field",
-        "10. Select Recurrence Type = Periodic and enter <Recurrence Frequency> and <Recurrence Interval> (optional)",
-        "11. Click Create"
+        "4. Select <From Account> in the From Account field",
+        "5. Select <To Account> in the To Account field",
+        "6. Select <Transfer Type> in the Transfer Type field",
+        "7. Select <Priority> in the Priority field",
+        "8. Select 'Fixed' from the Instruction Type dropdown",
+        "9. Enter <Amount> in the Amount field",
+        "10. Select <Validity From date> in the Validity From field",
+        "11. Select <Validity Till date> in the Validity Till field",
+        "12. Select 'Periodic' from the Recurrence Type dropdown",
+        "13. Enter <Recurrence Frequency> in the Recurrence Frequency field",
+        "14. Enter <Recurrence Interval> in the Recurrence Interval field",
+        "15. Click Create"
       ],
-      "expected_result": "A new row appears in the Standing Instructions table with the entered Name, From Account, To Account, Amount, Validity From and Validity Till visible in the respective columns.",
+      "expected_result": "New row appears in the Standing Instructions table with the entered Name, From Account, To Account, Amount and the specified Validity From/Till dates",
       "priority": "high"
     },
     {
-      "tc_id": "P-004",
-      "test_case": "Enable a Disabled standing instruction from the list",
+      "tc_id": "P-003",
+      "test_case": "Enable a standing instruction that is currently Disabled",
       "preconditions": [
         "User logged in as <Bank Staff>",
-        "A standing instruction named <Name> exists in the Standing Instructions table with Status == Disabled"
+        "<existing standing instruction> is present in the Standing Instructions table with Status 'Disabled'"
       ],
       "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Locate the row for <Name>",
-        "3. Click the Enable action on the <Name> row",
-        "4. If an Enable confirmation dialog appears, click Confirm"
+        "1. Navigate to the Standing Instructions page",
+        "2. Locate the row for <existing standing instruction>",
+        "3. Click the 'Enable' action for that row"
       ],
-      "expected_result": "The Status cell for <Name> in the Standing Instructions table updates to 'Active'.",
+      "expected_result": "Status column for <existing standing instruction> updates to 'Active' in the Standing Instructions table",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "Disable a standing instruction that is currently Active",
+      "preconditions": [
+        "User logged in as <Bank Staff>",
+        "<existing standing instruction> is present in the Standing Instructions table with Status 'Active'"
+      ],
+      "steps": [
+        "1. Navigate to the Standing Instructions page",
+        "2. Locate the row for <existing standing instruction>",
+        "3. Click the 'Disable' action for that row"
+      ],
+      "expected_result": "Status column for <existing standing instruction> updates to 'Disabled' in the Standing Instructions table",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Disable an Active standing instruction from the list",
+      "test_case": "Delete a standing instruction from the listing",
       "preconditions": [
         "User logged in as <Bank Staff>",
-        "A standing instruction named <Name> exists in the Standing Instructions table with Status == Active"
+        "<existing standing instruction> is present in the Standing Instructions table"
       ],
       "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Locate the row for <Name>",
-        "3. Click the Disable action on the <Name> row",
-        "4. If a Disable confirmation dialog appears, click Confirm"
+        "1. Navigate to the Standing Instructions page",
+        "2. Locate the row for <existing standing instruction>",
+        "3. Click the 'Delete' action for that row"
       ],
-      "expected_result": "The Status cell for <Name> in the Standing Instructions table updates to 'Disabled'.",
+      "expected_result": "The row for <existing standing instruction> is no longer present in the Standing Instructions table",
       "priority": "medium"
-    },
-    {
-      "tc_id": "P-006",
-      "test_case": "Delete a standing instruction from the list",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "A standing instruction named <Name> exists in the Standing Instructions table"
-      ],
-      "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Locate the row for <Name>",
-        "3. Click the Delete action on the <Name> row",
-        "4. Click Confirm on the Delete confirmation dialog"
-      ],
-      "expected_result": "The row with Name <Name> is no longer present in the Standing Instructions table.",
-      "priority": "high"
     }
   ],
   "summary": {
-    "total": 6,
-    "high_priority": 3,
+    "total": 5,
+    "high_priority": 2,
     "medium_priority": 3,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:20:19] Test-Positive - PARSED JSON
+[22:35:25] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Account Transfers & Standing Instructions",
@@ -591,117 +540,103 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Submit Account Transfer within available balance",
+      "test_case": "Submit an account transfer with amount within available balance",
       "preconditions": [
-        "User logged in as <Bank Staff>",
-        "From Account exists with available balance >= <Transfer Amount>",
-        "To Account exists"
+        "User logged in as <Bank Staff>"
       ],
       "steps": [
-        "1. Open the Account Transfers page",
+        "1. Navigate to the Account Transfers page",
         "2. Select <From Office> in the From Office field",
         "3. Select <From Client> in the From Client field",
-        "4. Select <From Account Type> from the From Account Type dropdown",
+        "4. Select 'Savings Account' from the From Account Type dropdown",
         "5. Select <From Account> in the From Account field",
         "6. Select <To Office> in the To Office field",
         "7. Select <To Client> in the To Client field",
-        "8. Select <To Account Type> from the To Account Type dropdown",
+        "8. Select 'Savings Account' from the To Account Type dropdown",
         "9. Select <To Account> in the To Account field",
-        "10. Enter <Transfer Amount> in the Transfer Amount field (amount <= available balance)",
-        "11. Enter <Transfer Date> in the Transfer Date field",
-        "12. Enter <Description> in the Description field (optional)",
+        "10. Enter <valid amount within available balance> in the Transfer Amount field",
+        "11. Select <transfer date> in the Transfer Date field",
+        "12. Enter <optional description> in the Description field",
         "13. Click Submit"
       ],
-      "expected_result": "A success notification is displayed confirming the transfer; the Account Transfers form fields are cleared.",
+      "expected_result": "A success notification is displayed confirming the transfer was processed and the Account Transfers form is reset/cleared",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Open Create Standing Instruction form from Standing Instructions list",
+      "test_case": "Create a new standing instruction via the Create form",
       "preconditions": [
         "User logged in as <Bank Staff>"
       ],
       "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Click + Create Standing Instruction"
-      ],
-      "expected_result": "The Create Standing Instruction form is displayed with fields: Name, From Office, From Client, From Account Type, From Account, To Office, To Client, To Account Type, To Account, Transfer Type, Priority, Instruction Type, Amount, Validity From, Validity Till, Recurrence Type, Recurrence Frequency and Recurrence Interval visible.",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-003",
-      "test_case": "Create a Fixed-amount Standing Instruction (happy path)",
-      "preconditions": [
-        "User logged in as <Bank Staff>"
-      ],
-      "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Click + Create Standing Instruction",
+        "1. Navigate to the Standing Instructions page",
+        "2. Click the '+ Create Standing Instruction' button to open the Create Standing Instruction form",
         "3. Enter <Name> in the Name field",
-        "4. Select <From Office>, enter/select <From Client>, choose <From Account Type> and select <From Account>",
-        "5. Select <To Office>, enter/select <To Client>, choose <To Account Type> and select <To Account>",
-        "6. Select <Transfer Type> and <Priority> (optional)",
-        "7. Select Instruction Type = Fixed",
-        "8. Enter <Amount> in the Amount field",
-        "9. Enter <Validity_From> in the Validity From field and <Validity_Till> in the Validity Till field",
-        "10. Select Recurrence Type = Periodic and enter <Recurrence Frequency> and <Recurrence Interval> (optional)",
-        "11. Click Create"
+        "4. Select <From Account> in the From Account field",
+        "5. Select <To Account> in the To Account field",
+        "6. Select <Transfer Type> in the Transfer Type field",
+        "7. Select <Priority> in the Priority field",
+        "8. Select 'Fixed' from the Instruction Type dropdown",
+        "9. Enter <Amount> in the Amount field",
+        "10. Select <Validity From date> in the Validity From field",
+        "11. Select <Validity Till date> in the Validity Till field",
+        "12. Select 'Periodic' from the Recurrence Type dropdown",
+        "13. Enter <Recurrence Frequency> in the Recurrence Frequency field",
+        "14. Enter <Recurrence Interval> in the Recurrence Interval field",
+        "15. Click Create"
       ],
-      "expected_result": "A new row appears in the Standing Instructions table with the entered Name, From Account, To Account, Amount, Validity From and Validity Till visible in the respective columns.",
+      "expected_result": "New row appears in the Standing Instructions table with the entered Name, From Account, To Account, Amount and the specified Validity From/Till dates",
       "priority": "high"
     },
     {
-      "tc_id": "P-004",
-      "test_case": "Enable a Disabled standing instruction from the list",
+      "tc_id": "P-003",
+      "test_case": "Enable a standing instruction that is currently Disabled",
       "preconditions": [
         "User logged in as <Bank Staff>",
-        "A standing instruction named <Name> exists in the Standing Instructions table with Status == Disabled"
+        "<existing standing instruction> is present in the Standing Instructions table with Status 'Disabled'"
       ],
       "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Locate the row for <Name>",
-        "3. Click the Enable action on the <Name> row",
-        "4. If an Enable confirmation dialog appears, click Confirm"
+        "1. Navigate to the Standing Instructions page",
+        "2. Locate the row for <existing standing instruction>",
+        "3. Click the 'Enable' action for that row"
       ],
-      "expected_result": "The Status cell for <Name> in the Standing Instructions table updates to 'Active'.",
+      "expected_result": "Status column for <existing standing instruction> updates to 'Active' in the Standing Instructions table",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "Disable a standing instruction that is currently Active",
+      "preconditions": [
+        "User logged in as <Bank Staff>",
+        "<existing standing instruction> is present in the Standing Instructions table with Status 'Active'"
+      ],
+      "steps": [
+        "1. Navigate to the Standing Instructions page",
+        "2. Locate the row for <existing standing instruction>",
+        "3. Click the 'Disable' action for that row"
+      ],
+      "expected_result": "Status column for <existing standing instruction> updates to 'Disabled' in the Standing Instructions table",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Disable an Active standing instruction from the list",
+      "test_case": "Delete a standing instruction from the listing",
       "preconditions": [
         "User logged in as <Bank Staff>",
-        "A standing instruction named <Name> exists in the Standing Instructions table with Status == Active"
+        "<existing standing instruction> is present in the Standing Instructions table"
       ],
       "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Locate the row for <Name>",
-        "3. Click the Disable action on the <Name> row",
-        "4. If a Disable confirmation dialog appears, click Confirm"
+        "1. Navigate to the Standing Instructions page",
+        "2. Locate the row for <existing standing instruction>",
+        "3. Click the 'Delete' action for that row"
       ],
-      "expected_result": "The Status cell for <Name> in the Standing Instructions table updates to 'Disabled'.",
+      "expected_result": "The row for <existing standing instruction> is no longer present in the Standing Instructions table",
       "priority": "medium"
-    },
-    {
-      "tc_id": "P-006",
-      "test_case": "Delete a standing instruction from the list",
-      "preconditions": [
-        "User logged in as <Bank Staff>",
-        "A standing instruction named <Name> exists in the Standing Instructions table"
-      ],
-      "steps": [
-        "1. Open the Standing Instructions page",
-        "2. Locate the row for <Name>",
-        "3. Click the Delete action on the <Name> row",
-        "4. Click Confirm on the Delete confirmation dialog"
-      ],
-      "expected_result": "The row with Name <Name> is no longer present in the Standing Instructions table.",
-      "priority": "high"
     }
   ],
   "summary": {
-    "total": 6,
-    "high_priority": 3,
+    "total": 5,
+    "high_priority": 2,
     "medium_priority": 3,
     "low_priority": 0
   }

@@ -1,0 +1,547 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:54:00.269426
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:54:00] Test-Negative - SYSTEM PROMPT
+------------------------------------------------------------
+You are a Negative Test Case Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY negative test cases — tests where invalid input is provided or business rules are violated, and the system correctly rejects or blocks the action.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Negative Testing:**
+
+The AST represents every interactive element in the module. Each node type has a corresponding failure category:
+
+| AST node / field | What to test for failure |
+|---|---|
+| `required: true` field | Leave it blank and submit — inline validation error |
+| `constraints: []` on a field or action | One TC per unique constraint: violate it specifically |
+| `preconditions: []` on an action | One TC attempting the action when the precondition is NOT met |
+| `visible_when` / `required_when` conditional field | Trigger the condition, then submit the revealed field blank or invalid |
+| `state_bound_action_bar` states | Attempt an action from the wrong state (e.g., Approve an already-Active entity) |
+| `on_success` with quoted text | The negative expected_result is the *blocking* behavior — the entity stays unchanged |
+| `submit_actions[]` | If any button has `preconditions`, test that button when precondition fails |
+
+> If a module has no `form`, no `wizard`, no `state_bound_action_bar`, and no `constraints` — it is display-only. Generate at most 1–2 tests (unauthenticated access, or a non-implemented link if described). Do not invent validation scenarios.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — Name the field, the violated rule, and the visible error indicator.**
+Never write a vague expected result. Always specify what the tester sees.
+
+- ❌ `"Validation error shown"` — too vague
+- ❌ `"Error is displayed"` — too vague
+- ✅ `"Inline validation error appears on the <Field Name> field indicating it is required"`
+- ✅ `"<Field Name> field displays an error: 'Must be a valid email address'"`
+- ✅ `"Submit button remains disabled / form does not submit; <Field> is highlighted"`
+
+**Rule B — Quote exact error text when the spec provides it.**
+If the description quotes a specific error string, copy it verbatim into the expected_result.
+- ❌ `"incorrect credentials error shown"` when spec says `"Incorrect email or password. Please try again."`
+- ✅ `"Page displays 'Incorrect email or password. Please try again.' and the Password field is cleared"`
+
+**Rule C — Assert the blocking behavior, not just the error.**
+The expected_result must confirm the action was blocked: the entity was not created, the status did not change, the user was not redirected.
+- ❌ `"Error shown"` (doesn't confirm the action was blocked)
+- ✅ `"Form does not submit; <Entity> is not created; error shown on <Field>"`
+- ✅ `"Status remains <Current State>; no transition occurs"`
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Use generic placeholders in angle brackets.
+
+- ✅ `"Enter <invalid email format> in the Email field"`
+- ✅ `"Enter <amount exceeding available balance> in the Amount field"`
+- ✅ `"Enter <password shorter than minimum length> in the Password field"`
+- ❌ `"Enter 'notanemail' in the Email field"`
+- ❌ `"Enter 'abc123' in the Password field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic user action — one field, one click, one navigation. No grouping.
+
+- ✅ `"1. Leave the <Required Field> blank"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill all fields except <Required Field> and submit"`
+
+---
+
+**SCOPE GATE (run before writing any test):**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact sentence in the description or field/constraint/state in the AST justifies this test? If you cannot point to one → delete it.
+2. **UI-executable:** Can a tester trigger this by clicking, typing, selecting, or navigating in a browser? If verification requires dev tools, DOM inspection, concurrent users, API calls, or server-side error simulation → out of scope.
+3. **Not a positive test in disguise:** Display-only behavior ("the page shows X") produces positive tests, not negative ones.
+
+Do NOT generate tests for: backend data integrity, security vulnerabilities, infrastructure failures, race conditions, or anything not described in the spec.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Required field representatives (deduplicated by field type):**
+
+Group required fields by type: `text/unspecified`, `email`, `password`, `number`, `date`, `dropdown`, `file_upload`. Generate:
+- ONE "leave blank and submit" test per **type group** (not per field) — use the most prominent field as representative
+- ONE "submit with ALL required fields empty" test
+
+Do NOT generate a separate blank-field test for every required field. If 5 text fields are all required, one representative covers them all.
+
+**2. Format violations:**
+
+For fields with type-specific format rules (from AST type or description):
+- `email` → one test with invalid format
+- `number` → one test with non-numeric input
+- `date` → one test with invalid/impossible date
+- `password` → ONE representative test for policy violation (not one per sub-rule — see Deduplication)
+
+Only generate if the spec or AST implies format validation for that field.
+
+**3. Numeric bounds and balance violations:**
+
+If the spec describes minimum/maximum values, amount ranges, or balance checks:
+- One test per distinct bound violation (e.g., amount below minimum, amount above maximum, amount exceeding available balance)
+- Use `<amount below minimum>`, `<amount exceeding available balance>` as placeholders
+
+Examples across the dataset:
+- Transfer amount > available balance → error
+- Loan amount outside product min/max → error
+- Deposit below minimum requirement → error
+
+**4. Constraint violations:**
+
+For each unique `constraints[]` entry in the AST, and for cross-field rules described in the spec:
+- `"must be unique"` → submit with a duplicate value
+- `"must match"` (confirm fields) → enter mismatched values
+- `"must not be same as current"` → select the current value
+- `"cannot perform <action> while <condition>"` → attempt the action when the condition is true
+- `"<date> must be after <other date>"` → enter reversed dates
+
+One test per unique constraint. Do not duplicate the same mechanism.
+
+**5. Precondition violations (auth, role, and state):**
+
+For each `preconditions[]` entry on any action — and for auth/role rules described in the spec:
+
+- **Unauthenticated access:** If any page or action requires login, generate one test: an unauthenticated user attempts to access it and is redirected to the login page.
+- **Wrong role:** If the spec explicitly states a feature is restricted to a specific role (e.g., Teacher only, Admin only), generate one test: a user of the wrong role attempts the action and is blocked or the control is not visible.
+- **Precondition not met:** For each AST `preconditions[]` entry, attempt the action when that precondition is not satisfied.
+
+**6. State-machine violations:**
+
+From `state_bound_action_bar` nodes:
+- For each state where an action is NOT listed in `available_actions`, generate one test attempting that action from that state. Example: attempting "Approve" on an entity already in "Active" state.
+- If a state has an empty `available_actions` array, generate one test verifying no action buttons are visible in that state.
+
+One test per unique wrong-state scenario — do not enumerate every action × every invalid state.
+
+---
+
+**DEDUPLICATION GATE (run before outputting):**
+
+1. **Required field dedup:** Multiple required text fields → ONE representative test, not one per field.
+2. **Sub-rule dedup:** A field with multiple validation sub-rules (e.g., password: length + uppercase + lowercase + number + special char) → ONE representative violation test, not one per sub-rule.
+3. **Cross-form dedup:** If two forms in the same module share the same validation mechanism (e.g., both have a required text field) → test it on the primary form only.
+4. **Uniqueness check:** Before outputting, ask for each TC: "Does this test catch a bug that NO other test in this module would catch?" If no → remove it.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (standard CRUD form, form with constraints): **4–8 tests**
+- Complex module (state machine, multi-form, wizard with many constraints): **8–12 tests**
+
+If you exceed these ranges, you are generating redundant tests. Apply the deduplication gate again before outputting.
+
+---
+
+**PRIORITY:**
+
+- **High:** State precondition violations, constraint violations that could corrupt data, unauthenticated access, required field representatives
+- **Medium:** Format violations, cross-field validation, numeric bounds, wrong-role access, wrong-state action attempts
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "What error/block should occur, naming the field and indicator",
+      "priority": "high | medium"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "high_priority": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:54:00] Test-Negative - USER PROMPT
+------------------------------------------------------------
+<module_name>Cars Search & Listing</module_name>
+
+<ast>
+{
+  "module_name": "Cars Search & Listing",
+  "components": {
+    "Car_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Pick_Up_Location": {
+          "type": "search"
+        },
+        "Drop_Off_Location": {
+          "type": "search"
+        },
+        "Pick_Up_Date": {
+          "type": "date"
+        },
+        "Pick_Up_Time": {
+          "type": "unspecified"
+        },
+        "Drop_Off_Date": {
+          "type": "date"
+        },
+        "Drop_Off_Time": {
+          "type": "unspecified"
+        },
+        "Driver_Age": {
+          "type": "number"
+        }
+      },
+      "constraints": [
+        "Drop_Off_Date >= Pick_Up_Date"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to Listing_Page"
+        }
+      ]
+    },
+    "Listing_Page": {
+      "type": "page",
+      "components": {
+        "Sidebar_Filters": {
+          "type": "panel",
+          "on_change": "updates results dynamically",
+          "fields": {
+            "Car_Type": {
+              "type": "multiselect",
+              "options": [
+                "Economy",
+                "Compact",
+                "SUV",
+                "Luxury",
+                "Van"
+              ]
+            },
+            "Transmission": {
+              "type": "multiselect",
+              "options": [
+                "Automatic",
+                "Manual"
+              ]
+            },
+            "Fuel_Policy": {
+              "type": "multiselect"
+            },
+            "Rental_Company": {
+              "type": "multiselect"
+            },
+            "Price_Range": {
+              "type": "unspecified"
+            }
+          }
+        },
+        "Vehicles_List": {
+          "type": "grouped_list",
+          "grouped_by": "Car_Type",
+          "item_fields": {
+            "Vehicle_Image": {
+              "type": "image"
+            },
+            "Make_and_Model": {
+              "type": "text"
+            },
+            "Transmission_Type": {
+              "type": "text",
+              "options": [
+                "Automatic",
+                "Manual"
+              ]
+            },
+            "Fuel_Policy": {
+              "type": "text"
+            },
+            "Seating_Capacity": {
+              "type": "number"
+            },
+            "Luggage_Capacity": {
+              "type": "number"
+            },
+            "Features": {
+              "type": "list",
+              "items": [
+                "AC",
+                "GPS",
+                "etc."
+              ]
+            },
+            "Price_Per_Day": {
+              "type": "currency"
+            },
+            "Total_Rental_Cost": {
+              "type": "currency",
+              "computed": "Price_Per_Day * rental_days"
+            },
+            "Book_Now": {
+              "type": "button",
+              "element_name": "Book Now",
+              "on_success": "initiates booking flow"
+            }
+          },
+          "groups": {
+            "Economy": {
+              "items": []
+            },
+            "Compact": {
+              "items": []
+            },
+            "SUV": {
+              "items": []
+            },
+            "Luxury": {
+              "items": []
+            },
+            "Van": {
+              "items": []
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</ast>
+
+<description>
+
+The car rental search form collects pick-up and drop-off location, pick-up and drop-off date and time, and driver age. On success, users are redirected to the listing page, where vehicles are grouped by category (Economy, Compact, SUV, Luxury, Van). Each listing shows vehicle image, make and model, transmission type (Automatic/Manual), fuel policy, seating and luggage capacity, feature icons (AC, GPS, etc.), price per day, total rental cost for the selected period, and a Book Now button. Sidebar filters include car type, transmission, fuel policy, rental company, and price range. Filters update results dynamically.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:56:31] Test-Negative - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Cars Search & Listing",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Drop-off date earlier than pick-up date (constraint violation)",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <Pick_Up_Date> in the Pick_Up_Date field",
+        "2. Enter <Drop_Off_Date before Pick_Up_Date> in the Drop_Off_Date field",
+        "3. Click the Search button"
+      ],
+      "expected_result": "Inline validation error appears on the Drop_Off_Date field indicating it must be the same as or after Pick_Up_Date; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Invalid date format in pick-up date",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <invalid date format> in the Pick_Up_Date field",
+        "2. Click the Search button"
+      ],
+      "expected_result": "Pick_Up_Date field displays an inline validation error indicating an invalid date format; the form does not submit and the user remains on the search form (no redirect to Listing_Page)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Non-numeric input in Driver_Age field",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <non-numeric input> in the Driver_Age field",
+        "2. Click the Search button"
+      ],
+      "expected_result": "Driver_Age field displays an inline validation error indicating a numeric value is required; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Missing Drop_Off_Date when Pick_Up_Date is provided (incomplete date pair for rental period)",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <Pick_Up_Date> in the Pick_Up_Date field",
+        "2. Leave the Drop_Off_Date field blank",
+        "3. Click the Search button"
+      ],
+      "expected_result": "Inline validation error appears on the Drop_Off_Date field indicating it is required to determine the rental period; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "No 'Book Now' action when search returns zero vehicles",
+      "preconditions": [
+        "User performs a search that yields zero vehicles (search criteria produce no matches)"
+      ],
+      "steps": [
+        "1. Fill the search form with criteria that will produce no matching vehicles (e.g. select a combination of location, dates and filters known to return no results)",
+        "2. Click the Search button",
+        "3. Inspect the Vehicles_List section on the Listing_Page"
+      ],
+      "expected_result": "Vehicles_List displays no items and no 'Book Now' buttons are visible; user cannot initiate the booking flow and no booking is started",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Invalid time format in Pick_Up_Time",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <invalid time format> in the Pick_Up_Time field",
+        "2. Click the Search button"
+      ],
+      "expected_result": "Pick_Up_Time field shows an inline validation error indicating an invalid time format; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 3,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+------------------------------------------------------------
+[22:56:31] Test-Negative - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Cars Search & Listing",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Drop-off date earlier than pick-up date (constraint violation)",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <Pick_Up_Date> in the Pick_Up_Date field",
+        "2. Enter <Drop_Off_Date before Pick_Up_Date> in the Drop_Off_Date field",
+        "3. Click the Search button"
+      ],
+      "expected_result": "Inline validation error appears on the Drop_Off_Date field indicating it must be the same as or after Pick_Up_Date; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Invalid date format in pick-up date",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <invalid date format> in the Pick_Up_Date field",
+        "2. Click the Search button"
+      ],
+      "expected_result": "Pick_Up_Date field displays an inline validation error indicating an invalid date format; the form does not submit and the user remains on the search form (no redirect to Listing_Page)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Non-numeric input in Driver_Age field",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <non-numeric input> in the Driver_Age field",
+        "2. Click the Search button"
+      ],
+      "expected_result": "Driver_Age field displays an inline validation error indicating a numeric value is required; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Missing Drop_Off_Date when Pick_Up_Date is provided (incomplete date pair for rental period)",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <Pick_Up_Date> in the Pick_Up_Date field",
+        "2. Leave the Drop_Off_Date field blank",
+        "3. Click the Search button"
+      ],
+      "expected_result": "Inline validation error appears on the Drop_Off_Date field indicating it is required to determine the rental period; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "No 'Book Now' action when search returns zero vehicles",
+      "preconditions": [
+        "User performs a search that yields zero vehicles (search criteria produce no matches)"
+      ],
+      "steps": [
+        "1. Fill the search form with criteria that will produce no matching vehicles (e.g. select a combination of location, dates and filters known to return no results)",
+        "2. Click the Search button",
+        "3. Inspect the Vehicles_List section on the Listing_Page"
+      ],
+      "expected_result": "Vehicles_List displays no items and no 'Book Now' buttons are visible; user cannot initiate the booking flow and no booking is started",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Invalid time format in Pick_Up_Time",
+      "preconditions": [],
+      "steps": [
+        "1. Enter <invalid time format> in the Pick_Up_Time field",
+        "2. Click the Search button"
+      ],
+      "expected_result": "Pick_Up_Time field shows an inline validation error indicating an invalid time format; the form does not submit and the user is not redirected to the Listing_Page",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 3,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}

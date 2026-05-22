@@ -1,0 +1,2130 @@
+{
+  "project_name": "Phptravels",
+  "generated_at": "2026-05-21T22:59:34.642076Z",
+  "modules": [
+    {
+      "module_id": 1,
+      "module_title": "Home Page & Search",
+      "ast": {
+        "module_name": "Home Page & Search",
+        "components": {
+          "Search_Widget": {
+            "type": "tab_container",
+            "tabs": [
+              {
+                "tab_name": "Hotels",
+                "fields": {
+                  "Destination": {
+                    "type": "search"
+                  },
+                  "Check_In_Date": {
+                    "type": "date"
+                  },
+                  "Check_Out_Date": {
+                    "type": "date"
+                  },
+                  "Number_of_Rooms": {
+                    "type": "number"
+                  },
+                  "Adults": {
+                    "type": "number"
+                  },
+                  "Children": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "tab_name": "Flights",
+                "fields": {
+                  "Trip_Type": {
+                    "type": "dropdown",
+                    "options": [
+                      "One-way",
+                      "Round-trip",
+                      "Multi-city"
+                    ]
+                  },
+                  "Departure_City": {
+                    "type": "search"
+                  },
+                  "Arrival_City": {
+                    "type": "search"
+                  },
+                  "Departure_Date": {
+                    "type": "date"
+                  },
+                  "Return_Date": {
+                    "type": "date"
+                  },
+                  "Adults": {
+                    "type": "number"
+                  },
+                  "Children": {
+                    "type": "number"
+                  },
+                  "Infants": {
+                    "type": "number"
+                  },
+                  "Cabin_Class": {
+                    "type": "dropdown",
+                    "options": [
+                      "Economy",
+                      "Premium Economy",
+                      "Business",
+                      "First"
+                    ]
+                  }
+                }
+              },
+              {
+                "tab_name": "Tours",
+                "fields": {
+                  "Destination": {
+                    "type": "search"
+                  },
+                  "Travel_Start_Date": {
+                    "type": "date"
+                  },
+                  "Travel_End_Date": {
+                    "type": "date"
+                  }
+                }
+              },
+              {
+                "tab_name": "Cars",
+                "fields": {
+                  "Pick_Up_Location": {
+                    "type": "search"
+                  },
+                  "Drop_Off_Location": {
+                    "type": "search"
+                  },
+                  "Pick_Up_Date": {
+                    "type": "date"
+                  },
+                  "Pick_Up_Time": {
+                    "type": "unspecified"
+                  },
+                  "Drop_Off_Date": {
+                    "type": "date"
+                  },
+                  "Drop_Off_Time": {
+                    "type": "unspecified"
+                  }
+                }
+              }
+            ],
+            "submit_actions": [
+              {
+                "element_name": "Search",
+                "constraints": [
+                  "validates that all required fields for the active tab are filled"
+                ],
+                "on_success": "redirects to corresponding results listing page",
+                "on_failure": "shows inline field errors on invalid fields"
+              }
+            ],
+            "interaction_notes": [
+              "clicking a tab switches the visible search fields to that service type"
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 2,
+      "module_title": "User Registration",
+      "ast": {
+        "module_name": "User Registration",
+        "components": {
+          "Registration_Form": {
+            "type": "form",
+            "fields": {
+              "First_Name": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": []
+              },
+              "Last_Name": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": []
+              },
+              "Email": {
+                "type": "email",
+                "required": true,
+                "constraints": [
+                  "must be valid email format",
+                  "must be unique (email uniqueness validated on submit)"
+                ]
+              },
+              "Password": {
+                "type": "password",
+                "required": true,
+                "constraints": []
+              },
+              "Confirm_Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must match Password"
+                ]
+              },
+              "Country_Code": {
+                "type": "dropdown",
+                "required": true,
+                "constraints": []
+              },
+              "Mobile_Number": {
+                "type": "number",
+                "required": true,
+                "constraints": []
+              },
+              "Address": {
+                "type": "unspecified",
+                "required": false,
+                "constraints": []
+              },
+              "Country": {
+                "type": "dropdown",
+                "required": true,
+                "constraints": []
+              },
+              "Terms_and_Conditions": {
+                "type": "checkbox",
+                "required": true,
+                "constraints": [
+                  "must be accepted"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Register",
+                "constraints": [
+                  "required fields must be present",
+                  "Email must be unique",
+                  "Password and Confirm_Password must match",
+                  "Email must be valid format"
+                ],
+                "on_failure": "field-level errors appear inline for the fields that fail validation",
+                "on_success": "creates account; either automatically logs the user in and redirects to dashboard, or prompts user to verify their email before gaining access"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 3,
+      "module_title": "User Login",
+      "ast": {
+        "module_name": "User Login",
+        "components": {
+          "Login_Page": {
+            "type": "form",
+            "fields": {
+              "Email": {
+                "type": "email",
+                "required": false
+              },
+              "Password": {
+                "type": "password",
+                "required": false
+              },
+              "Remember_Me": {
+                "type": "checkbox",
+                "required": false
+              },
+              "CAPTCHA": {
+                "type": "unspecified",
+                "visible_when": "requires_captcha == true",
+                "required_when": "requires_captcha == true"
+              }
+            },
+            "links": [
+              {
+                "element_name": "Forgot Password?",
+                "type": "link",
+                "on_action": "navigates to Forgot Password flow"
+              }
+            ],
+            "buttons": [
+              {
+                "element_name": "Login",
+                "type": "button"
+              }
+            ],
+            "submit_actions": [
+              {
+                "element_name": "Login",
+                "on_success": "redirects to dashboard or previously requested page",
+                "on_failure": "shows error message and clears Password field",
+                "constraints": [
+                  "after multiple consecutive failed attempts require CAPTCHA verification"
+                ]
+              }
+            ],
+            "social_logins": [
+              {
+                "element_name": "Sign in with Google",
+                "type": "button",
+                "visible_when": "Google_Enabled == true",
+                "on_success": "redirects to dashboard or previously requested page"
+              },
+              {
+                "element_name": "Sign in with Facebook",
+                "type": "button",
+                "visible_when": "Facebook_Enabled == true",
+                "on_success": "redirects to dashboard or previously requested page"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 4,
+      "module_title": "Forgot Password",
+      "ast": {
+        "module_name": "Forgot Password",
+        "components": {
+          "Forgot_Password_Form": {
+            "type": "form",
+            "fields": {
+              "Email": {
+                "type": "email",
+                "required": true
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Reset Password",
+                "type": "button",
+                "on_success": "sends reset link to provided email and shows confirmation message",
+                "constraints": [
+                  "reset link expires after 24 hours"
+                ],
+                "on_failure": "shows error 'email not found' and leaves form editable"
+              }
+            ]
+          },
+          "Password_Reset_Link": {
+            "type": "link",
+            "element_name": "Password Reset Link",
+            "preconditions": [
+              "link must be valid (not expired)"
+            ],
+            "on_success": "navigates to Password_Reset_Page",
+            "constraints": [
+              "expires after 24 hours"
+            ]
+          },
+          "Password_Reset_Page": {
+            "type": "form",
+            "fields": {
+              "New_Password": {
+                "type": "password",
+                "required": true
+              },
+              "Confirm_Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must match New_Password"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Change Password",
+                "type": "button",
+                "preconditions": [
+                  "reset link must be valid (not expired)"
+                ],
+                "on_success": "changes password and redirects to login page with success message",
+                "on_failure": "shows error and allows retry"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 5,
+      "module_title": "Hotels Search & Listing",
+      "ast": {
+        "module_name": "Hotels Search & Listing",
+        "components": {
+          "Hotels_Search_Form": {
+            "type": "form",
+            "fields": {
+              "Destination": {
+                "type": "search",
+                "required": false
+              },
+              "Check_In": {
+                "type": "date",
+                "required": false
+              },
+              "Check_Out": {
+                "type": "date",
+                "required": false
+              },
+              "Rooms": {
+                "type": "number",
+                "required": false
+              },
+              "Adults": {
+                "type": "number",
+                "required": false
+              },
+              "Children": {
+                "type": "number",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Search",
+                "on_success": "redirects to Listing page"
+              }
+            ]
+          },
+          "Hotels_Listing_Page": {
+            "type": "page",
+            "components": {
+              "Sort_Control": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Price: Low to High",
+                  "Price: High to Low",
+                  "Star Rating",
+                  "Guest Rating"
+                ],
+                "on_change": "updates results dynamically"
+              },
+              "Active_Filters_Summary": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Active_Filter_Tag": {
+                    "type": "unspecified"
+                  },
+                  "Remove_Filter": {
+                    "type": "button",
+                    "element_name": "Remove",
+                    "on_success": "removes filter and updates results dynamically"
+                  }
+                },
+                "controls": {
+                  "Reset_All": {
+                    "type": "button",
+                    "element_name": "Reset all",
+                    "on_success": "clears all filters and updates results dynamically"
+                  }
+                }
+              },
+              "Filters_Sidebar": {
+                "type": "filter_panel",
+                "fields": {
+                  "Price_Range": {
+                    "type": "unspecified",
+                    "collapsible": true,
+                    "on_change": "updates results dynamically"
+                  },
+                  "Star_Rating": {
+                    "type": "unspecified",
+                    "collapsible": true,
+                    "on_change": "updates results dynamically"
+                  },
+                  "Facilities_Amenities": {
+                    "type": "unspecified",
+                    "collapsible": true,
+                    "on_change": "updates results dynamically"
+                  },
+                  "Hotel_Type": {
+                    "type": "unspecified",
+                    "collapsible": true,
+                    "on_change": "updates results dynamically"
+                  },
+                  "Board_Basis": {
+                    "type": "unspecified",
+                    "collapsible": true,
+                    "on_change": "updates results dynamically"
+                  }
+                }
+              },
+              "Hotel_Results": {
+                "type": "repeating_group",
+                "item_label": "Hotel_Card",
+                "item_fields": {
+                  "Book_Now": {
+                    "type": "button",
+                    "element_name": "Book Now"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 6,
+      "module_title": "Hotel Details & Booking",
+      "ast": {
+        "module_name": "Hotel Details & Booking",
+        "components": {
+          "Room_Types": {
+            "type": "repeating_group",
+            "description": "List of available room types for the hotel; each row offers a select action to begin booking that room",
+            "item_fields": {
+              "Room_Type_Name": {
+                "type": "text",
+                "required": false
+              },
+              "Price": {
+                "type": "number",
+                "required": false
+              },
+              "Max_Occupancy": {
+                "type": "number",
+                "required": false
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Select Room",
+                "type": "button",
+                "on_success": "populates Booking_Form.fields.Selected_Hotel, Booking_Form.fields.Selected_Room_Type, Booking_Form.fields.Room_Rate, Booking_Form.fields.Taxes, Booking_Form.fields.Fees, Booking_Form.fields.Total and opens Booking_Form",
+                "preconditions": []
+              }
+            ]
+          },
+          "Booking_Form": {
+            "type": "form",
+            "fields": {
+              "Selected_Hotel": {
+                "type": "text",
+                "required": true,
+                "read_only": true,
+                "description": "Populated when a room is selected"
+              },
+              "Selected_Room_Type": {
+                "type": "text",
+                "required": true,
+                "read_only": true,
+                "description": "Populated when a room is selected"
+              },
+              "Check_In": {
+                "type": "date",
+                "required": true
+              },
+              "Check_Out": {
+                "type": "date",
+                "required": true
+              },
+              "Guest_Count": {
+                "type": "number",
+                "required": true,
+                "constraints": []
+              },
+              "Room_Rate": {
+                "type": "number",
+                "required": true,
+                "read_only": true,
+                "constraints": [
+                  "currency"
+                ]
+              },
+              "Taxes": {
+                "type": "number",
+                "required": true,
+                "read_only": true,
+                "constraints": [
+                  "currency"
+                ]
+              },
+              "Fees": {
+                "type": "number",
+                "required": true,
+                "read_only": true,
+                "constraints": [
+                  "currency"
+                ]
+              },
+              "Total": {
+                "type": "number",
+                "required": true,
+                "read_only": true,
+                "constraints": [
+                  "currency"
+                ]
+              },
+              "First_Name": {
+                "type": "text",
+                "required": true
+              },
+              "Last_Name": {
+                "type": "text",
+                "required": true
+              },
+              "Email": {
+                "type": "email",
+                "required": true,
+                "constraints": []
+              },
+              "Phone_Number": {
+                "type": "tel",
+                "required": true
+              },
+              "Special_Requests": {
+                "type": "textarea",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Book Now",
+                "type": "button",
+                "preconditions": [
+                  "user must be logged in"
+                ],
+                "on_success": "redirects to Payment page"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 7,
+      "module_title": "Flights Search & Listing",
+      "ast": {
+        "module_name": "Flights Search & Listing",
+        "components": {
+          "Flights_Search_Form": {
+            "type": "form",
+            "fields": {
+              "Trip_Type": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "One-way",
+                  "Round-trip",
+                  "Multi-city"
+                ]
+              },
+              "Departure_City": {
+                "type": "search",
+                "required": true
+              },
+              "Arrival_City": {
+                "type": "search",
+                "required": true
+              },
+              "Departure_Date": {
+                "type": "date",
+                "required": true
+              },
+              "Return_Date": {
+                "type": "date",
+                "required": false,
+                "visible_when": "Trip_Type == Round-trip"
+              },
+              "Passenger_Count": {
+                "type": "group",
+                "fields": {
+                  "Adults": {
+                    "type": "number",
+                    "required": true
+                  },
+                  "Children": {
+                    "type": "number",
+                    "required": false
+                  },
+                  "Infants": {
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              },
+              "Cabin_Class": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Economy",
+                  "Premium Economy",
+                  "Business",
+                  "First"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Search",
+                "on_success": "redirects to listing page"
+              }
+            ]
+          },
+          "Sidebar_Filters": {
+            "type": "form",
+            "fields": {
+              "Airlines": {
+                "type": "dropdown",
+                "required": false,
+                "multiple": true
+              },
+              "Number_of_Stops": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Non-stop",
+                  "1 stop",
+                  "2+ stops"
+                ]
+              },
+              "Departure_Time_Range": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Arrival_Time_Range": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Price_Range": {
+                "type": "unspecified",
+                "required": false
+              }
+            },
+            "actions": [
+              {
+                "element_name": "Apply Filters",
+                "on_success": "filters applied to listing"
+              },
+              {
+                "element_name": "Clear Filters",
+                "on_success": "filters cleared"
+              }
+            ]
+          },
+          "Flights_Listing": {
+            "type": "data_table",
+            "row_expandable": true,
+            "on_row_expand": "reveals additional flight details (baggage allowance, fare rules, seat availability) as passive display",
+            "row_actions": [
+              {
+                "action_name": "Select",
+                "on_success": "flight selected"
+              }
+            ],
+            "sorting_controls": {
+              "type": "dropdown",
+              "options": [
+                "Price",
+                "Duration",
+                "Departure Time",
+                "Arrival Time"
+              ]
+            },
+            "sortable_columns": [
+              "Price",
+              "Duration",
+              "Departure Time",
+              "Arrival Time"
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 8,
+      "module_title": "Flight Booking",
+      "ast": {
+        "module_name": "Flight Booking",
+        "components": {
+          "Flight_Booking_Form": {
+            "type": "form",
+            "fields": {
+              "Travelers": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Title": {
+                    "type": "dropdown",
+                    "required": true,
+                    "options": [
+                      "Mr",
+                      "Mrs",
+                      "Ms",
+                      "Dr"
+                    ]
+                  },
+                  "First_Name": {
+                    "type": "unspecified",
+                    "required": true
+                  },
+                  "Last_Name": {
+                    "type": "unspecified",
+                    "required": true
+                  },
+                  "Date_of_Birth": {
+                    "type": "date",
+                    "required": true
+                  },
+                  "Passport_Number": {
+                    "type": "unspecified",
+                    "required": true
+                  },
+                  "Passport_Expiry": {
+                    "type": "date",
+                    "required": true
+                  },
+                  "Meal_Preferences": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Seat_Selection": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              "Lead_Passenger_Email": {
+                "type": "email",
+                "required": true
+              },
+              "Lead_Passenger_Phone": {
+                "type": "unspecified",
+                "required": true
+              }
+            },
+            "constraints": [
+              "invalid fields display inline errors",
+              "incomplete or invalid required fields block progression"
+            ],
+            "submit_actions": [
+              {
+                "element_name": "Continue",
+                "type": "button",
+                "preconditions": [
+                  "all required fields valid"
+                ],
+                "on_success": "navigates to Payment page"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 2
+    },
+    {
+      "module_id": 9,
+      "module_title": "Tours Search & Listing",
+      "ast": {
+        "module_name": "Tours Search & Listing",
+        "components": {
+          "Tours_Search_Form": {
+            "type": "form",
+            "fields": {
+              "Destination": {
+                "type": "search",
+                "required": false
+              },
+              "Travel_Start_Date": {
+                "type": "date",
+                "required": false
+              },
+              "Travel_End_Date": {
+                "type": "date",
+                "required": false
+              },
+              "Tour_Type": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Adventure",
+                  "Cultural",
+                  "Cruise",
+                  "Wildlife"
+                ]
+              },
+              "Duration_Min_Days": {
+                "type": "number",
+                "required": false
+              },
+              "Duration_Max_Days": {
+                "type": "number",
+                "required": false
+              },
+              "Budget_Min": {
+                "type": "number",
+                "required": false
+              },
+              "Budget_Max": {
+                "type": "number",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Search",
+                "type": "button",
+                "on_success": "redirects to Tours Listing page"
+              }
+            ]
+          },
+          "Tours_Listing_Page": {
+            "type": "page",
+            "components": {
+              "Filters_Sidebar": {
+                "type": "form",
+                "fields": {
+                  "Destination": {
+                    "type": "search",
+                    "required": false
+                  },
+                  "Tour_Type": {
+                    "type": "dropdown",
+                    "required": false,
+                    "options": [
+                      "Adventure",
+                      "Cultural",
+                      "Cruise",
+                      "Wildlife"
+                    ]
+                  },
+                  "Price_Min": {
+                    "type": "number",
+                    "required": false
+                  },
+                  "Price_Max": {
+                    "type": "number",
+                    "required": false
+                  },
+                  "Duration_Min_Days": {
+                    "type": "number",
+                    "required": false
+                  },
+                  "Duration_Max_Days": {
+                    "type": "number",
+                    "required": false
+                  },
+                  "Departure_Start_Date": {
+                    "type": "date",
+                    "required": false
+                  },
+                  "Departure_End_Date": {
+                    "type": "date",
+                    "required": false
+                  }
+                }
+              },
+              "Sort_Control": {
+                "type": "dropdown",
+                "element_name": "Sort By",
+                "options": [
+                  "Popularity",
+                  "Price",
+                  "Duration",
+                  "Rating"
+                ]
+              },
+              "Results_List": {
+                "type": "list",
+                "description": "Card-based results (cards are passive displays per spec)",
+                "sortable_options": [
+                  "Popularity",
+                  "Price",
+                  "Duration",
+                  "Rating"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 10,
+      "module_title": "Tour Details & Booking",
+      "ast": {
+        "module_name": "Tour Details & Booking",
+        "components": {
+          "Tour_Details_Page": {
+            "type": "form",
+            "fields": {
+              "Departure_Date": {
+                "type": "dropdown",
+                "required": true,
+                "constraints": [
+                  "must be one of available departure dates"
+                ]
+              },
+              "Adults": {
+                "type": "number",
+                "required": true
+              },
+              "Children": {
+                "type": "number",
+                "required": true
+              }
+            },
+            "actions": [
+              {
+                "element_name": "Book Now",
+                "type": "button",
+                "preconditions": [
+                  "user must be logged in"
+                ],
+                "on_success": "navigates to Booking Form",
+                "on_failure": "redirects to login page"
+              }
+            ]
+          },
+          "Booking_Form": {
+            "type": "form",
+            "constraints": [
+              "number of Traveler entries must equal Adults + Children selected on Tour Details page"
+            ],
+            "fields": {
+              "Travelers": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "First_Name": {
+                    "type": "unspecified",
+                    "required": true
+                  },
+                  "Last_Name": {
+                    "type": "unspecified",
+                    "required": true
+                  }
+                }
+              },
+              "Contact_Email": {
+                "type": "email",
+                "required": true
+              },
+              "Contact_Phone": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Special_Requirements": {
+                "type": "unspecified",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Confirm Booking",
+                "type": "button",
+                "preconditions": [
+                  "user must be logged in"
+                ],
+                "on_success": "creates booking"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 11,
+      "module_title": "Cars Search & Listing",
+      "ast": {
+        "module_name": "Cars Search & Listing",
+        "components": {
+          "Car_Search_Form": {
+            "type": "form",
+            "fields": {
+              "Pick_Up_Location": {
+                "type": "search"
+              },
+              "Drop_Off_Location": {
+                "type": "search"
+              },
+              "Pick_Up_Date": {
+                "type": "date"
+              },
+              "Pick_Up_Time": {
+                "type": "unspecified"
+              },
+              "Drop_Off_Date": {
+                "type": "date"
+              },
+              "Drop_Off_Time": {
+                "type": "unspecified"
+              },
+              "Driver_Age": {
+                "type": "number"
+              }
+            },
+            "constraints": [
+              "Drop_Off_Date >= Pick_Up_Date"
+            ],
+            "submit_actions": [
+              {
+                "element_name": "Search",
+                "on_success": "redirects to Listing_Page"
+              }
+            ]
+          },
+          "Listing_Page": {
+            "type": "page",
+            "components": {
+              "Sidebar_Filters": {
+                "type": "panel",
+                "on_change": "updates results dynamically",
+                "fields": {
+                  "Car_Type": {
+                    "type": "multiselect",
+                    "options": [
+                      "Economy",
+                      "Compact",
+                      "SUV",
+                      "Luxury",
+                      "Van"
+                    ]
+                  },
+                  "Transmission": {
+                    "type": "multiselect",
+                    "options": [
+                      "Automatic",
+                      "Manual"
+                    ]
+                  },
+                  "Fuel_Policy": {
+                    "type": "multiselect"
+                  },
+                  "Rental_Company": {
+                    "type": "multiselect"
+                  },
+                  "Price_Range": {
+                    "type": "unspecified"
+                  }
+                }
+              },
+              "Vehicles_List": {
+                "type": "grouped_list",
+                "grouped_by": "Car_Type",
+                "item_fields": {
+                  "Vehicle_Image": {
+                    "type": "image"
+                  },
+                  "Make_and_Model": {
+                    "type": "text"
+                  },
+                  "Transmission_Type": {
+                    "type": "text",
+                    "options": [
+                      "Automatic",
+                      "Manual"
+                    ]
+                  },
+                  "Fuel_Policy": {
+                    "type": "text"
+                  },
+                  "Seating_Capacity": {
+                    "type": "number"
+                  },
+                  "Luggage_Capacity": {
+                    "type": "number"
+                  },
+                  "Features": {
+                    "type": "list",
+                    "items": [
+                      "AC",
+                      "GPS",
+                      "etc."
+                    ]
+                  },
+                  "Price_Per_Day": {
+                    "type": "currency"
+                  },
+                  "Total_Rental_Cost": {
+                    "type": "currency",
+                    "computed": "Price_Per_Day * rental_days"
+                  },
+                  "Book_Now": {
+                    "type": "button",
+                    "element_name": "Book Now",
+                    "on_success": "initiates booking flow"
+                  }
+                },
+                "groups": {
+                  "Economy": {
+                    "items": []
+                  },
+                  "Compact": {
+                    "items": []
+                  },
+                  "SUV": {
+                    "items": []
+                  },
+                  "Luxury": {
+                    "items": []
+                  },
+                  "Van": {
+                    "items": []
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 12,
+      "module_title": "Car Booking",
+      "ast": {
+        "module_name": "Car Booking",
+        "components": {
+          "Car_Booking_Form": {
+            "type": "form",
+            "fields": {
+              "Driver_Full_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Age": {
+                "type": "number",
+                "required": true
+              },
+              "License_Number": {
+                "type": "unspecified",
+                "required": true
+              },
+              "License_Issue_Country": {
+                "type": "dropdown",
+                "required": true
+              },
+              "Email": {
+                "type": "email",
+                "required": true
+              },
+              "Phone_Number": {
+                "type": "unspecified",
+                "required": true
+              },
+              "GPS": {
+                "type": "checkbox",
+                "required": false
+              },
+              "Child_Seat": {
+                "type": "checkbox",
+                "required": false
+              },
+              "Additional_Driver": {
+                "type": "checkbox",
+                "required": false
+              },
+              "Insurance_Plan": {
+                "type": "dropdown",
+                "required": true
+              },
+              "Accept_Terms": {
+                "type": "checkbox",
+                "required": true,
+                "constraints": [
+                  "must be checked to enable Confirm Booking"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Confirm Booking",
+                "type": "button",
+                "preconditions": [
+                  "Accept_Terms must be accepted"
+                ],
+                "constraints": [
+                  "all fields must be valid"
+                ],
+                "on_success": "proceeds to payment",
+                "on_failure": "displays inline errors and blocks progression"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 13,
+      "module_title": "Visa Services",
+      "ast": {
+        "module_name": "Visa Services",
+        "components": {
+          "Visa_Requirements_Selector": {
+            "type": "form",
+            "fields": {
+              "Nationality": {
+                "type": "dropdown",
+                "required": false
+              },
+              "Destination_Country": {
+                "type": "dropdown",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "View Requirements",
+                "on_success": "displays visa requirements for selected Nationality and Destination Country"
+              }
+            ]
+          },
+          "Visa_Application_Form": {
+            "type": "form",
+            "fields": {
+              "Full_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Passport_Number": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Passport_Expiry_Date": {
+                "type": "date",
+                "required": true
+              },
+              "Date_of_Birth": {
+                "type": "date",
+                "required": true
+              },
+              "Nationality": {
+                "type": "dropdown",
+                "required": true
+              },
+              "Email": {
+                "type": "email",
+                "required": true
+              },
+              "Phone": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Purpose_of_Visit": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Intended_Travel_Start_Date": {
+                "type": "date",
+                "required": false
+              },
+              "Intended_Travel_End_Date": {
+                "type": "date",
+                "required": false
+              },
+              "Duration_of_Stay": {
+                "type": "number",
+                "required": false
+              },
+              "Passport_Copy": {
+                "type": "file_upload",
+                "required": true
+              },
+              "Photographs": {
+                "type": "file_upload",
+                "required": true
+              },
+              "Invitation_Letter": {
+                "type": "file_upload",
+                "required": false
+              },
+              "Supporting_Documents": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Document": {
+                    "type": "file_upload",
+                    "required": true
+                  },
+                  "Description": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                },
+                "min": 0
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Submit Application",
+                "on_success": "application submitted and appears in Bookings dashboard for tracking"
+              }
+            ]
+          },
+          "Bookings_Table": {
+            "type": "data_table",
+            "row_actions": [
+              {
+                "action_name": "View Application",
+                "on_action": "opens visa application detail for tracking status"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 14,
+      "module_title": "User Dashboard",
+      "ast": {
+        "module_name": "User Dashboard",
+        "components": {
+          "My_Bookings": {
+            "type": "data_table",
+            "row_actions": [
+              {
+                "action_name": "View Details"
+              },
+              {
+                "action_name": "Cancel",
+                "preconditions": [
+                  "cancellation policy permits",
+                  "booking type permits cancellation"
+                ]
+              },
+              {
+                "action_name": "Modify",
+                "preconditions": [
+                  "booking type permits modification",
+                  "modification policy permits"
+                ]
+              },
+              {
+                "action_name": "Download Confirmation"
+              },
+              {
+                "action_name": "Download Invoice"
+              },
+              {
+                "action_name": "Download Voucher"
+              }
+            ]
+          },
+          "My_Profile": {
+            "type": "component",
+            "actions": [
+              {
+                "action_name": "Edit"
+              }
+            ]
+          },
+          "Wallet_Credits": {
+            "type": "data_table",
+            "description": "transaction history for wallet/credits",
+            "row_actions": [],
+            "bulk_actions": []
+          },
+          "Wishlist": {
+            "type": "list",
+            "fields": {}
+          },
+          "Reviews": {
+            "type": "form",
+            "fields": {
+              "Rating": {
+                "type": "number",
+                "visible_when": "booking_status == Completed",
+                "constraints": [
+                  "min 1",
+                  "max 5"
+                ]
+              },
+              "Review_Text": {
+                "type": "unspecified",
+                "visible_when": "booking_status == Completed"
+              }
+            },
+            "submit_actions": [
+              {
+                "preconditions": [
+                  "booking must be completed"
+                ]
+              }
+            ]
+          },
+          "Settings": {
+            "type": "form",
+            "fields": {
+              "Change_Password": {
+                "type": "form",
+                "fields": {
+                  "Old_Password": {
+                    "type": "password",
+                    "required": true
+                  },
+                  "New_Password": {
+                    "type": "password",
+                    "required": true
+                  },
+                  "Confirm_Password": {
+                    "type": "password",
+                    "required": true,
+                    "constraints": [
+                      "must match New_Password"
+                    ]
+                  }
+                }
+              },
+              "Notification_Preferences": {
+                "type": "unspecified"
+              },
+              "Default_Currency": {
+                "type": "dropdown"
+              },
+              "Default_Language": {
+                "type": "dropdown"
+              }
+            }
+          },
+          "Logout": {
+            "type": "button",
+            "element_name": "Logout",
+            "on_success": "ends session"
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 15,
+      "module_title": "Booking Management",
+      "ast": {
+        "module_name": "Booking Management",
+        "components": {
+          "Booking_Detail_Action_Bar": {
+            "type": "action_bar",
+            "available_actions": [
+              {
+                "action_name": "Modify",
+                "preconditions": [
+                  "booking type permits modification",
+                  "cancellation policy permits modification"
+                ],
+                "fields": {
+                  "Travel_Date_Changes": {
+                    "type": "repeating_group",
+                    "item_fields": {
+                      "New_Date": {
+                        "type": "date",
+                        "required": true
+                      }
+                    },
+                    "constraints": [
+                      "subject to availability",
+                      "applicable fees may apply"
+                    ]
+                  },
+                  "Special_Requests": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Traveler_Updates": {
+                    "type": "repeating_group",
+                    "item_fields": {}
+                  }
+                },
+                "submit_actions": [
+                  {
+                    "on_success": "applies changes, charges applicable fees, updates booking and sends modification email"
+                  }
+                ]
+              },
+              {
+                "action_name": "Cancel",
+                "preconditions": [
+                  "cancellation policy permits cancellation"
+                ],
+                "constraints": [
+                  "user must explicitly confirm cancellation"
+                ],
+                "confirmation_flow": {
+                  "fields": {
+                    "Refund_Amount": {
+                      "type": "number"
+                    },
+                    "Confirm_Cancellation": {
+                      "type": "checkbox",
+                      "required": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "on_success": "cancels booking, initiates refund to original payment method, sends cancellation email"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 16,
+      "module_title": "Payment Processing",
+      "ast": {
+        "module_name": "Payment Processing",
+        "components": {
+          "Payment_Form": {
+            "type": "form",
+            "fields": {
+              "Payment_Method": {
+                "type": "dropdown",
+                "required": true,
+                "options": [
+                  "Credit/Debit Card",
+                  "PayPal",
+                  "Bank Transfer",
+                  "Wallet/Credits"
+                ]
+              },
+              "Cardholder_Name": {
+                "type": "text",
+                "required": true,
+                "visible_when": "Payment_Method == Credit/Debit Card"
+              },
+              "Card_Number": {
+                "type": "text",
+                "required": true,
+                "visible_when": "Payment_Method == Credit/Debit Card"
+              },
+              "Expiration_Date": {
+                "type": "month_year",
+                "required": true,
+                "visible_when": "Payment_Method == Credit/Debit Card"
+              },
+              "CVV": {
+                "type": "number",
+                "required": true,
+                "visible_when": "Payment_Method == Credit/Debit Card"
+              },
+              "Save_Card_For_Future_Use": {
+                "type": "checkbox",
+                "required": false,
+                "visible_when": "Payment_Method == Credit/Debit Card"
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Pay Now",
+                "on_success": "redirects to booking confirmation page with reference number; confirmation email sent",
+                "on_failure": "shows error message and allows retry without losing booking details",
+                "error_messages": [
+                  "Card declined",
+                  "Insufficient funds",
+                  "Payment gateway error"
+                ]
+              }
+            ]
+          },
+          "Confirmation_Page": {
+            "type": "page",
+            "components": {
+              "Download_Actions": {
+                "type": "action_group",
+                "actions": [
+                  {
+                    "element_name": "Download Invoice",
+                    "action_type": "button",
+                    "on_success": "downloads invoice PDF"
+                  },
+                  {
+                    "element_name": "Download Voucher",
+                    "action_type": "button",
+                    "on_success": "downloads voucher PDF"
+                  }
+                ]
+              }
+            }
+          },
+          "Payment_Error_Recovery": {
+            "type": "form_helper",
+            "fields": {
+              "Retry_Payment": {
+                "type": "button",
+                "element_name": "Retry",
+                "description": "Retries the payment using existing booking details",
+                "preconditions": [],
+                "on_success": "re-attempts payment using current form values; redirects to confirmation on success",
+                "on_failure": "shows error message and retains booking details"
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 17,
+      "module_title": "Currency & Language Selection",
+      "ast": {
+        "module_name": "Currency & Language Selection",
+        "components": {
+          "Global_Preferences": {
+            "type": "form",
+            "fields": {
+              "Currency_Selector": {
+                "type": "dropdown",
+                "required": false,
+                "on_change_actions": [
+                  {
+                    "action_name": "Apply Currency",
+                    "on_success": "updates all prices across the site in real-time preserving the user's current search context"
+                  },
+                  {
+                    "action_name": "Save Currency Preference (Authenticated)",
+                    "preconditions": [
+                      "user is authenticated"
+                    ],
+                    "on_success": "saves currency preference to user profile"
+                  },
+                  {
+                    "action_name": "Save Currency Preference (Unauthenticated)",
+                    "preconditions": [
+                      "user is unauthenticated"
+                    ],
+                    "on_success": "stores currency preference in session/cookie for the current browsing session"
+                  }
+                ]
+              },
+              "Language_Selector": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "English",
+                  "Arabic",
+                  "Spanish",
+                  "French"
+                ],
+                "on_change_actions": [
+                  {
+                    "action_name": "Apply Language",
+                    "on_success": "switches the entire site interface to the chosen language (navigation labels, form labels, content)",
+                    "effects": [
+                      "if Language == Arabic then set text direction to RTL"
+                    ]
+                  },
+                  {
+                    "action_name": "Save Language Preference (Authenticated)",
+                    "preconditions": [
+                      "user is authenticated"
+                    ],
+                    "on_success": "saves language preference to user profile"
+                  },
+                  {
+                    "action_name": "Save Language Preference (Unauthenticated)",
+                    "preconditions": [
+                      "user is unauthenticated"
+                    ],
+                    "on_success": "stores language preference in session/cookie for the current browsing session"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 18,
+      "module_title": "Search & Filters",
+      "ast": {
+        "module_name": "Search & Filters",
+        "components": {
+          "Filter_Sidebar": {
+            "type": "filter_sidebar",
+            "sections": [
+              {
+                "section_name": "Common Filters",
+                "collapsible": true,
+                "fields": {
+                  "Price_Range": {
+                    "type": "unspecified",
+                    "control": "slider",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Rating": {
+                    "type": "unspecified",
+                    "control": "star_or_review_selector",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  }
+                }
+              },
+              {
+                "section_name": "Hotels Filters",
+                "collapsible": true,
+                "visible_when": "listing_type == Hotels",
+                "fields": {
+                  "Facilities_Amenities": {
+                    "type": "unspecified",
+                    "control": "multi_select_checkboxes",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Hotel_Type": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Board_Basis": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Location_Area": {
+                    "type": "search",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  }
+                }
+              },
+              {
+                "section_name": "Flights Filters",
+                "collapsible": true,
+                "visible_when": "listing_type == Flights",
+                "fields": {
+                  "Airlines": {
+                    "type": "unspecified",
+                    "control": "multi_select",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Number_of_Stops": {
+                    "type": "unspecified",
+                    "control": "dropdown_or_radio",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Departure_Time_Range": {
+                    "type": "unspecified",
+                    "control": "time_range_slider",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Arrival_Time_Range": {
+                    "type": "unspecified",
+                    "control": "time_range_slider",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  }
+                }
+              },
+              {
+                "section_name": "Tours Filters",
+                "collapsible": true,
+                "visible_when": "listing_type == Tours",
+                "fields": {
+                  "Tour_Type": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Duration": {
+                    "type": "unspecified",
+                    "control": "range_or_dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Departure_Dates": {
+                    "type": "unspecified",
+                    "control": "date_range",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  }
+                }
+              },
+              {
+                "section_name": "Cars Filters",
+                "collapsible": true,
+                "visible_when": "listing_type == Cars",
+                "fields": {
+                  "Car_Type": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Transmission": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Fuel_Policy": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  },
+                  "Rental_Company": {
+                    "type": "dropdown",
+                    "required": false,
+                    "on_change": "updates results dynamically and updates result count"
+                  }
+                }
+              }
+            ]
+          },
+          "Active_Filters_Summary": {
+            "type": "active_filters_summary",
+            "location": "top_of_results",
+            "fields": {
+              "Active_Filters": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Filter_Tag_Label": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Remove_Filter": {
+                    "type": "button",
+                    "element_name": "Remove_Filter",
+                    "on_click": "removes the filter and updates results dynamically and updates result count",
+                    "on_success": "filter removed and results updated"
+                  }
+                }
+              },
+              "Reset_All_Filters": {
+                "type": "button",
+                "element_name": "Reset_All_Filters",
+                "on_click": "clears all filters and updates results dynamically and updates result count",
+                "on_success": "all filters cleared and results updated"
+              }
+            }
+          },
+          "Sorting_Controls": {
+            "type": "sorting_controls",
+            "location": "above_results_grid",
+            "fields": {
+              "Sort_By": {
+                "type": "dropdown",
+                "required": false,
+                "on_change": "updates results dynamically and updates result order"
+              },
+              "Sort_Order": {
+                "type": "unspecified",
+                "control": "toggle_asc_desc",
+                "required": false,
+                "on_change": "updates results dynamically and updates result order"
+              }
+            }
+          },
+          "Results_Grid": {
+            "type": "data_table",
+            "interaction": {
+              "updates_on_filter_change": true,
+              "update_consequence": "results and result count update dynamically when filters or sorting change"
+            },
+            "row_actions": [],
+            "bulk_actions": []
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 19,
+      "module_title": "Reviews & Ratings",
+      "ast": {
+        "module_name": "Reviews & Ratings",
+        "components": {
+          "Detail_Page_Reviews_Section": {
+            "type": "section",
+            "components": {
+              "Reviews_Filters": {
+                "type": "form",
+                "fields": {
+                  "Rating": {
+                    "type": "dropdown"
+                  },
+                  "Date_From": {
+                    "type": "date"
+                  },
+                  "Date_To": {
+                    "type": "date"
+                  },
+                  "Traveler_Type": {
+                    "type": "dropdown"
+                  }
+                }
+              },
+              "Reviews_List": {
+                "type": "data_table",
+                "row_actions": [],
+                "bulk_actions": [],
+                "fields": {}
+              }
+            }
+          },
+          "Submit_Review_Form": {
+            "type": "form",
+            "preconditions": [
+              "user must be authenticated",
+              "user must have completed a booking for this item"
+            ],
+            "fields": {
+              "Overall_Rating": {
+                "type": "number"
+              },
+              "Cleanliness_Rating": {
+                "type": "number"
+              },
+              "Service_Rating": {
+                "type": "number"
+              },
+              "Location_Rating": {
+                "type": "number"
+              },
+              "Written_Comments": {
+                "type": "unspecified"
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Submit Review",
+                "on_success": "submits review"
+              }
+            ]
+          },
+          "Dashboard_Submit_Review_Button": {
+            "type": "button",
+            "element_name": "Write a Review",
+            "preconditions": [
+              "user must be authenticated",
+              "user must have completed a booking for this item"
+            ],
+            "opens": "Submit_Review_Form"
+          },
+          "Post_Stay_Email_Prompt": {
+            "type": "link",
+            "element_name": "Leave a Review",
+            "preconditions": [
+              "recipient must have completed a booking for this item"
+            ],
+            "opens": "Submit_Review_Form"
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 20,
+      "module_title": "Offers & Deals",
+      "ast": {
+        "module_name": "Offers & Deals",
+        "components": {
+          "Offers_Filters": {
+            "type": "form",
+            "fields": {
+              "Service_Type": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Hotels",
+                  "Flights",
+                  "Packages"
+                ]
+              },
+              "Destination": {
+                "type": "search",
+                "required": false
+              },
+              "Start_Date": {
+                "type": "date",
+                "required": false
+              },
+              "End_Date": {
+                "type": "date",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": null,
+                "on_success": "filters offers list"
+              }
+            ]
+          },
+          "Deals_List": {
+            "type": "repeating_group",
+            "item_fields": {
+              "Book_Now": {
+                "type": "button",
+                "on_success": "applies promotional code to booking flow OR redirects to a pre-filled search with the discounted rates applied"
+              },
+              "Terms_and_Conditions": {
+                "type": "link",
+                "on_success": "opens terms and conditions"
+              }
+            }
+          },
+          "Promotional_Banners": {
+            "type": "repeating_group",
+            "item_fields": {
+              "Book_Now": {
+                "type": "button",
+                "on_success": "applies promotional code to booking flow OR redirects to a pre-filled search with the discounted rates applied"
+              },
+              "Terms_and_Conditions": {
+                "type": "link",
+                "on_success": "opens terms and conditions"
+              }
+            }
+          },
+          "Newsletter_Subscription": {
+            "type": "form",
+            "fields": {
+              "Email": {
+                "type": "email",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": null,
+                "on_success": "submits email to receive future exclusive deals"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 2
+    },
+    {
+      "module_id": 21,
+      "module_title": "Logout",
+      "ast": {
+        "module_name": "Logout",
+        "components": {
+          "Logout_Button": {
+            "type": "button",
+            "element_name": "Logout",
+            "preconditions": [
+              "user must be logged in"
+            ],
+            "on_success": "terminates current session, clears sensitive session data, redirects to home page; subsequent attempts to access protected pages redirect to the login page"
+          }
+        }
+      },
+      "attempts": 1
+    }
+  ]
+}

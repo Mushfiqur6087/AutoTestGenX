@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.758977
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.395361
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Fixed & Recurring Deposit Accounts
 
@@ -218,18 +218,20 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:27] UI-AST Agent - LLM RESPONSE
+[22:21:38] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Fixed & Recurring Deposit Accounts",
   "components": {
     "FD_Account_Creation_Form": {
       "type": "form",
-      "preconditions": ["accessed from Client Detail page"],
       "fields": {
         "Fixed_Deposit_Product": {
           "type": "dropdown",
-          "required": true
+          "required": true,
+          "constraints": [
+            "interest rate determined by the selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
         },
         "Deposit_Amount": {
           "type": "number",
@@ -242,66 +244,88 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Deposit_Period_Unit": {
           "type": "dropdown",
           "required": true,
-          "options": ["Days", "Months", "Years"]
+          "options": [
+            "Days",
+            "Months",
+            "Years"
+          ]
         },
         "Maturity_Instructions": {
           "type": "dropdown",
-          "required": true,
-          "options": ["Transfer to Savings", "Re-Invest", "Re-Invest Principal and Transfer Interest"]
+          "required": false,
+          "options": [
+            "Transfer to Savings",
+            "Re-Invest",
+            "Re-Invest Principal and Transfer Interest"
+          ]
         }
       },
-      "constraints": [
-        "interest rate is determined by the selected product's Interest Rate Chart based on Deposit_Amount and Deposit_Period_Value + Deposit_Period_Unit"
-      ],
       "submit_actions": [
         {
-          "element_name": "Create Fixed Deposit Account",
-          "on_success": "creates FD account in Pending status"
+          "element_name": "Submit",
+          "on_success": "creates Fixed Deposit account in Pending status"
         }
       ]
     },
     "RD_Account_Creation_Form": {
       "type": "form",
-      "preconditions": ["accessed from Client Detail page"],
       "fields": {
         "Recurring_Deposit_Product": {
           "type": "dropdown",
-          "required": true
-        },
-        "Mandatory_Deposit_Amount_Per_Installment": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Value": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
           "required": true,
-          "options": ["Days", "Months", "Years"]
+          "constraints": [
+            "interest rate determined by the selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
+        },
+        "Mandatory_Deposit_Amount_per_installment": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period": {
+          "type": "unspecified",
+          "required": true
         },
         "Deposit_Frequency": {
           "type": "dropdown",
           "required": true,
-          "options": ["Daily", "Weekly", "Monthly", "Quarterly", "Yearly"]
+          "options": [
+            "Daily",
+            "Weekly",
+            "Monthly",
+            "Quarterly",
+            "Yearly"
+          ]
         },
         "Expected_First_Deposit_On": {
           "type": "date",
-          "required": true
+          "required": false
         }
       },
-      "constraints": [
-        "interest rate is determined by the selected product's Interest Rate Chart based on Mandatory_Deposit_Amount_Per_Installment and Deposit_Period_Value + Deposit_Period_Unit"
-      ],
       "submit_actions": [
         {
-          "element_name": "Create Recurring Deposit Account",
-          "on_success": "creates RD account in Pending status"
+          "element_name": "Submit",
+          "on_success": "creates Recurring Deposit account in Pending status"
         }
       ]
     },
     "FD_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {}
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        }
+      ]
+    },
+    "RD_Account_Detail_Tabs": {
       "type": "tab_container",
       "tabs": [
         {
@@ -325,8 +349,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": [
             {
               "action_name": "Approve",
-              "preconditions": ["status must be Pending"],
-              "on_success": "changes status from Pending to Approved"
+              "on_success": "moves Pending → Approved"
             }
           ]
         },
@@ -334,8 +357,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": [
             {
               "action_name": "Activate",
-              "preconditions": ["status must be Approved"],
-              "on_success": "changes status from Approved to Active"
+              "on_success": "moves Approved → Active"
             }
           ]
         },
@@ -343,17 +365,169 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": [
             {
               "action_name": "Premature Close",
-              "preconditions": ["status must be Active"],
-              "on_success": "changes status to Closed"
+              "on_success": "closes account prematurely (sets status to Closed)"
             },
             {
               "action_name": "Close on Maturity",
-              "preconditions": ["status must be Active", "maturity date must be reached"],
-              "on_success": "changes status to Closed"
+              "preconditions": [
+                "maturity date must be reached"
+              ],
+              "on_success": "closes account on maturity (sets status to Closed)"
             }
           ]
         }
       }
+    },
+    "RD_Account_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "on_success": "moves Pending → Approved"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "on_success": "moves Approved → Active"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Deposit",
+              "on_success": "records a deposit and updates the deposit schedule and total deposits made"
+            },
+            {
+              "action_name": "Premature Close",
+              "on_success": "closes account prematurely (sets status to Closed)"
+            },
+            {
+              "action_name": "Close on Maturity",
+              "preconditions": [
+                "maturity date must be reached"
+              ],
+              "on_success": "closes account on maturity (sets status to Closed)"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:21:38] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Fixed & Recurring Deposit Accounts",
+  "components": {
+    "FD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Fixed_Deposit_Product": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "interest rate determined by the selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
+        },
+        "Deposit_Amount": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Value": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Unit": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Days",
+            "Months",
+            "Years"
+          ]
+        },
+        "Maturity_Instructions": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Transfer to Savings",
+            "Re-Invest",
+            "Re-Invest Principal and Transfer Interest"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates Fixed Deposit account in Pending status"
+        }
+      ]
+    },
+    "RD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Recurring_Deposit_Product": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "interest rate determined by the selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
+        },
+        "Mandatory_Deposit_Amount_per_installment": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Deposit_Frequency": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Daily",
+            "Weekly",
+            "Monthly",
+            "Quarterly",
+            "Yearly"
+          ]
+        },
+        "Expected_First_Deposit_On": {
+          "type": "date",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates Recurring Deposit account in Pending status"
+        }
+      ]
+    },
+    "FD_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {}
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        }
+      ]
     },
     "RD_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -372,15 +546,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         }
       ]
     },
-    "RD_Account_Detail_Actions": {
+    "FD_Account_Detail_Actions": {
       "type": "state_bound_action_bar",
       "states": {
         "Pending": {
           "available_actions": [
             {
               "action_name": "Approve",
-              "preconditions": ["status must be Pending"],
-              "on_success": "changes status from Pending to Approved"
+              "on_success": "moves Pending \u2192 Approved"
             }
           ]
         },
@@ -388,8 +561,43 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": [
             {
               "action_name": "Activate",
-              "preconditions": ["status must be Approved"],
-              "on_success": "changes status from Approved to Active"
+              "on_success": "moves Approved \u2192 Active"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Premature Close",
+              "on_success": "closes account prematurely (sets status to Closed)"
+            },
+            {
+              "action_name": "Close on Maturity",
+              "preconditions": [
+                "maturity date must be reached"
+              ],
+              "on_success": "closes account on maturity (sets status to Closed)"
+            }
+          ]
+        }
+      }
+    },
+    "RD_Account_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "on_success": "moves Pending \u2192 Approved"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "on_success": "moves Approved \u2192 Active"
             }
           ]
         },
@@ -397,25 +605,18 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "available_actions": [
             {
               "action_name": "Deposit",
-              "fields": {
-                "Deposit_Amount": { "type": "number", "required": true },
-                "Deposit_Date": { "type": "date", "required": true }
-              },
-              "constraints": [
-                "Deposit_Amount must be >= account's Mandatory_Deposit_Amount_Per_Installment"
-              ],
-              "preconditions": ["status must be Active"],
-              "on_success": "increments total deposits made and updates deposit schedule"
+              "on_success": "records a deposit and updates the deposit schedule and total deposits made"
             },
             {
               "action_name": "Premature Close",
-              "preconditions": ["status must be Active"],
-              "on_success": "changes status to Closed"
+              "on_success": "closes account prematurely (sets status to Closed)"
             },
             {
               "action_name": "Close on Maturity",
-              "preconditions": ["status must be Active", "maturity date must be reached"],
-              "on_success": "changes status to Closed"
+              "preconditions": [
+                "maturity date must be reached"
+              ],
+              "on_success": "closes account on maturity (sets status to Closed)"
             }
           ]
         }
@@ -425,20 +626,196 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:06:27] UI-AST Agent - PARSED JSON
+[22:23:38] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Fixed & Recurring Deposit Accounts
+
+
+Fixed Deposit and Recurring Deposit accounts are created from the Client Detail page. The FD Account creation form contains Fixed Deposit Product dropdown, Deposit Amount, Deposit Period (numeric and unit — Days, Months, Years), and Maturity Instructions (Transfer to Savings, Re-Invest, or Re-Invest Principal and Transfer Interest). The FD Account Detail page shows deposit amount, maturity date, maturity amount, interest rate, and status with action buttons for Approve, Activate, Premature Close, and Close on Maturity. The RD Account creation form contains Recurring Deposit Product dropdown, Mandatory Deposit Amount per installment, Deposit Period, Deposit Frequency (Daily, Weekly, Monthly, Quarterly, Yearly), and Expected First Deposit On date. The RD Account Detail page shows the deposit schedule, total deposits made, maturity details, interest rate, and status with action buttons for Approve, Activate, Deposit, Premature Close, and Close on Maturity. Both FD and RD detail pages include tabs for Summary, Transactions, and Charges. Interest rates are determined by the Interest Rate Chart configured on the product, with tiered rates based on deposit amount and term length.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. RD_Account_Creation_Form.fields.Deposit_Period: Replace the single 'unspecified' field with explicit fields matching FD pattern — add 'Deposit_Period_Value' (type: number, required: true) and 'Deposit_Period_Unit' (type: dropdown, options: ['Days','Months','Years'], required: true), unless the product definition specifies a different structure for RD; if different, clarify in description.
+2. FD_Account_Creation_Form.submit_actions[0]: Remove the explicit button name or mark it as unspecified in the AST (e.g., use a generic 'create_action' without a specific label), and do not assert resulting account status unless the description specifies the initial status.
+3. FD_Account_Creation_Form.submit_actions[0].on_success: Remove or generalize the 'creates Fixed Deposit account in Pending status' text to 'creates Fixed Deposit account' (do not assert 'Pending' unless description states initial status).
+4. RD_Account_Creation_Form.submit_actions[0]: Remove the explicit button name or mark it as unspecified in the AST, and do not assert resulting account status.
+5. RD_Account_Creation_Form.submit_actions[0].on_success: Remove or generalize the 'creates Recurring Deposit account in Pending status' text to 'creates Recurring Deposit account' (do not assert 'Pending' unless description states initial status).
+6. FD_Account_Detail_Actions: Replace explicit 'states' structure with a flat 'available_actions' list on the FD detail page if the description only requires action buttons; if states are required, update description to explicitly name states and transitions before modeling them.
+7. FD_Account_Detail_Actions.states.Active.available_actions[1].preconditions[0]: Remove the 'maturity date must be reached' precondition unless the description explicitly specifies this conditional behavior.
+8. RD_Account_Detail_Actions: Replace explicit 'states' structure with a flat 'available_actions' list on the RD detail page if the description only requires action buttons; if states are required, update description to explicitly name states and transitions before modeling them.
+9. RD_Account_Detail_Actions.states.Active.available_actions[2].preconditions[0]: Remove the 'maturity date must be reached' precondition unless the description explicitly specifies this conditional behavior.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:25:12] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Fixed & Recurring Deposit Accounts",
   "components": {
+    "Client_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Create Fixed Deposit Account",
+          "on_success": "opens Fixed Deposit Account creation form"
+        },
+        {
+          "action_name": "Create Recurring Deposit Account",
+          "on_success": "opens Recurring Deposit Account creation form"
+        }
+      ]
+    },
     "FD_Account_Creation_Form": {
       "type": "form",
-      "preconditions": [
-        "accessed from Client Detail page"
-      ],
       "fields": {
         "Fixed_Deposit_Product": {
           "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "interest rate determined by selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
+        },
+        "Deposit_Amount": {
+          "type": "number",
           "required": true
+        },
+        "Deposit_Period_Value": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Unit": {
+          "type": "dropdown",
+          "required": true,
+          "options": ["Days", "Months", "Years"]
+        },
+        "Maturity_Instructions": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Transfer to Savings",
+            "Re-Invest",
+            "Re-Invest Principal and Transfer Interest"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "create_action",
+          "on_success": "creates Fixed Deposit account"
+        }
+      ]
+    },
+    "FD_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        { "tab_name": "Summary", "fields": {} },
+        { "tab_name": "Transactions", "fields": {} },
+        { "tab_name": "Charges", "fields": {} }
+      ]
+    },
+    "FD_Account_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        { "action_name": "Approve" },
+        { "action_name": "Activate" },
+        { "action_name": "Premature Close" },
+        { "action_name": "Close on Maturity" }
+      ]
+    },
+    "RD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Recurring_Deposit_Product": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "interest rate determined by selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
+        },
+        "Mandatory_Deposit_Amount": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Value": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Unit": {
+          "type": "dropdown",
+          "required": true,
+          "options": ["Days", "Months", "Years"]
+        },
+        "Deposit_Frequency": {
+          "type": "dropdown",
+          "required": true,
+          "options": ["Daily", "Weekly", "Monthly", "Quarterly", "Yearly"]
+        },
+        "Expected_First_Deposit_On": {
+          "type": "date",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "create_action",
+          "on_success": "creates Recurring Deposit account"
+        }
+      ]
+    },
+    "RD_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        { "tab_name": "Summary", "fields": {} },
+        { "tab_name": "Transactions", "fields": {} },
+        { "tab_name": "Charges", "fields": {} }
+      ]
+    },
+    "RD_Account_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        { "action_name": "Approve" },
+        { "action_name": "Activate" },
+        { "action_name": "Deposit" },
+        { "action_name": "Premature Close" },
+        { "action_name": "Close on Maturity" }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:25:12] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Fixed & Recurring Deposit Accounts",
+  "components": {
+    "Client_Detail_Actions": {
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Create Fixed Deposit Account",
+          "on_success": "opens Fixed Deposit Account creation form"
+        },
+        {
+          "action_name": "Create Recurring Deposit Account",
+          "on_success": "opens Recurring Deposit Account creation form"
+        }
+      ]
+    },
+    "FD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Fixed_Deposit_Product": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "interest rate determined by selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
         },
         "Deposit_Amount": {
           "type": "number",
@@ -467,277 +844,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           ]
         }
       },
-      "constraints": [
-        "interest rate is determined by the selected product's Interest Rate Chart based on Deposit_Amount and Deposit_Period_Value + Deposit_Period_Unit"
-      ],
       "submit_actions": [
         {
-          "element_name": "Create Fixed Deposit Account",
-          "on_success": "creates FD account in Pending status"
-        }
-      ]
-    },
-    "RD_Account_Creation_Form": {
-      "type": "form",
-      "preconditions": [
-        "accessed from Client Detail page"
-      ],
-      "fields": {
-        "Recurring_Deposit_Product": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Mandatory_Deposit_Amount_Per_Installment": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Value": {
-          "type": "number",
-          "required": true
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Days",
-            "Months",
-            "Years"
-          ]
-        },
-        "Deposit_Frequency": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Daily",
-            "Weekly",
-            "Monthly",
-            "Quarterly",
-            "Yearly"
-          ]
-        },
-        "Expected_First_Deposit_On": {
-          "type": "date",
-          "required": true
-        }
-      },
-      "constraints": [
-        "interest rate is determined by the selected product's Interest Rate Chart based on Mandatory_Deposit_Amount_Per_Installment and Deposit_Period_Value + Deposit_Period_Unit"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Create Recurring Deposit Account",
-          "on_success": "creates RD account in Pending status"
-        }
-      ]
-    },
-    "FD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "FD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status from Pending to Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status from Approved to Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "changes status to Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active",
-                "maturity date must be reached"
-              ],
-              "on_success": "changes status to Closed"
-            }
-          ]
-        }
-      }
-    },
-    "RD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "RD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "preconditions": [
-                "status must be Pending"
-              ],
-              "on_success": "changes status from Pending to Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "preconditions": [
-                "status must be Approved"
-              ],
-              "on_success": "changes status from Approved to Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Deposit",
-              "fields": {
-                "Deposit_Amount": {
-                  "type": "number",
-                  "required": true
-                },
-                "Deposit_Date": {
-                  "type": "date",
-                  "required": true
-                }
-              },
-              "constraints": [
-                "Deposit_Amount must be >= account's Mandatory_Deposit_Amount_Per_Installment"
-              ],
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "increments total deposits made and updates deposit schedule"
-            },
-            {
-              "action_name": "Premature Close",
-              "preconditions": [
-                "status must be Active"
-              ],
-              "on_success": "changes status to Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "preconditions": [
-                "status must be Active",
-                "maturity date must be reached"
-              ],
-              "on_success": "changes status to Closed"
-            }
-          ]
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:08:14] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Fixed & Recurring Deposit Accounts
-
-
-Fixed Deposit and Recurring Deposit accounts are created from the Client Detail page. The FD Account creation form contains Fixed Deposit Product dropdown, Deposit Amount, Deposit Period (numeric and unit — Days, Months, Years), and Maturity Instructions (Transfer to Savings, Re-Invest, or Re-Invest Principal and Transfer Interest). The FD Account Detail page shows deposit amount, maturity date, maturity amount, interest rate, and status with action buttons for Approve, Activate, Premature Close, and Close on Maturity. The RD Account creation form contains Recurring Deposit Product dropdown, Mandatory Deposit Amount per installment, Deposit Period, Deposit Frequency (Daily, Weekly, Monthly, Quarterly, Yearly), and Expected First Deposit On date. The RD Account Detail page shows the deposit schedule, total deposits made, maturity details, interest rate, and status with action buttons for Approve, Activate, Deposit, Premature Close, and Close on Maturity. Both FD and RD detail pages include tabs for Summary, Transactions, and Charges. Interest rates are determined by the Interest Rate Chart configured on the product, with tiered rates based on deposit amount and term length.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove components.FD_Account_Creation_Form.submit_actions[0] or replace it with a neutral, unspecified submit action only if the description explicitly names the button; do not invent a labeled 'Create Fixed Deposit Account' button.
-2. Remove components.RD_Account_Creation_Form.submit_actions[0] or replace it with a neutral, unspecified submit action only if the description explicitly names the button; do not invent a labeled 'Create Recurring Deposit Account' button.
-3. Remove components.RD_Account_Detail_Actions.states.Active.available_actions[0].fields (Deposit_Amount and Deposit_Date). If the Deposit action requires specific input fields, the description must explicitly list them; otherwise represent Deposit as a simple action button with no internal fields.
-4. Remove components.RD_Account_Detail_Actions.states.Active.available_actions[0].constraints[0] (the minimum-deposit constraint). Only include explicit validation rules that are directly stated in the description.
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[16:09:41] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Fixed & Recurring Deposit Accounts",
-  "components": {
-    "FD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Fixed_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rate determined by Interest Rate Chart configured on the product based on deposit amount and deposit period"
-          ]
-        },
-        "Deposit_Amount": {
-          "type": "number",
-          "required": false
-        },
-        "Deposit_Period_Numeric": {
-          "type": "number",
-          "required": false
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": false,
-          "options": ["Days", "Months", "Years"]
-        },
-        "Maturity_Instructions": {
-          "type": "dropdown",
-          "required": false,
-          "options": ["Transfer to Savings", "Re-Invest", "Re-Invest Principal and Transfer Interest"]
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
+          "element_name": "create_action",
           "on_success": "creates Fixed Deposit account"
         }
       ]
@@ -760,69 +869,68 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       ]
     },
     "FD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "on_success": "moves Pending -> Approved"
-            }
-          ]
+      "type": "action_bar",
+      "available_actions": [
+        {
+          "action_name": "Approve"
         },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "on_success": "moves Approved -> Active"
-            }
-          ]
+        {
+          "action_name": "Activate"
         },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Premature Close",
-              "on_success": "moves Active -> Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "on_success": "moves Active -> Closed"
-            }
-          ]
+        {
+          "action_name": "Premature Close"
+        },
+        {
+          "action_name": "Close on Maturity"
         }
-      }
+      ]
     },
     "RD_Account_Creation_Form": {
       "type": "form",
       "fields": {
         "Recurring_Deposit_Product": {
           "type": "dropdown",
-          "required": false,
+          "required": true,
           "constraints": [
-            "interest rate determined by Interest Rate Chart configured on the product based on deposit amount and deposit period"
+            "interest rate determined by selected product's Interest Rate Chart (tiered by deposit amount and term length)"
           ]
         },
-        "Mandatory_Deposit_Amount_per_installment": {
+        "Mandatory_Deposit_Amount": {
           "type": "number",
-          "required": false
+          "required": true
         },
-        "Deposit_Period_Numeric": {
+        "Deposit_Period_Value": {
           "type": "number",
-          "required": false
+          "required": true
+        },
+        "Deposit_Period_Unit": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Days",
+            "Months",
+            "Years"
+          ]
         },
         "Deposit_Frequency": {
           "type": "dropdown",
-          "required": false,
-          "options": ["Daily", "Weekly", "Monthly", "Quarterly", "Yearly"]
+          "required": true,
+          "options": [
+            "Daily",
+            "Weekly",
+            "Monthly",
+            "Quarterly",
+            "Yearly"
+          ]
         },
         "Expected_First_Deposit_On": {
           "type": "date",
-          "required": false
+          "required": true
         }
       },
       "submit_actions": [
         {
-          "element_name": "Submit",
+          "element_name": "create_action",
           "on_success": "creates Recurring Deposit account"
         }
       ]
@@ -845,620 +953,22 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       ]
     },
     "RD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "on_success": "moves Pending -> Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "on_success": "moves Approved -> Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Deposit"
-            },
-            {
-              "action_name": "Premature Close",
-              "on_success": "moves Active -> Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "on_success": "moves Active -> Closed"
-            }
-          ]
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:09:41] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Fixed & Recurring Deposit Accounts",
-  "components": {
-    "FD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Fixed_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rate determined by Interest Rate Chart configured on the product based on deposit amount and deposit period"
-          ]
-        },
-        "Deposit_Amount": {
-          "type": "number",
-          "required": false
-        },
-        "Deposit_Period_Numeric": {
-          "type": "number",
-          "required": false
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Days",
-            "Months",
-            "Years"
-          ]
-        },
-        "Maturity_Instructions": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Transfer to Savings",
-            "Re-Invest",
-            "Re-Invest Principal and Transfer Interest"
-          ]
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates Fixed Deposit account"
-        }
-      ]
-    },
-    "FD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "FD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "on_success": "moves Pending -> Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "on_success": "moves Approved -> Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Premature Close",
-              "on_success": "moves Active -> Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "on_success": "moves Active -> Closed"
-            }
-          ]
-        }
-      }
-    },
-    "RD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Recurring_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rate determined by Interest Rate Chart configured on the product based on deposit amount and deposit period"
-          ]
-        },
-        "Mandatory_Deposit_Amount_per_installment": {
-          "type": "number",
-          "required": false
-        },
-        "Deposit_Period_Numeric": {
-          "type": "number",
-          "required": false
-        },
-        "Deposit_Frequency": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Daily",
-            "Weekly",
-            "Monthly",
-            "Quarterly",
-            "Yearly"
-          ]
-        },
-        "Expected_First_Deposit_On": {
-          "type": "date",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "on_success": "creates Recurring Deposit account"
-        }
-      ]
-    },
-    "RD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "RD_Account_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Pending": {
-          "available_actions": [
-            {
-              "action_name": "Approve",
-              "on_success": "moves Pending -> Approved"
-            }
-          ]
-        },
-        "Approved": {
-          "available_actions": [
-            {
-              "action_name": "Activate",
-              "on_success": "moves Approved -> Active"
-            }
-          ]
-        },
-        "Active": {
-          "available_actions": [
-            {
-              "action_name": "Deposit"
-            },
-            {
-              "action_name": "Premature Close",
-              "on_success": "moves Active -> Closed"
-            },
-            {
-              "action_name": "Close on Maturity",
-              "on_success": "moves Active -> Closed"
-            }
-          ]
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:10:52] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Fixed & Recurring Deposit Accounts
-
-
-Fixed Deposit and Recurring Deposit accounts are created from the Client Detail page. The FD Account creation form contains Fixed Deposit Product dropdown, Deposit Amount, Deposit Period (numeric and unit — Days, Months, Years), and Maturity Instructions (Transfer to Savings, Re-Invest, or Re-Invest Principal and Transfer Interest). The FD Account Detail page shows deposit amount, maturity date, maturity amount, interest rate, and status with action buttons for Approve, Activate, Premature Close, and Close on Maturity. The RD Account creation form contains Recurring Deposit Product dropdown, Mandatory Deposit Amount per installment, Deposit Period, Deposit Frequency (Daily, Weekly, Monthly, Quarterly, Yearly), and Expected First Deposit On date. The RD Account Detail page shows the deposit schedule, total deposits made, maturity details, interest rate, and status with action buttons for Approve, Activate, Deposit, Premature Close, and Close on Maturity. Both FD and RD detail pages include tabs for Summary, Transactions, and Charges. Interest rates are determined by the Interest Rate Chart configured on the product, with tiered rates based on deposit amount and term length.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. components.FD_Account_Creation_Form.submit_actions: Remove this inferred submit_actions array, or if a submission control is required, replace with a single button whose exact label is added to the source description (e.g., set element_name to 'Create Fixed Deposit Account' only if the description is updated to name it).
-2. components.RD_Account_Creation_Form.submit_actions: Remove this inferred submit_actions array, or if a submission control is required, replace with a single button whose exact label is added to the source description (e.g., set element_name to 'Create Recurring Deposit Account' only if the description is updated to name it).
-3. components.FD_Account_Detail_Actions.states: Remove the inferred state-bound structure (states.Pending/Approved/Active and their on_success messages). Instead model the detail-page actions exactly as buttons listed (Approve, Activate, Premature Close, Close on Maturity) under a simple 'available_actions' list without state mapping, unless the description is updated to explicitly define states and transitions.
-4. components.RD_Account_Detail_Actions.states: Remove the inferred state-bound structure (states.Pending/Approved/Active and their on_success messages). Instead model the detail-page actions exactly as buttons listed (Approve, Activate, Deposit, Premature Close, Close on Maturity) under a simple 'available_actions' list without state mapping, unless the description is updated to explicitly define states and transitions.
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[16:11:27] UI-AST Agent - LLM RESPONSE
-------------------------------------------------------------
-{
-  "module_name": "Fixed & Recurring Deposit Accounts",
-  "components": {
-    "Client_Detail_Page": {
-      "type": "page",
-      "available_actions": [
-        {
-          "action_name": "Create Fixed Deposit Account",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Create Recurring Deposit Account",
-          "element_type": "button"
-        }
-      ]
-    },
-    "FD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Fixed_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
-          ]
-        },
-        "Deposit_Amount": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
-          ]
-        },
-        "Deposit_Period_Number": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "term length used with product's Interest Rate Chart to determine applicable rate"
-          ]
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": false,
-          "options": ["Days", "Months", "Years"]
-        },
-        "Maturity_Instructions": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Transfer to Savings",
-            "Re-Invest",
-            "Re-Invest Principal and Transfer Interest"
-          ]
-        }
-      }
-    },
-    "RD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Recurring_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
-          ]
-        },
-        "Mandatory_Deposit_Amount_per_installment": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
-          ]
-        },
-        "Deposit_Period": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "term length used with product's Interest Rate Chart to determine applicable rate"
-          ]
-        },
-        "Deposit_Frequency": {
-          "type": "dropdown",
-          "required": false,
-          "options": ["Daily", "Weekly", "Monthly", "Quarterly", "Yearly"]
-        },
-        "Expected_First_Deposit_On": {
-          "type": "date",
-          "required": false
-        }
-      }
-    },
-    "FD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "FD_Account_Detail_Actions": {
       "type": "action_bar",
       "available_actions": [
         {
-          "action_name": "Approve",
-          "element_type": "button"
+          "action_name": "Approve"
         },
         {
-          "action_name": "Activate",
-          "element_type": "button"
+          "action_name": "Activate"
         },
         {
-          "action_name": "Premature Close",
-          "element_type": "button"
+          "action_name": "Deposit"
         },
         {
-          "action_name": "Close on Maturity",
-          "element_type": "button"
-        }
-      ]
-    },
-    "RD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
+          "action_name": "Premature Close"
         },
         {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "RD_Account_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Approve",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Activate",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Deposit",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Premature Close",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Close on Maturity",
-          "element_type": "button"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:11:27] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Fixed & Recurring Deposit Accounts",
-  "components": {
-    "Client_Detail_Page": {
-      "type": "page",
-      "available_actions": [
-        {
-          "action_name": "Create Fixed Deposit Account",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Create Recurring Deposit Account",
-          "element_type": "button"
-        }
-      ]
-    },
-    "FD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Fixed_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
-          ]
-        },
-        "Deposit_Amount": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
-          ]
-        },
-        "Deposit_Period_Number": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "term length used with product's Interest Rate Chart to determine applicable rate"
-          ]
-        },
-        "Deposit_Period_Unit": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Days",
-            "Months",
-            "Years"
-          ]
-        },
-        "Maturity_Instructions": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Transfer to Savings",
-            "Re-Invest",
-            "Re-Invest Principal and Transfer Interest"
-          ]
-        }
-      }
-    },
-    "RD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Recurring_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
-          ]
-        },
-        "Mandatory_Deposit_Amount_per_installment": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
-          ]
-        },
-        "Deposit_Period": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "term length used with product's Interest Rate Chart to determine applicable rate"
-          ]
-        },
-        "Deposit_Frequency": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Daily",
-            "Weekly",
-            "Monthly",
-            "Quarterly",
-            "Yearly"
-          ]
-        },
-        "Expected_First_Deposit_On": {
-          "type": "date",
-          "required": false
-        }
-      }
-    },
-    "FD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "FD_Account_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Approve",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Activate",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Premature Close",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Close on Maturity",
-          "element_type": "button"
-        }
-      ]
-    },
-    "RD_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {}
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        }
-      ]
-    },
-    "RD_Account_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Approve",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Activate",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Deposit",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Premature Close",
-          "element_type": "button"
-        },
-        {
-          "action_name": "Close on Maturity",
-          "element_type": "button"
+          "action_name": "Close on Maturity"
         }
       ]
     }

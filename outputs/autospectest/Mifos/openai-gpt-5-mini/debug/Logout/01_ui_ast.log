@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.761540
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.399957
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Logout
 
@@ -215,31 +215,23 @@ The logout function is accessible from the user profile icon in the top-right co
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:56] UI-AST Agent - LLM RESPONSE
+[22:22:15] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Logout",
   "components": {
-    "User_Profile_Menu": {
+    "User_Profile_Icon": {
+      "type": "button",
+      "visible_when": "user is logged in",
+      "on_click": "toggles Profile_Dropdown"
+    },
+    "Profile_Dropdown": {
       "type": "dropdown",
-      "preconditions": [
-        "user must be logged in"
-      ],
-      "trigger": {
-        "element_name": "Profile Icon",
-        "type": "button",
-        "preconditions": [
-          "user must be logged in"
-        ],
-        "on_action": "reveals dropdown menu"
-      },
-      "menu_items": [
+      "visible_when": "User_Profile_Icon == clicked",
+      "items": [
         {
           "element_name": "Profile Settings",
           "type": "link",
-          "preconditions": [
-            "user must be logged in"
-          ],
           "on_click": "navigates to Profile Settings page"
         },
         {
@@ -248,55 +240,40 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "preconditions": [
             "user must be logged in"
           ],
-          "on_click": "terminates authenticated session; clears authentication token; redirects to login page",
-          "on_success": "terminates authenticated session; clears authentication token; redirects to login page",
-          "state_change": {
-            "auth_state": "Logged_Out"
-          },
-          "postconditions": [
-            "subsequent navigation to authenticated pages redirects to login page"
-          ]
+          "on_click": "initiates logout flow",
+          "on_success": "terminates authenticated session; clears authentication token; redirects to login page"
         }
       ]
     },
-    "Authenticated_Page_Access_Guard": {
+    "Authenticated_Route_Guard": {
       "type": "unspecified",
-      "description": "Global guard applied to routes/pages that require authentication",
       "preconditions": [
         "user must be logged in"
       ],
       "on_failure": "redirects to login page",
-      "applies_to": "any authenticated page"
+      "description": "Global guard applied to all authenticated routes. After logout, attempts to navigate to an authenticated page will trigger this guard and redirect to the login page."
     }
   }
 }
 
 ------------------------------------------------------------
-[16:06:56] UI-AST Agent - PARSED JSON
+[22:22:15] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Logout",
   "components": {
-    "User_Profile_Menu": {
+    "User_Profile_Icon": {
+      "type": "button",
+      "visible_when": "user is logged in",
+      "on_click": "toggles Profile_Dropdown"
+    },
+    "Profile_Dropdown": {
       "type": "dropdown",
-      "preconditions": [
-        "user must be logged in"
-      ],
-      "trigger": {
-        "element_name": "Profile Icon",
-        "type": "button",
-        "preconditions": [
-          "user must be logged in"
-        ],
-        "on_action": "reveals dropdown menu"
-      },
-      "menu_items": [
+      "visible_when": "User_Profile_Icon == clicked",
+      "items": [
         {
           "element_name": "Profile Settings",
           "type": "link",
-          "preconditions": [
-            "user must be logged in"
-          ],
           "on_click": "navigates to Profile Settings page"
         },
         {
@@ -305,25 +282,18 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "preconditions": [
             "user must be logged in"
           ],
-          "on_click": "terminates authenticated session; clears authentication token; redirects to login page",
-          "on_success": "terminates authenticated session; clears authentication token; redirects to login page",
-          "state_change": {
-            "auth_state": "Logged_Out"
-          },
-          "postconditions": [
-            "subsequent navigation to authenticated pages redirects to login page"
-          ]
+          "on_click": "initiates logout flow",
+          "on_success": "terminates authenticated session; clears authentication token; redirects to login page"
         }
       ]
     },
-    "Authenticated_Page_Access_Guard": {
+    "Authenticated_Route_Guard": {
       "type": "unspecified",
-      "description": "Global guard applied to routes/pages that require authentication",
       "preconditions": [
         "user must be logged in"
       ],
       "on_failure": "redirects to login page",
-      "applies_to": "any authenticated page"
+      "description": "Global guard applied to all authenticated routes. After logout, attempts to navigate to an authenticated page will trigger this guard and redirect to the login page."
     }
   }
 }

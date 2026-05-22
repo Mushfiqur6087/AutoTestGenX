@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.373275
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.556998
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Organization Settings</module_name>
 
@@ -234,17 +234,20 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
   "components": {
     "Holidays_Page": {
       "type": "data_table",
-      "columns": [
+      "sortable_columns": [
         "Name",
         "Start Date",
         "To Date",
         "Status",
         "Rescheduling Type"
       ],
-      "actions": [
+      "bulk_actions": [],
+      "row_actions": [],
+      "page_actions": [
         {
           "element_name": "+ Create Holiday",
-          "opens_form": "Create_Holiday_Form"
+          "action": "open_form",
+          "target": "Create_Holiday_Form"
         }
       ]
     },
@@ -255,32 +258,35 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "type": "unspecified",
           "required": true
         },
-        "From_Date": {
+        "From Date": {
           "type": "date",
           "required": true
         },
-        "To_Date": {
+        "To Date": {
           "type": "date",
           "required": true
         },
-        "Repayments_Rescheduled_To_Date": {
-          "type": "date"
+        "Repayments Rescheduled To date": {
+          "type": "date",
+          "required": false
         },
-        "Rescheduling_Type": {
-          "type": "dropdown"
+        "Rescheduling Type": {
+          "type": "dropdown",
+          "required": false
         },
         "Description": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
-        "Applicable_Offices": {
-          "type": "dropdown",
-          "multi_select": true
+        "Applicable Offices": {
+          "type": "unspecified",
+          "multi_select": true,
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "unspecified",
-          "on_success": "creates holiday and reschedules installments falling on holidays per Rescheduling Type"
+          "on_success": "creates holiday and reschedules loan installments that fall on the holiday per the configured rescheduling type"
         }
       ]
     },
@@ -288,295 +294,304 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "type": "form",
       "fields": {
         "Monday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Tuesday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Wednesday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Thursday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Friday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Saturday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Sunday": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
-        "Repayment_Rescheduling": {
-          "type": "dropdown"
+        "Repayment Rescheduling": {
+          "type": "dropdown",
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "unspecified",
-          "on_success": "updates working days and repayment rescheduling behavior"
+          "on_success": "saves working days configuration and reschedules loan installments that fall on non-working days per the selected rescheduling option"
         }
       ]
     },
-    "Currencies_List": {
+    "Currencies_Page": {
       "type": "data_table",
-      "columns": [
+      "sortable_columns": [
         "Code",
         "Name",
         "Decimal Places"
       ],
-      "selectable_rows": true
+      "fields": {
+        "Currencies": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Code": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Decimal Places": {
+              "type": "number",
+              "required": true
+            },
+            "Is Active": {
+              "type": "checkbox",
+              "required": false
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "on_success": "updates which currencies are active for the system"
+        }
+      ]
     },
     "Funds_Page": {
       "type": "data_table",
-      "columns": [
+      "sortable_columns": [
         "Fund Name",
         "External ID"
       ],
-      "actions": [
+      "row_actions": [],
+      "page_actions": [
         {
-          "element_name": "Create Fund",
-          "opens_form": "Create_Fund_Form"
+          "action": "open_form",
+          "target": "Create_Fund_Form"
         }
       ]
     },
     "Create_Fund_Form": {
       "type": "form",
       "fields": {
-        "Fund_Name": {
-          "type": "unspecified"
+        "Fund Name": {
+          "type": "unspecified",
+          "required": false
         },
-        "External_ID": {
-          "type": "unspecified"
+        "External ID": {
+          "type": "unspecified",
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "unspecified",
-          "on_success": "creates fund"
+          "on_success": "creates fund and makes it available as a funding source for loans"
         }
       ]
     },
     "Payment_Types_Page": {
       "type": "data_table",
-      "columns": [
+      "sortable_columns": [
         "Name",
-        "Description",
-        "Is Cash Payment",
         "Position"
       ],
-      "actions": [
+      "fields": {
+        "Payment_Types": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Description": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Is Cash Payment": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Position": {
+              "type": "number",
+              "required": false
+            }
+          }
+        }
+      },
+      "page_actions": [
         {
           "element_name": "+ Create",
-          "opens_form": "Create_Payment_Type_Form"
+          "action": "open_form",
+          "target": "Create_Payment_Type_Form"
         }
-      ]
+      ],
+      "row_actions": [],
+      "bulk_actions": []
     },
     "Create_Payment_Type_Form": {
       "type": "form",
       "fields": {
         "Name": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": true
         },
         "Description": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
-        "Is_Cash_Payment": {
-          "type": "checkbox"
+        "Is Cash Payment": {
+          "type": "checkbox",
+          "required": false
         },
         "Position": {
-          "type": "number"
+          "type": "number",
+          "required": false
         }
       },
       "submit_actions": [
         {
-          "element_name": "unspecified",
-          "on_success": "creates payment type and makes it available in transaction form dropdowns"
+          "on_success": "creates payment type and adds it as a dropdown option in all transaction forms"
         }
       ]
     },
-    "Bulk_Import": {
-      "type": "container",
-      "entity_types": [
+    "Bulk_Import_Page": {
+      "type": "page",
+      "sections": [
         {
-          "entity_name": "Clients",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Clients",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Clients data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Groups",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Groups",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Groups data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Centers",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Centers",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Centers data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Offices",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Offices",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Offices data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Staff",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Staff",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Staff data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Users",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Users",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Users data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Loans",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Loans",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Loans data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Savings",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Savings",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports Savings data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         },
         {
-          "entity_name": "Other",
-          "description": "additional importable entity types",
-          "actions": {
-            "Download_Template": {
-              "element_name": "Download template"
-            }
-          },
-          "fields": {
-            "Upload_File": {
-              "type": "file_upload",
-              "required": "unspecified"
-            }
-          },
-          "submit_actions": [
+          "entity": "Other",
+          "description": "additional entity types supported",
+          "actions": [
             {
-              "element_name": "unspecified",
-              "on_success": "imports selected entity data"
+              "action_name": "Download template"
+            },
+            {
+              "action_name": "Upload",
+              "field": {
+                "type": "file_upload"
+              }
             }
           ]
         }
@@ -600,7 +615,7 @@ The Working Days page allows configuring which days of the week are working days
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:20:31] Test-Positive - LLM RESPONSE
+[22:36:11] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Organization Settings",
@@ -608,227 +623,131 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create a new Holiday (happy path)",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Holidays page",
-        "2. Click '+ Create Holiday' to open the Create Holiday form",
-        "3. Enter <holiday name> in the Name field",
-        "4. Enter <from date> in the From Date field",
-        "5. Enter <to date> in the To Date field",
-        "6. (Optional) Enter <repayments rescheduled to date> in Repayments Rescheduled To Date",
-        "7. Select <rescheduling type> from the Rescheduling Type dropdown",
-        "8. Enter <description> in the Description field",
-        "9. Select one or more <applicable offices> in Applicable Offices multi-select",
-        "10. Click Save"
+      "test_case": "Create a new Holiday via Create Holiday form (happy path)",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "creates holiday and reschedules installments falling on holidays per Rescheduling Type",
+      "steps": [
+        "1. Navigate to Organization Settings > Holidays",
+        "2. Click the '+ Create Holiday' button",
+        "3. Enter <Name> in the Name field",
+        "4. Enter <From Date> in the From Date field",
+        "5. Enter <To Date> in the To Date field",
+        "6. Select <Rescheduling Option> from the Rescheduling Type dropdown",
+        "7. (Optional) Enter <Repayments Rescheduled To date> in the Repayments Rescheduled To date field",
+        "8. (Optional) Select <applicable office(s)> in the Applicable Offices multi-select",
+        "9. (Optional) Enter <Description> in the Description field",
+        "10. Click Save (submit the Create Holiday form)"
+      ],
+      "expected_result": "A success notification is displayed: \"creates holiday and reschedules loan installments that fall on the holiday per the configured rescheduling type\"; the Holidays table shows a new row with the entered <Name>, Start Date = <From Date> and To Date = <To Date>",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Filter Holidays table by name",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Holidays page",
-        "2. Enter <holiday name> in the Holidays search/filter field",
-        "3. Click Search or apply the filter control"
+      "test_case": "Save Working Days configuration with repayment rescheduling option",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "Holidays table displays only rows matching <holiday name>; unrelated rows are no longer visible",
-      "priority": "medium"
+      "steps": [
+        "1. Navigate to Organization Settings > Working Days",
+        "2. Check the checkboxes for the working days to enable (e.g., click the checkbox for Monday)",
+        "3. Select <Repayment Rescheduling Option> from the Repayment Rescheduling dropdown",
+        "4. Click Save (submit the Working Days form)"
+      ],
+      "expected_result": "A success notification is displayed: \"saves working days configuration and reschedules loan installments that fall on non-working days per the selected rescheduling option\"; the Working Days page shows the chosen day checkboxes checked and the Repayment Rescheduling dropdown showing the selected <Repayment Rescheduling Option>",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Update Working Days and repayment rescheduling option",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Working Days page",
-        "2. Check the checkboxes for the desired working days (e.g., check <Monday>, <Tuesday>, <Wednesday>)",
-        "3. Uncheck the checkboxes for non-working days as needed (e.g., uncheck <Saturday>, <Sunday>)",
-        "4. Select <repayment rescheduling option> from the Repayment Rescheduling dropdown",
-        "5. Click Save"
+      "test_case": "Add a currency row and activate it via Currencies repeating group",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "updates working days and repayment rescheduling behavior",
+      "steps": [
+        "1. Navigate to Organization Settings > Currencies",
+        "2. Click Add Row (or equivalent) to add a new currency in the Currencies repeating group",
+        "3. Enter <Code> in the Code field for the new row",
+        "4. Enter <Currency Name> in the Name field for the new row",
+        "5. Enter <number of decimal places> in the Decimal Places field for the new row",
+        "6. Check the Is Active checkbox for the new row to mark the currency active",
+        "7. Click Save (submit the Currencies configuration)"
+      ],
+      "expected_result": "A success notification is displayed: \"updates which currencies are active for the system\"; the Currencies list/table displays a row with Code = <Code>, Name = <Currency Name>, Decimal Places = <number of decimal places>, and the currency is shown as active",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Create a new Fund",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Funds page",
-        "2. Click 'Create Fund' to open the Create Fund form",
-        "3. Enter <fund name> in the Fund Name field",
-        "4. Enter <external id> in the External ID field",
-        "5. Click Save"
+      "test_case": "Create a new Fund via Create Fund form",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "creates fund",
+      "steps": [
+        "1. Navigate to Organization Settings > Funds",
+        "2. Click the Create Fund button",
+        "3. Enter <Fund Name> in the Fund Name field",
+        "4. Enter <External ID> in the External ID field",
+        "5. Click Save (submit the Create Fund form)"
+      ],
+      "expected_result": "A success notification is displayed: \"creates fund and makes it available as a funding source for loans\"; the Funds table shows a new row with Fund Name = <Fund Name> and External ID = <External ID>",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Create a new Payment Type",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Payment Types page",
-        "2. Click '+ Create' to open the Create Payment Type form",
-        "3. Enter <payment type name> in the Name field",
-        "4. Enter <description> in the Description field",
-        "5. Check or uncheck Is Cash Payment as applicable",
-        "6. Enter <position> in the Position field",
-        "7. Click Save"
+      "test_case": "Create a new Payment Type and verify it appears in the list",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "creates payment type and makes it available in transaction form dropdowns",
+      "steps": [
+        "1. Navigate to Organization Settings > Payment Types",
+        "2. Click the '+ Create' button",
+        "3. Enter <Payment Type Name> in the Name field",
+        "4. (Optional) Enter <Description> in the Description field",
+        "5. (Optional) Check or leave unchecked the Is Cash Payment checkbox as appropriate",
+        "6. (Optional) Enter <Position> in the Position field",
+        "7. Click Save (submit the Create Payment Type form)"
+      ],
+      "expected_result": "A success notification is displayed: \"creates payment type and adds it as a dropdown option in all transaction forms\"; the Payment Types table displays a new row with Name = <Payment Type Name> and Position = <Position> (if provided)",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Select multiple currencies from the Currencies list",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Currencies page",
-        "2. Check the selectable rows for the desired currencies (select <currency codes>)"
+      "test_case": "Download template for Clients from Bulk Import page",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "Selected currencies rows are highlighted and show their checkboxes checked",
+      "steps": [
+        "1. Navigate to Organization Settings > Bulk Import",
+        "2. In the Clients section, click the 'Download template' action"
+      ],
+      "expected_result": "A file download is triggered in the browser for the Clients template",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Bulk import Clients using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Clients' import section/tab",
-        "3. Click 'Download template' to retrieve the Clients template",
-        "4. Click Upload and select a <valid clients import file> from the OS file picker",
-        "5. Click Import"
+      "test_case": "Upload a valid Clients import file via Bulk Import page",
+      "preconditions": [
+        "User logged in as <Admin>"
       ],
-      "expected_result": "imports Clients data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-008",
-      "test_case": "Bulk import Groups using template upload",
-      "preconditions": ["User logged in as <Admin>"],
       "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Groups' import section/tab",
-        "3. Click 'Download template' to retrieve the Groups template",
-        "4. Click Upload and select a <valid groups import file> from the OS file picker",
-        "5. Click Import"
+        "1. Navigate to Organization Settings > Bulk Import",
+        "2. In the Clients section, click the 'Upload' action",
+        "3. In the file chooser, select a <valid import file> (supported format)",
+        "4. Click the Upload/Confirm button to start the import"
       ],
-      "expected_result": "imports Groups data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-009",
-      "test_case": "Bulk import Centers using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Centers' import section/tab",
-        "3. Click 'Download template' to retrieve the Centers template",
-        "4. Click Upload and select a <valid centers import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Centers data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-010",
-      "test_case": "Bulk import Offices using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Offices' import section/tab",
-        "3. Click 'Download template' to retrieve the Offices template",
-        "4. Click Upload and select a <valid offices import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Offices data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-011",
-      "test_case": "Bulk import Staff using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Staff' import section/tab",
-        "3. Click 'Download template' to retrieve the Staff template",
-        "4. Click Upload and select a <valid staff import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Staff data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-012",
-      "test_case": "Bulk import Users using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Users' import section/tab",
-        "3. Click 'Download template' to retrieve the Users template",
-        "4. Click Upload and select a <valid users import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Users data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-013",
-      "test_case": "Bulk import Loans using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Loans' import section/tab",
-        "3. Click 'Download template' to retrieve the Loans template",
-        "4. Click Upload and select a <valid loans import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Loans data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-014",
-      "test_case": "Bulk import Savings using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Savings' import section/tab",
-        "3. Click 'Download template' to retrieve the Savings template",
-        "4. Click Upload and select a <valid savings import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Savings data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-015",
-      "test_case": "Bulk import Other entity type using template upload",
-      "preconditions": ["User logged in as <Admin>"],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Other' import section/tab and choose the target entity in the UI",
-        "3. Click 'Download template' to retrieve the selected entity template",
-        "4. Click Upload and select a <valid import file> for the selected entity from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports selected entity data",
-      "priority": "medium"
+      "expected_result": "An import progress or result panel is displayed for Clients indicating the uploaded file is being processed or has been processed (upload started/completed view visible)",
+      "priority": "high"
     }
   ],
   "summary": {
-    "total": 15,
-    "high_priority": 4,
-    "medium_priority": 11,
+    "total": 7,
+    "high_priority": 6,
+    "medium_priority": 1,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:20:31] Test-Positive - PARSED JSON
+[22:36:11] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Organization Settings",
@@ -836,251 +755,125 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create a new Holiday (happy path)",
+      "test_case": "Create a new Holiday via Create Holiday form (happy path)",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Holidays page",
-        "2. Click '+ Create Holiday' to open the Create Holiday form",
-        "3. Enter <holiday name> in the Name field",
-        "4. Enter <from date> in the From Date field",
-        "5. Enter <to date> in the To Date field",
-        "6. (Optional) Enter <repayments rescheduled to date> in Repayments Rescheduled To Date",
-        "7. Select <rescheduling type> from the Rescheduling Type dropdown",
-        "8. Enter <description> in the Description field",
-        "9. Select one or more <applicable offices> in Applicable Offices multi-select",
-        "10. Click Save"
+        "1. Navigate to Organization Settings > Holidays",
+        "2. Click the '+ Create Holiday' button",
+        "3. Enter <Name> in the Name field",
+        "4. Enter <From Date> in the From Date field",
+        "5. Enter <To Date> in the To Date field",
+        "6. Select <Rescheduling Option> from the Rescheduling Type dropdown",
+        "7. (Optional) Enter <Repayments Rescheduled To date> in the Repayments Rescheduled To date field",
+        "8. (Optional) Select <applicable office(s)> in the Applicable Offices multi-select",
+        "9. (Optional) Enter <Description> in the Description field",
+        "10. Click Save (submit the Create Holiday form)"
       ],
-      "expected_result": "creates holiday and reschedules installments falling on holidays per Rescheduling Type",
+      "expected_result": "A success notification is displayed: \"creates holiday and reschedules loan installments that fall on the holiday per the configured rescheduling type\"; the Holidays table shows a new row with the entered <Name>, Start Date = <From Date> and To Date = <To Date>",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Filter Holidays table by name",
+      "test_case": "Save Working Days configuration with repayment rescheduling option",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Holidays page",
-        "2. Enter <holiday name> in the Holidays search/filter field",
-        "3. Click Search or apply the filter control"
+        "1. Navigate to Organization Settings > Working Days",
+        "2. Check the checkboxes for the working days to enable (e.g., click the checkbox for Monday)",
+        "3. Select <Repayment Rescheduling Option> from the Repayment Rescheduling dropdown",
+        "4. Click Save (submit the Working Days form)"
       ],
-      "expected_result": "Holidays table displays only rows matching <holiday name>; unrelated rows are no longer visible",
-      "priority": "medium"
+      "expected_result": "A success notification is displayed: \"saves working days configuration and reschedules loan installments that fall on non-working days per the selected rescheduling option\"; the Working Days page shows the chosen day checkboxes checked and the Repayment Rescheduling dropdown showing the selected <Repayment Rescheduling Option>",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Update Working Days and repayment rescheduling option",
+      "test_case": "Add a currency row and activate it via Currencies repeating group",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Working Days page",
-        "2. Check the checkboxes for the desired working days (e.g., check <Monday>, <Tuesday>, <Wednesday>)",
-        "3. Uncheck the checkboxes for non-working days as needed (e.g., uncheck <Saturday>, <Sunday>)",
-        "4. Select <repayment rescheduling option> from the Repayment Rescheduling dropdown",
-        "5. Click Save"
+        "1. Navigate to Organization Settings > Currencies",
+        "2. Click Add Row (or equivalent) to add a new currency in the Currencies repeating group",
+        "3. Enter <Code> in the Code field for the new row",
+        "4. Enter <Currency Name> in the Name field for the new row",
+        "5. Enter <number of decimal places> in the Decimal Places field for the new row",
+        "6. Check the Is Active checkbox for the new row to mark the currency active",
+        "7. Click Save (submit the Currencies configuration)"
       ],
-      "expected_result": "updates working days and repayment rescheduling behavior",
+      "expected_result": "A success notification is displayed: \"updates which currencies are active for the system\"; the Currencies list/table displays a row with Code = <Code>, Name = <Currency Name>, Decimal Places = <number of decimal places>, and the currency is shown as active",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Create a new Fund",
+      "test_case": "Create a new Fund via Create Fund form",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Funds page",
-        "2. Click 'Create Fund' to open the Create Fund form",
-        "3. Enter <fund name> in the Fund Name field",
-        "4. Enter <external id> in the External ID field",
-        "5. Click Save"
+        "1. Navigate to Organization Settings > Funds",
+        "2. Click the Create Fund button",
+        "3. Enter <Fund Name> in the Fund Name field",
+        "4. Enter <External ID> in the External ID field",
+        "5. Click Save (submit the Create Fund form)"
       ],
-      "expected_result": "creates fund",
+      "expected_result": "A success notification is displayed: \"creates fund and makes it available as a funding source for loans\"; the Funds table shows a new row with Fund Name = <Fund Name> and External ID = <External ID>",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Create a new Payment Type",
+      "test_case": "Create a new Payment Type and verify it appears in the list",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Payment Types page",
-        "2. Click '+ Create' to open the Create Payment Type form",
-        "3. Enter <payment type name> in the Name field",
-        "4. Enter <description> in the Description field",
-        "5. Check or uncheck Is Cash Payment as applicable",
-        "6. Enter <position> in the Position field",
-        "7. Click Save"
+        "1. Navigate to Organization Settings > Payment Types",
+        "2. Click the '+ Create' button",
+        "3. Enter <Payment Type Name> in the Name field",
+        "4. (Optional) Enter <Description> in the Description field",
+        "5. (Optional) Check or leave unchecked the Is Cash Payment checkbox as appropriate",
+        "6. (Optional) Enter <Position> in the Position field",
+        "7. Click Save (submit the Create Payment Type form)"
       ],
-      "expected_result": "creates payment type and makes it available in transaction form dropdowns",
+      "expected_result": "A success notification is displayed: \"creates payment type and adds it as a dropdown option in all transaction forms\"; the Payment Types table displays a new row with Name = <Payment Type Name> and Position = <Position> (if provided)",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Select multiple currencies from the Currencies list",
+      "test_case": "Download template for Clients from Bulk Import page",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Currencies page",
-        "2. Check the selectable rows for the desired currencies (select <currency codes>)"
+        "1. Navigate to Organization Settings > Bulk Import",
+        "2. In the Clients section, click the 'Download template' action"
       ],
-      "expected_result": "Selected currencies rows are highlighted and show their checkboxes checked",
+      "expected_result": "A file download is triggered in the browser for the Clients template",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Bulk import Clients using template upload",
+      "test_case": "Upload a valid Clients import file via Bulk Import page",
       "preconditions": [
         "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Clients' import section/tab",
-        "3. Click 'Download template' to retrieve the Clients template",
-        "4. Click Upload and select a <valid clients import file> from the OS file picker",
-        "5. Click Import"
+        "1. Navigate to Organization Settings > Bulk Import",
+        "2. In the Clients section, click the 'Upload' action",
+        "3. In the file chooser, select a <valid import file> (supported format)",
+        "4. Click the Upload/Confirm button to start the import"
       ],
-      "expected_result": "imports Clients data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-008",
-      "test_case": "Bulk import Groups using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Groups' import section/tab",
-        "3. Click 'Download template' to retrieve the Groups template",
-        "4. Click Upload and select a <valid groups import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Groups data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-009",
-      "test_case": "Bulk import Centers using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Centers' import section/tab",
-        "3. Click 'Download template' to retrieve the Centers template",
-        "4. Click Upload and select a <valid centers import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Centers data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-010",
-      "test_case": "Bulk import Offices using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Offices' import section/tab",
-        "3. Click 'Download template' to retrieve the Offices template",
-        "4. Click Upload and select a <valid offices import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Offices data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-011",
-      "test_case": "Bulk import Staff using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Staff' import section/tab",
-        "3. Click 'Download template' to retrieve the Staff template",
-        "4. Click Upload and select a <valid staff import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Staff data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-012",
-      "test_case": "Bulk import Users using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Users' import section/tab",
-        "3. Click 'Download template' to retrieve the Users template",
-        "4. Click Upload and select a <valid users import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Users data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-013",
-      "test_case": "Bulk import Loans using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Loans' import section/tab",
-        "3. Click 'Download template' to retrieve the Loans template",
-        "4. Click Upload and select a <valid loans import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Loans data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-014",
-      "test_case": "Bulk import Savings using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Savings' import section/tab",
-        "3. Click 'Download template' to retrieve the Savings template",
-        "4. Click Upload and select a <valid savings import file> from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports Savings data",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-015",
-      "test_case": "Bulk import Other entity type using template upload",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Open the Organization > Bulk Import page",
-        "2. Select the 'Other' import section/tab and choose the target entity in the UI",
-        "3. Click 'Download template' to retrieve the selected entity template",
-        "4. Click Upload and select a <valid import file> for the selected entity from the OS file picker",
-        "5. Click Import"
-      ],
-      "expected_result": "imports selected entity data",
-      "priority": "medium"
+      "expected_result": "An import progress or result panel is displayed for Clients indicating the uploaded file is being processed or has been processed (upload started/completed view visible)",
+      "priority": "high"
     }
   ],
   "summary": {
-    "total": 15,
-    "high_priority": 4,
-    "medium_priority": 11,
+    "total": 7,
+    "high_priority": 6,
+    "medium_priority": 1,
     "low_priority": 0
   }
 }

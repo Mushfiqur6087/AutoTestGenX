@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.370217
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.545271
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Accounting Rules & Financial Activity Mappings</module_name>
 
@@ -232,18 +232,19 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Page": {
+    "Accounting_Rules_Table": {
       "type": "data_table",
       "columns": [
-        "Rule Name",
+        "Rule Name (link)",
         "Office",
         "Debit Account(s)",
         "Credit Account(s)"
       ],
       "row_actions": [
         {
-          "action_name": "Open Detail",
-          "description": "triggered by clicking the Rule Name link; opens Rule detail view"
+          "action_name": "Open",
+          "action_trigger": "click Rule Name link",
+          "opens": "Rule_Detail_View"
         }
       ],
       "actions": [
@@ -268,40 +269,47 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "type": "text",
           "required": true
         },
-        "Debit_Account_or_Tags": {
-          "type": "dropdown",
+        "Debit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Account_or_Tags": {
-          "type": "dropdown",
+        "Credit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Rule",
+          "type": "button",
+          "on_success": "creates accounting rule"
+        }
+      ]
     },
     "Rule_Detail_View": {
       "type": "detail_view",
+      "opens_from": "Accounting_Rules_Table",
       "actions": [
         {
-          "element_name": "Edit",
-          "type": "button",
+          "action_name": "Edit",
           "opens": "Edit_Rule_Form"
         },
         {
-          "element_name": "Delete",
-          "type": "button",
-          "constraints": [],
+          "action_name": "Delete",
           "on_success": "deletes rule"
         }
       ]
@@ -320,35 +328,43 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "type": "text",
           "required": true
         },
-        "Debit_Account_or_Tags": {
-          "type": "dropdown",
+        "Debit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Account_or_Tags": {
-          "type": "dropdown",
+        "Credit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates rule"
+        }
+      ]
     },
-    "Financial_Activity_Mappings_Page": {
+    "Financial_Activity_Mappings_Table": {
       "type": "data_table",
       "columns": [
         "Financial Activity",
         "GL Account"
       ],
-      "rows_description": "each row maps a single Financial Activity to a GL Account",
       "actions": [
         {
           "element_name": "+ Create Mapping",
@@ -375,8 +391,8 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
             "Overdraft Portfolio"
           ],
           "constraints": [
-            "selection must be currently unmapped",
-            "each financial activity may only be mapped once"
+            "each financial activity can only be mapped once",
+            "dropdown lists only unmapped activities"
           ]
         },
         "GL_Account": {
@@ -384,7 +400,13 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "required": true
         }
       },
-      "on_success": "creates mapping and enables automatic posting for the selected financial activity"
+      "submit_actions": [
+        {
+          "element_name": "Create Mapping",
+          "type": "button",
+          "on_success": "creates mapping and enables automatic posting for system-level financial activities"
+        }
+      ]
     }
   }
 }
@@ -404,7 +426,7 @@ The Financial Activity Mappings page displays a table mapping financial activiti
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:34] Test-Positive - LLM RESPONSE
+[22:34:12] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Accounting Rules & Financial Activity Mappings",
@@ -412,153 +434,132 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create a new accounting rule with an Office selected",
+      "test_case": "Open an accounting rule's detail view from the rules table",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open"
+        "User logged in as <Accounting Admin>",
+        "<an existing accounting rule> is present in the Accounting Rules table"
       ],
       "steps": [
-        "1. Click '+ Create Rule'",
-        "2. Select <Office> from the Office dropdown",
-        "3. Enter <valid rule name> in the Rule Name field",
-        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
-        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
-        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
-        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
-        "8. Click Save"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the <Rule Name> link for <an existing accounting rule> in the Accounting Rules table"
       ],
-      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office = <Office>, Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
-      "priority": "high"
+      "expected_result": "Rule Detail view opens showing the selected Rule Name and visible Edit and Delete actions",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new accounting rule with Office left blank (applies to all offices)",
+      "test_case": "Create a new accounting rule (single debit and credit)",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open"
+        "User logged in as <Accounting Admin>"
       ],
       "steps": [
-        "1. Click '+ Create Rule'",
-        "2. Leave the Office dropdown blank",
-        "3. Enter <valid rule name> in the Rule Name field",
-        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
-        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
-        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
-        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
-        "8. Click Save"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the '+ Create Rule' button",
+        "3. In the Create Rule form enter <valid Rule Name> in the Rule Name field",
+        "4. Select <Office or leave blank for all offices> from the Office dropdown",
+        "5. Select <one Debit GL account or tag> from the Debit Account/Tag control",
+        "6. Select <one Credit GL account or tag> from the Credit Account/Tag control",
+        "7. (Optional) Ensure Allow Multiple Debit Entries and Allow Multiple Credit Entries are unchecked",
+        "8. Click the 'Create Rule' button"
       ],
-      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office cell blank (indicating applies to all offices), Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
-      "priority": "medium"
+      "expected_result": "A new row appears in the Accounting Rules table with the entered Rule Name and showing the selected Office (or blank for all offices), Debit Account(s), and Credit Account(s)",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open an accounting rule detail by clicking its Rule Name link",
+      "test_case": "Edit an existing accounting rule and save changes",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open",
-        "A rule exists with Rule Name = <existing rule name>"
+        "User logged in as <Accounting Admin>",
+        "<an existing accounting rule> is present in the Accounting Rules table"
       ],
       "steps": [
-        "1. Click the <existing rule name> link in the Rule Name column"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the <Rule Name> link for <an existing accounting rule> to open its Rule Detail view",
+        "3. Click the Edit action on the Rule Detail view",
+        "4. In the Edit Rule form change the Rule Name to <new valid Rule Name>",
+        "5. (Optional) Change Office or Debit/Credit selections as required",
+        "6. Click the 'Save' button"
       ],
-      "expected_result": "Rule Detail page opens and displays Rule Name = <existing rule name>, Office = <Office or blank>, and the configured Debit Account(s) and Credit Account(s) as shown on the table row",
-      "priority": "medium"
+      "expected_result": "The Accounting Rules table (and the Rule Detail view if still open) shows the updated Rule Name reflecting the saved change",
+      "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit an existing accounting rule and save changes",
+      "test_case": "Delete an accounting rule from its detail view",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open",
-        "A rule exists with Rule Name = <existing rule name>"
+        "User logged in as <Accounting Admin>",
+        "<an existing accounting rule> is present in the Accounting Rules table"
       ],
       "steps": [
-        "1. Click the <existing rule name> link to open the Rule Detail page",
-        "2. Click 'Edit' on the Rule Detail page",
-        "3. Change Rule Name to <updated rule name>",
-        "4. Modify Debit Account or Tags to include <additional Debit GL account(s)> or remove as needed",
-        "5. (Optional) Toggle Allow Multiple Debit Entries as needed",
-        "6. Modify Credit Account or Tags to include <additional Credit GL account(s)> or remove as needed",
-        "7. (Optional) Toggle Allow Multiple Credit Entries as needed",
-        "8. Click Save"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the <Rule Name> link for <an existing accounting rule> to open its Rule Detail view",
+        "3. Click the Delete action on the Rule Detail view",
+        "4. Click Confirm on the Delete confirmation dialog"
       ],
-      "expected_result": "The Rule Detail page displays the updated values with Rule Name = <updated rule name> and the updated Debit Account(s)/Credit Account(s); the Accounting Rules table row for the rule shows Rule Name = <updated rule name> and reflects the same account selections",
-      "priority": "medium"
+      "expected_result": "The Accounting Rules table no longer contains the row for the deleted Rule Name; the deleted rule is not visible in the list",
+      "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Delete an existing accounting rule from its detail view",
+      "test_case": "Create a financial activity mapping (happy path)",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open",
-        "A rule exists with Rule Name = <rule to delete>"
+        "User logged in as <Accounting Admin>"
       ],
       "steps": [
-        "1. Click the <rule to delete> link to open the Rule Detail page",
-        "2. Click 'Delete' on the Rule Detail page",
-        "3. Click Confirm on the Delete dialog"
+        "1. Navigate to the Financial Activity Mappings page",
+        "2. Click the '+ Create Mapping' button",
+        "3. In the Create Mapping form select <an unmapped Financial Activity> from the Financial Activity dropdown",
+        "4. Select <a valid GL Account> from the GL Account dropdown",
+        "5. Click the 'Create Mapping' button"
       ],
-      "expected_result": "The Rule Detail page closes and the Accounting Rules table no longer contains any row with Rule Name = <rule to delete>",
+      "expected_result": "A new row appears in the Financial Activity Mappings table showing the selected Financial Activity and the chosen GL Account",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create a Financial Activity mapping for an unmapped activity (happy path)",
+      "test_case": "Mapped financial activity is removed from the 'Financial Activity' dropdown when creating a new mapping",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Financial Activity Mappings page is open",
-        "At least one financial activity is currently unmapped"
+        "User logged in as <Accounting Admin>",
+        "<Financial Activity A> is already mapped to a GL account (mapping exists in the Financial Activity Mappings table)"
       ],
       "steps": [
-        "1. Click '+ Create Mapping'",
-        "2. Select <an unmapped financial activity> from the Financial Activity dropdown",
-        "3. Select <GL account> from the GL Account dropdown",
-        "4. Click Save"
+        "1. Navigate to the Financial Activity Mappings page",
+        "2. Click the '+ Create Mapping' button to open the Create Mapping form",
+        "3. Open the Financial Activity dropdown"
       ],
-      "expected_result": "\"creates mapping and enables automatic posting for the selected financial activity\" and a new row appears in the Financial Activity Mappings table with Financial Activity = <an unmapped financial activity> and GL Account = <GL account>",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-007",
-      "test_case": "Create Mapping form only lists currently unmapped financial activities",
-      "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Financial Activity Mappings page is open",
-        "Financial Activity <already mapped activity> is already mapped to a GL account"
-      ],
-      "steps": [
-        "1. Click '+ Create Mapping' to open the Create Mapping form",
-        "2. Open the Financial Activity dropdown"
-      ],
-      "expected_result": "The Financial Activity dropdown does not include <already mapped activity> and lists only financial activities that are currently unmapped (e.g., <unmapped financial activity placeholders>)",
+      "expected_result": "<Financial Activity A> is not present in the Financial Activity dropdown; the dropdown lists only unmapped activities",
       "priority": "medium"
     },
     {
-      "tc_id": "P-008",
-      "test_case": "Filter the Financial Activity Mappings table using the search/filter to narrow results",
+      "tc_id": "P-007",
+      "test_case": "Create an accounting rule with multiple debit and credit entries enabled",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Financial Activity Mappings page is open",
-        "Multiple mappings exist with distinguishable Financial Activity names or GL Accounts"
+        "User logged in as <Accounting Admin>"
       ],
       "steps": [
-        "1. Enter <filter term> in the mappings search box or filter control",
-        "2. Apply the filter"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the '+ Create Rule' button",
+        "3. In the Create Rule form enter <valid Rule Name> in the Rule Name field",
+        "4. Select multiple items in the Debit Account/Tag multi-select: <multiple Debit GL accounts or tags>",
+        "5. Check the Allow Multiple Debit Entries checkbox",
+        "6. Select multiple items in the Credit Account/Tag multi-select: <multiple Credit GL accounts or tags>",
+        "7. Check the Allow Multiple Credit Entries checkbox",
+        "8. Click the 'Create Rule' button"
       ],
-      "expected_result": "The Financial Activity Mappings table displays only rows matching <filter term>; unrelated mapping rows are no longer visible",
-      "priority": "low"
+      "expected_result": "A new row appears in the Accounting Rules table with the entered Rule Name and displaying multiple Debit Account(s) and multiple Credit Account(s) as selected",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 3,
-    "medium_priority": 4,
-    "low_priority": 1
+    "total": 7,
+    "high_priority": 4,
+    "medium_priority": 3,
+    "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:19:34] Test-Positive - PARSED JSON
+[22:34:12] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Accounting Rules & Financial Activity Mappings",
@@ -566,147 +567,126 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create a new accounting rule with an Office selected",
+      "test_case": "Open an accounting rule's detail view from the rules table",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open"
+        "User logged in as <Accounting Admin>",
+        "<an existing accounting rule> is present in the Accounting Rules table"
       ],
       "steps": [
-        "1. Click '+ Create Rule'",
-        "2. Select <Office> from the Office dropdown",
-        "3. Enter <valid rule name> in the Rule Name field",
-        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
-        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
-        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
-        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
-        "8. Click Save"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the <Rule Name> link for <an existing accounting rule> in the Accounting Rules table"
       ],
-      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office = <Office>, Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
-      "priority": "high"
+      "expected_result": "Rule Detail view opens showing the selected Rule Name and visible Edit and Delete actions",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new accounting rule with Office left blank (applies to all offices)",
+      "test_case": "Create a new accounting rule (single debit and credit)",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open"
+        "User logged in as <Accounting Admin>"
       ],
       "steps": [
-        "1. Click '+ Create Rule'",
-        "2. Leave the Office dropdown blank",
-        "3. Enter <valid rule name> in the Rule Name field",
-        "4. Select one or more <Debit GL account(s)> in Debit Account or Tags",
-        "5. (Optional) Check or leave unchecked Allow Multiple Debit Entries",
-        "6. Select one or more <Credit GL account(s)> in Credit Account or Tags",
-        "7. (Optional) Check or leave unchecked Allow Multiple Credit Entries",
-        "8. Click Save"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the '+ Create Rule' button",
+        "3. In the Create Rule form enter <valid Rule Name> in the Rule Name field",
+        "4. Select <Office or leave blank for all offices> from the Office dropdown",
+        "5. Select <one Debit GL account or tag> from the Debit Account/Tag control",
+        "6. Select <one Credit GL account or tag> from the Credit Account/Tag control",
+        "7. (Optional) Ensure Allow Multiple Debit Entries and Allow Multiple Credit Entries are unchecked",
+        "8. Click the 'Create Rule' button"
       ],
-      "expected_result": "A new row appears in the Accounting Rules table with Rule Name = <valid rule name>, Office cell blank (indicating applies to all offices), Debit Account(s) showing the selected <Debit GL account(s)>, and Credit Account(s) showing the selected <Credit GL account(s)>",
-      "priority": "medium"
+      "expected_result": "A new row appears in the Accounting Rules table with the entered Rule Name and showing the selected Office (or blank for all offices), Debit Account(s), and Credit Account(s)",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open an accounting rule detail by clicking its Rule Name link",
+      "test_case": "Edit an existing accounting rule and save changes",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open",
-        "A rule exists with Rule Name = <existing rule name>"
+        "User logged in as <Accounting Admin>",
+        "<an existing accounting rule> is present in the Accounting Rules table"
       ],
       "steps": [
-        "1. Click the <existing rule name> link in the Rule Name column"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the <Rule Name> link for <an existing accounting rule> to open its Rule Detail view",
+        "3. Click the Edit action on the Rule Detail view",
+        "4. In the Edit Rule form change the Rule Name to <new valid Rule Name>",
+        "5. (Optional) Change Office or Debit/Credit selections as required",
+        "6. Click the 'Save' button"
       ],
-      "expected_result": "Rule Detail page opens and displays Rule Name = <existing rule name>, Office = <Office or blank>, and the configured Debit Account(s) and Credit Account(s) as shown on the table row",
-      "priority": "medium"
+      "expected_result": "The Accounting Rules table (and the Rule Detail view if still open) shows the updated Rule Name reflecting the saved change",
+      "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit an existing accounting rule and save changes",
+      "test_case": "Delete an accounting rule from its detail view",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open",
-        "A rule exists with Rule Name = <existing rule name>"
+        "User logged in as <Accounting Admin>",
+        "<an existing accounting rule> is present in the Accounting Rules table"
       ],
       "steps": [
-        "1. Click the <existing rule name> link to open the Rule Detail page",
-        "2. Click 'Edit' on the Rule Detail page",
-        "3. Change Rule Name to <updated rule name>",
-        "4. Modify Debit Account or Tags to include <additional Debit GL account(s)> or remove as needed",
-        "5. (Optional) Toggle Allow Multiple Debit Entries as needed",
-        "6. Modify Credit Account or Tags to include <additional Credit GL account(s)> or remove as needed",
-        "7. (Optional) Toggle Allow Multiple Credit Entries as needed",
-        "8. Click Save"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the <Rule Name> link for <an existing accounting rule> to open its Rule Detail view",
+        "3. Click the Delete action on the Rule Detail view",
+        "4. Click Confirm on the Delete confirmation dialog"
       ],
-      "expected_result": "The Rule Detail page displays the updated values with Rule Name = <updated rule name> and the updated Debit Account(s)/Credit Account(s); the Accounting Rules table row for the rule shows Rule Name = <updated rule name> and reflects the same account selections",
-      "priority": "medium"
+      "expected_result": "The Accounting Rules table no longer contains the row for the deleted Rule Name; the deleted rule is not visible in the list",
+      "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Delete an existing accounting rule from its detail view",
+      "test_case": "Create a financial activity mapping (happy path)",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Accounting Rules page is open",
-        "A rule exists with Rule Name = <rule to delete>"
+        "User logged in as <Accounting Admin>"
       ],
       "steps": [
-        "1. Click the <rule to delete> link to open the Rule Detail page",
-        "2. Click 'Delete' on the Rule Detail page",
-        "3. Click Confirm on the Delete dialog"
+        "1. Navigate to the Financial Activity Mappings page",
+        "2. Click the '+ Create Mapping' button",
+        "3. In the Create Mapping form select <an unmapped Financial Activity> from the Financial Activity dropdown",
+        "4. Select <a valid GL Account> from the GL Account dropdown",
+        "5. Click the 'Create Mapping' button"
       ],
-      "expected_result": "The Rule Detail page closes and the Accounting Rules table no longer contains any row with Rule Name = <rule to delete>",
+      "expected_result": "A new row appears in the Financial Activity Mappings table showing the selected Financial Activity and the chosen GL Account",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create a Financial Activity mapping for an unmapped activity (happy path)",
+      "test_case": "Mapped financial activity is removed from the 'Financial Activity' dropdown when creating a new mapping",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Financial Activity Mappings page is open",
-        "At least one financial activity is currently unmapped"
+        "User logged in as <Accounting Admin>",
+        "<Financial Activity A> is already mapped to a GL account (mapping exists in the Financial Activity Mappings table)"
       ],
       "steps": [
-        "1. Click '+ Create Mapping'",
-        "2. Select <an unmapped financial activity> from the Financial Activity dropdown",
-        "3. Select <GL account> from the GL Account dropdown",
-        "4. Click Save"
+        "1. Navigate to the Financial Activity Mappings page",
+        "2. Click the '+ Create Mapping' button to open the Create Mapping form",
+        "3. Open the Financial Activity dropdown"
       ],
-      "expected_result": "\"creates mapping and enables automatic posting for the selected financial activity\" and a new row appears in the Financial Activity Mappings table with Financial Activity = <an unmapped financial activity> and GL Account = <GL account>",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-007",
-      "test_case": "Create Mapping form only lists currently unmapped financial activities",
-      "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Financial Activity Mappings page is open",
-        "Financial Activity <already mapped activity> is already mapped to a GL account"
-      ],
-      "steps": [
-        "1. Click '+ Create Mapping' to open the Create Mapping form",
-        "2. Open the Financial Activity dropdown"
-      ],
-      "expected_result": "The Financial Activity dropdown does not include <already mapped activity> and lists only financial activities that are currently unmapped (e.g., <unmapped financial activity placeholders>)",
+      "expected_result": "<Financial Activity A> is not present in the Financial Activity dropdown; the dropdown lists only unmapped activities",
       "priority": "medium"
     },
     {
-      "tc_id": "P-008",
-      "test_case": "Filter the Financial Activity Mappings table using the search/filter to narrow results",
+      "tc_id": "P-007",
+      "test_case": "Create an accounting rule with multiple debit and credit entries enabled",
       "preconditions": [
-        "User logged in as <User with accounting permissions>",
-        "Financial Activity Mappings page is open",
-        "Multiple mappings exist with distinguishable Financial Activity names or GL Accounts"
+        "User logged in as <Accounting Admin>"
       ],
       "steps": [
-        "1. Enter <filter term> in the mappings search box or filter control",
-        "2. Apply the filter"
+        "1. Navigate to the Accounting Rules page",
+        "2. Click the '+ Create Rule' button",
+        "3. In the Create Rule form enter <valid Rule Name> in the Rule Name field",
+        "4. Select multiple items in the Debit Account/Tag multi-select: <multiple Debit GL accounts or tags>",
+        "5. Check the Allow Multiple Debit Entries checkbox",
+        "6. Select multiple items in the Credit Account/Tag multi-select: <multiple Credit GL accounts or tags>",
+        "7. Check the Allow Multiple Credit Entries checkbox",
+        "8. Click the 'Create Rule' button"
       ],
-      "expected_result": "The Financial Activity Mappings table displays only rows matching <filter term>; unrelated mapping rows are no longer visible",
-      "priority": "low"
+      "expected_result": "A new row appears in the Accounting Rules table with the entered Rule Name and displaying multiple Debit Account(s) and multiple Credit Account(s) as selected",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 8,
-    "high_priority": 3,
-    "medium_priority": 4,
-    "low_priority": 1
+    "total": 7,
+    "high_priority": 4,
+    "medium_priority": 3,
+    "low_priority": 0
   }
 }

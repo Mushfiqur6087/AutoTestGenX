@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.759157
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.395593
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Accounting — Chart of Accounts
 
@@ -218,31 +218,41 @@ The Chart of Accounts page displays a hierarchical tree of all General Ledger ac
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:25] UI-AST Agent - LLM RESPONSE
+[22:21:36] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Accounting — Chart of Accounts",
   "components": {
     "Chart_of_Accounts_Tree": {
       "type": "data_table",
-      "is_tree": true,
-      "toolbar_actions": [
-        {
-          "element_name": "Create GL Account",
-          "type": "button",
-          "on_trigger": "opens Create_GL_Account_Form"
-        }
-      ],
+      "hierarchical": true,
+      "grouped_by": ["Account Type"],
       "row_actions": [
         {
-          "action_name": "Open Account Detail",
-          "trigger": "click Account Name",
-          "on_trigger": "opens Account_Detail_View"
+          "action_name": "Open Detail",
+          "element_type": "link",
+          "on_click": "navigates to Account_Detail_View"
         }
-      ]
+      ],
+      "bulk_actions": []
+    },
+    "Create_GL_Account_Button": {
+      "type": "button",
+      "element_name": "+ Create GL Account",
+      "opens": "Create_GL_Account_Form"
     },
     "Create_GL_Account_Form": {
       "type": "form",
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates new GL account"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
+        }
+      ],
       "fields": {
         "Account_Type": {
           "type": "dropdown",
@@ -252,13 +262,19 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Parent_Account": {
           "type": "dropdown",
           "required": false,
-          "options_source": "accounts where Account_Usage == Header and Account_Type == selected Account_Type"
+          "enabled_when": "Account_Type != null",
+          "options_source": "header_accounts",
+          "options_filter": "type == Account_Type && Account_Usage == Header",
+          "constraints": [
+            "selected parent must be a header account of the same Account Type"
+          ]
         },
         "GL_Code": {
           "type": "unspecified",
           "required": true,
           "constraints": [
-            "must be unique across all GL accounts; duplicates produce a validation error"
+            "must be unique among GL Codes",
+            "duplicates produce a validation error"
           ]
         },
         "Account_Name": {
@@ -280,33 +296,37 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Tag": {
           "type": "dropdown",
-          "required": false,
-          "options_source": "system tag list"
+          "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates GL account in Chart of Accounts tree"
-        }
-      ]
+      }
     },
     "Account_Detail_View": {
       "type": "detail_view",
+      "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "on_trigger": "opens Edit_GL_Account_Form"
+          "opens": "Edit_GL_Account_Form",
+          "on_success": "updates GL account"
         },
         {
           "action_name": "Delete",
-          "on_trigger": "deletes GL account",
-          "on_success": "removes account from Chart of Accounts tree"
+          "on_success": "deletes GL account"
         }
       ]
     },
     "Edit_GL_Account_Form": {
       "type": "form",
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates GL account"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
+        }
+      ],
       "fields": {
         "Account_Type": {
           "type": "dropdown",
@@ -316,13 +336,18 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Parent_Account": {
           "type": "dropdown",
           "required": false,
-          "options_source": "accounts where Account_Usage == Header and Account_Type == selected Account_Type"
+          "enabled_when": "Account_Type != null",
+          "options_source": "header_accounts",
+          "options_filter": "type == Account_Type && Account_Usage == Header",
+          "constraints": [
+            "selected parent must be a header account of the same Account Type"
+          ]
         },
         "GL_Code": {
           "type": "unspecified",
           "required": true,
           "constraints": [
-            "must be unique across all GL accounts (excluding this account); duplicates produce a validation error"
+            "must be unique among GL Codes (uniqueness validation applies on save)"
           ]
         },
         "Account_Name": {
@@ -344,46 +369,51 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Tag": {
           "type": "dropdown",
-          "required": false,
-          "options_source": "system tag list"
+          "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates GL account in Chart of Accounts tree"
-        }
-      ]
+      }
     }
   }
 }
 
 ------------------------------------------------------------
-[16:06:25] UI-AST Agent - PARSED JSON
+[22:21:36] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Accounting \u2014 Chart of Accounts",
   "components": {
     "Chart_of_Accounts_Tree": {
       "type": "data_table",
-      "is_tree": true,
-      "toolbar_actions": [
-        {
-          "element_name": "Create GL Account",
-          "type": "button",
-          "on_trigger": "opens Create_GL_Account_Form"
-        }
+      "hierarchical": true,
+      "grouped_by": [
+        "Account Type"
       ],
       "row_actions": [
         {
-          "action_name": "Open Account Detail",
-          "trigger": "click Account Name",
-          "on_trigger": "opens Account_Detail_View"
+          "action_name": "Open Detail",
+          "element_type": "link",
+          "on_click": "navigates to Account_Detail_View"
         }
-      ]
+      ],
+      "bulk_actions": []
+    },
+    "Create_GL_Account_Button": {
+      "type": "button",
+      "element_name": "+ Create GL Account",
+      "opens": "Create_GL_Account_Form"
     },
     "Create_GL_Account_Form": {
       "type": "form",
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates new GL account"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
+        }
+      ],
       "fields": {
         "Account_Type": {
           "type": "dropdown",
@@ -399,13 +429,19 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Parent_Account": {
           "type": "dropdown",
           "required": false,
-          "options_source": "accounts where Account_Usage == Header and Account_Type == selected Account_Type"
+          "enabled_when": "Account_Type != null",
+          "options_source": "header_accounts",
+          "options_filter": "type == Account_Type && Account_Usage == Header",
+          "constraints": [
+            "selected parent must be a header account of the same Account Type"
+          ]
         },
         "GL_Code": {
           "type": "unspecified",
           "required": true,
           "constraints": [
-            "must be unique across all GL accounts; duplicates produce a validation error"
+            "must be unique among GL Codes",
+            "duplicates produce a validation error"
           ]
         },
         "Account_Name": {
@@ -430,33 +466,37 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Tag": {
           "type": "dropdown",
-          "required": false,
-          "options_source": "system tag list"
+          "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates GL account in Chart of Accounts tree"
-        }
-      ]
+      }
     },
     "Account_Detail_View": {
       "type": "detail_view",
+      "fields": {},
       "actions": [
         {
           "action_name": "Edit",
-          "on_trigger": "opens Edit_GL_Account_Form"
+          "opens": "Edit_GL_Account_Form",
+          "on_success": "updates GL account"
         },
         {
           "action_name": "Delete",
-          "on_trigger": "deletes GL account",
-          "on_success": "removes account from Chart of Accounts tree"
+          "on_success": "deletes GL account"
         }
       ]
     },
     "Edit_GL_Account_Form": {
       "type": "form",
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates GL account"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form"
+        }
+      ],
       "fields": {
         "Account_Type": {
           "type": "dropdown",
@@ -472,13 +512,18 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Parent_Account": {
           "type": "dropdown",
           "required": false,
-          "options_source": "accounts where Account_Usage == Header and Account_Type == selected Account_Type"
+          "enabled_when": "Account_Type != null",
+          "options_source": "header_accounts",
+          "options_filter": "type == Account_Type && Account_Usage == Header",
+          "constraints": [
+            "selected parent must be a header account of the same Account Type"
+          ]
         },
         "GL_Code": {
           "type": "unspecified",
           "required": true,
           "constraints": [
-            "must be unique across all GL accounts (excluding this account); duplicates produce a validation error"
+            "must be unique among GL Codes (uniqueness validation applies on save)"
           ]
         },
         "Account_Name": {
@@ -503,22 +548,15 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Tag": {
           "type": "dropdown",
-          "required": false,
-          "options_source": "system tag list"
+          "required": false
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates GL account in Chart of Accounts tree"
-        }
-      ]
+      }
     }
   }
 }
 
 ------------------------------------------------------------
-[16:07:58] UI-AST Agent - USER PROMPT
+[22:23:29] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Accounting — Chart of Accounts
 
@@ -530,37 +568,41 @@ The Chart of Accounts page displays a hierarchical tree of all General Ledger ac
 
 
 **CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. components.Create_GL_Account_Form.submit_actions[0].element_name: Remove the explicit button name 'Create' or mark it unspecified — the description does not name the form submit button.
-2. components.Edit_GL_Account_Form.submit_actions[0].element_name: Remove the explicit button name 'Save' or mark it unspecified — the description does not name the form submit button.
-3. components.Edit_GL_Account_Form.fields.GL_Code.constraints[0]: Replace 'must be unique across all GL accounts (excluding this account); duplicates produce a validation error' with exactly the description's constraint: 'must be unique across all GL accounts; duplicates produce a validation error' (do not add edit-specific exclusions unless described).
-4. components.Create_GL_Account_Form.fields.Tag.options_source: Remove or leave unspecified the 'system tag list' options_source; the description only states a Tag dropdown but does not specify the source of options.
-5. Regenerate the AST after applying the above removals/adjustments so that only interactions and constraints explicitly stated in the description are present.
+1. Remove inferred/unspecified form action entries: delete Create_GL_Account_Form.submit_actions[1] (the Cancel button) and, unless the description names the form submit label, replace Create_GL_Account_Form.submit_actions[0] with a single generic submit action entry at Create_GL_Account_Form.submit_actions[0] named 'submit' (or regenerate leaving submit_actions unspecified so the generator can name it based on the description).
+2. Remove enabled/visibility rules that were not explicitly described: delete Create_GL_Account_Form.fields.Parent_Account.enabled_when and Edit_GL_Account_Form.fields.Parent_Account.enabled_when; keep only the explicit requirement that Parent_Account options are filtered to header accounts of the same Account Type (options_filter), which is described.
+3. Do not invent a fully-specified Edit form: either remove the Edit_GL_Account_Form component entirely or regenerate it as a placeholder (Account_Detail_View.actions.Edit should exist as an action) but do not populate Edit_GL_Account_Form.fields or submit_actions unless the description explicitly states the form fields and buttons.
+4. If keeping form submit actions, only include action entries that are explicitly stated in the description; otherwise omit them so labels are not inferred. Specifically, remove Edit_GL_Account_Form.submit_actions[0] and [1] unless the description explicitly names 'Save' or 'Cancel'.
 
 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:09:29] UI-AST Agent - LLM RESPONSE
+[22:24:51] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Accounting — Chart of Accounts",
   "components": {
-    "Chart_of_Accounts_Tree": {
-      "type": "data_table",
-      "hierarchical": true,
-      "description": "hierarchical tree of all GL accounts organized by type",
-      "row_actions": [
-        {
-          "action_name": "Open Details",
-          "navigates_to": "Account_Detail_View"
+    "Chart_of_Accounts_Page": {
+      "type": "page",
+      "components": {
+        "Chart_of_Accounts_Tree": {
+          "type": "tree",
+          "description": "Hierarchical tree of all General Ledger accounts organized by account type",
+          "group_by_types": ["Assets", "Liabilities", "Equity", "Income", "Expenses"],
+          "row_actions": [
+            {
+              "action_name": "Open Account Detail",
+              "trigger": "click Account Name",
+              "opens": "Account_Detail_View"
+            }
+          ]
+        },
+        "Create_GL_Account_Button": {
+          "type": "button",
+          "element_name": "+ Create GL Account",
+          "opens": "Create_GL_Account_Form"
         }
-      ],
-      "sortable_columns": []
-    },
-    "Create_GL_Account_Button": {
-      "type": "button",
-      "element_name": "+ Create GL Account",
-      "opens": "Create_GL_Account_Form"
+      }
     },
     "Create_GL_Account_Form": {
       "type": "form",
@@ -573,17 +615,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Parent_Account": {
           "type": "dropdown",
           "required": false,
-          "constraints": [
-            "options must be header accounts with the same Account_Type as selected"
-          ],
-          "options_filter": "Account_Type == selected Account_Type AND Account_Usage == Header"
+          "options_filter": "Usage == Header AND Account_Type == Account_Type"
         },
         "GL_Code": {
           "type": "unspecified",
           "required": true,
-          "constraints": [
-            "must be unique across all GL accounts; duplicates produce a validation error"
-          ]
+          "constraints": ["must be unique across all GL Codes; duplicates produce a validation error"]
         },
         "Account_Name": {
           "type": "unspecified",
@@ -609,73 +646,19 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "unspecified"
+          "element_name": "submit"
         }
       ]
     },
     "Account_Detail_View": {
       "type": "detail_view",
-      "navigable_from": "Chart_of_Accounts_Tree",
+      "opens_from": "Chart_of_Accounts_Tree",
       "actions": [
         {
-          "action_name": "Edit",
-          "opens": "Edit_GL_Account_Form"
+          "action_name": "Edit"
         },
         {
           "action_name": "Delete"
-        }
-      ],
-      "fields": {}
-    },
-    "Edit_GL_Account_Form": {
-      "type": "form",
-      "opens_from": "Account_Detail_View",
-      "fields": {
-        "Account_Type": {
-          "type": "dropdown",
-          "required": true,
-          "options": ["Assets", "Liabilities", "Equity", "Income", "Expenses"]
-        },
-        "Parent_Account": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "options must be header accounts with the same Account_Type as selected"
-          ],
-          "options_filter": "Account_Type == selected Account_Type AND Account_Usage == Header"
-        },
-        "GL_Code": {
-          "type": "unspecified",
-          "required": true,
-          "constraints": [
-            "must be unique across all GL accounts; duplicates produce a validation error"
-          ]
-        },
-        "Account_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Account_Usage": {
-          "type": "dropdown",
-          "required": false,
-          "options": ["Header", "Detail"]
-        },
-        "Manual_Entries_Allowed": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Description": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Tag": {
-          "type": "dropdown",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "unspecified"
         }
       ]
     }
@@ -683,27 +666,38 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:09:29] UI-AST Agent - PARSED JSON
+[22:24:51] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Accounting \u2014 Chart of Accounts",
   "components": {
-    "Chart_of_Accounts_Tree": {
-      "type": "data_table",
-      "hierarchical": true,
-      "description": "hierarchical tree of all GL accounts organized by type",
-      "row_actions": [
-        {
-          "action_name": "Open Details",
-          "navigates_to": "Account_Detail_View"
+    "Chart_of_Accounts_Page": {
+      "type": "page",
+      "components": {
+        "Chart_of_Accounts_Tree": {
+          "type": "tree",
+          "description": "Hierarchical tree of all General Ledger accounts organized by account type",
+          "group_by_types": [
+            "Assets",
+            "Liabilities",
+            "Equity",
+            "Income",
+            "Expenses"
+          ],
+          "row_actions": [
+            {
+              "action_name": "Open Account Detail",
+              "trigger": "click Account Name",
+              "opens": "Account_Detail_View"
+            }
+          ]
+        },
+        "Create_GL_Account_Button": {
+          "type": "button",
+          "element_name": "+ Create GL Account",
+          "opens": "Create_GL_Account_Form"
         }
-      ],
-      "sortable_columns": []
-    },
-    "Create_GL_Account_Button": {
-      "type": "button",
-      "element_name": "+ Create GL Account",
-      "opens": "Create_GL_Account_Form"
+      }
     },
     "Create_GL_Account_Form": {
       "type": "form",
@@ -722,16 +716,13 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Parent_Account": {
           "type": "dropdown",
           "required": false,
-          "constraints": [
-            "options must be header accounts with the same Account_Type as selected"
-          ],
-          "options_filter": "Account_Type == selected Account_Type AND Account_Usage == Header"
+          "options_filter": "Usage == Header AND Account_Type == Account_Type"
         },
         "GL_Code": {
           "type": "unspecified",
           "required": true,
           "constraints": [
-            "must be unique across all GL accounts; duplicates produce a validation error"
+            "must be unique across all GL Codes; duplicates produce a validation error"
           ]
         },
         "Account_Name": {
@@ -761,82 +752,19 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       },
       "submit_actions": [
         {
-          "element_name": "unspecified"
+          "element_name": "submit"
         }
       ]
     },
     "Account_Detail_View": {
       "type": "detail_view",
-      "navigable_from": "Chart_of_Accounts_Tree",
+      "opens_from": "Chart_of_Accounts_Tree",
       "actions": [
         {
-          "action_name": "Edit",
-          "opens": "Edit_GL_Account_Form"
+          "action_name": "Edit"
         },
         {
           "action_name": "Delete"
-        }
-      ],
-      "fields": {}
-    },
-    "Edit_GL_Account_Form": {
-      "type": "form",
-      "opens_from": "Account_Detail_View",
-      "fields": {
-        "Account_Type": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Assets",
-            "Liabilities",
-            "Equity",
-            "Income",
-            "Expenses"
-          ]
-        },
-        "Parent_Account": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "options must be header accounts with the same Account_Type as selected"
-          ],
-          "options_filter": "Account_Type == selected Account_Type AND Account_Usage == Header"
-        },
-        "GL_Code": {
-          "type": "unspecified",
-          "required": true,
-          "constraints": [
-            "must be unique across all GL accounts; duplicates produce a validation error"
-          ]
-        },
-        "Account_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Account_Usage": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Header",
-            "Detail"
-          ]
-        },
-        "Manual_Entries_Allowed": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Description": {
-          "type": "unspecified",
-          "required": false
-        },
-        "Tag": {
-          "type": "dropdown",
-          "required": false
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "unspecified"
         }
       ]
     }

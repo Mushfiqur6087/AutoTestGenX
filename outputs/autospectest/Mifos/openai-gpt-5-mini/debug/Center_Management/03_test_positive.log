@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.358212
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.522183
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Center Management</module_name>
 
@@ -232,7 +232,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Center Management",
   "components": {
-    "Centers_Table": {
+    "Centers_Page": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -241,23 +241,17 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         "Status",
         "Office Name"
       ],
-      "row_actions": [
-        {
-          "action_name": "View",
-          "element_name": "Name",
-          "on_trigger": "navigates to Center Detail"
-        }
-      ],
+      "link_column": "Name",
       "page_actions": [
-        {
-          "element_name": "Create Center",
-          "type": "button",
-          "on_trigger": "opens Create_Center_Form"
-        },
         {
           "element_name": "Import Center",
           "type": "button",
           "on_trigger": "navigates to Bulk_Import_Centers"
+        },
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
         }
       ]
     },
@@ -266,38 +260,33 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Office": {
-          "type": "dropdown",
-          "constraints": [
-            "required"
-          ]
+          "type": "unspecified",
+          "required": true
         },
         "Staff": {
-          "type": "search"
+          "type": "search",
+          "required": false
         },
         "Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "External_Id": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group": {
-              "type": "search"
-            }
-          }
+          "type": "search",
+          "multiple": true,
+          "required": false,
+          "description": "Select and add groups via searchable dropdown"
         }
       },
       "submit_actions": [
@@ -310,42 +299,113 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
     "Bulk_Import_Centers": {
       "type": "form",
       "fields": {
-        "Download_Template": {
-          "type": "link",
-          "element_name": "Download Template"
+        "Template_Download": {
+          "type": "button",
+          "on_trigger": "downloads template"
         },
-        "Import_File": {
+        "File": {
           "type": "file_upload",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         }
       },
       "submit_actions": [
         {
-          "element_name": "Upload",
+          "element_name": "Import",
           "on_success": "imports centers from file"
         }
       ]
     },
-    "Center_Detail_Tabs": {
-      "type": "tab_container",
+    "Edit_Center_Form": {
+      "type": "form",
+      "description": "Edit form opened by Edit action on Center Detail (fields prefilled)",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "search",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups": {
+          "type": "search",
+          "multiple": true,
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates center"
+        }
+      ]
+    },
+    "Center_Detail_Page": {
+      "type": "detail_page",
+      "action_bar": {
+        "type": "state_bound_action_bar",
+        "states": {
+          "Any": {
+            "available_actions": [
+              {
+                "action_name": "Activate",
+                "on_success": "status changes to Active"
+              },
+              {
+                "action_name": "Edit",
+                "on_trigger": "opens Edit_Center_Form"
+              },
+              {
+                "action_name": "Close",
+                "on_success": "status changes to Closed"
+              },
+              {
+                "action_name": "Assign Staff",
+                "fields": {
+                  "Staff": {
+                    "type": "search",
+                    "required": true
+                  }
+                },
+                "on_success": "assigns selected staff to center"
+              },
+              {
+                "action_name": "Generate Collection Sheet",
+                "on_trigger": "opens Collection_Sheet"
+              }
+            ]
+          }
+        }
+      },
       "tabs": [
         {
           "tab_name": "Groups",
-          "fields": {
+          "components": {
             "Member_Groups_Table": {
               "type": "data_table",
               "columns": [
-                "Group Name"
+                "Name",
+                "Group External Id",
+                "Status",
+                "Office Name"
               ],
-              "row_actions": [
-                {
-                  "action_name": "View Group",
-                  "element_name": "Group Name",
-                  "on_trigger": "navigates to Group Detail"
-                }
-              ]
+              "link_column": "Name"
             }
           }
         },
@@ -367,110 +427,37 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         }
       ]
     },
-    "Center_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Activate",
-          "type": "button",
-          "on_success": "sets center status to Active"
-        },
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_trigger": "opens Edit_Center_Form"
-        },
-        {
-          "action_name": "Close",
-          "type": "button",
-          "on_success": "sets center status to Closed"
-        },
-        {
-          "action_name": "Assign Staff",
-          "type": "button",
-          "fields": {
-            "Staff": {
-              "type": "search"
-            }
-          }
-        }
-      ]
-    },
-    "Edit_Center_Form": {
-      "type": "form",
-      "fields": {
-        "Name": {
-          "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
-        },
-        "Office": {
-          "type": "dropdown",
-          "constraints": [
-            "required"
-          ]
-        },
-        "Staff": {
-          "type": "search"
-        },
-        "Active": {
-          "type": "checkbox"
-        },
-        "External_Id": {
-          "type": "unspecified"
-        },
-        "Submitted_On": {
-          "type": "date",
-          "constraints": [
-            "required"
-          ]
-        },
-        "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group": {
-              "type": "search"
-            }
-          }
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates center"
-        }
-      ]
-    },
-    "Collection_Sheet_Generator": {
-      "type": "button",
-      "element_name": "Generate Collection Sheet",
-      "on_trigger": "opens Collection_Sheet for batch data entry"
-    },
     "Collection_Sheet": {
       "type": "data_table",
+      "description": "Sheet showing all groups and their clients with editable amounts for batch data entry",
       "row_fields": {
         "Group_Name": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Client_Name": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
-        "Loan_Repayment": {
-          "type": "number"
+        "Loan_Repayment_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
         },
-        "Savings_Deposit": {
-          "type": "number"
+        "Savings_Deposit_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
         }
       },
-      "editable_columns": [
-        "Loan_Repayment",
-        "Savings_Deposit"
-      ],
       "submit_actions": [
         {
           "element_name": "Submit Collection Sheet",
-          "on_success": "records repayments and deposits"
+          "on_success": "saves repayments and deposits in batch"
         }
       ]
     }
@@ -492,7 +479,7 @@ The Center Detail page displays the center name, status, office, and staff with 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:18:33] Test-Positive - LLM RESPONSE
+[22:31:06] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Center Management",
@@ -500,219 +487,219 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Center detail from Centers table",
+      "test_case": "Open Create Center form from Centers page",
       "preconditions": [
-        "User logged in as <User with center view permission>",
-        "A center with name <center name> exists"
+        "User logged in as <User>",
+        "At least one center exists"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> in the Centers table"
+        "2. Click the 'Create Center' button"
       ],
-      "expected_result": "Center Detail page is shown for '<center name>' and displays the center name, Status badge, Office Name, and action buttons Activate, Edit, Close, and Assign Staff",
+      "expected_result": "The Create Center form is displayed with fields: Name, Office, Staff, Active checkbox, External Id, Submitted On, and Groups (searchable dropdown)",
       "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new center with groups via Create Center form",
+      "test_case": "Create a new center with required and optional fields",
       "preconditions": [
-        "User logged in as <User with center creation permission>",
-        "Centers page is accessible"
+        "User logged in as <User>",
+        "Centers page is reachable"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Create Center button",
-        "3. Enter <new center name> in the Name field",
-        "4. Select <office> from the Office dropdown",
-        "5. Enter/select <staff> in the Staff search field (optional)",
+        "2. Click the 'Create Center' button to open the Create Center form",
+        "3. Enter <valid name> in the Name field",
+        "4. Select <office> from the Office field",
+        "5. Optionally select <staff member> in the Staff search field",
         "6. Check the Active checkbox (optional)",
         "7. Enter <external id> in the External Id field (optional)",
-        "8. Enter <submitted on date> in the Submitted On field",
-        "9. Click Add Row in the Groups section",
-        "10. Enter/select <group> in the new Group search field",
-        "11. Click Submit"
+        "8. Enter <date> in the Submitted On field",
+        "9. Use the Groups searchable dropdown to select and add one or more <groups>",
+        "10. Click the 'Submit' button"
       ],
-      "expected_result": "A new row appears in the Centers table with the Name '<new center name>' and Office '<office>'",
+      "expected_result": "A new row appears in the Centers table showing the entered Name and Office; the Name value is a clickable link to the Center Detail page",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Download template from Bulk Import Centers page",
+      "test_case": "Open Bulk Import Centers page from Centers page",
       "preconditions": [
-        "User logged in as <User with center import permission>",
-        "Centers page is accessible"
+        "User logged in as <User>",
+        "Centers page is reachable"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Import Center button",
-        "3. Click the Download Template link on the Bulk Import Centers page"
+        "2. Click the 'Import Center' button"
       ],
-      "expected_result": "A template file download is triggered in the browser",
-      "priority": "low"
+      "expected_result": "The Bulk Import Centers page/form is displayed with a Template Download control and a File upload field",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Upload valid import file and import centers",
+      "test_case": "Download the import template from Bulk Import Centers",
       "preconditions": [
-        "User logged in as <User with center import permission>",
-        "A valid import file <valid import file> is available"
+        "User logged in as <User>",
+        "Bulk Import Centers page is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Import Center button to open Bulk Import Centers",
-        "3. Click the Import_File upload control and select <valid import file>",
-        "4. Click Upload"
+        "1. Click the Template Download button"
       ],
-      "expected_result": "A success notification is displayed confirming the import and the Centers table shows rows corresponding to the centers from the uploaded file",
-      "priority": "high"
+      "expected_result": "A template file download is triggered in the browser",
+      "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Navigate through all tabs on Center Detail page",
+      "test_case": "Import centers via file upload",
       "preconditions": [
         "User logged in as <User>",
-        "A center with name <center name> exists"
+        "Bulk Import Centers page is open",
+        "A valid centers import file is available as <valid import file>"
+      ],
+      "steps": [
+        "1. Click the File upload control and select <valid import file>",
+        "2. Click the 'Import' button"
+      ],
+      "expected_result": "A success notification is displayed confirming centers were imported from the uploaded file; the UI remains on the Bulk Import page or navigates back to Centers page showing newly imported rows",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-006",
+      "test_case": "Navigate Center Detail tabs and view Groups table",
+      "preconditions": [
+        "User logged in as <User>",
+        "At least one center exists",
+        "Centers page is reachable"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
+        "2. Click the Name link of an existing center to open its Center Detail page",
         "3. Click the 'Groups' tab",
         "4. Click the 'Loan Accounts' tab",
         "5. Click the 'Savings Accounts' tab",
         "6. Click the 'Notes' tab",
-        "7. Click the 'Calendar/Meeting' tab"
+        "7. Click the 'Calendar/Meeting' tab",
+        "8. Return to the 'Groups' tab"
       ],
-      "expected_result": "Each tab's panel becomes visible when selected; the Groups tab displays the Member Groups table with group names and the other tabs display their respective content panels",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-006",
-      "test_case": "Open Group Detail from Member Groups table on Groups tab",
-      "preconditions": [
-        "User logged in as <User>",
-        "A center with name <center name> exists that has a member group <group name>"
-      ],
-      "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the 'Groups' tab",
-        "4. Click the Group Name link for <group name> in the Member Groups table"
-      ],
-      "expected_result": "Group Detail page is shown for '<group name>' and displays the group name",
+      "expected_result": "Each tab displays its content when selected; on the Groups tab the Member Groups table is visible with rows containing Name (as a clickable link), Group External Id, Status, and Office Name columns",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Activate a center updates the status badge to Active",
+      "test_case": "Open a member group from the Groups tab",
       "preconditions": [
-        "User logged in as <User with center action permission>",
-        "A center with name <center name> exists and is not Active"
+        "User logged in as <User>",
+        "A center exists that has member groups",
+        "Center Detail page is open on the Groups tab"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Activate button"
+        "1. In the Member Groups table click the Name link of a group"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Center Detail page",
-      "priority": "high"
+      "expected_result": "The application navigates away from the Center Detail page to the selected group's detail page (redirect occurs)",
+      "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Close a center updates the status badge to Closed",
+      "test_case": "Activate a center from Center Detail page",
       "preconditions": [
-        "User logged in as <User with center action permission>",
-        "A center with name <center name> exists and is Active"
+        "User logged in as <User>",
+        "A center exists with status <Inactive>",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Close button"
+        "1. Click the 'Activate' action button in the action bar"
       ],
-      "expected_result": "Status badge updates to 'Closed' on the Center Detail page",
+      "expected_result": "The status badge on the Center Detail page updates to 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Edit center details via Edit Center form and save",
+      "test_case": "Close a center from Center Detail page",
       "preconditions": [
-        "User logged in as <User with center edit permission>",
-        "A center with name <center name> exists"
+        "User logged in as <User>",
+        "A center exists with status <Active>",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Edit button to open the Edit Center form",
-        "4. Enter <new name> in the Name field",
-        "5. Select <new office> from the Office dropdown",
-        "6. Enter/select <new staff> in the Staff search field (optional)",
-        "7. Click Save"
+        "1. Click the 'Close' action button in the action bar"
       ],
-      "expected_result": "Center Detail page shows the updated Name as '<new name>' and Office as '<new office>'",
+      "expected_result": "The status badge on the Center Detail page updates to 'Closed'",
       "priority": "high"
     },
     {
       "tc_id": "P-010",
       "test_case": "Assign staff to a center using Assign Staff action",
       "preconditions": [
-        "User logged in as <User with assign staff permission>",
-        "A center with name <center name> exists",
-        "<staff> exists and is assignable"
+        "User logged in as <User>",
+        "A center exists",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Assign Staff button",
-        "4. Enter <staff> in the Staff search field",
-        "5. Select <staff> from the search results",
-        "6. Click Assign (or Confirm) on the Assign Staff dialog"
+        "1. Click the 'Assign Staff' action in the action bar",
+        "2. In the Assign Staff dialog enter/select <staff member> in the Staff search field",
+        "3. Click Confirm on the Assign Staff dialog"
       ],
-      "expected_result": "Center Detail page displays the assigned staff as '<staff>' in the staff area",
+      "expected_result": "A success notification is displayed and the Center Detail page shows the assigned staff in the staff section",
       "priority": "medium"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Generate Collection Sheet, enter repayments/deposits and submit",
+      "test_case": "Edit center details and save changes",
       "preconditions": [
-        "User logged in as <User with collection sheet permission>",
-        "A center with name <center name> exists that has groups and clients"
+        "User logged in as <User>",
+        "A center exists",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Generate Collection Sheet button",
-        "4. In the Collection Sheet, enter <loan repayment amount> in Loan_Repayment for a client row",
-        "5. Enter <savings deposit amount> in Savings_Deposit for the same client row",
-        "6. Repeat edits for any additional client rows as needed",
-        "7. Click Submit Collection Sheet"
+        "1. Click the 'Edit' action button in the action bar to open the Edit Center form",
+        "2. Update the Name field to <updated name> and/or update the Office field to <updated office>",
+        "3. Modify other optional fields if desired (e.g., Staff, Active, External Id, Groups)",
+        "4. Click the 'Save' button"
       ],
-      "expected_result": "A success notification is displayed and the Collection Sheet lists the entered Loan Repayment and Savings Deposit amounts for the edited client rows",
+      "expected_result": "A success notification is displayed and the Center Detail page shows the updated Name and Office values as entered",
       "priority": "high"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Search Centers table filters results by center name",
+      "test_case": "Open Collection Sheet from Center Detail action bar",
       "preconditions": [
         "User logged in as <User>",
-        "Centers page contains multiple centers including one named <center name>"
+        "A center exists with at least one group and clients",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Enter <center name> in the Centers table search/filter control and apply the filter"
+        "1. Click the 'Generate Collection Sheet' action in the action bar"
       ],
-      "expected_result": "Centers table displays only rows matching <center name>; unrelated rows are no longer visible",
+      "expected_result": "The Collection Sheet is displayed showing rows for groups and their clients with editable Loan Repayment Amount and Savings Deposit Amount input fields",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Submit Collection Sheet with repayment and deposit amounts",
+      "preconditions": [
+        "User logged in as <User>",
+        "A center exists with groups and clients",
+        "Collection Sheet is open with editable rows"
+      ],
+      "steps": [
+        "1. Enter non-negative numbers in one or more Loan Repayment Amount fields for clients (e.g., <repayment amount>)",
+        "2. Enter non-negative numbers in one or more Savings Deposit Amount fields for clients (e.g., <deposit amount>)",
+        "3. Click the 'Submit Collection Sheet' button"
+      ],
+      "expected_result": "A success notification is displayed confirming that repayments and deposits were saved in batch",
+      "priority": "high"
     }
   ],
   "summary": {
-    "total": 12,
-    "high_priority": 7,
-    "medium_priority": 4,
-    "low_priority": 1
+    "total": 13,
+    "high_priority": 6,
+    "medium_priority": 7,
+    "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:18:33] Test-Positive - PARSED JSON
+[22:31:06] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Center Management",
@@ -720,213 +707,213 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Center detail from Centers table",
+      "test_case": "Open Create Center form from Centers page",
       "preconditions": [
-        "User logged in as <User with center view permission>",
-        "A center with name <center name> exists"
+        "User logged in as <User>",
+        "At least one center exists"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> in the Centers table"
+        "2. Click the 'Create Center' button"
       ],
-      "expected_result": "Center Detail page is shown for '<center name>' and displays the center name, Status badge, Office Name, and action buttons Activate, Edit, Close, and Assign Staff",
+      "expected_result": "The Create Center form is displayed with fields: Name, Office, Staff, Active checkbox, External Id, Submitted On, and Groups (searchable dropdown)",
       "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new center with groups via Create Center form",
+      "test_case": "Create a new center with required and optional fields",
       "preconditions": [
-        "User logged in as <User with center creation permission>",
-        "Centers page is accessible"
+        "User logged in as <User>",
+        "Centers page is reachable"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Create Center button",
-        "3. Enter <new center name> in the Name field",
-        "4. Select <office> from the Office dropdown",
-        "5. Enter/select <staff> in the Staff search field (optional)",
+        "2. Click the 'Create Center' button to open the Create Center form",
+        "3. Enter <valid name> in the Name field",
+        "4. Select <office> from the Office field",
+        "5. Optionally select <staff member> in the Staff search field",
         "6. Check the Active checkbox (optional)",
         "7. Enter <external id> in the External Id field (optional)",
-        "8. Enter <submitted on date> in the Submitted On field",
-        "9. Click Add Row in the Groups section",
-        "10. Enter/select <group> in the new Group search field",
-        "11. Click Submit"
+        "8. Enter <date> in the Submitted On field",
+        "9. Use the Groups searchable dropdown to select and add one or more <groups>",
+        "10. Click the 'Submit' button"
       ],
-      "expected_result": "A new row appears in the Centers table with the Name '<new center name>' and Office '<office>'",
+      "expected_result": "A new row appears in the Centers table showing the entered Name and Office; the Name value is a clickable link to the Center Detail page",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Download template from Bulk Import Centers page",
+      "test_case": "Open Bulk Import Centers page from Centers page",
       "preconditions": [
-        "User logged in as <User with center import permission>",
-        "Centers page is accessible"
+        "User logged in as <User>",
+        "Centers page is reachable"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Import Center button",
-        "3. Click the Download Template link on the Bulk Import Centers page"
+        "2. Click the 'Import Center' button"
       ],
-      "expected_result": "A template file download is triggered in the browser",
-      "priority": "low"
+      "expected_result": "The Bulk Import Centers page/form is displayed with a Template Download control and a File upload field",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Upload valid import file and import centers",
+      "test_case": "Download the import template from Bulk Import Centers",
       "preconditions": [
-        "User logged in as <User with center import permission>",
-        "A valid import file <valid import file> is available"
+        "User logged in as <User>",
+        "Bulk Import Centers page is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Import Center button to open Bulk Import Centers",
-        "3. Click the Import_File upload control and select <valid import file>",
-        "4. Click Upload"
+        "1. Click the Template Download button"
       ],
-      "expected_result": "A success notification is displayed confirming the import and the Centers table shows rows corresponding to the centers from the uploaded file",
-      "priority": "high"
+      "expected_result": "A template file download is triggered in the browser",
+      "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Navigate through all tabs on Center Detail page",
+      "test_case": "Import centers via file upload",
       "preconditions": [
         "User logged in as <User>",
-        "A center with name <center name> exists"
+        "Bulk Import Centers page is open",
+        "A valid centers import file is available as <valid import file>"
+      ],
+      "steps": [
+        "1. Click the File upload control and select <valid import file>",
+        "2. Click the 'Import' button"
+      ],
+      "expected_result": "A success notification is displayed confirming centers were imported from the uploaded file; the UI remains on the Bulk Import page or navigates back to Centers page showing newly imported rows",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-006",
+      "test_case": "Navigate Center Detail tabs and view Groups table",
+      "preconditions": [
+        "User logged in as <User>",
+        "At least one center exists",
+        "Centers page is reachable"
       ],
       "steps": [
         "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
+        "2. Click the Name link of an existing center to open its Center Detail page",
         "3. Click the 'Groups' tab",
         "4. Click the 'Loan Accounts' tab",
         "5. Click the 'Savings Accounts' tab",
         "6. Click the 'Notes' tab",
-        "7. Click the 'Calendar/Meeting' tab"
+        "7. Click the 'Calendar/Meeting' tab",
+        "8. Return to the 'Groups' tab"
       ],
-      "expected_result": "Each tab's panel becomes visible when selected; the Groups tab displays the Member Groups table with group names and the other tabs display their respective content panels",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-006",
-      "test_case": "Open Group Detail from Member Groups table on Groups tab",
-      "preconditions": [
-        "User logged in as <User>",
-        "A center with name <center name> exists that has a member group <group name>"
-      ],
-      "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the 'Groups' tab",
-        "4. Click the Group Name link for <group name> in the Member Groups table"
-      ],
-      "expected_result": "Group Detail page is shown for '<group name>' and displays the group name",
+      "expected_result": "Each tab displays its content when selected; on the Groups tab the Member Groups table is visible with rows containing Name (as a clickable link), Group External Id, Status, and Office Name columns",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Activate a center updates the status badge to Active",
+      "test_case": "Open a member group from the Groups tab",
       "preconditions": [
-        "User logged in as <User with center action permission>",
-        "A center with name <center name> exists and is not Active"
+        "User logged in as <User>",
+        "A center exists that has member groups",
+        "Center Detail page is open on the Groups tab"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Activate button"
+        "1. In the Member Groups table click the Name link of a group"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Center Detail page",
-      "priority": "high"
+      "expected_result": "The application navigates away from the Center Detail page to the selected group's detail page (redirect occurs)",
+      "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Close a center updates the status badge to Closed",
+      "test_case": "Activate a center from Center Detail page",
       "preconditions": [
-        "User logged in as <User with center action permission>",
-        "A center with name <center name> exists and is Active"
+        "User logged in as <User>",
+        "A center exists with status <Inactive>",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Close button"
+        "1. Click the 'Activate' action button in the action bar"
       ],
-      "expected_result": "Status badge updates to 'Closed' on the Center Detail page",
+      "expected_result": "The status badge on the Center Detail page updates to 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Edit center details via Edit Center form and save",
+      "test_case": "Close a center from Center Detail page",
       "preconditions": [
-        "User logged in as <User with center edit permission>",
-        "A center with name <center name> exists"
+        "User logged in as <User>",
+        "A center exists with status <Active>",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Edit button to open the Edit Center form",
-        "4. Enter <new name> in the Name field",
-        "5. Select <new office> from the Office dropdown",
-        "6. Enter/select <new staff> in the Staff search field (optional)",
-        "7. Click Save"
+        "1. Click the 'Close' action button in the action bar"
       ],
-      "expected_result": "Center Detail page shows the updated Name as '<new name>' and Office as '<new office>'",
+      "expected_result": "The status badge on the Center Detail page updates to 'Closed'",
       "priority": "high"
     },
     {
       "tc_id": "P-010",
       "test_case": "Assign staff to a center using Assign Staff action",
       "preconditions": [
-        "User logged in as <User with assign staff permission>",
-        "A center with name <center name> exists",
-        "<staff> exists and is assignable"
+        "User logged in as <User>",
+        "A center exists",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Assign Staff button",
-        "4. Enter <staff> in the Staff search field",
-        "5. Select <staff> from the search results",
-        "6. Click Assign (or Confirm) on the Assign Staff dialog"
+        "1. Click the 'Assign Staff' action in the action bar",
+        "2. In the Assign Staff dialog enter/select <staff member> in the Staff search field",
+        "3. Click Confirm on the Assign Staff dialog"
       ],
-      "expected_result": "Center Detail page displays the assigned staff as '<staff>' in the staff area",
+      "expected_result": "A success notification is displayed and the Center Detail page shows the assigned staff in the staff section",
       "priority": "medium"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Generate Collection Sheet, enter repayments/deposits and submit",
+      "test_case": "Edit center details and save changes",
       "preconditions": [
-        "User logged in as <User with collection sheet permission>",
-        "A center with name <center name> exists that has groups and clients"
+        "User logged in as <User>",
+        "A center exists",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Click the Name link for <center name> to open Center Detail",
-        "3. Click the Generate Collection Sheet button",
-        "4. In the Collection Sheet, enter <loan repayment amount> in Loan_Repayment for a client row",
-        "5. Enter <savings deposit amount> in Savings_Deposit for the same client row",
-        "6. Repeat edits for any additional client rows as needed",
-        "7. Click Submit Collection Sheet"
+        "1. Click the 'Edit' action button in the action bar to open the Edit Center form",
+        "2. Update the Name field to <updated name> and/or update the Office field to <updated office>",
+        "3. Modify other optional fields if desired (e.g., Staff, Active, External Id, Groups)",
+        "4. Click the 'Save' button"
       ],
-      "expected_result": "A success notification is displayed and the Collection Sheet lists the entered Loan Repayment and Savings Deposit amounts for the edited client rows",
+      "expected_result": "A success notification is displayed and the Center Detail page shows the updated Name and Office values as entered",
       "priority": "high"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Search Centers table filters results by center name",
+      "test_case": "Open Collection Sheet from Center Detail action bar",
       "preconditions": [
         "User logged in as <User>",
-        "Centers page contains multiple centers including one named <center name>"
+        "A center exists with at least one group and clients",
+        "Center Detail page for that center is open"
       ],
       "steps": [
-        "1. Navigate to the Centers page",
-        "2. Enter <center name> in the Centers table search/filter control and apply the filter"
+        "1. Click the 'Generate Collection Sheet' action in the action bar"
       ],
-      "expected_result": "Centers table displays only rows matching <center name>; unrelated rows are no longer visible",
+      "expected_result": "The Collection Sheet is displayed showing rows for groups and their clients with editable Loan Repayment Amount and Savings Deposit Amount input fields",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-013",
+      "test_case": "Submit Collection Sheet with repayment and deposit amounts",
+      "preconditions": [
+        "User logged in as <User>",
+        "A center exists with groups and clients",
+        "Collection Sheet is open with editable rows"
+      ],
+      "steps": [
+        "1. Enter non-negative numbers in one or more Loan Repayment Amount fields for clients (e.g., <repayment amount>)",
+        "2. Enter non-negative numbers in one or more Savings Deposit Amount fields for clients (e.g., <deposit amount>)",
+        "3. Click the 'Submit Collection Sheet' button"
+      ],
+      "expected_result": "A success notification is displayed confirming that repayments and deposits were saved in batch",
+      "priority": "high"
     }
   ],
   "summary": {
-    "total": 12,
-    "high_priority": 7,
-    "medium_priority": 4,
-    "low_priority": 1
+    "total": 13,
+    "high_priority": 6,
+    "medium_priority": 7,
+    "low_priority": 0
   }
 }

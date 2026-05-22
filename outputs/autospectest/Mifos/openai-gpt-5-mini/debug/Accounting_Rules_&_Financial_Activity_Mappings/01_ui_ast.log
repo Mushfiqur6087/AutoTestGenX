@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.759519
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.396277
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Accounting Rules & Financial Activity Mappings
 
@@ -220,403 +220,403 @@ The Financial Activity Mappings page displays a table mapping financial activiti
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:29] UI-AST Agent - LLM RESPONSE
+[22:21:49] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Page": {
-      "type": "page",
-      "components": {
-        "Accounting_Rules_Table": {
-          "type": "data_table",
-          "columns": ["Rule Name", "Office", "Debit Account(s)", "Credit Account(s)"],
-          "clickable_columns": {
-            "Rule Name": "opens Rule_Detail_View"
-          },
-          "row_actions": [
-            {
-              "action_name": "Open Rule (via Rule Name link)",
-              "type": "link",
-              "on_click": "opens Rule_Detail_View"
-            }
-          ]
-        },
-        "Create_Rule_Button": {
-          "type": "button",
-          "element_name": "+ Create Rule",
-          "on_click": "opens Create_Rule_Form"
-        },
-        "Create_Rule_Form": {
-          "type": "form",
-          "fields": {
-            "Office": {
-              "type": "dropdown",
-              "required": false,
-              "constraints": ["blank applies to all offices"]
-            },
-            "Rule_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Debit_Tags_or_Debit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Debit_Entries": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Credit_Tags_or_Credit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Credit_Entries": {
-              "type": "checkbox",
-              "required": false
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Create",
-              "on_success": "creates accounting rule"
-            },
-            {
-              "element_name": "Cancel",
-              "on_success": "dismisses form"
-            }
-          ]
-        },
-        "Rule_Detail_View": {
-          "type": "detail_view",
-          "fields": {},
-          "actions": [
-            {
-              "action_name": "Edit",
-              "type": "button",
-              "on_click": "opens Edit_Rule_Form"
-            },
-            {
-              "action_name": "Delete",
-              "type": "button",
-              "on_success": "deletes rule"
-            }
-          ]
-        },
-        "Edit_Rule_Form": {
-          "type": "form",
-          "fields": {
-            "Office": {
-              "type": "dropdown",
-              "required": false,
-              "constraints": ["blank applies to all offices"]
-            },
-            "Rule_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Debit_Tags_or_Debit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Debit_Entries": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Credit_Tags_or_Credit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Credit_Entries": {
-              "type": "checkbox",
-              "required": false
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Save",
-              "on_success": "saves changes to accounting rule"
-            },
-            {
-              "element_name": "Cancel",
-              "on_success": "dismisses edit form"
-            }
-          ]
+    "Accounting_Rules_Table": {
+      "type": "data_table",
+      "columns": ["Rule Name", "Office", "Debit Account(s)", "Credit Account(s)"],
+      "row_actions": [
+        {
+          "action_name": "Open Rule Detail",
+          "action_type": "link",
+          "on_trigger": "opens Rule_Detail_View"
         }
-      }
+      ]
     },
-    "Financial_Activity_Mappings_Page": {
-      "type": "page",
-      "components": {
-        "Mappings_Table": {
-          "type": "data_table",
-          "columns": ["Financial Activity", "Mapped GL Account"],
-          "rows_note": "each financial activity appears at most once; mappings drive automatic posting",
-          "row_actions": []
-        },
-        "Create_Mapping_Button": {
-          "type": "button",
-          "element_name": "+ Create Mapping",
-          "on_click": "opens Create_Mapping_Form"
-        },
-        "Create_Mapping_Form": {
-          "type": "form",
-          "fields": {
-            "Financial_Activity": {
-              "type": "dropdown",
-              "required": true,
-              "options": [
-                "Asset Transfer",
-                "Liability Transfer",
-                "Cash at Mainvault",
-                "Cash at Teller",
-                "Opening Balances Transfer",
-                "Fund Source",
-                "Payable Dividends",
-                "Asset Fund Source",
-                "Overdraft Portfolio"
-              ],
-              "constraints": [
-                "dropdown lists only activities that are currently unmapped",
-                "each financial activity can only be mapped once",
-                "selected value must not already exist in mappings"
-              ]
-            },
-            "GL_Account": {
-              "type": "dropdown",
-              "required": true
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Create",
-              "on_success": "creates mapping and enables system to auto-post accounting entries for internal transfers, teller operations, and other system-level financial activities"
-            },
-            {
-              "element_name": "Cancel",
-              "on_success": "dismisses form"
-            }
+    "Create_Rule_Button": {
+      "type": "button",
+      "element_name": "+ Create Rule",
+      "on_click": "opens Create_Rule_Form"
+    },
+    "Create_Rule_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "blank applies to all offices"
           ]
+        },
+        "Rule_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Debit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Debit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or debit tags"
+          ]
+        },
+        "Allow_Multiple_Debit_Entries": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Credit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Credit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or credit tags"
+          ]
+        },
+        "Allow_Multiple_Credit_Entries": {
+          "type": "checkbox",
+          "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Rule",
+          "on_success": "creates accounting rule",
+          "constraints": []
+        },
+        {
+          "element_name": "Cancel",
+          "on_trigger": "closes form"
+        }
+      ]
+    },
+    "Rule_Detail_View": {
+      "type": "detail_view",
+      "fields": {},
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "button",
+          "on_trigger": "opens Edit_Rule_Form"
+        },
+        {
+          "action_name": "Delete",
+          "action_type": "button",
+          "on_success": "deletes rule",
+          "preconditions": [],
+          "constraints": []
+        }
+      ]
+    },
+    "Edit_Rule_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "blank applies to all offices"
+          ]
+        },
+        "Rule_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Debit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Debit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or debit tags"
+          ]
+        },
+        "Allow_Multiple_Debit_Entries": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Credit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Credit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or credit tags"
+          ]
+        },
+        "Allow_Multiple_Credit_Entries": {
+          "type": "checkbox",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates accounting rule"
+        },
+        {
+          "element_name": "Cancel",
+          "on_trigger": "closes form"
+        }
+      ]
+    },
+    "Financial_Activity_Mappings_Table": {
+      "type": "data_table",
+      "columns": ["Financial Activity", "Mapped GL Account"]
+    },
+    "Create_Mapping_Button": {
+      "type": "button",
+      "element_name": "+ Create Mapping",
+      "on_click": "opens Create_Mapping_Form"
+    },
+    "Create_Mapping_Form": {
+      "type": "form",
+      "fields": {
+        "Financial_Activity": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Asset Transfer",
+            "Liability Transfer",
+            "Cash at Mainvault",
+            "Cash at Teller",
+            "Opening Balances Transfer",
+            "Fund Source",
+            "Payable Dividends",
+            "Asset Fund Source",
+            "Overdraft Portfolio"
+          ],
+          "constraints": [
+            "each financial activity can only be mapped once",
+            "dropdown lists only activities that are currently unmapped"
+          ]
+        },
+        "GL_Account": {
+          "type": "dropdown",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Mapping",
+          "on_success": "creates mapping and enables automatic posting of accounting entries for internal transfers, teller operations, and other system-level financial activities",
+          "preconditions": [
+            "Financial_Activity must be unmapped"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "on_trigger": "closes form"
+        }
+      ]
     }
   }
 }
 
 ------------------------------------------------------------
-[16:06:29] UI-AST Agent - PARSED JSON
+[22:21:49] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Page": {
-      "type": "page",
-      "components": {
-        "Accounting_Rules_Table": {
-          "type": "data_table",
-          "columns": [
-            "Rule Name",
-            "Office",
-            "Debit Account(s)",
-            "Credit Account(s)"
-          ],
-          "clickable_columns": {
-            "Rule Name": "opens Rule_Detail_View"
-          },
-          "row_actions": [
-            {
-              "action_name": "Open Rule (via Rule Name link)",
-              "type": "link",
-              "on_click": "opens Rule_Detail_View"
-            }
-          ]
-        },
-        "Create_Rule_Button": {
-          "type": "button",
-          "element_name": "+ Create Rule",
-          "on_click": "opens Create_Rule_Form"
-        },
-        "Create_Rule_Form": {
-          "type": "form",
-          "fields": {
-            "Office": {
-              "type": "dropdown",
-              "required": false,
-              "constraints": [
-                "blank applies to all offices"
-              ]
-            },
-            "Rule_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Debit_Tags_or_Debit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Debit_Entries": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Credit_Tags_or_Credit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Credit_Entries": {
-              "type": "checkbox",
-              "required": false
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Create",
-              "on_success": "creates accounting rule"
-            },
-            {
-              "element_name": "Cancel",
-              "on_success": "dismisses form"
-            }
-          ]
-        },
-        "Rule_Detail_View": {
-          "type": "detail_view",
-          "fields": {},
-          "actions": [
-            {
-              "action_name": "Edit",
-              "type": "button",
-              "on_click": "opens Edit_Rule_Form"
-            },
-            {
-              "action_name": "Delete",
-              "type": "button",
-              "on_success": "deletes rule"
-            }
-          ]
-        },
-        "Edit_Rule_Form": {
-          "type": "form",
-          "fields": {
-            "Office": {
-              "type": "dropdown",
-              "required": false,
-              "constraints": [
-                "blank applies to all offices"
-              ]
-            },
-            "Rule_Name": {
-              "type": "unspecified",
-              "required": true
-            },
-            "Debit_Tags_or_Debit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Debit_Entries": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Credit_Tags_or_Credit_Account": {
-              "type": "dropdown",
-              "required": false,
-              "multi_select": true,
-              "constraints": []
-            },
-            "Allow_Multiple_Credit_Entries": {
-              "type": "checkbox",
-              "required": false
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Save",
-              "on_success": "saves changes to accounting rule"
-            },
-            {
-              "element_name": "Cancel",
-              "on_success": "dismisses edit form"
-            }
-          ]
+    "Accounting_Rules_Table": {
+      "type": "data_table",
+      "columns": [
+        "Rule Name",
+        "Office",
+        "Debit Account(s)",
+        "Credit Account(s)"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Rule Detail",
+          "action_type": "link",
+          "on_trigger": "opens Rule_Detail_View"
         }
-      }
+      ]
     },
-    "Financial_Activity_Mappings_Page": {
-      "type": "page",
-      "components": {
-        "Mappings_Table": {
-          "type": "data_table",
-          "columns": [
-            "Financial Activity",
-            "Mapped GL Account"
-          ],
-          "rows_note": "each financial activity appears at most once; mappings drive automatic posting",
-          "row_actions": []
-        },
-        "Create_Mapping_Button": {
-          "type": "button",
-          "element_name": "+ Create Mapping",
-          "on_click": "opens Create_Mapping_Form"
-        },
-        "Create_Mapping_Form": {
-          "type": "form",
-          "fields": {
-            "Financial_Activity": {
-              "type": "dropdown",
-              "required": true,
-              "options": [
-                "Asset Transfer",
-                "Liability Transfer",
-                "Cash at Mainvault",
-                "Cash at Teller",
-                "Opening Balances Transfer",
-                "Fund Source",
-                "Payable Dividends",
-                "Asset Fund Source",
-                "Overdraft Portfolio"
-              ],
-              "constraints": [
-                "dropdown lists only activities that are currently unmapped",
-                "each financial activity can only be mapped once",
-                "selected value must not already exist in mappings"
-              ]
-            },
-            "GL_Account": {
-              "type": "dropdown",
-              "required": true
-            }
-          },
-          "submit_actions": [
-            {
-              "element_name": "Create",
-              "on_success": "creates mapping and enables system to auto-post accounting entries for internal transfers, teller operations, and other system-level financial activities"
-            },
-            {
-              "element_name": "Cancel",
-              "on_success": "dismisses form"
-            }
+    "Create_Rule_Button": {
+      "type": "button",
+      "element_name": "+ Create Rule",
+      "on_click": "opens Create_Rule_Form"
+    },
+    "Create_Rule_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "blank applies to all offices"
           ]
+        },
+        "Rule_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Debit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Debit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or debit tags"
+          ]
+        },
+        "Allow_Multiple_Debit_Entries": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Credit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Credit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or credit tags"
+          ]
+        },
+        "Allow_Multiple_Credit_Entries": {
+          "type": "checkbox",
+          "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Rule",
+          "on_success": "creates accounting rule",
+          "constraints": []
+        },
+        {
+          "element_name": "Cancel",
+          "on_trigger": "closes form"
+        }
+      ]
+    },
+    "Rule_Detail_View": {
+      "type": "detail_view",
+      "fields": {},
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action_type": "button",
+          "on_trigger": "opens Edit_Rule_Form"
+        },
+        {
+          "action_name": "Delete",
+          "action_type": "button",
+          "on_success": "deletes rule",
+          "preconditions": [],
+          "constraints": []
+        }
+      ]
+    },
+    "Edit_Rule_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "blank applies to all offices"
+          ]
+        },
+        "Rule_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Debit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Debit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or debit tags"
+          ]
+        },
+        "Allow_Multiple_Debit_Entries": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Credit_Account_or_Tag": {
+          "type": "dropdown",
+          "required": false,
+          "allows_multiple_when": "Allow_Multiple_Credit_Entries == true",
+          "constraints": [
+            "selects GL account(s) or credit tags"
+          ]
+        },
+        "Allow_Multiple_Credit_Entries": {
+          "type": "checkbox",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates accounting rule"
+        },
+        {
+          "element_name": "Cancel",
+          "on_trigger": "closes form"
+        }
+      ]
+    },
+    "Financial_Activity_Mappings_Table": {
+      "type": "data_table",
+      "columns": [
+        "Financial Activity",
+        "Mapped GL Account"
+      ]
+    },
+    "Create_Mapping_Button": {
+      "type": "button",
+      "element_name": "+ Create Mapping",
+      "on_click": "opens Create_Mapping_Form"
+    },
+    "Create_Mapping_Form": {
+      "type": "form",
+      "fields": {
+        "Financial_Activity": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Asset Transfer",
+            "Liability Transfer",
+            "Cash at Mainvault",
+            "Cash at Teller",
+            "Opening Balances Transfer",
+            "Fund Source",
+            "Payable Dividends",
+            "Asset Fund Source",
+            "Overdraft Portfolio"
+          ],
+          "constraints": [
+            "each financial activity can only be mapped once",
+            "dropdown lists only activities that are currently unmapped"
+          ]
+        },
+        "GL_Account": {
+          "type": "dropdown",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Mapping",
+          "on_success": "creates mapping and enables automatic posting of accounting entries for internal transfers, teller operations, and other system-level financial activities",
+          "preconditions": [
+            "Financial_Activity must be unmapped"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "on_trigger": "closes form"
+        }
+      ]
     }
   }
 }
 
 ------------------------------------------------------------
-[16:08:29] UI-AST Agent - USER PROMPT
+[22:24:12] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Accounting Rules & Financial Activity Mappings
 
@@ -630,28 +630,29 @@ The Financial Activity Mappings page displays a table mapping financial activiti
 
 
 **CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Set a concrete input type for the rule name fields: components.Accounting_Rules_Page.components.Create_Rule_Form.fields.Rule_Name.type -> "text"
-2. Set a concrete input type for the rule name fields: components.Accounting_Rules_Page.components.Edit_Rule_Form.fields.Rule_Name.type -> "text"
-3. Remove inferred form submit actions that are not specified in the description: delete components.Accounting_Rules_Page.components.Create_Rule_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)
-4. Remove inferred form submit actions that are not specified in the description: delete components.Accounting_Rules_Page.components.Edit_Rule_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)
-5. Remove inferred form submit actions that are not specified in the description: delete components.Financial_Activity_Mappings_Page.components.Create_Mapping_Form.submit_actions (or replace with explicit buttons only if the description is updated to name them)
+1. Remove the conditional attributes that were inferred: delete Create_Rule_Form.fields.Debit_Account_or_Tag.allows_multiple_when and Create_Rule_Form.fields.Credit_Account_or_Tag.allows_multiple_when; instead represent the field as 'type': 'dropdown_or_multiselect' or add a non-conditional note (e.g., 'supports single or multiple GL account selection / tags') so no conditional logic is implied.
+2. Remove the conditional attributes from the edit form: delete Edit_Rule_Form.fields.Debit_Account_or_Tag.allows_multiple_when and Edit_Rule_Form.fields.Credit_Account_or_Tag.allows_multiple_when; instead represent those fields as 'type': 'dropdown_or_multiselect' or equivalent non-conditional descriptor.
+3. Remove the inferred Cancel submit actions that are not specified in the description: delete Create_Rule_Form.submit_actions[1], Edit_Rule_Form.submit_actions[1], and Create_Mapping_Form.submit_actions[1]; if cancel/close controls are required by design, explicitly state them in the description and name them so they can be included.
+4. Clarify explicit field types where unspecified: set Create_Rule_Form.fields.Rule_Name.type to 'text' (or 'input') instead of 'unspecified' and mirror in Edit_Rule_Form.fields.Rule_Name.type.
+5. If the UI behavior is intended that the 'Allow Multiple' checkboxes toggle whether the account field is single vs multi-select, update the description to include explicit trigger language (e.g., 'when Allow Multiple Debit Entries is checked the Debit Account field becomes multi-select') so conditional logic can be represented; otherwise keep the account fields as non-conditional 'dropdown_or_multiselect' types in the AST.
 
 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:10:02] UI-AST Agent - LLM RESPONSE
+[22:25:37] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Page": {
+    "Accounting_Rules_Table": {
       "type": "data_table",
-      "columns": ["Rule Name", "Office", "Debit Account(s)", "Credit Account(s)"],
+      "columns": ["Rule Name (link)", "Office", "Debit Account(s)", "Credit Account(s)"],
       "row_actions": [
         {
-          "action_name": "Open Detail",
-          "description": "triggered by clicking the Rule Name link; opens Rule detail view"
+          "action_name": "Open",
+          "action_trigger": "click Rule Name link",
+          "opens": "Rule_Detail_View"
         }
       ],
       "actions": [
@@ -674,40 +675,43 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "text",
           "required": true
         },
-        "Debit_Account_or_Tags": {
-          "type": "dropdown",
+        "Debit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": ["supports single or multiple GL account selection / tags"]
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Account_or_Tags": {
-          "type": "dropdown",
+        "Credit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": ["supports single or multiple GL account selection / tags"]
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Rule",
+          "type": "button",
+          "on_success": "creates accounting rule"
+        }
+      ]
     },
     "Rule_Detail_View": {
       "type": "detail_view",
+      "opens_from": "Accounting_Rules_Table",
       "actions": [
         {
-          "element_name": "Edit",
-          "type": "button",
+          "action_name": "Edit",
           "opens": "Edit_Rule_Form"
         },
         {
-          "element_name": "Delete",
-          "type": "button",
-          "constraints": [],
+          "action_name": "Delete",
           "on_success": "deletes rule"
         }
       ]
@@ -724,32 +728,36 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "text",
           "required": true
         },
-        "Debit_Account_or_Tags": {
-          "type": "dropdown",
+        "Debit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": ["supports single or multiple GL account selection / tags"]
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Account_or_Tags": {
-          "type": "dropdown",
+        "Credit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": ["supports single or multiple GL account selection / tags"]
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates rule"
+        }
+      ]
     },
-    "Financial_Activity_Mappings_Page": {
+    "Financial_Activity_Mappings_Table": {
       "type": "data_table",
       "columns": ["Financial Activity", "GL Account"],
-      "rows_description": "each row maps a single Financial Activity to a GL Account",
       "actions": [
         {
           "element_name": "+ Create Mapping",
@@ -776,8 +784,8 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "Overdraft Portfolio"
           ],
           "constraints": [
-            "selection must be currently unmapped",
-            "each financial activity may only be mapped once"
+            "each financial activity can only be mapped once",
+            "dropdown lists only unmapped activities"
           ]
         },
         "GL_Account": {
@@ -785,29 +793,36 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         }
       },
-      "on_success": "creates mapping and enables automatic posting for the selected financial activity"
+      "submit_actions": [
+        {
+          "element_name": "Create Mapping",
+          "type": "button",
+          "on_success": "creates mapping and enables automatic posting for system-level financial activities"
+        }
+      ]
     }
   }
 }
 
 ------------------------------------------------------------
-[16:10:02] UI-AST Agent - PARSED JSON
+[22:25:37] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Accounting Rules & Financial Activity Mappings",
   "components": {
-    "Accounting_Rules_Page": {
+    "Accounting_Rules_Table": {
       "type": "data_table",
       "columns": [
-        "Rule Name",
+        "Rule Name (link)",
         "Office",
         "Debit Account(s)",
         "Credit Account(s)"
       ],
       "row_actions": [
         {
-          "action_name": "Open Detail",
-          "description": "triggered by clicking the Rule Name link; opens Rule detail view"
+          "action_name": "Open",
+          "action_trigger": "click Rule Name link",
+          "opens": "Rule_Detail_View"
         }
       ],
       "actions": [
@@ -832,40 +847,47 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "text",
           "required": true
         },
-        "Debit_Account_or_Tags": {
-          "type": "dropdown",
+        "Debit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Account_or_Tags": {
-          "type": "dropdown",
+        "Credit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Rule",
+          "type": "button",
+          "on_success": "creates accounting rule"
+        }
+      ]
     },
     "Rule_Detail_View": {
       "type": "detail_view",
+      "opens_from": "Accounting_Rules_Table",
       "actions": [
         {
-          "element_name": "Edit",
-          "type": "button",
+          "action_name": "Edit",
           "opens": "Edit_Rule_Form"
         },
         {
-          "element_name": "Delete",
-          "type": "button",
-          "constraints": [],
+          "action_name": "Delete",
           "on_success": "deletes rule"
         }
       ]
@@ -884,35 +906,43 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "text",
           "required": true
         },
-        "Debit_Account_or_Tags": {
-          "type": "dropdown",
+        "Debit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Debit_Entries": {
           "type": "checkbox",
           "required": false
         },
-        "Credit_Account_or_Tags": {
-          "type": "dropdown",
+        "Credit_Account_or_Tag": {
+          "type": "dropdown_or_multiselect",
           "required": false,
-          "multiple": true,
-          "description": "GL account selection; may allow multi-select"
+          "constraints": [
+            "supports single or multiple GL account selection / tags"
+          ]
         },
         "Allow_Multiple_Credit_Entries": {
           "type": "checkbox",
           "required": false
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates rule"
+        }
+      ]
     },
-    "Financial_Activity_Mappings_Page": {
+    "Financial_Activity_Mappings_Table": {
       "type": "data_table",
       "columns": [
         "Financial Activity",
         "GL Account"
       ],
-      "rows_description": "each row maps a single Financial Activity to a GL Account",
       "actions": [
         {
           "element_name": "+ Create Mapping",
@@ -939,8 +969,8 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "Overdraft Portfolio"
           ],
           "constraints": [
-            "selection must be currently unmapped",
-            "each financial activity may only be mapped once"
+            "each financial activity can only be mapped once",
+            "dropdown lists only unmapped activities"
           ]
         },
         "GL_Account": {
@@ -948,7 +978,13 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         }
       },
-      "on_success": "creates mapping and enables automatic posting for the selected financial activity"
+      "submit_actions": [
+        {
+          "element_name": "Create Mapping",
+          "type": "button",
+          "on_success": "creates mapping and enables automatic posting for system-level financial activities"
+        }
+      ]
     }
   }
 }

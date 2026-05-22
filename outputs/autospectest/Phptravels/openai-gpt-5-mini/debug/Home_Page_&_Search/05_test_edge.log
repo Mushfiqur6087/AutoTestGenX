@@ -1,0 +1,680 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:54:00.227060
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Home Page & Search</module_name>
+
+<ast>
+{
+  "module_name": "Home Page & Search",
+  "components": {
+    "Search_Widget": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Hotels",
+          "fields": {
+            "Destination": {
+              "type": "search"
+            },
+            "Check_In_Date": {
+              "type": "date"
+            },
+            "Check_Out_Date": {
+              "type": "date"
+            },
+            "Number_of_Rooms": {
+              "type": "number"
+            },
+            "Adults": {
+              "type": "number"
+            },
+            "Children": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "tab_name": "Flights",
+          "fields": {
+            "Trip_Type": {
+              "type": "dropdown",
+              "options": [
+                "One-way",
+                "Round-trip",
+                "Multi-city"
+              ]
+            },
+            "Departure_City": {
+              "type": "search"
+            },
+            "Arrival_City": {
+              "type": "search"
+            },
+            "Departure_Date": {
+              "type": "date"
+            },
+            "Return_Date": {
+              "type": "date"
+            },
+            "Adults": {
+              "type": "number"
+            },
+            "Children": {
+              "type": "number"
+            },
+            "Infants": {
+              "type": "number"
+            },
+            "Cabin_Class": {
+              "type": "dropdown",
+              "options": [
+                "Economy",
+                "Premium Economy",
+                "Business",
+                "First"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Tours",
+          "fields": {
+            "Destination": {
+              "type": "search"
+            },
+            "Travel_Start_Date": {
+              "type": "date"
+            },
+            "Travel_End_Date": {
+              "type": "date"
+            }
+          }
+        },
+        {
+          "tab_name": "Cars",
+          "fields": {
+            "Pick_Up_Location": {
+              "type": "search"
+            },
+            "Drop_Off_Location": {
+              "type": "search"
+            },
+            "Pick_Up_Date": {
+              "type": "date"
+            },
+            "Pick_Up_Time": {
+              "type": "unspecified"
+            },
+            "Drop_Off_Date": {
+              "type": "date"
+            },
+            "Drop_Off_Time": {
+              "type": "unspecified"
+            }
+          }
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "constraints": [
+            "validates that all required fields for the active tab are filled"
+          ],
+          "on_success": "redirects to corresponding results listing page",
+          "on_failure": "shows inline field errors on invalid fields"
+        }
+      ],
+      "interaction_notes": [
+        "clicking a tab switches the visible search fields to that service type"
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The home page features a prominent search widget with four tabs: Hotels, Flights, Tours, and Cars. Clicking a tab switches the visible search fields for that service type. The Hotels tab collects destination, check-in/check-out dates, number of rooms, and guest count (adults and children). The Flights tab collects trip type (One-way, Round-trip, or Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, or First). The Tours tab collects destination and a travel date range. The Cars tab collects pick-up and drop-off location, pick-up and drop-off date and time. The Search button validates that all required fields for the active tab are filled; inline errors appear on invalid fields. On success, the user is redirected to the corresponding results listing page.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:54:41] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Home Page & Search",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Hotels: Check-out date equal to check-in date (same-day) is blocked",
+      "preconditions": [
+        "Home page is loaded",
+        "Hotels tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Check_In_Date",
+        "3. Enter <the same day as Check_In_Date> in Check_Out_Date",
+        "4. Enter values in Number_of_Rooms, Adults (and Children if required)",
+        "5. Click the Search button"
+      ],
+      "expected_result": "Search is blocked; the Check_Out_Date field displays an inline error indicating the check-out date must be after the check-in date (visible inline error on the Check_Out_Date field).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Hotels: Check-out date one day after check-in succeeds",
+      "preconditions": [
+        "Home page is loaded",
+        "Hotels tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Check_In_Date",
+        "3. Enter <one day after Check_In_Date> in Check_Out_Date",
+        "4. Enter values in Number_of_Rooms, Adults (and Children if required)",
+        "5. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Hotels results listing page (results page loads for the Hotels search).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Flights (Round-trip): Return date equal to departure date (same-day return) succeeds",
+      "preconditions": [
+        "Home page is loaded",
+        "Flights tab is active",
+        "Trip_Type is set to Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter a valid value in Departure_City",
+        "3. Enter a valid value in Arrival_City",
+        "4. Enter a date in Departure_Date",
+        "5. Enter <the same day as Departure_Date> in Return_Date",
+        "6. Enter values for Adults (and Children/Infants if required) and select Cabin_Class",
+        "7. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Flights results listing page for the specified round-trip (results page loads showing flights for the same-day return).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Flights (Round-trip): Return date one day before departure is blocked",
+      "preconditions": [
+        "Home page is loaded",
+        "Flights tab is active",
+        "Trip_Type is set to Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter a valid value in Departure_City",
+        "3. Enter a valid value in Arrival_City",
+        "4. Enter a date in Departure_Date",
+        "5. Enter <one day before Departure_Date> in Return_Date",
+        "6. Enter values for Adults (and Children/Infants if required) and select Cabin_Class",
+        "7. Click the Search button"
+      ],
+      "expected_result": "Search is blocked; the Return_Date field displays an inline error indicating the return date cannot be before the departure date (visible inline error on the Return_Date field).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Tours: Travel end date equal to start date (same-day tour) succeeds",
+      "preconditions": [
+        "Home page is loaded",
+        "Tours tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Travel_Start_Date",
+        "3. Enter <the same day as Travel_Start_Date> in Travel_End_Date",
+        "4. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Tours results listing page (results page loads showing tours that match the same-day range).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "boundary",
+      "test_case": "Tours: Travel end date one day before start date is blocked",
+      "preconditions": [
+        "Home page is loaded",
+        "Tours tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Travel_Start_Date",
+        "3. Enter <one day before Travel_Start_Date> in Travel_End_Date",
+        "4. Click the Search button"
+      ],
+      "expected_result": "Search is blocked; the Travel_End_Date field displays an inline error indicating the travel end date must be the same as or after the travel start date (visible inline error on Travel_End_Date).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "input_edge",
+      "test_case": "Hotels Destination with leading and trailing whitespace is trimmed in search",
+      "preconditions": [
+        "Home page is loaded",
+        "Hotels tab is active"
+      ],
+      "steps": [
+        "1. Enter <value with leading and trailing whitespace> into Destination (Hotels)",
+        "2. Enter valid dates in Check_In_Date and Check_Out_Date",
+        "3. Enter values in Number_of_Rooms and Adults",
+        "4. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Hotels results listing page and the search summary at the top shows the Destination value trimmed of leading/trailing whitespace (visible trimmed value in the search summary).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click on Search triggers a single search (no duplicate results pages)",
+      "preconditions": [
+        "Home page is loaded",
+        "Any tab is active with all required fields filled"
+      ],
+      "steps": [
+        "1. Fill all required fields for the active tab",
+        "2. Rapidly double-click the Search button (two clicks in quick succession)"
+      ],
+      "expected_result": "Search succeeds once; user is redirected a single time to the corresponding results listing page and the results listing displays only one set of results (no duplicate results pages or duplicate result sets visible).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 6,
+    "input_edge": 1,
+    "interaction_edge": 1,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 6,
+    "low_priority": 2
+  }
+}
+
+------------------------------------------------------------
+[22:54:41] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Home Page & Search",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Hotels: Check-out date equal to check-in date (same-day) is blocked",
+      "preconditions": [
+        "Home page is loaded",
+        "Hotels tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Check_In_Date",
+        "3. Enter <the same day as Check_In_Date> in Check_Out_Date",
+        "4. Enter values in Number_of_Rooms, Adults (and Children if required)",
+        "5. Click the Search button"
+      ],
+      "expected_result": "Search is blocked; the Check_Out_Date field displays an inline error indicating the check-out date must be after the check-in date (visible inline error on the Check_Out_Date field).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Hotels: Check-out date one day after check-in succeeds",
+      "preconditions": [
+        "Home page is loaded",
+        "Hotels tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Check_In_Date",
+        "3. Enter <one day after Check_In_Date> in Check_Out_Date",
+        "4. Enter values in Number_of_Rooms, Adults (and Children if required)",
+        "5. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Hotels results listing page (results page loads for the Hotels search).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Flights (Round-trip): Return date equal to departure date (same-day return) succeeds",
+      "preconditions": [
+        "Home page is loaded",
+        "Flights tab is active",
+        "Trip_Type is set to Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter a valid value in Departure_City",
+        "3. Enter a valid value in Arrival_City",
+        "4. Enter a date in Departure_Date",
+        "5. Enter <the same day as Departure_Date> in Return_Date",
+        "6. Enter values for Adults (and Children/Infants if required) and select Cabin_Class",
+        "7. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Flights results listing page for the specified round-trip (results page loads showing flights for the same-day return).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Flights (Round-trip): Return date one day before departure is blocked",
+      "preconditions": [
+        "Home page is loaded",
+        "Flights tab is active",
+        "Trip_Type is set to Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter a valid value in Departure_City",
+        "3. Enter a valid value in Arrival_City",
+        "4. Enter a date in Departure_Date",
+        "5. Enter <one day before Departure_Date> in Return_Date",
+        "6. Enter values for Adults (and Children/Infants if required) and select Cabin_Class",
+        "7. Click the Search button"
+      ],
+      "expected_result": "Search is blocked; the Return_Date field displays an inline error indicating the return date cannot be before the departure date (visible inline error on the Return_Date field).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Tours: Travel end date equal to start date (same-day tour) succeeds",
+      "preconditions": [
+        "Home page is loaded",
+        "Tours tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Travel_Start_Date",
+        "3. Enter <the same day as Travel_Start_Date> in Travel_End_Date",
+        "4. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Tours results listing page (results page loads showing tours that match the same-day range).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "boundary",
+      "test_case": "Tours: Travel end date one day before start date is blocked",
+      "preconditions": [
+        "Home page is loaded",
+        "Tours tab is active"
+      ],
+      "steps": [
+        "1. Enter a valid value in Destination",
+        "2. Enter a date in Travel_Start_Date",
+        "3. Enter <one day before Travel_Start_Date> in Travel_End_Date",
+        "4. Click the Search button"
+      ],
+      "expected_result": "Search is blocked; the Travel_End_Date field displays an inline error indicating the travel end date must be the same as or after the travel start date (visible inline error on Travel_End_Date).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "input_edge",
+      "test_case": "Hotels Destination with leading and trailing whitespace is trimmed in search",
+      "preconditions": [
+        "Home page is loaded",
+        "Hotels tab is active"
+      ],
+      "steps": [
+        "1. Enter <value with leading and trailing whitespace> into Destination (Hotels)",
+        "2. Enter valid dates in Check_In_Date and Check_Out_Date",
+        "3. Enter values in Number_of_Rooms and Adults",
+        "4. Click the Search button"
+      ],
+      "expected_result": "Search succeeds; user is redirected to the Hotels results listing page and the search summary at the top shows the Destination value trimmed of leading/trailing whitespace (visible trimmed value in the search summary).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click on Search triggers a single search (no duplicate results pages)",
+      "preconditions": [
+        "Home page is loaded",
+        "Any tab is active with all required fields filled"
+      ],
+      "steps": [
+        "1. Fill all required fields for the active tab",
+        "2. Rapidly double-click the Search button (two clicks in quick succession)"
+      ],
+      "expected_result": "Search succeeds once; user is redirected a single time to the corresponding results listing page and the results listing displays only one set of results (no duplicate results pages or duplicate result sets visible).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 6,
+    "input_edge": 1,
+    "interaction_edge": 1,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 6,
+    "low_priority": 2
+  }
+}

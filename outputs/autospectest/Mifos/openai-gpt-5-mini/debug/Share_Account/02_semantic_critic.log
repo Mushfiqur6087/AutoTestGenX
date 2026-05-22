@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.758782
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.395136
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:06:27] Semantic Critic - SYSTEM PROMPT
+[22:21:42] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:06:27] Semantic Critic - USER PROMPT
+[22:21:42] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -123,32 +123,28 @@ The Share Account Detail page displays the share account number, product name, c
 {
   "module_name": "Share Account",
   "components": {
-    "Client_Detail_Create_Share_Account": {
-      "type": "button",
-      "element_name": "Create Share Account",
-      "on_click": "opens Share_Account_Application_Form",
-      "preconditions": [
-        "on Client Detail page"
-      ]
-    },
     "Share_Account_Application_Form": {
       "type": "form",
+      "preconditions": [
+        "initiated from Client Detail page"
+      ],
       "fields": {
         "Share_Product": {
           "type": "dropdown",
-          "required": false,
-          "on_change": "auto-populates default values into the form"
+          "required": true,
+          "constraints": [],
+          "on_change": "auto-populates default values into other form fields based on selected product"
         },
         "Submitted_On": {
           "type": "date",
-          "required": false
+          "required": true
         },
         "Requested_Shares": {
           "type": "number",
-          "required": false,
+          "required": true,
           "constraints": [
-            "min = product.min_per_client",
-            "max = product.max_per_client"
+            "min: product.min_per_client",
+            "max: product.max_per_client"
           ]
         },
         "Application_Date": {
@@ -172,32 +168,33 @@ The Share Account Detail page displays the share account number, product name, c
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "creates share account in Submitted and Pending Approval status"
+          "on_success": "creates account in Submitted and Pending Approval status"
         }
       ]
     },
     "Share_Account_Detail_Actions": {
       "type": "state_bound_action_bar",
       "states": {
-        "Submitted and Pending Approval": {
+        "Pending": {
           "available_actions": [
             {
               "action_name": "Approve",
               "fields": {
                 "Approved_Shares": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
                 "Approved_Date": {
                   "type": "date",
-                  "required": false
+                  "required": true
                 }
               },
-              "on_success": "sets account status to Approved"
+              "on_success": "changes status to Approved"
             },
             {
               "action_name": "Reject",
-              "on_success": "marks application as Rejected"
+              "fields": {},
+              "on_success": "changes status to Rejected"
             }
           ]
         },
@@ -205,25 +202,278 @@ The Share Account Detail page displays the share account number, product name, c
           "available_actions": [
             {
               "action_name": "Activate",
-              "on_success": "activates account and sets status to Active"
+              "fields": {},
+              "on_success": "changes status to Active"
             },
             {
               "action_name": "Undo Approval",
-              "on_success": "reverts status to Submitted and Pending Approval"
+              "fields": {},
+              "on_success": "reverts status to Pending"
             }
           ]
         },
         "Active": {
           "available_actions": [
             {
-              "action_name": "Apply Additional Shares"
+              "action_name": "Apply Additional Shares",
+              "fields": {
+                "Number_of_Shares": {
+                  "type": "number",
+                  "required": true
+                },
+                "Payment_Savings_Account": {
+                  "type": "dropdown",
+                  "required": false,
+                  "options_source": "client_active_savings_accounts"
+                }
+              },
+              "on_success": "creates purchase transaction and increases approved shares total"
             },
             {
               "action_name": "Redeem Shares",
-              "on_success": "calculates redemption_amount = selected_shares * current_unit_price and credits the linked savings account with the calculated amount"
+              "fields": {
+                "Shares_to_Redeem": {
+                  "type": "number",
+                  "required": true,
+                  "constraints": [
+                    "must be <= total redeemable shares"
+                  ]
+                },
+                "Credit_Savings_Account": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options_source": "linked_savings_accounts"
+                }
+              },
+              "constraints": [
+                "redemption_amount = Shares_to_Redeem * current_unit_price"
+              ],
+              "on_success": "credits redemption_amount (Shares_to_Redeem * current_unit_price) to selected linked savings account"
             },
             {
-              "action_name": "Close"
+              "action_name": "Close",
+              "fields": {},
+              "on_success": "changes status to Closed"
+            }
+          ]
+        }
+      }
+    },
+    "Share_Account_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Purchased Shares",
+          "fields": {
+            "Purchased_Shares_Table": {
+              "type": "data_table",
+              "columns": [
+                "Date",
+                "Type",
+                "Number of Shares",
+                "Unit Price",
+                "Amount",
+                "Status"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Dividends",
+          "fields": {
+            "Dividends_Table": {
+              "type": "data_table",
+              "columns": [
+                "Date",
+                "Amount Per Share",
+                "Total Amount"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:23:42] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains multiple inferred/unspecified interactive elements not explicitly described (phantoms); regenerate after removing or justifying these inferred fields and making External_ID type explicit.",
+  "missing": [],
+  "phantoms": [
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Number_of_Shares (Apply Additional Shares field not explicitly specified in description)",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Savings_Account (Apply Additional Shares payment account inferred but not specified)",
+    "components.Share_Account_Application_Form.fields.Charges (represented as a repeating_group with item_fields inferred; description only mentions a Charges section with no item structure)",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[1].fields.Shares_to_Redeem.constraints[0] (constraint 'must be <= total redeemable shares' inferred but not stated)"
+  ],
+  "fixes": [
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Number_of_Shares — remove this field unless the description is updated to explicitly require entering the number of shares when performing 'Apply Additional Shares'; if it should exist, note the exact field label and type in the description.",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Savings_Account — remove this field unless the description explicitly requires choosing a payment savings account for 'Apply Additional Shares'; if required, specify the exact options source (e.g., client's active savings accounts) in the description.",
+    "components.Share_Account_Application_Form.fields.Charges — replace the repeating_group inference with a neutral placeholder (fields: {}) or explicitly list the charge item fields in the description; do not assume an item structure.",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[1].fields.Shares_to_Redeem.constraints[0] — remove the inferred 'must be <= total redeemable shares' constraint unless the description explicitly states this rule; keep only the redemption calculation which is described.",
+    "components.Share_Account_Application_Form.fields.External_ID.type — set an explicit primitive type (e.g., 'text' or 'string') instead of 'unspecified' and regenerate."
+  ]
+}
+
+------------------------------------------------------------
+[22:23:42] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains multiple inferred/unspecified interactive elements not explicitly described (phantoms); regenerate after removing or justifying these inferred fields and making External_ID type explicit.",
+  "missing": [],
+  "phantoms": [
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Number_of_Shares (Apply Additional Shares field not explicitly specified in description)",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Savings_Account (Apply Additional Shares payment account inferred but not specified)",
+    "components.Share_Account_Application_Form.fields.Charges (represented as a repeating_group with item_fields inferred; description only mentions a Charges section with no item structure)",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[1].fields.Shares_to_Redeem.constraints[0] (constraint 'must be <= total redeemable shares' inferred but not stated)"
+  ],
+  "fixes": [
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Number_of_Shares \u2014 remove this field unless the description is updated to explicitly require entering the number of shares when performing 'Apply Additional Shares'; if it should exist, note the exact field label and type in the description.",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Savings_Account \u2014 remove this field unless the description explicitly requires choosing a payment savings account for 'Apply Additional Shares'; if required, specify the exact options source (e.g., client's active savings accounts) in the description.",
+    "components.Share_Account_Application_Form.fields.Charges \u2014 replace the repeating_group inference with a neutral placeholder (fields: {}) or explicitly list the charge item fields in the description; do not assume an item structure.",
+    "components.Share_Account_Detail_Actions.states.Active.available_actions[1].fields.Shares_to_Redeem.constraints[0] \u2014 remove the inferred 'must be <= total redeemable shares' constraint unless the description explicitly states this rule; keep only the redemption calculation which is described.",
+    "components.Share_Account_Application_Form.fields.External_ID.type \u2014 set an explicit primitive type (e.g., 'text' or 'string') instead of 'unspecified' and regenerate."
+  ]
+}
+
+------------------------------------------------------------
+[22:25:17] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+A new share account is created from the Client Detail page. The Share Account Application form contains Share Product dropdown (selecting a product auto-populates default values), Submitted On date, Requested Shares (bounded by product min/max per client), Application Date, Savings Account for Charges dropdown (lists the client's active savings accounts to debit fees from), External ID, and a Charges section. Clicking "Submit" creates the account in "Submitted and Pending Approval" status.
+
+The Share Account Detail page displays the share account number, product name, client name, status badge, total approved shares, total pending shares, and unit price. Action buttons change based on status: Pending offers Approve (with Approved Shares and Approved Date) and Reject; Approved offers Activate and Undo Approval; Active offers Apply Additional Shares (purchase more shares), Redeem Shares (redemption amount is calculated as shares multiplied by current unit price and credited to the linked savings account), and Close. Tabs show Purchased Shares (table with Date, Type, Number of Shares, Unit Price, Amount, and Status), Dividends (posted dividend distributions with Date, Amount Per Share, and Total Amount), and Charges.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Share Account",
+  "components": {
+    "Client_Detail_Create_Share_Account": {
+      "type": "link",
+      "element_name": "Create Share Account",
+      "on_click": "opens Share_Account_Application_Form"
+    },
+    "Share_Account_Application_Form": {
+      "type": "form",
+      "fields": {
+        "Share_Product": {
+          "type": "dropdown",
+          "required": false,
+          "on_change": "auto-populates default values from selected product"
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": false
+        },
+        "Requested_Shares": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be >= product.min and <= product.max per client"
+          ]
+        },
+        "Application_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Savings_Account_for_Charges": {
+          "type": "dropdown",
+          "required": false,
+          "options_source": "client_active_savings_accounts"
+        },
+        "External_ID": {
+          "type": "text",
+          "required": false
+        },
+        "Charges": {
+          "type": "unspecified",
+          "fields": {}
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates account in Submitted and Pending Approval status"
+        }
+      ]
+    },
+    "Share_Account_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "fields": {
+                "Approved_Shares": {
+                  "type": "number"
+                },
+                "Approved_Date": {
+                  "type": "date"
+                }
+              },
+              "on_success": "changes status to Approved"
+            },
+            {
+              "action_name": "Reject",
+              "fields": {},
+              "on_success": "changes status to Rejected"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "fields": {},
+              "on_success": "changes status to Active"
+            },
+            {
+              "action_name": "Undo Approval",
+              "fields": {},
+              "on_success": "reverts status to Pending"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Apply Additional Shares",
+              "fields": {}
+            },
+            {
+              "action_name": "Redeem Shares",
+              "fields": {
+                "Shares_to_Redeem": {
+                  "type": "number"
+                }
+              },
+              "on_success": "redemption amount is calculated as Shares_to_Redeem multiplied by current unit price and credited to the linked savings account"
+            },
+            {
+              "action_name": "Close",
+              "fields": {}
             }
           ]
         }
@@ -278,27 +528,23 @@ The Share Account Detail page displays the share account number, product name, c
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:08:13] Semantic Critic - LLM RESPONSE
+[22:26:20] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST correctly captures the interactive elements (create button, application form fields, submit action, state-bound actions, and tabs/tables); one minor inferred structure (Charges as a repeating_group) is acceptable.",
+  "summary": "The AST correctly includes all interactive elements (create link, application form fields including Charges section, submit action, state-bound actions with their fields, and the three detail tabs/tables) without extraneous phantoms.",
   "missing": [],
-  "phantoms": [
-    "Share_Account_Application_Form.fields.Charges (defined as a repeating_group.item_fields {} — description only mentioned a Charges section without field structure)"
-  ],
+  "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:08:13] Semantic Critic - PARSED JSON
+[22:26:20] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST correctly captures the interactive elements (create button, application form fields, submit action, state-bound actions, and tabs/tables); one minor inferred structure (Charges as a repeating_group) is acceptable.",
+  "summary": "The AST correctly includes all interactive elements (create link, application form fields including Charges section, submit action, state-bound actions with their fields, and the three detail tabs/tables) without extraneous phantoms.",
   "missing": [],
-  "phantoms": [
-    "Share_Account_Application_Form.fields.Charges (defined as a repeating_group.item_fields {} \u2014 description only mentioned a Charges section without field structure)"
-  ],
+  "phantoms": [],
   "fixes": []
 }

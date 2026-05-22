@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.368793
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.540683
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Share Account</module_name>
 
@@ -233,12 +233,9 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
   "module_name": "Share Account",
   "components": {
     "Client_Detail_Create_Share_Account": {
-      "type": "button",
+      "type": "link",
       "element_name": "Create Share Account",
-      "on_click": "opens Share_Account_Application_Form",
-      "preconditions": [
-        "on Client Detail page"
-      ]
+      "on_click": "opens Share_Account_Application_Form"
     },
     "Share_Account_Application_Form": {
       "type": "form",
@@ -246,7 +243,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         "Share_Product": {
           "type": "dropdown",
           "required": false,
-          "on_change": "auto-populates default values into the form"
+          "on_change": "auto-populates default values from selected product"
         },
         "Submitted_On": {
           "type": "date",
@@ -256,8 +253,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "type": "number",
           "required": false,
           "constraints": [
-            "min = product.min_per_client",
-            "max = product.max_per_client"
+            "must be >= product.min and <= product.max per client"
           ]
         },
         "Application_Date": {
@@ -270,43 +266,42 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "options_source": "client_active_savings_accounts"
         },
         "External_ID": {
-          "type": "unspecified",
+          "type": "text",
           "required": false
         },
         "Charges": {
-          "type": "repeating_group",
-          "item_fields": {}
+          "type": "unspecified",
+          "fields": {}
         }
       },
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "creates share account in Submitted and Pending Approval status"
+          "on_success": "creates account in Submitted and Pending Approval status"
         }
       ]
     },
     "Share_Account_Detail_Actions": {
       "type": "state_bound_action_bar",
       "states": {
-        "Submitted and Pending Approval": {
+        "Pending": {
           "available_actions": [
             {
               "action_name": "Approve",
               "fields": {
                 "Approved_Shares": {
-                  "type": "number",
-                  "required": false
+                  "type": "number"
                 },
                 "Approved_Date": {
-                  "type": "date",
-                  "required": false
+                  "type": "date"
                 }
               },
-              "on_success": "sets account status to Approved"
+              "on_success": "changes status to Approved"
             },
             {
               "action_name": "Reject",
-              "on_success": "marks application as Rejected"
+              "fields": {},
+              "on_success": "changes status to Rejected"
             }
           ]
         },
@@ -314,25 +309,34 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "available_actions": [
             {
               "action_name": "Activate",
-              "on_success": "activates account and sets status to Active"
+              "fields": {},
+              "on_success": "changes status to Active"
             },
             {
               "action_name": "Undo Approval",
-              "on_success": "reverts status to Submitted and Pending Approval"
+              "fields": {},
+              "on_success": "reverts status to Pending"
             }
           ]
         },
         "Active": {
           "available_actions": [
             {
-              "action_name": "Apply Additional Shares"
+              "action_name": "Apply Additional Shares",
+              "fields": {}
             },
             {
               "action_name": "Redeem Shares",
-              "on_success": "calculates redemption_amount = selected_shares * current_unit_price and credits the linked savings account with the calculated amount"
+              "fields": {
+                "Shares_to_Redeem": {
+                  "type": "number"
+                }
+              },
+              "on_success": "redemption amount is calculated as Shares_to_Redeem multiplied by current unit price and credited to the linked savings account"
             },
             {
-              "action_name": "Close"
+              "action_name": "Close",
+              "fields": {}
             }
           ]
         }
@@ -398,7 +402,7 @@ The Share Account Detail page displays the share account number, product name, c
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:25] Test-Positive - LLM RESPONSE
+[22:33:24] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Share Account",
@@ -406,174 +410,174 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Share Account from Client Detail (happy path)",
+      "test_case": "Submit Share Account Application (happy path)",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Client Detail page is open for <target client>"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Client exists and is selected on the Client Detail page"
       ],
       "steps": [
-        "1. Click the 'Create Share Account' button on the Client Detail page",
-        "2. In the Share Account Application form select <Share Product> from the Share Product dropdown",
-        "3. Enter <Submitted On> in the Submitted On date field",
-        "4. Enter <Requested Shares> within the product min/max in the Requested Shares field",
-        "5. Enter <Application Date> in the Application Date field",
-        "6. Select <Savings Account for Charges> from the Savings Account for Charges dropdown",
-        "7. Enter <External ID> in the External ID field",
-        "8. (Optional) Click 'Add Row' in Charges and enter a <valid charge line item>",
-        "9. Click the 'Submit' button"
+        "1. Navigate to the Client Detail page for <client>",
+        "2. Click the 'Create Share Account' link",
+        "3. In the Share Account Application form, select <share product> from the Share Product dropdown",
+        "4. Enter <valid date> in Submitted On and <valid date> in Application Date",
+        "5. Enter <requested shares> in Requested Shares (within the product's min/max bounds)",
+        "6. Select <client active savings account> from Savings Account for Charges",
+        "7. Enter <external id> in External ID (optional)",
+        "8. Click Submit"
       ],
-      "expected_result": "Share Account Detail page opens for the new account showing the share account number, product name, client name and a status badge 'Submitted and Pending Approval' (on_success: creates share account in Submitted and Pending Approval status)",
+      "expected_result": "A new Share Account entry appears on the client's Share Accounts list with a status badge 'Submitted and Pending Approval'",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Selecting Share Product auto-populates product default values",
+      "test_case": "Selecting a Share Product auto-populates product default values in the application form",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Client Detail page is open for <target client>",
-        "Share Account Application form is open"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Client Detail page for <client> is open"
       ],
       "steps": [
-        "1. In the Share Account Application form select <Share Product> from the Share Product dropdown"
+        "1. Click the 'Create Share Account' link to open the Share Account Application form",
+        "2. Select <share product> from the Share Product dropdown"
       ],
-      "expected_result": "Relevant form fields are populated with the product's default values (for example, default Requested Shares and default Application Date appear in their respective fields)",
+      "expected_result": "Default values from the selected product are populated in the form (for example, product defaults such as min/max requested shares and unit price are displayed in the relevant fields)",
       "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Approve a Submitted share application",
+      "test_case": "Approve a Pending share account with Approved Shares and Approved Date",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Share Account Detail page is open for an account in 'Submitted and Pending Approval' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Pending status"
       ],
       "steps": [
-        "1. Click the 'Approve' action on the Share Account Detail page",
-        "2. In the Approve dialog enter <Approved_Shares> in the Approved Shares field",
-        "3. Enter <Approved_Date> in the Approved Date field",
+        "1. Navigate to the Share Account Detail page for <share account in Pending status>",
+        "2. Click the 'Approve' action in the action bar",
+        "3. Enter <approved shares> in Approved Shares and select <approved date> in Approved Date",
         "4. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "Status badge updates to 'Approved' on the Share Account Detail page and the Total approved shares value updates to reflect <Approved_Shares> (on_success: sets account status to Approved)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Approved' and the Total Approved Shares value shows <approved shares>",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Reject a Submitted share application",
+      "test_case": "Reject a Pending share account",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Share Account Detail page is open for an account in 'Submitted and Pending Approval' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Pending status"
       ],
       "steps": [
-        "1. Click the 'Reject' action on the Share Account Detail page",
-        "2. Click Confirm on the Reject dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Pending status>",
+        "2. Click the 'Reject' action in the action bar",
+        "3. Click Confirm on the Reject dialog"
       ],
-      "expected_result": "Status badge updates to 'Rejected' on the Share Account Detail page (on_success: marks application as Rejected)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Rejected'",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
       "test_case": "Activate an Approved share account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Approved' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Approved status"
       ],
       "steps": [
-        "1. Click the 'Activate' action on the Share Account Detail page",
-        "2. Click Confirm on the Activate dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Approved status>",
+        "2. Click the 'Activate' action in the action bar",
+        "3. Click Confirm on the Activate dialog"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Share Account Detail page (on_success: activates account and sets status to Active)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Undo Approval on an Approved share account",
+      "test_case": "Undo Approval on an Approved share account to revert to Pending",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Approved' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Approved status"
       ],
       "steps": [
-        "1. Click the 'Undo Approval' action on the Share Account Detail page",
-        "2. Click Confirm on the Undo Approval dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Approved status>",
+        "2. Click the 'Undo Approval' action in the action bar",
+        "3. Click Confirm on the Undo Approval dialog"
       ],
-      "expected_result": "Status badge reverts to 'Submitted and Pending Approval' on the Share Account Detail page (on_success: reverts status to Submitted and Pending Approval)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Pending'",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Redeem shares from an Active share account (calculation visible)",
+      "test_case": "Redeem shares from an Active share account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Active' status with a linked savings account <Linked Savings Account>",
-        "Share Account Detail page displays the current unit price as <current_unit_price>"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Active status and has a linked savings account",
+        "Share Account Detail page displays current unit price"
       ],
       "steps": [
-        "1. Click the 'Redeem Shares' action on the Share Account Detail page",
-        "2. Enter <selected_shares> to redeem in the Redeem dialog",
-        "3. Select <Linked Savings Account> as the destination savings account",
+        "1. Navigate to the Share Account Detail page for <share account in Active status>",
+        "2. Click the 'Redeem Shares' action in the action bar",
+        "3. Enter <shares to redeem> in Shares_to_Redeem",
         "4. Click Confirm on the Redeem dialog"
       ],
-      "expected_result": "A success notification is displayed and the Purchased Shares table contains a new row of Type 'Redemption' with Number of Shares = <selected_shares>, Unit Price = <current_unit_price>, and Amount equal to <selected_shares> * <current_unit_price>; on_success: calculates redemption_amount = selected_shares * current_unit_price and credits the linked savings account with the calculated amount",
+      "expected_result": "A new row appears in the Purchased Shares table with Type 'Redemption', Number of Shares = <shares to redeem>, Unit Price = <current unit price>, and Amount showing <shares to redeem> × <current unit price>",
       "priority": "high"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Apply additional shares (purchase more shares) on an Active account",
+      "test_case": "Apply Additional Shares (purchase more shares) on an Active account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Active' status",
-        "Share Account Detail page displays the current unit price as <current_unit_price>"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Active status"
       ],
       "steps": [
-        "1. Click the 'Apply Additional Shares' action on the Share Account Detail page",
-        "2. Enter <additional_shares> in the purchase dialog",
-        "3. Select <payment source> if prompted",
-        "4. Click Confirm on the purchase dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Active status>",
+        "2. Click the 'Apply Additional Shares' action in the action bar",
+        "3. In the Add Shares dialog, enter <number of shares to purchase> and complete the purchase flow",
+        "4. Click Confirm to submit the additional shares purchase"
       ],
-      "expected_result": "A success notification is displayed and the Purchased Shares table contains a new row of Type 'Purchase' with Number of Shares = <additional_shares>, Unit Price = <current_unit_price>, and Amount equal to <additional_shares> * <current_unit_price>",
+      "expected_result": "A new row appears in the Purchased Shares table with Type 'Purchase' and Number of Shares = <number of shares to purchase>",
       "priority": "medium"
     },
     {
       "tc_id": "P-009",
       "test_case": "Close an Active share account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Active' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Active status"
       ],
       "steps": [
-        "1. Click the 'Close' action on the Share Account Detail page",
-        "2. Click Confirm on the Close dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Active status>",
+        "2. Click the 'Close' action in the action bar",
+        "3. Click Confirm on the Close dialog"
       ],
-      "expected_result": "Status badge updates to 'Closed' on the Share Account Detail page",
-      "priority": "low"
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Closed'",
+      "priority": "medium"
     },
     {
       "tc_id": "P-010",
       "test_case": "Navigate Share Account Detail tabs: Purchased Shares, Dividends, Charges",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for any share account"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account detail page for <share account> is accessible"
       ],
       "steps": [
-        "1. Click the 'Purchased Shares' tab",
-        "2. Verify the Purchased Shares table is visible",
-        "3. Click the 'Dividends' tab",
-        "4. Verify the Dividends table is visible",
-        "5. Click the 'Charges' tab",
-        "6. Verify the Charges tab content is visible"
+        "1. Navigate to the Share Account Detail page for <share account>",
+        "2. Click the 'Purchased Shares' tab and verify the Purchased Shares table is displayed",
+        "3. Click the 'Dividends' tab and verify the Dividends table is displayed with columns Date, Amount Per Share, and Total Amount",
+        "4. Click the 'Charges' tab and verify the Charges section is displayed"
       ],
-      "expected_result": "Purchased Shares tab shows the Purchased Shares table with columns Date, Type, Number of Shares, Unit Price, Amount, and Status; Dividends tab shows the Dividends table with columns Date, Amount Per Share, and Total Amount; Charges tab displays the account's Charges section",
-      "priority": "low"
+      "expected_result": "Purchased Shares, Dividends, and Charges tabs each show their respective content: the Purchased Shares table is visible; the Dividends table displays columns Date, Amount Per Share, and Total Amount; and the Charges tab shows the Charges section",
+      "priority": "medium"
     }
   ],
   "summary": {
     "total": 10,
     "high_priority": 4,
-    "medium_priority": 4,
-    "low_priority": 2
+    "medium_priority": 6,
+    "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:19:25] Test-Positive - PARSED JSON
+[22:33:24] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Share Account",
@@ -581,168 +585,168 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Share Account from Client Detail (happy path)",
+      "test_case": "Submit Share Account Application (happy path)",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Client Detail page is open for <target client>"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Client exists and is selected on the Client Detail page"
       ],
       "steps": [
-        "1. Click the 'Create Share Account' button on the Client Detail page",
-        "2. In the Share Account Application form select <Share Product> from the Share Product dropdown",
-        "3. Enter <Submitted On> in the Submitted On date field",
-        "4. Enter <Requested Shares> within the product min/max in the Requested Shares field",
-        "5. Enter <Application Date> in the Application Date field",
-        "6. Select <Savings Account for Charges> from the Savings Account for Charges dropdown",
-        "7. Enter <External ID> in the External ID field",
-        "8. (Optional) Click 'Add Row' in Charges and enter a <valid charge line item>",
-        "9. Click the 'Submit' button"
+        "1. Navigate to the Client Detail page for <client>",
+        "2. Click the 'Create Share Account' link",
+        "3. In the Share Account Application form, select <share product> from the Share Product dropdown",
+        "4. Enter <valid date> in Submitted On and <valid date> in Application Date",
+        "5. Enter <requested shares> in Requested Shares (within the product's min/max bounds)",
+        "6. Select <client active savings account> from Savings Account for Charges",
+        "7. Enter <external id> in External ID (optional)",
+        "8. Click Submit"
       ],
-      "expected_result": "Share Account Detail page opens for the new account showing the share account number, product name, client name and a status badge 'Submitted and Pending Approval' (on_success: creates share account in Submitted and Pending Approval status)",
+      "expected_result": "A new Share Account entry appears on the client's Share Accounts list with a status badge 'Submitted and Pending Approval'",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Selecting Share Product auto-populates product default values",
+      "test_case": "Selecting a Share Product auto-populates product default values in the application form",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Client Detail page is open for <target client>",
-        "Share Account Application form is open"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Client Detail page for <client> is open"
       ],
       "steps": [
-        "1. In the Share Account Application form select <Share Product> from the Share Product dropdown"
+        "1. Click the 'Create Share Account' link to open the Share Account Application form",
+        "2. Select <share product> from the Share Product dropdown"
       ],
-      "expected_result": "Relevant form fields are populated with the product's default values (for example, default Requested Shares and default Application Date appear in their respective fields)",
+      "expected_result": "Default values from the selected product are populated in the form (for example, product defaults such as min/max requested shares and unit price are displayed in the relevant fields)",
       "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Approve a Submitted share application",
+      "test_case": "Approve a Pending share account with Approved Shares and Approved Date",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Share Account Detail page is open for an account in 'Submitted and Pending Approval' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Pending status"
       ],
       "steps": [
-        "1. Click the 'Approve' action on the Share Account Detail page",
-        "2. In the Approve dialog enter <Approved_Shares> in the Approved Shares field",
-        "3. Enter <Approved_Date> in the Approved Date field",
+        "1. Navigate to the Share Account Detail page for <share account in Pending status>",
+        "2. Click the 'Approve' action in the action bar",
+        "3. Enter <approved shares> in Approved Shares and select <approved date> in Approved Date",
         "4. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "Status badge updates to 'Approved' on the Share Account Detail page and the Total approved shares value updates to reflect <Approved_Shares> (on_success: sets account status to Approved)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Approved' and the Total Approved Shares value shows <approved shares>",
       "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Reject a Submitted share application",
+      "test_case": "Reject a Pending share account",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Share Account Detail page is open for an account in 'Submitted and Pending Approval' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Pending status"
       ],
       "steps": [
-        "1. Click the 'Reject' action on the Share Account Detail page",
-        "2. Click Confirm on the Reject dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Pending status>",
+        "2. Click the 'Reject' action in the action bar",
+        "3. Click Confirm on the Reject dialog"
       ],
-      "expected_result": "Status badge updates to 'Rejected' on the Share Account Detail page (on_success: marks application as Rejected)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Rejected'",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
       "test_case": "Activate an Approved share account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Approved' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Approved status"
       ],
       "steps": [
-        "1. Click the 'Activate' action on the Share Account Detail page",
-        "2. Click Confirm on the Activate dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Approved status>",
+        "2. Click the 'Activate' action in the action bar",
+        "3. Click Confirm on the Activate dialog"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Share Account Detail page (on_success: activates account and sets status to Active)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Undo Approval on an Approved share account",
+      "test_case": "Undo Approval on an Approved share account to revert to Pending",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Approved' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Approved status"
       ],
       "steps": [
-        "1. Click the 'Undo Approval' action on the Share Account Detail page",
-        "2. Click Confirm on the Undo Approval dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Approved status>",
+        "2. Click the 'Undo Approval' action in the action bar",
+        "3. Click Confirm on the Undo Approval dialog"
       ],
-      "expected_result": "Status badge reverts to 'Submitted and Pending Approval' on the Share Account Detail page (on_success: reverts status to Submitted and Pending Approval)",
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Pending'",
       "priority": "medium"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Redeem shares from an Active share account (calculation visible)",
+      "test_case": "Redeem shares from an Active share account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Active' status with a linked savings account <Linked Savings Account>",
-        "Share Account Detail page displays the current unit price as <current_unit_price>"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Active status and has a linked savings account",
+        "Share Account Detail page displays current unit price"
       ],
       "steps": [
-        "1. Click the 'Redeem Shares' action on the Share Account Detail page",
-        "2. Enter <selected_shares> to redeem in the Redeem dialog",
-        "3. Select <Linked Savings Account> as the destination savings account",
+        "1. Navigate to the Share Account Detail page for <share account in Active status>",
+        "2. Click the 'Redeem Shares' action in the action bar",
+        "3. Enter <shares to redeem> in Shares_to_Redeem",
         "4. Click Confirm on the Redeem dialog"
       ],
-      "expected_result": "A success notification is displayed and the Purchased Shares table contains a new row of Type 'Redemption' with Number of Shares = <selected_shares>, Unit Price = <current_unit_price>, and Amount equal to <selected_shares> * <current_unit_price>; on_success: calculates redemption_amount = selected_shares * current_unit_price and credits the linked savings account with the calculated amount",
+      "expected_result": "A new row appears in the Purchased Shares table with Type 'Redemption', Number of Shares = <shares to redeem>, Unit Price = <current unit price>, and Amount showing <shares to redeem> \u00d7 <current unit price>",
       "priority": "high"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Apply additional shares (purchase more shares) on an Active account",
+      "test_case": "Apply Additional Shares (purchase more shares) on an Active account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Active' status",
-        "Share Account Detail page displays the current unit price as <current_unit_price>"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Active status"
       ],
       "steps": [
-        "1. Click the 'Apply Additional Shares' action on the Share Account Detail page",
-        "2. Enter <additional_shares> in the purchase dialog",
-        "3. Select <payment source> if prompted",
-        "4. Click Confirm on the purchase dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Active status>",
+        "2. Click the 'Apply Additional Shares' action in the action bar",
+        "3. In the Add Shares dialog, enter <number of shares to purchase> and complete the purchase flow",
+        "4. Click Confirm to submit the additional shares purchase"
       ],
-      "expected_result": "A success notification is displayed and the Purchased Shares table contains a new row of Type 'Purchase' with Number of Shares = <additional_shares>, Unit Price = <current_unit_price>, and Amount equal to <additional_shares> * <current_unit_price>",
+      "expected_result": "A new row appears in the Purchased Shares table with Type 'Purchase' and Number of Shares = <number of shares to purchase>",
       "priority": "medium"
     },
     {
       "tc_id": "P-009",
       "test_case": "Close an Active share account",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for an account in 'Active' status"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account for <client> exists and is in Active status"
       ],
       "steps": [
-        "1. Click the 'Close' action on the Share Account Detail page",
-        "2. Click Confirm on the Close dialog"
+        "1. Navigate to the Share Account Detail page for <share account in Active status>",
+        "2. Click the 'Close' action in the action bar",
+        "3. Click Confirm on the Close dialog"
       ],
-      "expected_result": "Status badge updates to 'Closed' on the Share Account Detail page",
-      "priority": "low"
+      "expected_result": "Status badge on the Share Account Detail page updates to 'Closed'",
+      "priority": "medium"
     },
     {
       "tc_id": "P-010",
       "test_case": "Navigate Share Account Detail tabs: Purchased Shares, Dividends, Charges",
       "preconditions": [
-        "User logged in as <Staff>",
-        "Share Account Detail page is open for any share account"
+        "User logged in as <Staff user with Share Account permissions>",
+        "Share account detail page for <share account> is accessible"
       ],
       "steps": [
-        "1. Click the 'Purchased Shares' tab",
-        "2. Verify the Purchased Shares table is visible",
-        "3. Click the 'Dividends' tab",
-        "4. Verify the Dividends table is visible",
-        "5. Click the 'Charges' tab",
-        "6. Verify the Charges tab content is visible"
+        "1. Navigate to the Share Account Detail page for <share account>",
+        "2. Click the 'Purchased Shares' tab and verify the Purchased Shares table is displayed",
+        "3. Click the 'Dividends' tab and verify the Dividends table is displayed with columns Date, Amount Per Share, and Total Amount",
+        "4. Click the 'Charges' tab and verify the Charges section is displayed"
       ],
-      "expected_result": "Purchased Shares tab shows the Purchased Shares table with columns Date, Type, Number of Shares, Unit Price, Amount, and Status; Dividends tab shows the Dividends table with columns Date, Amount Per Share, and Total Amount; Charges tab displays the account's Charges section",
-      "priority": "low"
+      "expected_result": "Purchased Shares, Dividends, and Charges tabs each show their respective content: the Purchased Shares table is visible; the Dividends table displays columns Date, Amount Per Share, and Total Amount; and the Charges tab shows the Charges section",
+      "priority": "medium"
     }
   ],
   "summary": {
     "total": 10,
     "high_priority": 4,
-    "medium_priority": 4,
-    "low_priority": 2
+    "medium_priority": 6,
+    "low_priority": 0
   }
 }

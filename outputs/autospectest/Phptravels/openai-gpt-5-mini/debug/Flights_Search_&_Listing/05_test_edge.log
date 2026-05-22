@@ -1,0 +1,654 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:54:00.265501
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Flights Search & Listing</module_name>
+
+<ast>
+{
+  "module_name": "Flights Search & Listing",
+  "components": {
+    "Flights_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Trip_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "One-way",
+            "Round-trip",
+            "Multi-city"
+          ]
+        },
+        "Departure_City": {
+          "type": "search",
+          "required": true
+        },
+        "Arrival_City": {
+          "type": "search",
+          "required": true
+        },
+        "Departure_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Return_Date": {
+          "type": "date",
+          "required": false,
+          "visible_when": "Trip_Type == Round-trip"
+        },
+        "Passenger_Count": {
+          "type": "group",
+          "fields": {
+            "Adults": {
+              "type": "number",
+              "required": true
+            },
+            "Children": {
+              "type": "number",
+              "required": false
+            },
+            "Infants": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        "Cabin_Class": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Economy",
+            "Premium Economy",
+            "Business",
+            "First"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to listing page"
+        }
+      ]
+    },
+    "Sidebar_Filters": {
+      "type": "form",
+      "fields": {
+        "Airlines": {
+          "type": "dropdown",
+          "required": false,
+          "multiple": true
+        },
+        "Number_of_Stops": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Non-stop",
+            "1 stop",
+            "2+ stops"
+          ]
+        },
+        "Departure_Time_Range": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Arrival_Time_Range": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Price_Range": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "actions": [
+        {
+          "element_name": "Apply Filters",
+          "on_success": "filters applied to listing"
+        },
+        {
+          "element_name": "Clear Filters",
+          "on_success": "filters cleared"
+        }
+      ]
+    },
+    "Flights_Listing": {
+      "type": "data_table",
+      "row_expandable": true,
+      "on_row_expand": "reveals additional flight details (baggage allowance, fare rules, seat availability) as passive display",
+      "row_actions": [
+        {
+          "action_name": "Select",
+          "on_success": "flight selected"
+        }
+      ],
+      "sorting_controls": {
+        "type": "dropdown",
+        "options": [
+          "Price",
+          "Duration",
+          "Departure Time",
+          "Arrival Time"
+        ]
+      },
+      "sortable_columns": [
+        "Price",
+        "Duration",
+        "Departure Time",
+        "Arrival Time"
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The flights search form collects trip type (One-way, Round-trip, Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, First). On success, users are redirected to the listing page, where each result shows airline logo and name, departure and arrival times and airports, total duration, number of stops (Non-stop, 1 stop, 2+ stops), price per passenger, and a Select button. Expanding a result shows baggage allowance, fare rules, and seat availability. Sidebar filters include airlines, number of stops, departure and arrival time ranges, and price range. Results can be sorted by price, duration, departure time, or arrival time.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:55:54] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Flights Search & Listing",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Round-trip reveals Return_Date and accepts same-day return",
+      "preconditions": [
+        "Flights_Search_Form is visible",
+        "Trip_Type field exists (type: dropdown)",
+        "Departure_Date and Return_Date fields exist (type: date); Return_Date has visible_when = Trip_Type == Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter <today> in Departure_Date",
+        "3. Enter <today> in Return_Date (same-day return)",
+        "4. Fill required city search fields with valid entries",
+        "5. Click Search"
+      ],
+      "expected_result": "Search submits successfully; user is redirected to the listing page (redirects to listing page) — same-day Return_Date is accepted and search completes (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Return_Date value is not applied after switching Trip_Type from Round-trip to One-way",
+      "preconditions": [
+        "Flights_Search_Form is visible",
+        "Return_Date has visible_when = Trip_Type == Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter <valid date> in Departure_Date",
+        "3. Enter <valid date after Departure_Date> in Return_Date",
+        "4. Switch Trip_Type = One-way (causing Return_Date to become hidden)",
+        "5. Fill required city search fields with valid entries",
+        "6. Click Search"
+      ],
+      "expected_result": "Search submits successfully and returns results for a one-way search (succeeds); the previously-entered Return_Date is not applied in the search because the field was hidden (its value is ignored/cleared).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Departure_Date set to a far-future date is accepted by the search",
+      "preconditions": [
+        "Flights_Search_Form Departure_Date is type: date"
+      ],
+      "steps": [
+        "1. Enter <far future date> in Departure_Date",
+        "2. Fill required city search fields with valid entries",
+        "3. Click Search"
+      ],
+      "expected_result": "Search submits successfully and the listing page loads (succeeds); listing page either displays matching flights for the far-future date or displays a 'No flights found' passive message — the search action itself completes successfully.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Departure_Date set to a past date (yesterday) is rejected",
+      "preconditions": [
+        "Flights_Search_Form Departure_Date is type: date"
+      ],
+      "steps": [
+        "1. Enter <yesterday> in Departure_Date",
+        "2. Fill required city search fields with valid entries",
+        "3. Click Search"
+      ],
+      "expected_result": "Search is blocked / error shown: an inline error is displayed on the Departure_Date field indicating the date is in the past and the search is not submitted (is blocked / error shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click of Search only triggers one search/redirect",
+      "preconditions": [
+        "Flights_Search_Form has a Search submit_actions element that redirects to listing page"
+      ],
+      "steps": [
+        "1. Fill required fields in Flights_Search_Form (Departure_City, Arrival_City, Departure_Date)",
+        "2. Double-click the Search button rapidly (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one search submission is processed; only one redirect to the listing page occurs and only one set of results load (Second submission attempt is blocked); no duplicate navigations or duplicated result sets appear (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "state_edge",
+      "test_case": "Rapid expand/collapse of a listing row remains stable and shows single details panel",
+      "preconditions": [
+        "Flights_Listing rows are row_expandable (reveals additional flight details)"
+      ],
+      "steps": [
+        "1. From a populated Flights_Listing, identify a single row",
+        "2. Click to expand the row (reveal details)",
+        "3. Immediately collapse the row",
+        "4. Immediately expand the row again (repeat expand/collapse rapidly multiple times)"
+      ],
+      "expected_result": "Rapid consecutive expand/collapse actions succeed; the details panel shows the expected baggage allowance, fare rules, and seat availability once with no duplicated sections or lingering artifacts (succeeds).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click Select on a flight only triggers a single selection action",
+      "preconditions": [
+        "Flights_Listing has row_actions with action_name = Select"
+      ],
+      "steps": [
+        "1. On a Flights_Listing row, click the Select button twice rapidly"
+      ],
+      "expected_result": "Only one selection action is processed; user-visible confirmation of selection appears only once and subsequent rapid clicks are ignored (Second selection attempt is blocked); no duplicate selection confirmations are shown (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "input_edge",
+      "test_case": "Leading/trailing whitespace in Departure_City is trimmed before search",
+      "preconditions": [
+        "Departure_City is type: search (free-text/autocomplete field)"
+      ],
+      "steps": [
+        "1. Enter '  <valid city>  ' (leading and trailing whitespace around a valid city token) into Departure_City",
+        "2. Fill Arrival_City and Departure_Date with valid entries",
+        "3. Click Search"
+      ],
+      "expected_result": "Search submits successfully; the Departure_City input is trimmed of leading/trailing whitespace before submission and the search executes for '<valid city>' (succeeds).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 4,
+    "input_edge": 1,
+    "interaction_edge": 2,
+    "state_edge": 1,
+    "data_edge": 0,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[22:55:54] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Flights Search & Listing",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Round-trip reveals Return_Date and accepts same-day return",
+      "preconditions": [
+        "Flights_Search_Form is visible",
+        "Trip_Type field exists (type: dropdown)",
+        "Departure_Date and Return_Date fields exist (type: date); Return_Date has visible_when = Trip_Type == Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter <today> in Departure_Date",
+        "3. Enter <today> in Return_Date (same-day return)",
+        "4. Fill required city search fields with valid entries",
+        "5. Click Search"
+      ],
+      "expected_result": "Search submits successfully; user is redirected to the listing page (redirects to listing page) \u2014 same-day Return_Date is accepted and search completes (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Return_Date value is not applied after switching Trip_Type from Round-trip to One-way",
+      "preconditions": [
+        "Flights_Search_Form is visible",
+        "Return_Date has visible_when = Trip_Type == Round-trip"
+      ],
+      "steps": [
+        "1. Select Trip_Type = Round-trip",
+        "2. Enter <valid date> in Departure_Date",
+        "3. Enter <valid date after Departure_Date> in Return_Date",
+        "4. Switch Trip_Type = One-way (causing Return_Date to become hidden)",
+        "5. Fill required city search fields with valid entries",
+        "6. Click Search"
+      ],
+      "expected_result": "Search submits successfully and returns results for a one-way search (succeeds); the previously-entered Return_Date is not applied in the search because the field was hidden (its value is ignored/cleared).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Departure_Date set to a far-future date is accepted by the search",
+      "preconditions": [
+        "Flights_Search_Form Departure_Date is type: date"
+      ],
+      "steps": [
+        "1. Enter <far future date> in Departure_Date",
+        "2. Fill required city search fields with valid entries",
+        "3. Click Search"
+      ],
+      "expected_result": "Search submits successfully and the listing page loads (succeeds); listing page either displays matching flights for the far-future date or displays a 'No flights found' passive message \u2014 the search action itself completes successfully.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Departure_Date set to a past date (yesterday) is rejected",
+      "preconditions": [
+        "Flights_Search_Form Departure_Date is type: date"
+      ],
+      "steps": [
+        "1. Enter <yesterday> in Departure_Date",
+        "2. Fill required city search fields with valid entries",
+        "3. Click Search"
+      ],
+      "expected_result": "Search is blocked / error shown: an inline error is displayed on the Departure_Date field indicating the date is in the past and the search is not submitted (is blocked / error shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click of Search only triggers one search/redirect",
+      "preconditions": [
+        "Flights_Search_Form has a Search submit_actions element that redirects to listing page"
+      ],
+      "steps": [
+        "1. Fill required fields in Flights_Search_Form (Departure_City, Arrival_City, Departure_Date)",
+        "2. Double-click the Search button rapidly (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one search submission is processed; only one redirect to the listing page occurs and only one set of results load (Second submission attempt is blocked); no duplicate navigations or duplicated result sets appear (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "state_edge",
+      "test_case": "Rapid expand/collapse of a listing row remains stable and shows single details panel",
+      "preconditions": [
+        "Flights_Listing rows are row_expandable (reveals additional flight details)"
+      ],
+      "steps": [
+        "1. From a populated Flights_Listing, identify a single row",
+        "2. Click to expand the row (reveal details)",
+        "3. Immediately collapse the row",
+        "4. Immediately expand the row again (repeat expand/collapse rapidly multiple times)"
+      ],
+      "expected_result": "Rapid consecutive expand/collapse actions succeed; the details panel shows the expected baggage allowance, fare rules, and seat availability once with no duplicated sections or lingering artifacts (succeeds).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click Select on a flight only triggers a single selection action",
+      "preconditions": [
+        "Flights_Listing has row_actions with action_name = Select"
+      ],
+      "steps": [
+        "1. On a Flights_Listing row, click the Select button twice rapidly"
+      ],
+      "expected_result": "Only one selection action is processed; user-visible confirmation of selection appears only once and subsequent rapid clicks are ignored (Second selection attempt is blocked); no duplicate selection confirmations are shown (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "input_edge",
+      "test_case": "Leading/trailing whitespace in Departure_City is trimmed before search",
+      "preconditions": [
+        "Departure_City is type: search (free-text/autocomplete field)"
+      ],
+      "steps": [
+        "1. Enter '  <valid city>  ' (leading and trailing whitespace around a valid city token) into Departure_City",
+        "2. Fill Arrival_City and Departure_Date with valid entries",
+        "3. Click Search"
+      ],
+      "expected_result": "Search submits successfully; the Departure_City input is trimmed of leading/trailing whitespace before submission and the search executes for '<valid city>' (succeeds).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 4,
+    "input_edge": 1,
+    "interaction_edge": 2,
+    "state_edge": 1,
+    "data_edge": 0,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}

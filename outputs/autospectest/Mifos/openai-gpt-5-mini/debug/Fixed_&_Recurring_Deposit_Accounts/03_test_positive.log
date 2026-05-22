@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.369082
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.541814
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Fixed & Recurring Deposit Accounts</module_name>
 
@@ -232,16 +232,16 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Fixed & Recurring Deposit Accounts",
   "components": {
-    "Client_Detail_Page": {
-      "type": "page",
+    "Client_Detail_Actions": {
+      "type": "action_bar",
       "available_actions": [
         {
           "action_name": "Create Fixed Deposit Account",
-          "element_type": "button"
+          "on_success": "opens Fixed Deposit Account creation form"
         },
         {
           "action_name": "Create Recurring Deposit Account",
-          "element_type": "button"
+          "on_success": "opens Recurring Deposit Account creation form"
         }
       ]
     },
@@ -250,28 +250,22 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "fields": {
         "Fixed_Deposit_Product": {
           "type": "dropdown",
-          "required": false,
+          "required": true,
           "constraints": [
-            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
+            "interest rate determined by selected product's Interest Rate Chart (tiered by deposit amount and term length)"
           ]
         },
         "Deposit_Amount": {
           "type": "number",
-          "required": false,
-          "constraints": [
-            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
-          ]
+          "required": true
         },
-        "Deposit_Period_Number": {
+        "Deposit_Period_Value": {
           "type": "number",
-          "required": false,
-          "constraints": [
-            "term length used with product's Interest Rate Chart to determine applicable rate"
-          ]
+          "required": true
         },
         "Deposit_Period_Unit": {
           "type": "dropdown",
-          "required": false,
+          "required": true,
           "options": [
             "Days",
             "Months",
@@ -280,55 +274,20 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         },
         "Maturity_Instructions": {
           "type": "dropdown",
-          "required": false,
+          "required": true,
           "options": [
             "Transfer to Savings",
             "Re-Invest",
             "Re-Invest Principal and Transfer Interest"
           ]
         }
-      }
-    },
-    "RD_Account_Creation_Form": {
-      "type": "form",
-      "fields": {
-        "Recurring_Deposit_Product": {
-          "type": "dropdown",
-          "required": false,
-          "constraints": [
-            "interest rates determined by the selected product's Interest Rate Chart; tiered rates based on deposit amount and term length"
-          ]
-        },
-        "Mandatory_Deposit_Amount_per_installment": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "subject to tiers defined in the selected product's Interest Rate Chart (based on deposit amount and term length)"
-          ]
-        },
-        "Deposit_Period": {
-          "type": "number",
-          "required": false,
-          "constraints": [
-            "term length used with product's Interest Rate Chart to determine applicable rate"
-          ]
-        },
-        "Deposit_Frequency": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Daily",
-            "Weekly",
-            "Monthly",
-            "Quarterly",
-            "Yearly"
-          ]
-        },
-        "Expected_First_Deposit_On": {
-          "type": "date",
-          "required": false
+      },
+      "submit_actions": [
+        {
+          "element_name": "create_action",
+          "on_success": "creates Fixed Deposit account"
         }
-      }
+      ]
     },
     "FD_Account_Detail_Tabs": {
       "type": "tab_container",
@@ -351,20 +310,66 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "type": "action_bar",
       "available_actions": [
         {
-          "action_name": "Approve",
-          "element_type": "button"
+          "action_name": "Approve"
         },
         {
-          "action_name": "Activate",
-          "element_type": "button"
+          "action_name": "Activate"
         },
         {
-          "action_name": "Premature Close",
-          "element_type": "button"
+          "action_name": "Premature Close"
         },
         {
-          "action_name": "Close on Maturity",
-          "element_type": "button"
+          "action_name": "Close on Maturity"
+        }
+      ]
+    },
+    "RD_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Recurring_Deposit_Product": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [
+            "interest rate determined by selected product's Interest Rate Chart (tiered by deposit amount and term length)"
+          ]
+        },
+        "Mandatory_Deposit_Amount": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Value": {
+          "type": "number",
+          "required": true
+        },
+        "Deposit_Period_Unit": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Days",
+            "Months",
+            "Years"
+          ]
+        },
+        "Deposit_Frequency": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Daily",
+            "Weekly",
+            "Monthly",
+            "Quarterly",
+            "Yearly"
+          ]
+        },
+        "Expected_First_Deposit_On": {
+          "type": "date",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "create_action",
+          "on_success": "creates Recurring Deposit account"
         }
       ]
     },
@@ -389,24 +394,19 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "type": "action_bar",
       "available_actions": [
         {
-          "action_name": "Approve",
-          "element_type": "button"
+          "action_name": "Approve"
         },
         {
-          "action_name": "Activate",
-          "element_type": "button"
+          "action_name": "Activate"
         },
         {
-          "action_name": "Deposit",
-          "element_type": "button"
+          "action_name": "Deposit"
         },
         {
-          "action_name": "Premature Close",
-          "element_type": "button"
+          "action_name": "Premature Close"
         },
         {
-          "action_name": "Close on Maturity",
-          "element_type": "button"
+          "action_name": "Close on Maturity"
         }
       ]
     }
@@ -426,7 +426,7 @@ Fixed Deposit and Recurring Deposit accounts are created from the Client Detail 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:31] Test-Positive - LLM RESPONSE
+[22:33:52] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Fixed & Recurring Deposit Accounts",
@@ -434,179 +434,236 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Fixed Deposit account — happy path shows interest and maturity calculation",
-      "preconditions": ["User logged in as <Bank Officer>", "Client Detail page is open for <client>"],
-      "steps": [
-        "1. Click 'Create Fixed Deposit Account' on the Client Detail page",
-        "2. Select <Fixed Deposit Product> from the Fixed Deposit Product dropdown",
-        "3. Enter <Deposit Amount> in the Deposit Amount field",
-        "4. Enter <Deposit Period Number> in the Deposit Period field",
-        "5. Select <Deposit Period Unit> from the Deposit Period Unit dropdown",
-        "6. Select <Maturity Instruction> from the Maturity Instructions dropdown",
-        "7. Click Create (or Submit) to create the Fixed Deposit account"
+      "test_case": "Open Fixed Deposit Account creation form from Client Detail",
+      "preconditions": [
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
-      "expected_result": "Fixed Deposit Account detail page is displayed for the new account showing the entered Deposit Amount; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity Amount and Maturity Date are displayed and update to reflect the entered Deposit Amount and term; Status badge on the detail page shows 'Pending'",
-      "priority": "high"
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Click the 'Create Fixed Deposit Account' action in the Client Detail action bar"
+      ],
+      "expected_result": "Fixed Deposit Account creation form is displayed showing fields: Fixed Deposit Product (dropdown), Deposit Amount (number), Deposit Period Value (number), Deposit Period Unit (Days/Months/Years), and Maturity Instructions (dropdown)",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create Recurring Deposit account — happy path shows interest, schedule and maturity details",
-      "preconditions": ["User logged in as <Bank Officer>", "Client Detail page is open for <client>"],
-      "steps": [
-        "1. Click 'Create Recurring Deposit Account' on the Client Detail page",
-        "2. Select <Recurring Deposit Product> from the Recurring Deposit Product dropdown",
-        "3. Enter <Mandatory Deposit Amount per installment> in the Mandatory Deposit Amount per installment field",
-        "4. Enter <Deposit Period> in the Deposit Period field",
-        "5. Select <Deposit Frequency> from the Deposit Frequency dropdown",
-        "6. Enter <Expected First Deposit On> in the Expected First Deposit On date field",
-        "7. Click Create (or Submit) to create the Recurring Deposit account"
+      "test_case": "Create Fixed Deposit account (happy path)",
+      "preconditions": [
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
-      "expected_result": "Recurring Deposit Account detail page is displayed for the new account showing the entered Mandatory Installment Amount, Deposit Frequency, and Expected First Deposit On date; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity details including Maturity Amount and Maturity Date are displayed; Status badge on the detail page shows 'Pending'",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Fixed Deposit Account' to open the FD creation form",
+        "3. Select <Fixed_Deposit_Product> from the Fixed Deposit Product dropdown",
+        "4. Enter <Deposit_Amount> in the Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> in the Deposit Period Value field",
+        "6. Select <Deposit_Period_Unit> from the Deposit Period Unit dropdown",
+        "7. Select <Maturity_Instructions> from the Maturity Instructions dropdown",
+        "8. Click the Create button (create_action)"
+      ],
+      "expected_result": "Fixed Deposit Account Detail page is displayed showing visible summary fields including 'Deposit Amount: <Deposit_Amount>', 'Maturity Date', 'Maturity Amount', 'Interest Rate' and the action buttons Approve, Activate, Premature Close, and Close on Maturity",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Navigate Fixed Deposit account detail tabs (Summary, Transactions, Charges)",
-      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account>"],
-      "steps": [
-        "1. Click the 'Summary' tab on the FD Account detail page",
-        "2. Verify Summary panel is visible",
-        "3. Click the 'Transactions' tab",
-        "4. Verify Transactions panel is visible",
-        "5. Click the 'Charges' tab",
-        "6. Verify Charges panel is visible"
+      "test_case": "FD creation form shows applicable interest rate after product, amount and period are entered",
+      "preconditions": [
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>",
+        "A Fixed Deposit product has an Interest Rate Chart configured"
       ],
-      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Fixed Deposit Account' to open the FD creation form",
+        "3. Select <Fixed_Deposit_Product> from the Fixed Deposit Product dropdown",
+        "4. Enter <Deposit_Amount> in the Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> in the Deposit Period Value field and select <Deposit_Period_Unit>"
+      ],
+      "expected_result": "The FD creation form displays the applicable interest rate derived from the selected product's Interest Rate Chart for the entered amount and period (displayed as 'Interest Rate: <calculated_rate>')",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Navigate Recurring Deposit account detail tabs (Summary, Transactions, Charges)",
-      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account>"],
-      "steps": [
-        "1. Click the 'Summary' tab on the RD Account detail page",
-        "2. Verify Summary panel is visible",
-        "3. Click the 'Transactions' tab",
-        "4. Verify Transactions panel is visible",
-        "5. Click the 'Charges' tab",
-        "6. Verify Charges panel is visible"
+      "test_case": "Navigate tabs on Fixed Deposit Account detail page",
+      "preconditions": [
+        "User logged in as <Bank Staff>",
+        "A Fixed Deposit account exists for <client>"
       ],
-      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit schedule and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
-      "priority": "medium"
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Summary' tab",
+        "4. Click the 'Transactions' tab",
+        "5. Click the 'Charges' tab"
+      ],
+      "expected_result": "Each tab displays its content when selected: 'Summary' shows the account summary section; 'Transactions' shows the transactions list for the FD account; 'Charges' shows the charges list for the FD account",
+      "priority": "low"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Approve Fixed Deposit account from Pending to Approved",
-      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> in 'Pending' status"],
-      "steps": [
-        "1. Click the 'Approve' button on the FD Account detail page",
-        "2. Click Confirm on the Approve dialog"
+      "test_case": "Approve Fixed Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Staff with approval permission>",
+        "A Fixed Deposit account exists for <client> in status <Pending Approval>"
       ],
-      "expected_result": "Status badge updates to 'Approved' on the Fixed Deposit Account Detail page",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Approve' action in the account action bar",
+        "4. Click Confirm on the Approve dialog"
+      ],
+      "expected_result": "Status badge on the Fixed Deposit Account Detail page updates to 'Approved' and the Approve action is no longer visible while the Activate action is visible",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Activate Fixed Deposit account after approval",
-      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> in 'Approved' status"],
-      "steps": [
-        "1. Click the 'Activate' button on the FD Account detail page",
-        "2. Click Confirm on the Activate dialog"
+      "test_case": "Activate Fixed Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Staff with activation permission>",
+        "A Fixed Deposit account exists for <client> in status <Approved>"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Fixed Deposit Account Detail page",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Activate' action in the account action bar",
+        "4. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Status badge on the Fixed Deposit Account Detail page updates to 'Active' and the Activate action is no longer visible while Premature Close and Close on Maturity actions are visible",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Prematurely close an Active Fixed Deposit account",
-      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> in 'Active' status"],
-      "steps": [
-        "1. Click the 'Premature Close' button on the FD Account detail page",
-        "2. Click Confirm on the Premature Close dialog"
+      "test_case": "Open Recurring Deposit Account creation form from Client Detail",
+      "preconditions": [
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
-      "expected_result": "Status badge updates to 'Prematurely Closed' on the Fixed Deposit Account Detail page and the Transactions tab shows a transaction row recording the premature closure",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Click the 'Create Recurring Deposit Account' action in the Client Detail action bar"
+      ],
+      "expected_result": "Recurring Deposit Account creation form is displayed showing fields: Recurring Deposit Product (dropdown), Mandatory Deposit Amount (number), Deposit Period Value (number), Deposit Period Unit (Days/Months/Years), Deposit Frequency (Daily/Weekly/Monthly/Quarterly/Yearly), and Expected First Deposit On (date)",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Close Fixed Deposit account on maturity",
-      "preconditions": ["User logged in as <Bank Officer>", "Fixed Deposit Account detail page is open for <FD account> that has reached its maturity date"],
-      "steps": [
-        "1. Click the 'Close on Maturity' button on the FD Account detail page",
-        "2. Click Confirm on the Close on Maturity dialog"
+      "test_case": "Create Recurring Deposit account (happy path)",
+      "preconditions": [
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
-      "expected_result": "Status badge updates to 'Closed on Maturity' on the Fixed Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-009",
-      "test_case": "Approve Recurring Deposit account from Pending to Approved",
-      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Pending' status"],
       "steps": [
-        "1. Click the 'Approve' button on the RD Account detail page",
-        "2. Click Confirm on the Approve dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Recurring Deposit Account' to open the RD creation form",
+        "3. Select <Recurring_Deposit_Product> from the Recurring Deposit Product dropdown",
+        "4. Enter <Mandatory_Deposit_Amount> in the Mandatory Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> in the Deposit Period Value field and select <Deposit_Period_Unit>",
+        "6. Select <Deposit_Frequency> from the Deposit Frequency dropdown",
+        "7. Enter <Expected_First_Deposit_On> in the Expected First Deposit On date field",
+        "8. Click the Create button (create_action)"
       ],
-      "expected_result": "Status badge updates to 'Approved' on the Recurring Deposit Account Detail page",
+      "expected_result": "Recurring Deposit Account Detail page is displayed showing a deposit schedule preview, 'Total Deposits Made', maturity details including 'Maturity Date' and 'Maturity Amount', the applicable 'Interest Rate', and the action buttons Approve, Activate, Deposit, Premature Close, and Close on Maturity",
       "priority": "high"
     },
     {
-      "tc_id": "P-010",
-      "test_case": "Activate Recurring Deposit account after approval",
-      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Approved' status"],
-      "steps": [
-        "1. Click the 'Activate' button on the RD Account detail page",
-        "2. Click Confirm on the Activate dialog"
+      "tc_id": "P-009",
+      "test_case": "RD creation form shows applicable interest rate after product and amount/frequency are entered",
+      "preconditions": [
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>",
+        "A Recurring Deposit product has an Interest Rate Chart configured"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Recurring Deposit Account Detail page",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Recurring Deposit Account' to open the RD creation form",
+        "3. Select <Recurring_Deposit_Product> from the Recurring Deposit Product dropdown",
+        "4. Enter <Mandatory_Deposit_Amount> in the Mandatory Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> and select <Deposit_Period_Unit>, and select <Deposit_Frequency>"
+      ],
+      "expected_result": "The RD creation form displays the applicable interest rate derived from the selected product's Interest Rate Chart for the entered amount, period and frequency (displayed as 'Interest Rate: <calculated_rate>')",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Make a Deposit on a Recurring Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Staff with transaction permission>",
+        "A Recurring Deposit account exists for <client> in status <Active>"
+      ],
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Recurring Deposit Account Detail page for <Recurring_Deposit_Account>",
+        "3. Click the 'Deposit' action in the account action bar",
+        "4. In the Deposit dialog, enter <deposit_amount> in the Amount field",
+        "5. Click Confirm on the Deposit dialog",
+        "6. Click the 'Transactions' tab to view transactions"
+      ],
+      "expected_result": "Transactions tab shows a new transaction row for the deposit with amount '<deposit_amount>' and the 'Total Deposits Made' value on the RD Account Detail page visibly updates to include '<deposit_amount>'",
       "priority": "high"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Make a deposit on an Active Recurring Deposit account and verify transactions and total",
-      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"],
-      "steps": [
-        "1. Click the 'Deposit' button on the RD Account detail page to open the Deposit dialog",
-        "2. Enter <valid deposit amount> in the Deposit dialog",
-        "3. Click Confirm on the Deposit dialog",
-        "4. Click the 'Transactions' tab to view transactions",
-        "5. Click the 'Summary' tab to view updated totals"
+      "test_case": "Navigate tabs on Recurring Deposit Account detail page",
+      "preconditions": [
+        "User logged in as <Bank Staff>",
+        "A Recurring Deposit account exists for <client>"
       ],
-      "expected_result": "A new transaction row appears in the Transactions tab showing the deposit of the entered amount; the 'Total deposits made' value on the Summary panel updates to include the new deposit",
-      "priority": "medium"
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Recurring Deposit Account Detail page for <Recurring_Deposit_Account>",
+        "3. Click the 'Summary' tab",
+        "4. Click the 'Transactions' tab",
+        "5. Click the 'Charges' tab"
+      ],
+      "expected_result": "Each tab displays its content when selected: 'Summary' shows the account summary and deposit schedule; 'Transactions' shows the transactions list for the RD account; 'Charges' shows the charges list for the RD account",
+      "priority": "low"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Prematurely close an Active Recurring Deposit account",
-      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"],
-      "steps": [
-        "1. Click the 'Premature Close' button on the RD Account detail page",
-        "2. Click Confirm on the Premature Close dialog"
+      "test_case": "Premature close an Active Fixed Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Staff with closure permission>",
+        "A Fixed Deposit account exists for <client> in status <Active>"
       ],
-      "expected_result": "Status badge updates to 'Prematurely Closed' on the Recurring Deposit Account Detail page and the Transactions tab shows a transaction recording the premature closure",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Premature Close' action in the account action bar",
+        "4. Click Confirm on the Premature Close dialog"
+      ],
+      "expected_result": "Status badge on the Fixed Deposit Account Detail page updates to 'Closed' and the Premature Close action is no longer visible",
       "priority": "medium"
     },
     {
       "tc_id": "P-013",
-      "test_case": "Close Recurring Deposit account on maturity",
-      "preconditions": ["User logged in as <Bank Officer>", "Recurring Deposit Account detail page is open for <RD account> that has reached its maturity date"],
-      "steps": [
-        "1. Click the 'Close on Maturity' button on the RD Account detail page",
-        "2. Click Confirm on the Close on Maturity dialog"
+      "test_case": "Close on maturity for an Active Recurring Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Staff with closure permission>",
+        "A Recurring Deposit account exists for <client> in status <Active> and has reached maturity",
+        "Maturity date for the account is <maturity_date>"
       ],
-      "expected_result": "Status badge updates to 'Closed on Maturity' on the Recurring Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Recurring Deposit Account Detail page for <Recurring_Deposit_Account>",
+        "3. Click the 'Close on Maturity' action in the account action bar",
+        "4. Click Confirm on the Close on Maturity dialog"
+      ],
+      "expected_result": "Status badge on the Recurring Deposit Account Detail page updates to 'Closed' and the Close on Maturity action is no longer visible",
       "priority": "medium"
     }
   ],
   "summary": {
     "total": 13,
-    "high_priority": 6,
-    "medium_priority": 7,
-    "low_priority": 0
+    "high_priority": 5,
+    "medium_priority": 6,
+    "low_priority": 2
   }
 }
 
 ------------------------------------------------------------
-[16:19:31] Test-Positive - PARSED JSON
+[22:33:52] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Fixed & Recurring Deposit Accounts",
@@ -614,212 +671,230 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create Fixed Deposit account \u2014 happy path shows interest and maturity calculation",
+      "test_case": "Open Fixed Deposit Account creation form from Client Detail",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Client Detail page is open for <client>"
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
       "steps": [
-        "1. Click 'Create Fixed Deposit Account' on the Client Detail page",
-        "2. Select <Fixed Deposit Product> from the Fixed Deposit Product dropdown",
-        "3. Enter <Deposit Amount> in the Deposit Amount field",
-        "4. Enter <Deposit Period Number> in the Deposit Period field",
-        "5. Select <Deposit Period Unit> from the Deposit Period Unit dropdown",
-        "6. Select <Maturity Instruction> from the Maturity Instructions dropdown",
-        "7. Click Create (or Submit) to create the Fixed Deposit account"
+        "1. Open the Client Detail page for <client>",
+        "2. Click the 'Create Fixed Deposit Account' action in the Client Detail action bar"
       ],
-      "expected_result": "Fixed Deposit Account detail page is displayed for the new account showing the entered Deposit Amount; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity Amount and Maturity Date are displayed and update to reflect the entered Deposit Amount and term; Status badge on the detail page shows 'Pending'",
-      "priority": "high"
+      "expected_result": "Fixed Deposit Account creation form is displayed showing fields: Fixed Deposit Product (dropdown), Deposit Amount (number), Deposit Period Value (number), Deposit Period Unit (Days/Months/Years), and Maturity Instructions (dropdown)",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create Recurring Deposit account \u2014 happy path shows interest, schedule and maturity details",
+      "test_case": "Create Fixed Deposit account (happy path)",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Client Detail page is open for <client>"
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
       "steps": [
-        "1. Click 'Create Recurring Deposit Account' on the Client Detail page",
-        "2. Select <Recurring Deposit Product> from the Recurring Deposit Product dropdown",
-        "3. Enter <Mandatory Deposit Amount per installment> in the Mandatory Deposit Amount per installment field",
-        "4. Enter <Deposit Period> in the Deposit Period field",
-        "5. Select <Deposit Frequency> from the Deposit Frequency dropdown",
-        "6. Enter <Expected First Deposit On> in the Expected First Deposit On date field",
-        "7. Click Create (or Submit) to create the Recurring Deposit account"
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Fixed Deposit Account' to open the FD creation form",
+        "3. Select <Fixed_Deposit_Product> from the Fixed Deposit Product dropdown",
+        "4. Enter <Deposit_Amount> in the Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> in the Deposit Period Value field",
+        "6. Select <Deposit_Period_Unit> from the Deposit Period Unit dropdown",
+        "7. Select <Maturity_Instructions> from the Maturity Instructions dropdown",
+        "8. Click the Create button (create_action)"
       ],
-      "expected_result": "Recurring Deposit Account detail page is displayed for the new account showing the entered Mandatory Installment Amount, Deposit Frequency, and Expected First Deposit On date; the Interest Rate (from the product's Interest Rate Chart) is visible; Maturity details including Maturity Amount and Maturity Date are displayed; Status badge on the detail page shows 'Pending'",
+      "expected_result": "Fixed Deposit Account Detail page is displayed showing visible summary fields including 'Deposit Amount: <Deposit_Amount>', 'Maturity Date', 'Maturity Amount', 'Interest Rate' and the action buttons Approve, Activate, Premature Close, and Close on Maturity",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Navigate Fixed Deposit account detail tabs (Summary, Transactions, Charges)",
+      "test_case": "FD creation form shows applicable interest rate after product, amount and period are entered",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Fixed Deposit Account detail page is open for <FD account>"
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>",
+        "A Fixed Deposit product has an Interest Rate Chart configured"
       ],
       "steps": [
-        "1. Click the 'Summary' tab on the FD Account detail page",
-        "2. Verify Summary panel is visible",
-        "3. Click the 'Transactions' tab",
-        "4. Verify Transactions panel is visible",
-        "5. Click the 'Charges' tab",
-        "6. Verify Charges panel is visible"
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Fixed Deposit Account' to open the FD creation form",
+        "3. Select <Fixed_Deposit_Product> from the Fixed Deposit Product dropdown",
+        "4. Enter <Deposit_Amount> in the Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> in the Deposit Period Value field and select <Deposit_Period_Unit>"
       ],
-      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
+      "expected_result": "The FD creation form displays the applicable interest rate derived from the selected product's Interest Rate Chart for the entered amount and period (displayed as 'Interest Rate: <calculated_rate>')",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Navigate Recurring Deposit account detail tabs (Summary, Transactions, Charges)",
+      "test_case": "Navigate tabs on Fixed Deposit Account detail page",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Recurring Deposit Account detail page is open for <RD account>"
+        "User logged in as <Bank Staff>",
+        "A Fixed Deposit account exists for <client>"
       ],
       "steps": [
-        "1. Click the 'Summary' tab on the RD Account detail page",
-        "2. Verify Summary panel is visible",
-        "3. Click the 'Transactions' tab",
-        "4. Verify Transactions panel is visible",
-        "5. Click the 'Charges' tab",
-        "6. Verify Charges panel is visible"
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Summary' tab",
+        "4. Click the 'Transactions' tab",
+        "5. Click the 'Charges' tab"
       ],
-      "expected_result": "Summary, Transactions and Charges panels are each displayed when their respective tab is clicked; Summary shows deposit schedule and maturity details, Transactions shows the transaction list, and Charges shows applicable charge items",
-      "priority": "medium"
+      "expected_result": "Each tab displays its content when selected: 'Summary' shows the account summary section; 'Transactions' shows the transactions list for the FD account; 'Charges' shows the charges list for the FD account",
+      "priority": "low"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Approve Fixed Deposit account from Pending to Approved",
+      "test_case": "Approve Fixed Deposit account",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Fixed Deposit Account detail page is open for <FD account> in 'Pending' status"
+        "User logged in as <Bank Staff with approval permission>",
+        "A Fixed Deposit account exists for <client> in status <Pending Approval>"
       ],
       "steps": [
-        "1. Click the 'Approve' button on the FD Account detail page",
-        "2. Click Confirm on the Approve dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Approve' action in the account action bar",
+        "4. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "Status badge updates to 'Approved' on the Fixed Deposit Account Detail page",
+      "expected_result": "Status badge on the Fixed Deposit Account Detail page updates to 'Approved' and the Approve action is no longer visible while the Activate action is visible",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Activate Fixed Deposit account after approval",
+      "test_case": "Activate Fixed Deposit account",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Fixed Deposit Account detail page is open for <FD account> in 'Approved' status"
+        "User logged in as <Bank Staff with activation permission>",
+        "A Fixed Deposit account exists for <client> in status <Approved>"
       ],
       "steps": [
-        "1. Click the 'Activate' button on the FD Account detail page",
-        "2. Click Confirm on the Activate dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Activate' action in the account action bar",
+        "4. Click Confirm on the Activate dialog"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Fixed Deposit Account Detail page",
+      "expected_result": "Status badge on the Fixed Deposit Account Detail page updates to 'Active' and the Activate action is no longer visible while Premature Close and Close on Maturity actions are visible",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Prematurely close an Active Fixed Deposit account",
+      "test_case": "Open Recurring Deposit Account creation form from Client Detail",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Fixed Deposit Account detail page is open for <FD account> in 'Active' status"
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
       "steps": [
-        "1. Click the 'Premature Close' button on the FD Account detail page",
-        "2. Click Confirm on the Premature Close dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Click the 'Create Recurring Deposit Account' action in the Client Detail action bar"
       ],
-      "expected_result": "Status badge updates to 'Prematurely Closed' on the Fixed Deposit Account Detail page and the Transactions tab shows a transaction row recording the premature closure",
+      "expected_result": "Recurring Deposit Account creation form is displayed showing fields: Recurring Deposit Product (dropdown), Mandatory Deposit Amount (number), Deposit Period Value (number), Deposit Period Unit (Days/Months/Years), Deposit Frequency (Daily/Weekly/Monthly/Quarterly/Yearly), and Expected First Deposit On (date)",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Close Fixed Deposit account on maturity",
+      "test_case": "Create Recurring Deposit account (happy path)",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Fixed Deposit Account detail page is open for <FD account> that has reached its maturity date"
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>"
       ],
       "steps": [
-        "1. Click the 'Close on Maturity' button on the FD Account detail page",
-        "2. Click Confirm on the Close on Maturity dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Recurring Deposit Account' to open the RD creation form",
+        "3. Select <Recurring_Deposit_Product> from the Recurring Deposit Product dropdown",
+        "4. Enter <Mandatory_Deposit_Amount> in the Mandatory Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> in the Deposit Period Value field and select <Deposit_Period_Unit>",
+        "6. Select <Deposit_Frequency> from the Deposit Frequency dropdown",
+        "7. Enter <Expected_First_Deposit_On> in the Expected First Deposit On date field",
+        "8. Click the Create button (create_action)"
       ],
-      "expected_result": "Status badge updates to 'Closed on Maturity' on the Fixed Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-009",
-      "test_case": "Approve Recurring Deposit account from Pending to Approved",
-      "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Recurring Deposit Account detail page is open for <RD account> in 'Pending' status"
-      ],
-      "steps": [
-        "1. Click the 'Approve' button on the RD Account detail page",
-        "2. Click Confirm on the Approve dialog"
-      ],
-      "expected_result": "Status badge updates to 'Approved' on the Recurring Deposit Account Detail page",
+      "expected_result": "Recurring Deposit Account Detail page is displayed showing a deposit schedule preview, 'Total Deposits Made', maturity details including 'Maturity Date' and 'Maturity Amount', the applicable 'Interest Rate', and the action buttons Approve, Activate, Deposit, Premature Close, and Close on Maturity",
       "priority": "high"
     },
     {
-      "tc_id": "P-010",
-      "test_case": "Activate Recurring Deposit account after approval",
+      "tc_id": "P-009",
+      "test_case": "RD creation form shows applicable interest rate after product and amount/frequency are entered",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Recurring Deposit Account detail page is open for <RD account> in 'Approved' status"
+        "User logged in as <Bank Staff with account creation permission>",
+        "A client exists with identifier <client>",
+        "A Recurring Deposit product has an Interest Rate Chart configured"
       ],
       "steps": [
-        "1. Click the 'Activate' button on the RD Account detail page",
-        "2. Click Confirm on the Activate dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Click 'Create Recurring Deposit Account' to open the RD creation form",
+        "3. Select <Recurring_Deposit_Product> from the Recurring Deposit Product dropdown",
+        "4. Enter <Mandatory_Deposit_Amount> in the Mandatory Deposit Amount field",
+        "5. Enter <Deposit_Period_Value> and select <Deposit_Period_Unit>, and select <Deposit_Frequency>"
       ],
-      "expected_result": "Status badge updates to 'Active' on the Recurring Deposit Account Detail page",
+      "expected_result": "The RD creation form displays the applicable interest rate derived from the selected product's Interest Rate Chart for the entered amount, period and frequency (displayed as 'Interest Rate: <calculated_rate>')",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-010",
+      "test_case": "Make a Deposit on a Recurring Deposit account",
+      "preconditions": [
+        "User logged in as <Bank Staff with transaction permission>",
+        "A Recurring Deposit account exists for <client> in status <Active>"
+      ],
+      "steps": [
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Recurring Deposit Account Detail page for <Recurring_Deposit_Account>",
+        "3. Click the 'Deposit' action in the account action bar",
+        "4. In the Deposit dialog, enter <deposit_amount> in the Amount field",
+        "5. Click Confirm on the Deposit dialog",
+        "6. Click the 'Transactions' tab to view transactions"
+      ],
+      "expected_result": "Transactions tab shows a new transaction row for the deposit with amount '<deposit_amount>' and the 'Total Deposits Made' value on the RD Account Detail page visibly updates to include '<deposit_amount>'",
       "priority": "high"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Make a deposit on an Active Recurring Deposit account and verify transactions and total",
+      "test_case": "Navigate tabs on Recurring Deposit Account detail page",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"
+        "User logged in as <Bank Staff>",
+        "A Recurring Deposit account exists for <client>"
       ],
       "steps": [
-        "1. Click the 'Deposit' button on the RD Account detail page to open the Deposit dialog",
-        "2. Enter <valid deposit amount> in the Deposit dialog",
-        "3. Click Confirm on the Deposit dialog",
-        "4. Click the 'Transactions' tab to view transactions",
-        "5. Click the 'Summary' tab to view updated totals"
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Recurring Deposit Account Detail page for <Recurring_Deposit_Account>",
+        "3. Click the 'Summary' tab",
+        "4. Click the 'Transactions' tab",
+        "5. Click the 'Charges' tab"
       ],
-      "expected_result": "A new transaction row appears in the Transactions tab showing the deposit of the entered amount; the 'Total deposits made' value on the Summary panel updates to include the new deposit",
-      "priority": "medium"
+      "expected_result": "Each tab displays its content when selected: 'Summary' shows the account summary and deposit schedule; 'Transactions' shows the transactions list for the RD account; 'Charges' shows the charges list for the RD account",
+      "priority": "low"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Prematurely close an Active Recurring Deposit account",
+      "test_case": "Premature close an Active Fixed Deposit account",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Recurring Deposit Account detail page is open for <RD account> in 'Active' status"
+        "User logged in as <Bank Staff with closure permission>",
+        "A Fixed Deposit account exists for <client> in status <Active>"
       ],
       "steps": [
-        "1. Click the 'Premature Close' button on the RD Account detail page",
-        "2. Click Confirm on the Premature Close dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Fixed Deposit Account Detail page for <Fixed_Deposit_Account>",
+        "3. Click the 'Premature Close' action in the account action bar",
+        "4. Click Confirm on the Premature Close dialog"
       ],
-      "expected_result": "Status badge updates to 'Prematurely Closed' on the Recurring Deposit Account Detail page and the Transactions tab shows a transaction recording the premature closure",
+      "expected_result": "Status badge on the Fixed Deposit Account Detail page updates to 'Closed' and the Premature Close action is no longer visible",
       "priority": "medium"
     },
     {
       "tc_id": "P-013",
-      "test_case": "Close Recurring Deposit account on maturity",
+      "test_case": "Close on maturity for an Active Recurring Deposit account",
       "preconditions": [
-        "User logged in as <Bank Officer>",
-        "Recurring Deposit Account detail page is open for <RD account> that has reached its maturity date"
+        "User logged in as <Bank Staff with closure permission>",
+        "A Recurring Deposit account exists for <client> in status <Active> and has reached maturity",
+        "Maturity date for the account is <maturity_date>"
       ],
       "steps": [
-        "1. Click the 'Close on Maturity' button on the RD Account detail page",
-        "2. Click Confirm on the Close on Maturity dialog"
+        "1. Open the Client Detail page for <client>",
+        "2. Open the Recurring Deposit Account Detail page for <Recurring_Deposit_Account>",
+        "3. Click the 'Close on Maturity' action in the account action bar",
+        "4. Click Confirm on the Close on Maturity dialog"
       ],
-      "expected_result": "Status badge updates to 'Closed on Maturity' on the Recurring Deposit Account Detail page and the Transactions tab shows the maturity settlement transaction",
+      "expected_result": "Status badge on the Recurring Deposit Account Detail page updates to 'Closed' and the Close on Maturity action is no longer visible",
       "priority": "medium"
     }
   ],
   "summary": {
     "total": 13,
-    "high_priority": 6,
-    "medium_priority": 7,
-    "low_priority": 0
+    "high_priority": 5,
+    "medium_priority": 6,
+    "low_priority": 2
   }
 }

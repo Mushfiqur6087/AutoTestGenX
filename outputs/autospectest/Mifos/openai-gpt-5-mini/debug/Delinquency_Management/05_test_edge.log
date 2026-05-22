@@ -1,0 +1,697 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.536109
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Delinquency Management</module_name>
+
+<ast>
+{
+  "module_name": "Delinquency Management",
+  "components": {
+    "Delinquency_Ranges_Page": {
+      "type": "page",
+      "create_action": {
+        "element_name": "Create Delinquency Range",
+        "opens": "Create_Delinquency_Range_Form"
+      },
+      "data_table": {
+        "type": "data_table",
+        "columns": [
+          "Classification",
+          "Minimum Age Days",
+          "Maximum Age Days"
+        ],
+        "link_columns": [
+          "Classification"
+        ],
+        "row_actions": [
+          {
+            "action_name": "Open Classification",
+            "type": "link",
+            "description": "navigates to Delinquency Range detail"
+          }
+        ]
+      }
+    },
+    "Create_Delinquency_Range_Form": {
+      "type": "form",
+      "fields": {
+        "Classification": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Minimum_Age_Days": {
+          "type": "number",
+          "required": true
+        },
+        "Maximum_Age_Days": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "if blank, applies to all days beyond the Minimum_Age_Days"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates delinquency range"
+        }
+      ]
+    },
+    "Delinquency_Buckets_Page": {
+      "type": "page",
+      "create_action": {
+        "element_name": "Create Delinquency Bucket",
+        "opens": "Create_Delinquency_Bucket_Form"
+      },
+      "data_table": {
+        "type": "data_table",
+        "columns": [
+          "Bucket Name",
+          "Associated Ranges"
+        ],
+        "link_columns": [
+          "Bucket Name"
+        ],
+        "row_actions": [
+          {
+            "action_name": "Open Bucket",
+            "type": "link",
+            "description": "navigates to Delinquency Bucket detail"
+          }
+        ]
+      }
+    },
+    "Create_Delinquency_Bucket_Form": {
+      "type": "form",
+      "fields": {
+        "Bucket_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Ranges": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Minimum_Age_Days": {
+              "type": "number",
+              "required": true
+            },
+            "Maximum_Age_Days": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                "if blank for the last range, applies to all days beyond the minimum"
+              ]
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates delinquency bucket"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Delinquency pages cover two sub-pages: Delinquency Ranges and Delinquency Buckets. The Delinquency Ranges page displays a data table with columns for Classification (clickable link), Minimum Age Days, and Maximum Age Days. The Create Delinquency Range form contains Classification (required), Minimum Age Days (required), and Maximum Age Days (optional — if blank, applies to all days beyond the minimum). The Delinquency Buckets page displays a data table with columns for Bucket Name (clickable link) and associated ranges. The Create Delinquency Bucket form contains Bucket Name (required) and an interface for adding multiple delinquency ranges in sequence (e.g., 1–29 days = Range 1, 30–59 days = Range 2, 60+ days = Range 3). Delinquency buckets are linked to Loan Products; when a loan becomes overdue, the system automatically classifies it into the appropriate range based on days past due, which is used for portfolio-at-risk reporting, provisioning calculations, and collection workflow triggers.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:32:46] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Delinquency Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Create Delinquency Range where Maximum_Age_Days equals Minimum_Age_Days (same-day range)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter <Minimum_Age_Days> in Minimum_Age_Days",
+        "3. Enter <the same value as Minimum_Age_Days> in Maximum_Age_Days",
+        "4. Click Create"
+      ],
+      "expected_result": "Form submits successfully; delinquency range is created and the Delinquency Ranges table (or range detail) displays Minimum_Age_Days = <Minimum_Age_Days> and Maximum_Age_Days = <Minimum_Age_Days> (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Create Delinquency Range where Maximum_Age_Days is one unit below Minimum_Age_Days (invalid inverted range)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter <Minimum_Age_Days> in Minimum_Age_Days",
+        "3. Enter <one unit below Minimum_Age_Days> in Maximum_Age_Days",
+        "4. Click Create"
+      ],
+      "expected_result": "Maximum_Age_Days displays an inline error indicating the value is below the minimum allowed; the form submission is blocked and no range is created (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Create Delinquency Range with Maximum_Age_Days left blank (applies to all days beyond Minimum)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter <Minimum_Age_Days> in Minimum_Age_Days",
+        "3. Leave Maximum_Age_Days blank",
+        "4. Click Create"
+      ],
+      "expected_result": "Form submits successfully; delinquency range is created and the Delinquency Ranges table or detail shows Minimum_Age_Days = <Minimum_Age_Days> and Maximum_Age_Days blank with a visible note or display indicating it applies to all days beyond the minimum (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Add sequential ranges in a Bucket where second range Minimum = previous Maximum + 1 (adjacent, non-overlapping)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Buckets page",
+        "Create Delinquency Bucket form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Bucket_Name",
+        "2. In Ranges repeating group add first item",
+        "3. Enter <first Minimum_Age_Days> in first item's Minimum_Age_Days",
+        "4. Enter <first Maximum_Age_Days> in first item's Maximum_Age_Days",
+        "5. Add a second Ranges item",
+        "6. Enter <previous Maximum + 1> in second item's Minimum_Age_Days",
+        "7. Enter <second Maximum_Age_Days> in second item's Maximum_Age_Days",
+        "8. Click Create"
+      ],
+      "expected_result": "Form submits successfully; delinquency bucket is created and the bucket detail lists the ranges with the second range Minimum_Age_Days = <previous Maximum + 1> and no overlaps between ranges (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Add repeating-group ranges where a subsequent range's Minimum_Age_Days overlaps previous range (one unit less than or equal to previous Maximum) — blocked",
+      "preconditions": [
+        "User is authenticated and on Delinquency Buckets page",
+        "Create Delinquency Bucket form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Bucket_Name",
+        "2. In Ranges repeating group add first item",
+        "3. Enter <first Minimum_Age_Days> in first item's Minimum_Age_Days",
+        "4. Enter <first Maximum_Age_Days> in first item's Maximum_Age_Days",
+        "5. Add a second Ranges item",
+        "6. Enter <one unit less than or equal to previous Maximum> in second item's Minimum_Age_Days",
+        "7. Enter <second Maximum_Age_Days> in second item's Maximum_Age_Days",
+        "8. Click Create"
+      ],
+      "expected_result": "Second item's Minimum_Age_Days field displays an inline error indicating the range overlaps the previous range; the form submission is blocked and no bucket is created (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "input_edge",
+      "test_case": "Enter a very long Bucket_Name (200+ characters)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Buckets page",
+        "Create Delinquency Bucket form is opened"
+      ],
+      "steps": [
+        "1. Enter a string of 200+ characters in Bucket_Name",
+        "2. Add at least one valid Ranges item with valid Minimum_Age_Days and Maximum_Age_Days (or blank last maximum)",
+        "3. Click Create"
+      ],
+      "expected_result": "Either the form submits successfully and the bucket detail/table shows the Bucket_Name (full or visibly truncated with an ellipsis in the table cell), or the Bucket_Name field displays an inline 'exceeds maximum length' error; the visible outcome must indicate acceptance or exact truncation/error",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "input_edge",
+      "test_case": "Use special characters and emoji in Classification and Bucket_Name fields",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page and Delinquency Buckets page respectively",
+        "Create forms are opened as applicable"
+      ],
+      "steps": [
+        "1. In Create Delinquency Range form enter a Classification containing special characters and emoji",
+        "2. Enter valid values for Minimum_Age_Days and Maximum_Age_Days (or leave Maximum blank) and click Create",
+        "3. In Create Delinquency Bucket form enter a Bucket_Name containing special characters and emoji",
+        "4. Add at least one valid Ranges item and click Create"
+      ],
+      "expected_result": "Each form either submits successfully and the special-character-containing names appear in the ranges/buckets table or detail page (visible exactly as entered), or the field displays an inline validation error explaining unsupported characters; the UI must show which of these two outcomes occurred",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click Create on Create Delinquency Range form to check for duplicate creation",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter valid Minimum_Age_Days and Maximum_Age_Days (or leave Maximum blank)",
+        "3. Rapidly double-click the Create button (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one delinquency range is created; the Delinquency Ranges table shows a single new row for the Classification entered and no duplicate row appears (only one create succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "interaction_edge",
+      "test_case": "After successful create, use browser Back then attempt to resubmit the same Create form to check duplicate prevention",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter valid Minimum_Age_Days and Maximum_Age_Days (or leave Maximum blank)",
+        "3. Click Create and wait for success and redirect to the ranges listing or detail",
+        "4. Press the browser Back button to return to the Create form",
+        "5. Click Create again without changing fields"
+      ],
+      "expected_result": "Second submission attempt is blocked or ignored; only one record appears in the Delinquency Ranges table for that Classification and a visible indicator prevents duplicate creation (is blocked / error shown or only one entity present)",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "boundary": 5,
+    "input_edge": 2,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 6,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[22:32:46] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Delinquency Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Create Delinquency Range where Maximum_Age_Days equals Minimum_Age_Days (same-day range)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter <Minimum_Age_Days> in Minimum_Age_Days",
+        "3. Enter <the same value as Minimum_Age_Days> in Maximum_Age_Days",
+        "4. Click Create"
+      ],
+      "expected_result": "Form submits successfully; delinquency range is created and the Delinquency Ranges table (or range detail) displays Minimum_Age_Days = <Minimum_Age_Days> and Maximum_Age_Days = <Minimum_Age_Days> (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Create Delinquency Range where Maximum_Age_Days is one unit below Minimum_Age_Days (invalid inverted range)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter <Minimum_Age_Days> in Minimum_Age_Days",
+        "3. Enter <one unit below Minimum_Age_Days> in Maximum_Age_Days",
+        "4. Click Create"
+      ],
+      "expected_result": "Maximum_Age_Days displays an inline error indicating the value is below the minimum allowed; the form submission is blocked and no range is created (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Create Delinquency Range with Maximum_Age_Days left blank (applies to all days beyond Minimum)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter <Minimum_Age_Days> in Minimum_Age_Days",
+        "3. Leave Maximum_Age_Days blank",
+        "4. Click Create"
+      ],
+      "expected_result": "Form submits successfully; delinquency range is created and the Delinquency Ranges table or detail shows Minimum_Age_Days = <Minimum_Age_Days> and Maximum_Age_Days blank with a visible note or display indicating it applies to all days beyond the minimum (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Add sequential ranges in a Bucket where second range Minimum = previous Maximum + 1 (adjacent, non-overlapping)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Buckets page",
+        "Create Delinquency Bucket form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Bucket_Name",
+        "2. In Ranges repeating group add first item",
+        "3. Enter <first Minimum_Age_Days> in first item's Minimum_Age_Days",
+        "4. Enter <first Maximum_Age_Days> in first item's Maximum_Age_Days",
+        "5. Add a second Ranges item",
+        "6. Enter <previous Maximum + 1> in second item's Minimum_Age_Days",
+        "7. Enter <second Maximum_Age_Days> in second item's Maximum_Age_Days",
+        "8. Click Create"
+      ],
+      "expected_result": "Form submits successfully; delinquency bucket is created and the bucket detail lists the ranges with the second range Minimum_Age_Days = <previous Maximum + 1> and no overlaps between ranges (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Add repeating-group ranges where a subsequent range's Minimum_Age_Days overlaps previous range (one unit less than or equal to previous Maximum) \u2014 blocked",
+      "preconditions": [
+        "User is authenticated and on Delinquency Buckets page",
+        "Create Delinquency Bucket form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Bucket_Name",
+        "2. In Ranges repeating group add first item",
+        "3. Enter <first Minimum_Age_Days> in first item's Minimum_Age_Days",
+        "4. Enter <first Maximum_Age_Days> in first item's Maximum_Age_Days",
+        "5. Add a second Ranges item",
+        "6. Enter <one unit less than or equal to previous Maximum> in second item's Minimum_Age_Days",
+        "7. Enter <second Maximum_Age_Days> in second item's Maximum_Age_Days",
+        "8. Click Create"
+      ],
+      "expected_result": "Second item's Minimum_Age_Days field displays an inline error indicating the range overlaps the previous range; the form submission is blocked and no bucket is created (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "input_edge",
+      "test_case": "Enter a very long Bucket_Name (200+ characters)",
+      "preconditions": [
+        "User is authenticated and on Delinquency Buckets page",
+        "Create Delinquency Bucket form is opened"
+      ],
+      "steps": [
+        "1. Enter a string of 200+ characters in Bucket_Name",
+        "2. Add at least one valid Ranges item with valid Minimum_Age_Days and Maximum_Age_Days (or blank last maximum)",
+        "3. Click Create"
+      ],
+      "expected_result": "Either the form submits successfully and the bucket detail/table shows the Bucket_Name (full or visibly truncated with an ellipsis in the table cell), or the Bucket_Name field displays an inline 'exceeds maximum length' error; the visible outcome must indicate acceptance or exact truncation/error",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "input_edge",
+      "test_case": "Use special characters and emoji in Classification and Bucket_Name fields",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page and Delinquency Buckets page respectively",
+        "Create forms are opened as applicable"
+      ],
+      "steps": [
+        "1. In Create Delinquency Range form enter a Classification containing special characters and emoji",
+        "2. Enter valid values for Minimum_Age_Days and Maximum_Age_Days (or leave Maximum blank) and click Create",
+        "3. In Create Delinquency Bucket form enter a Bucket_Name containing special characters and emoji",
+        "4. Add at least one valid Ranges item and click Create"
+      ],
+      "expected_result": "Each form either submits successfully and the special-character-containing names appear in the ranges/buckets table or detail page (visible exactly as entered), or the field displays an inline validation error explaining unsupported characters; the UI must show which of these two outcomes occurred",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click Create on Create Delinquency Range form to check for duplicate creation",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter valid Minimum_Age_Days and Maximum_Age_Days (or leave Maximum blank)",
+        "3. Rapidly double-click the Create button (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one delinquency range is created; the Delinquency Ranges table shows a single new row for the Classification entered and no duplicate row appears (only one create succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "interaction_edge",
+      "test_case": "After successful create, use browser Back then attempt to resubmit the same Create form to check duplicate prevention",
+      "preconditions": [
+        "User is authenticated and on Delinquency Ranges page",
+        "Create Delinquency Range form is opened"
+      ],
+      "steps": [
+        "1. Enter a value in Classification",
+        "2. Enter valid Minimum_Age_Days and Maximum_Age_Days (or leave Maximum blank)",
+        "3. Click Create and wait for success and redirect to the ranges listing or detail",
+        "4. Press the browser Back button to return to the Create form",
+        "5. Click Create again without changing fields"
+      ],
+      "expected_result": "Second submission attempt is blocked or ignored; only one record appears in the Delinquency Ranges table for that Classification and a visible indicator prevents duplicate creation (is blocked / error shown or only one entity present)",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "boundary": 5,
+    "input_edge": 2,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 6,
+    "low_priority": 3
+  }
+}

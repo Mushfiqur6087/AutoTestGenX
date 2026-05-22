@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.371218
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.550358
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Teller & Cashier Management</module_name>
 
@@ -232,38 +232,22 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Teller & Cashier Management",
   "components": {
-    "Tellers_Page": {
+    "Tellers_Table": {
       "type": "data_table",
-      "columns": {
-        "Teller_Name": {
-          "type": "link",
-          "click_action": {
-            "opens": "Teller_Detail_Page"
-          }
-        },
-        "Office": {
-          "type": "unspecified"
-        },
-        "Status": {
-          "type": "unspecified",
-          "options": [
-            "Active",
-            "Inactive"
-          ]
-        },
-        "Description": {
-          "type": "unspecified"
-        }
-      },
-      "row_actions": [],
-      "bulk_actions": [],
-      "actions": [
+      "columns": [
+        "Teller Name",
+        "Office",
+        "Status",
+        "Description"
+      ],
+      "clickable_row_link_column": "Teller Name",
+      "section_actions": [
         {
-          "element_name": "Create Teller",
-          "type": "button",
+          "action_name": "+ Create Teller",
           "opens": "Create_Teller_Form"
         }
-      ]
+      ],
+      "row_actions": []
     },
     "Create_Teller_Form": {
       "type": "form",
@@ -299,52 +283,10 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       },
       "submit_actions": [
         {
-          "element_name": "Create Teller",
+          "element_name": "Create",
           "on_success": "creates teller"
         }
       ]
-    },
-    "Teller_Detail_Page": {
-      "type": "detail_page",
-      "actions": [
-        {
-          "element_name": "Edit",
-          "type": "button",
-          "opens": "Edit_Teller_Form"
-        }
-      ],
-      "cashiers_section": {
-        "type": "data_table",
-        "columns": {
-          "Cashier_Name": {
-            "type": "link",
-            "click_action": {
-              "opens": "Cashier_Detail_Page"
-            }
-          },
-          "Start_Date": {
-            "type": "date"
-          },
-          "End_Date": {
-            "type": "date"
-          },
-          "Is_Full_Day": {
-            "type": "checkbox"
-          },
-          "Status": {
-            "type": "unspecified"
-          }
-        },
-        "row_actions": [],
-        "bulk_actions": [],
-        "actions": [
-          {
-            "element_name": "Allocate Cashier",
-            "type": "button",
-            "opens": "Allocate_Cashier_Form"
-          }
-        ]
-      }
     },
     "Edit_Teller_Form": {
       "type": "form",
@@ -381,9 +323,35 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "submit_actions": [
         {
           "element_name": "Save",
-          "on_success": "saves teller updates"
+          "on_success": "updates teller"
         }
       ]
+    },
+    "Teller_Detail_Page": {
+      "type": "detail_page",
+      "page_actions": [
+        {
+          "action_name": "Edit",
+          "opens": "Edit_Teller_Form"
+        }
+      ],
+      "Cashiers_Section": {
+        "type": "data_table",
+        "columns": [
+          "Cashier Name",
+          "Start Date",
+          "End Date",
+          "Is Full Day",
+          "Status"
+        ],
+        "section_actions": [
+          {
+            "action_name": "+ Allocate Cashier",
+            "opens": "Allocate_Cashier_Form"
+          }
+        ],
+        "row_actions": []
+      }
     },
     "Allocate_Cashier_Form": {
       "type": "form",
@@ -411,72 +379,48 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       },
       "submit_actions": [
         {
-          "element_name": "Allocate Cashier",
-          "on_success": "creates cashier allocation"
+          "element_name": "Allocate",
+          "on_success": "allocates cashier to teller"
         }
       ]
     },
     "Cashier_Detail_Page": {
       "type": "detail_page",
-      "actions": [
+      "page_actions": [
         {
-          "element_name": "Allocate Cash",
-          "type": "button",
-          "fields": {},
-          "on_success": "adds cash from the vault to cashier"
+          "action_name": "Allocate Cash",
+          "on_success": "adds cash from vault"
         },
         {
-          "element_name": "Settle Cash",
-          "type": "button",
-          "opens": "Settle_Cash_Form"
+          "action_name": "Settle Cash",
+          "fields": {
+            "Amount": {
+              "type": "number",
+              "required": true
+            },
+            "Currency": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Transaction_Date": {
+              "type": "date",
+              "required": true
+            }
+          },
+          "on_success": "returns cash to vault"
         }
       ],
-      "transactions_section": {
+      "Cashier_Transactions": {
         "type": "data_table",
-        "component_name": "Cashier_Transactions_List"
+        "columns": [
+          "Date",
+          "Type",
+          "Amount",
+          "Running Balance"
+        ],
+        "row_actions": [],
+        "bulk_actions": []
       }
-    },
-    "Settle_Cash_Form": {
-      "type": "form",
-      "fields": {
-        "Amount": {
-          "type": "number",
-          "required": true
-        },
-        "Currency": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Transaction_Date": {
-          "type": "date",
-          "required": true
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Settle",
-          "on_success": "returns cash to the vault and records settlement"
-        }
-      ]
-    },
-    "Cashier_Transactions_List": {
-      "type": "data_table",
-      "columns": {
-        "Date": {
-          "type": "date"
-        },
-        "Type": {
-          "type": "unspecified"
-        },
-        "Amount": {
-          "type": "number"
-        },
-        "Running_Balance": {
-          "type": "number"
-        }
-      },
-      "row_actions": [],
-      "bulk_actions": []
     }
   }
 }
@@ -494,7 +438,7 @@ The Tellers page displays a data table with columns for Teller Name (clickable l
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:20:06] Test-Positive - LLM RESPONSE
+[22:35:04] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Teller & Cashier Management",
@@ -502,125 +446,143 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Teller Detail by clicking Teller Name from Tellers list",
+      "test_case": "Create a new Teller via Create Teller form (happy path)",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> is present in the Tellers list"
+        "Tellers page is open"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> in the Tellers table"
+        "1. Click '+ Create Teller' on the Tellers page",
+        "2. Enter <Office> in the Office field",
+        "3. Enter <Teller Name> in the Teller Name field",
+        "4. (Optional) Enter <Description> in the Description field",
+        "5. Enter <Start Date> in the Start Date field",
+        "6. (Optional) Enter <End Date> in the End Date field",
+        "7. (Optional) Select <Status> from the Status dropdown",
+        "8. Click 'Create'"
       ],
-      "expected_result": "Teller Detail page for <existing teller> is displayed showing the teller's name, Office, Status, Description and a Cashiers section listing assignments",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "Create a new Teller using the Create Teller form",
-      "preconditions": [
-        "User logged in as <Teller Manager>"
-      ],
-      "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the 'Create Teller' button to open the Create Teller form",
-        "3. Enter <Office> in the Office field",
-        "4. Enter <Teller Name> in the Teller Name field",
-        "5. Enter <optional description> in the Description field",
-        "6. Select <Start Date> in the Start Date field",
-        "7. (Optional) Select <End Date> in the End Date field",
-        "8. (Optional) Select <Status> from the Status dropdown",
-        "9. Click the 'Create Teller' button on the form"
-      ],
-      "expected_result": "A new row appears in the Tellers table with the entered Teller Name and Office; the Status column shows the selected <Status>",
+      "expected_result": "A success notification displays \"creates teller\" and the Tellers table shows a new row with the entered <Teller Name> and <Office>",
       "priority": "high"
     },
     {
-      "tc_id": "P-003",
-      "test_case": "Edit an existing Teller and save updates",
+      "tc_id": "P-002",
+      "test_case": "Open Teller Detail page by clicking Teller Name in Tellers table",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> is present in the Tellers list"
+        "Tellers page is open",
+        "A Teller row exists in the Tellers table for <Teller Name>"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. Click the 'Edit' button to open the Edit Teller form",
-        "4. Update the Description field to <new description>",
-        "5. (Optional) Change Status to <Status>",
-        "6. Click the 'Save' button on the Edit Teller form"
+        "1. Click the <Teller Name> link in the Tellers table"
       ],
-      "expected_result": "Teller Detail page displays the updated Description and the updated Status is visible on the page",
+      "expected_result": "Teller Detail page for <Teller Name> is displayed showing the Edit action and a Cashiers section with columns 'Cashier Name', 'Start Date', 'End Date', 'Is Full Day', and 'Status'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "test_case": "Edit an existing Teller and save changes",
+      "preconditions": [
+        "User logged in as <Teller Manager>",
+        "Teller <Teller Name> exists and Teller Detail page is accessible"
+      ],
+      "steps": [
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click 'Edit' on the Teller Detail page",
+        "4. Update the Description field to <new description>",
+        "5. Select <new status> from the Status dropdown",
+        "6. Click 'Save'"
+      ],
+      "expected_result": "A success notification displays \"updates teller\" and the Teller Detail page shows Description = <new description> and Status = <new status>",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Allocate a Cashier to a Teller using Allocate Cashier form",
+      "test_case": "Allocate a Cashier to a Teller via Allocate Cashier form",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> is present in the Tellers list"
+        "Teller <Teller Name> exists and Teller Detail page is open"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. In the Cashiers section, click the 'Allocate Cashier' button to open the Allocate Cashier form",
-        "4. Select <Staff> in the Staff field (autocomplete/select)",
-        "5. Select <Start Date> in the Start Date field",
-        "6. (Optional) Select <End Date> in the End Date field",
-        "7. (Optional) Check the Is Full Day checkbox",
-        "8. (Optional) Enter <description> in the Description field",
-        "9. Click the 'Allocate Cashier' button on the form"
+        "1. On the Teller Detail page, click '+ Allocate Cashier' in the Cashiers section",
+        "2. Enter <Staff> in the Staff field",
+        "3. Enter <Start Date> in the Start Date field",
+        "4. (Optional) Enter <End Date> in the End Date field",
+        "5. (Optional) Check 'Is Full Day' if allocating full day",
+        "6. (Optional) Enter <Description> in the Description field",
+        "7. Click 'Allocate'"
       ],
-      "expected_result": "A new row appears in the Cashiers table on the Teller Detail page showing Cashier Name as <Staff> and the entered Start Date",
+      "expected_result": "A success notification displays \"allocates cashier to teller\" and the Cashiers section shows a new row with Cashier Name = <Staff> and Start Date = <Start Date>",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Allocate Cash to a Cashier via the Allocate Cash action",
+      "test_case": "Allocate cash to a Cashier from Cashier Detail (adds cash from vault)",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> and <existing cashier> are present; Cashier has a Cashier Detail page"
+        "Teller <Teller Name> exists with a Cashier <Cashier Name> allocated",
+        "Cashier Detail page for <Cashier Name> is reachable from the Teller Detail page"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. In the Cashiers section, click the Cashier Name link for <existing cashier> to open the Cashier Detail page",
-        "4. Verify Opening Balance and Cash In Hand are visible on the Cashier Detail page",
-        "5. Click the 'Allocate Cash' button"
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click the <Cashier Name> link in the Cashiers section to open Cashier Detail page",
+        "4. Click 'Allocate Cash' on the Cashier Detail page",
+        "5. In the Allocate Cash dialog (or inline action), enter <amount> in the Amount field if prompted (or ensure amount selection is provided)",
+        "6. Confirm the allocation (click Confirm/Allocate as presented)"
       ],
-      "expected_result": "A new transaction appears in the Cashier Transactions list indicating an allocation from the vault; Cash In Hand and the Running Balance on the Cashier Detail page update to reflect the allocation",
+      "expected_result": "A success notification displays \"adds cash from vault\" and Cash In Hand on the Cashier Detail page shows an updated value reflecting the allocated <amount>; the Cashier Transactions table shows a new row with Type = 'Allocation', Amount = <amount>, and the Running Balance updated accordingly",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Settle Cash for a Cashier using the Settle Cash form",
+      "test_case": "Settle cash from a Cashier (return cash to vault) using Settle Cash form",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> and <existing cashier> are present; Cashier has a Cashier Detail page"
+        "Teller <Teller Name> exists with a Cashier <Cashier Name> that has sufficient Cash In Hand",
+        "Cashier Detail page for <Cashier Name> is reachable from the Teller Detail page"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. In the Cashiers section, click the Cashier Name link for <existing cashier> to open the Cashier Detail page",
-        "4. Click the 'Settle Cash' button to open the Settle Cash form",
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click the <Cashier Name> link in the Cashiers section to open Cashier Detail page",
+        "4. Click 'Settle Cash' on the Cashier Detail page to open the Settle Cash dialog",
         "5. Enter <Amount> in the Amount field",
-        "6. Select <Currency> in the Currency field",
-        "7. Select <Transaction Date> in the Transaction Date field",
-        "8. Click the 'Settle' button on the form"
+        "6. Enter <Currency> in the Currency field",
+        "7. Enter <Transaction Date> in the Transaction Date field",
+        "8. Click Confirm on the Settle Cash dialog"
       ],
-      "expected_result": "A new transaction appears in the Cashier Transactions list with Type 'Settlement' showing the entered Amount, Currency and Transaction Date; Cash In Hand and the Running Balance update accordingly",
+      "expected_result": "A success notification displays \"returns cash to vault\" and Cash In Hand on the Cashier Detail page shows a decreased value reflecting the settled <Amount>; the Cashier Transactions table shows a new row with Type = 'Settlement', Amount = <Amount>, and the Running Balance updated accordingly",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-007",
+      "test_case": "View Cashier Transactions table columns on Cashier Detail page",
+      "preconditions": [
+        "User logged in as <Teller Manager>",
+        "Cashier <Cashier Name> exists and is allocated to a Teller",
+        "Cashier Detail page for <Cashier Name> is reachable"
+      ],
+      "steps": [
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click the <Cashier Name> link in the Cashiers section to open Cashier Detail page",
+        "4. Scroll to the Cashier Transactions section"
+      ],
+      "expected_result": "Cashier Transactions table is visible and displays columns 'Date', 'Type', 'Amount', and 'Running Balance'",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 6,
+    "total": 7,
     "high_priority": 4,
-    "medium_priority": 2,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:20:06] Test-Positive - PARSED JSON
+[22:35:04] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Teller & Cashier Management",
@@ -628,119 +590,137 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Teller Detail by clicking Teller Name from Tellers list",
+      "test_case": "Create a new Teller via Create Teller form (happy path)",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> is present in the Tellers list"
+        "Tellers page is open"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> in the Tellers table"
+        "1. Click '+ Create Teller' on the Tellers page",
+        "2. Enter <Office> in the Office field",
+        "3. Enter <Teller Name> in the Teller Name field",
+        "4. (Optional) Enter <Description> in the Description field",
+        "5. Enter <Start Date> in the Start Date field",
+        "6. (Optional) Enter <End Date> in the End Date field",
+        "7. (Optional) Select <Status> from the Status dropdown",
+        "8. Click 'Create'"
       ],
-      "expected_result": "Teller Detail page for <existing teller> is displayed showing the teller's name, Office, Status, Description and a Cashiers section listing assignments",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "Create a new Teller using the Create Teller form",
-      "preconditions": [
-        "User logged in as <Teller Manager>"
-      ],
-      "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the 'Create Teller' button to open the Create Teller form",
-        "3. Enter <Office> in the Office field",
-        "4. Enter <Teller Name> in the Teller Name field",
-        "5. Enter <optional description> in the Description field",
-        "6. Select <Start Date> in the Start Date field",
-        "7. (Optional) Select <End Date> in the End Date field",
-        "8. (Optional) Select <Status> from the Status dropdown",
-        "9. Click the 'Create Teller' button on the form"
-      ],
-      "expected_result": "A new row appears in the Tellers table with the entered Teller Name and Office; the Status column shows the selected <Status>",
+      "expected_result": "A success notification displays \"creates teller\" and the Tellers table shows a new row with the entered <Teller Name> and <Office>",
       "priority": "high"
     },
     {
-      "tc_id": "P-003",
-      "test_case": "Edit an existing Teller and save updates",
+      "tc_id": "P-002",
+      "test_case": "Open Teller Detail page by clicking Teller Name in Tellers table",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> is present in the Tellers list"
+        "Tellers page is open",
+        "A Teller row exists in the Tellers table for <Teller Name>"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. Click the 'Edit' button to open the Edit Teller form",
-        "4. Update the Description field to <new description>",
-        "5. (Optional) Change Status to <Status>",
-        "6. Click the 'Save' button on the Edit Teller form"
+        "1. Click the <Teller Name> link in the Tellers table"
       ],
-      "expected_result": "Teller Detail page displays the updated Description and the updated Status is visible on the page",
+      "expected_result": "Teller Detail page for <Teller Name> is displayed showing the Edit action and a Cashiers section with columns 'Cashier Name', 'Start Date', 'End Date', 'Is Full Day', and 'Status'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "test_case": "Edit an existing Teller and save changes",
+      "preconditions": [
+        "User logged in as <Teller Manager>",
+        "Teller <Teller Name> exists and Teller Detail page is accessible"
+      ],
+      "steps": [
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click 'Edit' on the Teller Detail page",
+        "4. Update the Description field to <new description>",
+        "5. Select <new status> from the Status dropdown",
+        "6. Click 'Save'"
+      ],
+      "expected_result": "A success notification displays \"updates teller\" and the Teller Detail page shows Description = <new description> and Status = <new status>",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Allocate a Cashier to a Teller using Allocate Cashier form",
+      "test_case": "Allocate a Cashier to a Teller via Allocate Cashier form",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> is present in the Tellers list"
+        "Teller <Teller Name> exists and Teller Detail page is open"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. In the Cashiers section, click the 'Allocate Cashier' button to open the Allocate Cashier form",
-        "4. Select <Staff> in the Staff field (autocomplete/select)",
-        "5. Select <Start Date> in the Start Date field",
-        "6. (Optional) Select <End Date> in the End Date field",
-        "7. (Optional) Check the Is Full Day checkbox",
-        "8. (Optional) Enter <description> in the Description field",
-        "9. Click the 'Allocate Cashier' button on the form"
+        "1. On the Teller Detail page, click '+ Allocate Cashier' in the Cashiers section",
+        "2. Enter <Staff> in the Staff field",
+        "3. Enter <Start Date> in the Start Date field",
+        "4. (Optional) Enter <End Date> in the End Date field",
+        "5. (Optional) Check 'Is Full Day' if allocating full day",
+        "6. (Optional) Enter <Description> in the Description field",
+        "7. Click 'Allocate'"
       ],
-      "expected_result": "A new row appears in the Cashiers table on the Teller Detail page showing Cashier Name as <Staff> and the entered Start Date",
+      "expected_result": "A success notification displays \"allocates cashier to teller\" and the Cashiers section shows a new row with Cashier Name = <Staff> and Start Date = <Start Date>",
       "priority": "high"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Allocate Cash to a Cashier via the Allocate Cash action",
+      "test_case": "Allocate cash to a Cashier from Cashier Detail (adds cash from vault)",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> and <existing cashier> are present; Cashier has a Cashier Detail page"
+        "Teller <Teller Name> exists with a Cashier <Cashier Name> allocated",
+        "Cashier Detail page for <Cashier Name> is reachable from the Teller Detail page"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. In the Cashiers section, click the Cashier Name link for <existing cashier> to open the Cashier Detail page",
-        "4. Verify Opening Balance and Cash In Hand are visible on the Cashier Detail page",
-        "5. Click the 'Allocate Cash' button"
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click the <Cashier Name> link in the Cashiers section to open Cashier Detail page",
+        "4. Click 'Allocate Cash' on the Cashier Detail page",
+        "5. In the Allocate Cash dialog (or inline action), enter <amount> in the Amount field if prompted (or ensure amount selection is provided)",
+        "6. Confirm the allocation (click Confirm/Allocate as presented)"
       ],
-      "expected_result": "A new transaction appears in the Cashier Transactions list indicating an allocation from the vault; Cash In Hand and the Running Balance on the Cashier Detail page update to reflect the allocation",
+      "expected_result": "A success notification displays \"adds cash from vault\" and Cash In Hand on the Cashier Detail page shows an updated value reflecting the allocated <amount>; the Cashier Transactions table shows a new row with Type = 'Allocation', Amount = <amount>, and the Running Balance updated accordingly",
       "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Settle Cash for a Cashier using the Settle Cash form",
+      "test_case": "Settle cash from a Cashier (return cash to vault) using Settle Cash form",
       "preconditions": [
         "User logged in as <Teller Manager>",
-        "<existing teller> and <existing cashier> are present; Cashier has a Cashier Detail page"
+        "Teller <Teller Name> exists with a Cashier <Cashier Name> that has sufficient Cash In Hand",
+        "Cashier Detail page for <Cashier Name> is reachable from the Teller Detail page"
       ],
       "steps": [
-        "1. Navigate to the Tellers page",
-        "2. Click the Teller Name link for <existing teller> to open the Teller Detail page",
-        "3. In the Cashiers section, click the Cashier Name link for <existing cashier> to open the Cashier Detail page",
-        "4. Click the 'Settle Cash' button to open the Settle Cash form",
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click the <Cashier Name> link in the Cashiers section to open Cashier Detail page",
+        "4. Click 'Settle Cash' on the Cashier Detail page to open the Settle Cash dialog",
         "5. Enter <Amount> in the Amount field",
-        "6. Select <Currency> in the Currency field",
-        "7. Select <Transaction Date> in the Transaction Date field",
-        "8. Click the 'Settle' button on the form"
+        "6. Enter <Currency> in the Currency field",
+        "7. Enter <Transaction Date> in the Transaction Date field",
+        "8. Click Confirm on the Settle Cash dialog"
       ],
-      "expected_result": "A new transaction appears in the Cashier Transactions list with Type 'Settlement' showing the entered Amount, Currency and Transaction Date; Cash In Hand and the Running Balance update accordingly",
+      "expected_result": "A success notification displays \"returns cash to vault\" and Cash In Hand on the Cashier Detail page shows a decreased value reflecting the settled <Amount>; the Cashier Transactions table shows a new row with Type = 'Settlement', Amount = <Amount>, and the Running Balance updated accordingly",
       "priority": "high"
+    },
+    {
+      "tc_id": "P-007",
+      "test_case": "View Cashier Transactions table columns on Cashier Detail page",
+      "preconditions": [
+        "User logged in as <Teller Manager>",
+        "Cashier <Cashier Name> exists and is allocated to a Teller",
+        "Cashier Detail page for <Cashier Name> is reachable"
+      ],
+      "steps": [
+        "1. Open the Tellers page",
+        "2. Click the <Teller Name> link to open the Teller Detail page",
+        "3. Click the <Cashier Name> link in the Cashiers section to open Cashier Detail page",
+        "4. Scroll to the Cashier Transactions section"
+      ],
+      "expected_result": "Cashier Transactions table is visible and displays columns 'Date', 'Type', 'Amount', and 'Running Balance'",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 6,
+    "total": 7,
     "high_priority": 4,
-    "medium_priority": 2,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }

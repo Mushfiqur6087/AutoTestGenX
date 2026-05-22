@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.759342
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.395959
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Accounting — Journal Entries & Closures
 
@@ -220,7 +220,695 @@ The Closing Entries page displays a table with columns for Office, Closing Date,
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:25] UI-AST Agent - LLM RESPONSE
+[22:21:53] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Accounting — Journal Entries & Closures",
+  "components": {
+    "Journal_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry ID",
+        "Office",
+        "Transaction Date",
+        "Created Date",
+        "Transaction ID",
+        "Type",
+        "GL Account",
+        "Amount"
+      ],
+      "filters": {
+        "Office": {
+          "type": "unspecified",
+          "required": false
+        },
+        "GL_Account": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Date_Range": {
+          "type": "date_range",
+          "required": false
+        },
+        "Transaction_ID": {
+          "type": "search",
+          "required": false
+        },
+        "Entry_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Debit",
+            "Credit"
+          ]
+        }
+      },
+      "add_button": {
+        "element_name": "+ Add Journal Entry",
+        "action": "open_form",
+        "opens": "Add_Journal_Entry_Form"
+      }
+    },
+    "Add_Journal_Entry_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Currency": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Reference_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Transaction_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Payment_Type": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Payment_Details": {
+          "type": "unspecified",
+          "required": false,
+          "visible_when": "Payment_Type != ''"
+        },
+        "Entry_Lines": {
+          "type": "repeating_group",
+          "item_fields": {
+            "GL_Account": {
+              "type": "dropdown",
+              "required": true
+            },
+            "Type": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "Debit",
+                "Credit"
+              ]
+            },
+            "Amount": {
+              "type": "number",
+              "required": true,
+              "constraints": []
+            }
+          }
+        },
+        "Comments": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "constraints": [
+        "total debits must equal total credits (blocks submission if not balanced)",
+        "Transaction_Date must be after the latest closure date for the selected Office (journal entries cannot be posted for dates on or before a closure)"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Create Journal Entry",
+          "on_success": "creates journal entry",
+          "constraints": [
+            "total debits must equal total credits (blocks submission if not balanced)",
+            "Transaction_Date must be after the latest closure date for the selected Office"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "dismisses form"
+        }
+      ]
+    },
+    "Closing_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Office",
+        "Closing Date",
+        "Created Date",
+        "Comments"
+      ],
+      "add_button": {
+        "element_name": "+ Create Closure",
+        "action": "open_form",
+        "opens": "Create_Closure_Form"
+      }
+    },
+    "Create_Closure_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Closing_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Comments": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Closure",
+          "on_success": "creates closure and prevents journal entries from being posted for dates on or before the closing date"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "dismisses form"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:21:53] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Accounting \u2014 Journal Entries & Closures",
+  "components": {
+    "Journal_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry ID",
+        "Office",
+        "Transaction Date",
+        "Created Date",
+        "Transaction ID",
+        "Type",
+        "GL Account",
+        "Amount"
+      ],
+      "filters": {
+        "Office": {
+          "type": "unspecified",
+          "required": false
+        },
+        "GL_Account": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Date_Range": {
+          "type": "date_range",
+          "required": false
+        },
+        "Transaction_ID": {
+          "type": "search",
+          "required": false
+        },
+        "Entry_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Debit",
+            "Credit"
+          ]
+        }
+      },
+      "add_button": {
+        "element_name": "+ Add Journal Entry",
+        "action": "open_form",
+        "opens": "Add_Journal_Entry_Form"
+      }
+    },
+    "Add_Journal_Entry_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Currency": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Reference_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Transaction_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Payment_Type": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Payment_Details": {
+          "type": "unspecified",
+          "required": false,
+          "visible_when": "Payment_Type != ''"
+        },
+        "Entry_Lines": {
+          "type": "repeating_group",
+          "item_fields": {
+            "GL_Account": {
+              "type": "dropdown",
+              "required": true
+            },
+            "Type": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "Debit",
+                "Credit"
+              ]
+            },
+            "Amount": {
+              "type": "number",
+              "required": true,
+              "constraints": []
+            }
+          }
+        },
+        "Comments": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "constraints": [
+        "total debits must equal total credits (blocks submission if not balanced)",
+        "Transaction_Date must be after the latest closure date for the selected Office (journal entries cannot be posted for dates on or before a closure)"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Create Journal Entry",
+          "on_success": "creates journal entry",
+          "constraints": [
+            "total debits must equal total credits (blocks submission if not balanced)",
+            "Transaction_Date must be after the latest closure date for the selected Office"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "dismisses form"
+        }
+      ]
+    },
+    "Closing_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Office",
+        "Closing Date",
+        "Created Date",
+        "Comments"
+      ],
+      "add_button": {
+        "element_name": "+ Create Closure",
+        "action": "open_form",
+        "opens": "Create_Closure_Form"
+      }
+    },
+    "Create_Closure_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Closing_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Comments": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Closure",
+          "on_success": "creates closure and prevents journal entries from being posted for dates on or before the closing date"
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "dismisses form"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:24:11] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Accounting — Journal Entries & Closures
+
+
+The Journal Entries page displays a data table with columns for Entry ID, Office, Transaction Date, Created Date, Transaction ID, Type (Debit/Credit), GL Account, and Amount. A filter bar allows filtering by Office, GL Account, Date Range, Transaction ID, and Entry Type. A "+ Add Journal Entry" button opens the creation form containing Office (required), Currency (required), Reference Number, Transaction Date (required), Payment Type and payment detail fields, entry lines (each with a GL Account dropdown and Amount — an "Add Row" button adds additional lines), and Comments. A running total shows debit total, credit total, and difference; total debits must equal total credits or a validation error blocks submission.
+
+The Closing Entries page displays a table with columns for Office, Closing Date, Created Date, and Comments. A "+ Create Closure" button opens the form with Office (required), Closing Date (required), and Comments. Creating a closure prevents journal entries from being posted for dates on or before the closing date, protecting completed accounting periods.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Add_Journal_Entry_Form.fields.Entry_Lines — add an explicit add_row_button element (e.g., 'element_name': 'Add Row', 'action': 'add_repeating_item') so the UI explicitly exposes the ability to add rows as described.
+2. components.Add_Journal_Entry_Form — add a running_totals block (e.g., 'running_totals': { 'debit_total': {type:'number', read_only:true}, 'credit_total': {type:'number', read_only:true}, 'difference': {type:'number', read_only:true} }) to show debit total, credit total, and difference as required by the description.
+3. components.Add_Journal_Entry_Form.fields.Payment_Details — remove the inferred 'visible_when' conditional (Payment_Type != '') unless the description is updated to explicitly state that payment details are conditionally shown when a payment type is selected.
+4. components.Add_Journal_Entry_Form.fields.Entry_Lines.item_fields.Type — either remove this inferred per-line 'Type' field or update the functional description to explicitly state that each entry line must include a Debit/Credit selector; if kept, ensure the description mentions per-line Type selection so it's not an unanchored inference.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:25:41] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Accounting — Journal Entries & Closures",
+  "components": {
+    "Journal_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry ID",
+        "Office",
+        "Transaction Date",
+        "Created Date",
+        "Transaction ID",
+        "Type",
+        "GL Account",
+        "Amount"
+      ],
+      "filters": {
+        "Office": { "type": "dropdown", "required": false },
+        "GL_Account": { "type": "dropdown", "required": false },
+        "Date_Range": { "type": "unspecified", "required": false },
+        "Transaction_ID": { "type": "unspecified", "required": false },
+        "Entry_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": ["Debit", "Credit"]
+        }
+      },
+      "actions": [
+        {
+          "element_name": "+ Add Journal Entry",
+          "action": "open_form",
+          "target": "Add_Journal_Entry_Form"
+        }
+      ]
+    },
+    "Add_Journal_Entry_Form": {
+      "type": "form",
+      "fields": {
+        "Office": { "type": "dropdown", "required": true },
+        "Currency": { "type": "dropdown", "required": true },
+        "Reference_Number": { "type": "unspecified", "required": false },
+        "Transaction_Date": {
+          "type": "date",
+          "required": true,
+          "constraints": [
+            "must be after the latest closing date for the selected Office; cannot be on or before a closure date"
+          ]
+        },
+        "Payment_Type": { "type": "dropdown", "required": false },
+        "Payment_Details": { "type": "unspecified", "required": false },
+        "Entry_Lines": {
+          "type": "repeating_group",
+          "item_fields": {
+            "GL_Account": { "type": "dropdown", "required": true },
+            "Amount": { "type": "number", "required": true }
+          },
+          "add_row_button": {
+            "element_name": "Add Row",
+            "action": "add_repeating_item"
+          }
+        },
+        "Comments": { "type": "unspecified", "required": false }
+      },
+      "running_totals": {
+        "debit_total": { "type": "number", "read_only": true },
+        "credit_total": { "type": "number", "read_only": true },
+        "difference": { "type": "number", "read_only": true }
+      },
+      "constraints": [
+        "total debits must equal total credits; if not equal a validation error blocks submission"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Create Journal Entry",
+          "on_success": "creates journal entry",
+          "preconditions": [],
+          "constraints": [
+            "form-level validation must pass (including debits == credits)"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "action": "close_form"
+        }
+      ]
+    },
+    "Closing_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Office",
+        "Closing Date",
+        "Created Date",
+        "Comments"
+      ],
+      "actions": [
+        {
+          "element_name": "+ Create Closure",
+          "action": "open_form",
+          "target": "Create_Closure_Form"
+        }
+      ]
+    },
+    "Create_Closure_Form": {
+      "type": "form",
+      "fields": {
+        "Office": { "type": "dropdown", "required": true },
+        "Closing_Date": { "type": "date", "required": true },
+        "Comments": { "type": "unspecified", "required": false }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Closure",
+          "on_success": "creates closure and prevents journal entries from being posted for dates on or before the closing date for the selected Office"
+        },
+        {
+          "element_name": "Cancel",
+          "action": "close_form"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:25:41] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Accounting \u2014 Journal Entries & Closures",
+  "components": {
+    "Journal_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry ID",
+        "Office",
+        "Transaction Date",
+        "Created Date",
+        "Transaction ID",
+        "Type",
+        "GL Account",
+        "Amount"
+      ],
+      "filters": {
+        "Office": {
+          "type": "dropdown",
+          "required": false
+        },
+        "GL_Account": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Date_Range": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Transaction_ID": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Entry_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Debit",
+            "Credit"
+          ]
+        }
+      },
+      "actions": [
+        {
+          "element_name": "+ Add Journal Entry",
+          "action": "open_form",
+          "target": "Add_Journal_Entry_Form"
+        }
+      ]
+    },
+    "Add_Journal_Entry_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Currency": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Reference_Number": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Transaction_Date": {
+          "type": "date",
+          "required": true,
+          "constraints": [
+            "must be after the latest closing date for the selected Office; cannot be on or before a closure date"
+          ]
+        },
+        "Payment_Type": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Payment_Details": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Entry_Lines": {
+          "type": "repeating_group",
+          "item_fields": {
+            "GL_Account": {
+              "type": "dropdown",
+              "required": true
+            },
+            "Amount": {
+              "type": "number",
+              "required": true
+            }
+          },
+          "add_row_button": {
+            "element_name": "Add Row",
+            "action": "add_repeating_item"
+          }
+        },
+        "Comments": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "running_totals": {
+        "debit_total": {
+          "type": "number",
+          "read_only": true
+        },
+        "credit_total": {
+          "type": "number",
+          "read_only": true
+        },
+        "difference": {
+          "type": "number",
+          "read_only": true
+        }
+      },
+      "constraints": [
+        "total debits must equal total credits; if not equal a validation error blocks submission"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Create Journal Entry",
+          "on_success": "creates journal entry",
+          "preconditions": [],
+          "constraints": [
+            "form-level validation must pass (including debits == credits)"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "action": "close_form"
+        }
+      ]
+    },
+    "Closing_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Office",
+        "Closing Date",
+        "Created Date",
+        "Comments"
+      ],
+      "actions": [
+        {
+          "element_name": "+ Create Closure",
+          "action": "open_form",
+          "target": "Create_Closure_Form"
+        }
+      ]
+    },
+    "Create_Closure_Form": {
+      "type": "form",
+      "fields": {
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Closing_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Comments": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create Closure",
+          "on_success": "creates closure and prevents journal entries from being posted for dates on or before the closing date for the selected Office"
+        },
+        {
+          "element_name": "Cancel",
+          "action": "close_form"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:26:54] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Accounting — Journal Entries & Closures
+
+
+The Journal Entries page displays a data table with columns for Entry ID, Office, Transaction Date, Created Date, Transaction ID, Type (Debit/Credit), GL Account, and Amount. A filter bar allows filtering by Office, GL Account, Date Range, Transaction ID, and Entry Type. A "+ Add Journal Entry" button opens the creation form containing Office (required), Currency (required), Reference Number, Transaction Date (required), Payment Type and payment detail fields, entry lines (each with a GL Account dropdown and Amount — an "Add Row" button adds additional lines), and Comments. A running total shows debit total, credit total, and difference; total debits must equal total credits or a validation error blocks submission.
+
+The Closing Entries page displays a table with columns for Office, Closing Date, Created Date, and Comments. A "+ Create Closure" button opens the form with Office (required), Closing Date (required), and Comments. Creating a closure prevents journal entries from being posted for dates on or before the closing date, protecting completed accounting periods.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. Remove or document the Cancel button in components.Add_Journal_Entry_Form.submit_actions[1]; the description does not mention a Cancel action for the Add Journal Entry form.
+2. Remove or document the Cancel button in components.Create_Closure_Form.submit_actions[1]; the description does not mention a Cancel action for the Create Closure form.
+3. Remove the preconditions property at components.Add_Journal_Entry_Form.submit_actions[0].preconditions (or populate it with explicit preconditions mentioned in the description) — the description does not specify any preconditions.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:27:42] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Accounting — Journal Entries & Closures",
@@ -241,14 +929,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "fields": {
           "Office": { "type": "dropdown", "required": false },
           "GL_Account": { "type": "dropdown", "required": false },
-          "Date_Range": {
-            "type": "unspecified",
-            "fields": {
-              "Start_Date": { "type": "date", "required": false },
-              "End_Date": { "type": "date", "required": false }
-            }
-          },
-          "Transaction_ID": { "type": "unspecified", "required": false },
+          "Date_From": { "type": "date", "required": false },
+          "Date_To": { "type": "date", "required": false },
+          "Transaction_ID": { "type": "search", "required": false },
           "Entry_Type": {
             "type": "dropdown",
             "required": false,
@@ -259,57 +942,53 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "actions": [
         {
           "element_name": "+ Add Journal Entry",
-          "action": "open_form",
-          "opens": "Journal_Entry_Form"
+          "opens_form": "Add_Journal_Entry_Form"
         }
       ]
     },
-    "Journal_Entry_Form": {
+    "Add_Journal_Entry_Form": {
       "type": "form",
       "fields": {
         "Office": { "type": "dropdown", "required": true },
         "Currency": { "type": "dropdown", "required": true },
         "Reference_Number": { "type": "unspecified", "required": false },
         "Transaction_Date": { "type": "date", "required": true },
-        "Payment_Type": { "type": "unspecified", "required": false },
+        "Payment_Type": { "type": "dropdown", "required": false },
         "Payment_Details": { "type": "unspecified", "required": false },
         "Entry_Lines": {
           "type": "repeating_group",
           "item_fields": {
             "GL_Account": { "type": "dropdown", "required": true },
+            "Type": {
+              "type": "dropdown",
+              "required": true,
+              "options": ["Debit", "Credit"]
+            },
             "Amount": { "type": "number", "required": true }
           }
         },
         "Comments": { "type": "unspecified", "required": false }
       },
       "constraints": [
-        "total debits must equal total credits (validation error blocks submission)",
-        "transaction date must not be on or before a closing date already created for the selected Office"
+        "sum(Entry_Lines where Type == Debit).Amount == sum(Entry_Lines where Type == Credit).Amount"
       ],
       "submit_actions": [
         {
           "element_name": "Create Journal Entry",
           "on_success": "creates journal entry",
           "preconditions": [
-            "form constraints must be satisfied (including total debits == total credits)",
-            "transaction date must be after latest closure date for the selected Office"
+            "Transaction_Date must be after the latest closure date for the selected Office"
           ]
         }
       ]
     },
     "Closing_Entries_Table": {
       "type": "data_table",
-      "columns": [
-        "Office",
-        "Closing Date",
-        "Created Date",
-        "Comments"
-      ],
+      "columns": ["Office", "Closing Date", "Created Date", "Comments"],
       "actions": [
         {
           "element_name": "+ Create Closure",
-          "action": "open_form",
-          "opens": "Create_Closure_Form"
+          "opens_form": "Create_Closure_Form"
         }
       ]
     },
@@ -323,7 +1002,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Create Closure",
-          "on_success": "creates closure; prevents journal entries from being posted for dates on or before the closing date"
+          "on_success": "prevents journal entries from being posted for dates on or before the closing date (protects completed accounting periods)"
         }
       ]
     }
@@ -331,7 +1010,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:06:25] UI-AST Agent - PARSED JSON
+[22:27:42] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Accounting \u2014 Journal Entries & Closures",
@@ -358,21 +1037,16 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "type": "dropdown",
             "required": false
           },
-          "Date_Range": {
-            "type": "unspecified",
-            "fields": {
-              "Start_Date": {
-                "type": "date",
-                "required": false
-              },
-              "End_Date": {
-                "type": "date",
-                "required": false
-              }
-            }
+          "Date_From": {
+            "type": "date",
+            "required": false
+          },
+          "Date_To": {
+            "type": "date",
+            "required": false
           },
           "Transaction_ID": {
-            "type": "unspecified",
+            "type": "search",
             "required": false
           },
           "Entry_Type": {
@@ -388,12 +1062,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "actions": [
         {
           "element_name": "+ Add Journal Entry",
-          "action": "open_form",
-          "opens": "Journal_Entry_Form"
+          "opens_form": "Add_Journal_Entry_Form"
         }
       ]
     },
-    "Journal_Entry_Form": {
+    "Add_Journal_Entry_Form": {
       "type": "form",
       "fields": {
         "Office": {
@@ -413,7 +1086,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "required": true
         },
         "Payment_Type": {
-          "type": "unspecified",
+          "type": "dropdown",
           "required": false
         },
         "Payment_Details": {
@@ -427,6 +1100,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
               "type": "dropdown",
               "required": true
             },
+            "Type": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "Debit",
+                "Credit"
+              ]
+            },
             "Amount": {
               "type": "number",
               "required": true
@@ -439,16 +1120,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         }
       },
       "constraints": [
-        "total debits must equal total credits (validation error blocks submission)",
-        "transaction date must not be on or before a closing date already created for the selected Office"
+        "sum(Entry_Lines where Type == Debit).Amount == sum(Entry_Lines where Type == Credit).Amount"
       ],
       "submit_actions": [
         {
           "element_name": "Create Journal Entry",
           "on_success": "creates journal entry",
           "preconditions": [
-            "form constraints must be satisfied (including total debits == total credits)",
-            "transaction date must be after latest closure date for the selected Office"
+            "Transaction_Date must be after the latest closure date for the selected Office"
           ]
         }
       ]
@@ -464,8 +1143,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "actions": [
         {
           "element_name": "+ Create Closure",
-          "action": "open_form",
-          "opens": "Create_Closure_Form"
+          "opens_form": "Create_Closure_Form"
         }
       ]
     },
@@ -488,7 +1166,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Create Closure",
-          "on_success": "creates closure; prevents journal entries from being posted for dates on or before the closing date"
+          "on_success": "prevents journal entries from being posted for dates on or before the closing date (protects completed accounting periods)"
         }
       ]
     }

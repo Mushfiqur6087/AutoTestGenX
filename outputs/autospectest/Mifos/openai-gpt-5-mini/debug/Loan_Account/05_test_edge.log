@@ -1,0 +1,1107 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.538304
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Loan Account</module_name>
+
+<ast>
+{
+  "module_name": "Loan Account",
+  "components": {
+    "Loan_Application_Wizard": {
+      "type": "wizard",
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates loan in Submitted and Pending Approval status"
+        }
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_name": "Details",
+          "fields": {
+            "Product_Name": {
+              "type": "dropdown",
+              "required": true,
+              "on_change": "auto_populate_product_defaults"
+            },
+            "Loan_Officer": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Loan_Purpose": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Fund": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Submitted_On": {
+              "type": "date",
+              "required": false
+            },
+            "Expected_Disbursement_Date": {
+              "type": "date",
+              "required": false
+            },
+            "Principal": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                ">= product.min_principal",
+                "<= product.max_principal"
+              ]
+            },
+            "Number_of_Repayments": {
+              "type": "number",
+              "required": false
+            },
+            "Repaid_Every_Frequency": {
+              "type": "number",
+              "required": false
+            },
+            "Repaid_Every_Unit": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Interest_Rate": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                ">= product.min_interest_rate",
+                "<= product.max_interest_rate"
+              ]
+            },
+            "External_ID": {
+              "type": "unspecified",
+              "required": false
+            }
+          }
+        },
+        {
+          "step_index": 2,
+          "step_name": "Terms",
+          "fields": {
+            "Repayment_Strategy": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Amortization": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Interest_Method": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Interest_Calculation_Period": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Grace_Period_Days": {
+              "type": "number",
+              "required": false
+            },
+            "Grace_Period_Repayments": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        {
+          "step_index": 3,
+          "step_name": "Charges",
+          "fields": {
+            "Inherited_Product_Charges_List": {
+              "type": "unspecified",
+              "required": false,
+              "description": "lists charges inherited from the product (display-only)"
+            },
+            "Add_Charge": {
+              "type": "button",
+              "element_name": "Add Charge",
+              "on_success": "adds an additional charge entry to Additional_Charges"
+            },
+            "Additional_Charges": {
+              "type": "repeating_group",
+              "item_fields": {}
+            }
+          }
+        },
+        {
+          "step_index": 4,
+          "step_name": "Collateral",
+          "fields": {
+            "Collateral_Items": {
+              "type": "repeating_group",
+              "required": false,
+              "item_fields": {
+                "Collateral_Type": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Value": {
+                  "type": "number",
+                  "required": false
+                },
+                "Description": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Loan_Detail_Client_Link": {
+      "type": "link",
+      "element_name": "Client Name Link",
+      "on_click": "navigates to Client Detail page"
+    },
+    "Loan_Detail_Action_Bar": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Submitted and Pending Approval": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "fields": {
+                "Approved_On_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Approved_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Expected_Disbursement_Date": {
+                  "type": "date",
+                  "required": false
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "changes status to Approved"
+            },
+            {
+              "action_name": "Reject",
+              "fields": {},
+              "on_success": "changes status to Rejected"
+            },
+            {
+              "action_name": "Withdraw",
+              "fields": {},
+              "on_success": "withdraws application"
+            },
+            {
+              "action_name": "Delete",
+              "fields": {},
+              "on_success": "deletes loan application"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Disburse",
+              "fields": {
+                "Disbursed_On_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Payment_Type": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money",
+                    "Bank Transfer"
+                  ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Disburse_to_Savings": {
+                  "type": "checkbox",
+                  "required": false
+                }
+              },
+              "on_success": "changes status to Active or Active with disbursement recorded"
+            },
+            {
+              "action_name": "Undo Approval",
+              "fields": {},
+              "on_success": "reverts status from Approved to Submitted and Pending Approval"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Make Repayment",
+              "fields": {
+                "Transaction_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": true,
+                  "constraints": [
+                    "pre-filled with amount due"
+                  ]
+                },
+                "Payment_Type": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money",
+                    "Bank Transfer"
+                  ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "constraints": [
+                "partial repayments are applied per configured repayment strategy"
+              ],
+              "on_success": "applies payment; full settlement changes status to Closed (Closed obligations met)"
+            },
+            {
+              "action_name": "Waive Interest",
+              "fields": {},
+              "on_success": "applies interest waiver"
+            },
+            {
+              "action_name": "Write Off",
+              "fields": {},
+              "on_success": "changes status to Written Off"
+            },
+            {
+              "action_name": "Close",
+              "fields": {},
+              "on_success": "changes status to Closed"
+            },
+            {
+              "action_name": "Reschedule",
+              "fields": {
+                "Reschedule_From_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Reason": {
+                  "type": "unspecified",
+                  "required": true
+                },
+                "Adjusted_Due_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Grace_Fields": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Extra_Terms": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "New_Interest_Rate": {
+                  "type": "number",
+                  "required": false
+                }
+              },
+              "on_success": "creates a pending reschedule request requiring separate approval"
+            },
+            {
+              "action_name": "Prepay Loan",
+              "fields": {},
+              "on_success": "processes prepayment"
+            },
+            {
+              "action_name": "Foreclosure",
+              "fields": {},
+              "on_success": "processes foreclosure"
+            },
+            {
+              "action_name": "Charge Off",
+              "fields": {},
+              "on_success": "changes status to Written Off or Charged Off per business rules"
+            },
+            {
+              "action_name": "Assign Loan Officer",
+              "fields": {},
+              "on_success": "assigns loan officer"
+            }
+          ]
+        },
+        "Closed": {
+          "available_actions": []
+        },
+        "Overpaid": {
+          "available_actions": []
+        },
+        "Written Off": {
+          "available_actions": []
+        }
+      }
+    },
+    "Loan_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Repayment Schedule",
+          "fields": {
+            "Repayment_Schedule_Table": {
+              "type": "data_table",
+              "columns": [
+                "Installment Number",
+                "Due Date",
+                "Principal Due",
+                "Interest Due",
+                "Fees Due",
+                "Penalties Due",
+                "Total Due",
+                "Amounts Paid",
+                "Total Outstanding",
+                "Status Indicator"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {
+            "Transactions_Table": {
+              "type": "data_table",
+              "columns": [
+                "Date",
+                "Type",
+                "Amount",
+                "Principal/Interest/Fees/Penalties Portions",
+                "Outstanding Balance"
+              ],
+              "row_actions": [
+                {
+                  "action_name": "Undo",
+                  "element_type": "link",
+                  "on_success": "reverses transaction where allowed"
+                }
+              ],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {
+            "Charges_Table": {
+              "type": "data_table",
+              "columns": [
+                "Charge Name",
+                "Amount",
+                "Due Date",
+                "Paid",
+                "Waived",
+                "Outstanding"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Collateral",
+          "fields": {}
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+A new loan application is initiated from the Client Detail page. The Loan Application form is a multi-step wizard. Step 1 (Details) contains Product Name dropdown (selecting a product auto-populates default values), Loan Officer, Loan Purpose, Fund, Submitted On date, Expected Disbursement Date, Principal (bounded by product min/max), Number of Repayments, Repaid Every frequency and unit, Interest Rate (bounded by product min/max), and External ID. Step 2 (Terms) contains Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period dropdowns (pre-filled from the product but adjustable), plus grace period fields. Step 3 (Charges) lists charges inherited from the product and includes an "Add Charge" button for additional charges. Step 4 (Collateral, optional) allows adding collateral items with Collateral Type, Value, and Description. Clicking "Submit" creates the loan in "Submitted and Pending Approval" status.
+
+The Loan Detail page header displays the loan account number, product name, client name (clickable link), status badge, and loan balance. Status badges are color-coded: Submitted and Pending Approval (yellow), Approved (blue), Active (green), Closed (gray), Overpaid (purple), Written Off (red). Action buttons change based on status: Pending Approval offers Approve (dialog with Approved On Date, Approved Amount, Expected Disbursement Date, and Note), Reject, Withdraw, and Delete; Approved offers Disburse (form with Disbursed On Date, Transaction Amount, Payment Type — Cash, Check, Mobile Money, Bank Transfer — and payment detail fields; a "Disburse to Savings" option deposits directly into the client's linked savings account) and Undo Approval; Active offers Make Repayment (form with Transaction Date, Transaction Amount pre-filled with amount due, and Payment Type — partial repayments are applied per the configured repayment strategy; full settlement changes status to "Closed obligations met"), Waive Interest, Write Off, Close, Reschedule (form with Reschedule From Date, Reason, Adjusted Due Date, grace fields, Extra Terms, and New Interest Rate — creates a pending request requiring separate approval), Prepay Loan, Foreclosure, Charge Off, and Assign Loan Officer.
+
+Tabs on the detail page show Summary (disbursement details, repayment schedule summary, total paid, total outstanding, total overdue, and charges summary), Repayment Schedule (table with Installment Number, Due Date, Principal Due, Interest Due, Fees Due, Penalties Due, Total Due, amounts paid, Total Outstanding, and status indicators), Transactions (table with Date, Type, Amount, Principal/Interest/Fees/Penalties portions, Outstanding Balance, and undo link), Charges (Charge Name, Amount, Due Date, Paid, Waived, Outstanding), Collateral, Notes, and Documents.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:32:55] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Loan Account",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Principal equals product.min_principal (boundary pass)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_principal and product.max_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.min_principal",
+        "3. Enter exactly <product.min_principal> into the Principal field",
+        "4. (If required by UI) advance through Steps 2-4 without changing Principal",
+        "5. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Form submits successfully; loan is created in 'Submitted and Pending Approval' status and Principal saved value equals <product.min_principal> shown on the loan detail header/page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Principal one unit below product.min_principal (boundary fail)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.min_principal",
+        "3. Enter <one unit below product.min_principal> into the Principal field",
+        "4. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Submission is blocked; Principal field displays a visible validation error indicating the value is below the minimum allowed (error shown next to the Principal field)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Principal equals product.max_principal (boundary pass)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.max_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.max_principal",
+        "3. Enter exactly <product.max_principal> into the Principal field",
+        "4. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Form submits successfully; loan is created in 'Submitted and Pending Approval' status and Principal saved value equals <product.max_principal> shown on the loan detail page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Principal one unit above product.max_principal (boundary fail)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.max_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.max_principal",
+        "3. Enter <one unit above product.max_principal> into the Principal field",
+        "4. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Submission is blocked; Principal field displays a visible validation error indicating the value exceeds the maximum allowed (error shown next to the Principal field)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Interest Rate equals product.min_interest_rate and product.max_interest_rate boundaries",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_interest_rate and product.max_interest_rate"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that pre-fills interest rate constraints",
+        "3. Enter exactly <product.min_interest_rate> into the Interest_Rate field",
+        "4. Click 'Submit' and confirm loan created",
+        "5. Re-open wizard for a new application, select same <Product_Name>",
+        "6. Enter exactly <product.max_interest_rate> into the Interest_Rate field",
+        "7. Click 'Submit' and confirm loan created"
+      ],
+      "expected_result": "Both submissions succeed; when Interest_Rate is exactly <product.min_interest_rate> and exactly <product.max_interest_rate> the form submits successfully and saved loan shows the entered Interest_Rate values on the loan detail page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "boundary",
+      "test_case": "Interest Rate one unit below min and one unit above max (boundary fail)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_interest_rate and product.max_interest_rate"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name>",
+        "3. Enter <one unit below product.min_interest_rate> into the Interest_Rate field",
+        "4. Click 'Submit' and observe validation",
+        "5. Re-open wizard for a new application, select same <Product_Name>",
+        "6. Enter <one unit above product.max_interest_rate> into the Interest_Rate field",
+        "7. Click 'Submit' and observe validation"
+      ],
+      "expected_result": "Both submissions are blocked; Interest_Rate field displays a visible validation error when below the minimum and when above the maximum (error shown next to the Interest_Rate field)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "input_edge",
+      "test_case": "Change Product after entering Principal that becomes below new product.min_principal",
+      "preconditions": [
+        "User is on Client Detail page",
+        "Two products exist: Product A with a low product.min_principal, Product B with a higher product.min_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select Product A",
+        "3. Enter a Principal value of <value >= product.min_principal of Product A and < product.min_principal of Product B>",
+        "4. Change Product_Name selection to Product B",
+        "5. Observe Principal field and any inline validation or auto-adjust behavior"
+      ],
+      "expected_result": "Change is blocked or corrected: either Principal field displays a visible validation error indicating it is below Product B's minimum, or the Principal field is auto-adjusted to meet Product B's <product.min_principal>; the UI displays the adjustment or error next to the Principal field (submission should be blocked until resolved)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click 'Submit' rapidly (prevent duplicate loan creation)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A valid product selected and all required fields for submission are filled with valid values"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. Complete Step 1 with valid Product_Name and required values",
+        "3. Advance through Steps 2-4 as needed without changing validated values",
+        "4. Rapidly double-click the 'Submit' button (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one loan is created; user is taken to a single loan detail page and the system shows one new loan in the client's loan list (second submission attempt is blocked and no duplicate record appears)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "input_edge",
+      "test_case": "Add then remove all Collateral items and submit (repeating_group edge)",
+      "preconditions": [
+        "User is on Client Detail page"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. Navigate to Step 4 Collateral",
+        "3. Click to add a Collateral_Items entry",
+        "4. For the new Collateral item, enter values into Collateral_Type and Value fields",
+        "5. Remove the added Collateral_Items entry so zero items remain",
+        "6. Navigate back to Step 1 and ensure required fields are valid",
+        "7. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Form submits successfully (since Collateral_Items has no minimum constraint); loan is created in 'Submitted and Pending Approval' status and Collateral section on loan detail shows no collateral items",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-010",
+      "subcategory": "state_edge",
+      "test_case": "Approve then immediately attempt Disburse without waiting for state update (rapid consecutive state transitions)",
+      "preconditions": [
+        "A loan exists in 'Submitted and Pending Approval' status on the loan detail page",
+        "User has permission to Approve and Disburse"
+      ],
+      "steps": [
+        "1. From the loan detail page, click the 'Approve' action in the action bar",
+        "2. In the Approve dialog, enter a valid Approved_On_Date and Approved_Amount and click Confirm/Submit",
+        "3. Immediately (without waiting for the page to fully update) click the 'Disburse' action in the action bar"
+      ],
+      "expected_result": "Second action is blocked; the Disburse action shows a visible error or tooltip indicating the loan is not yet in the Approved state or that the prior action is still processing (Disburse does not open the disbursement form until the Approve transition completes)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-011",
+      "subcategory": "data_edge",
+      "test_case": "Make Repayment Transaction_Amount entered with higher-than-supported decimal precision",
+      "preconditions": [
+        "A loan exists in 'Active' status with an amount due prefilled for repayment",
+        "The Make Repayment action is available"
+      ],
+      "steps": [
+        "1. From the loan detail page, click 'Make Repayment' in the action bar",
+        "2. In the Make Repayment form, observe the pre-filled Transaction_Amount",
+        "3. Replace the pre-filled Transaction_Amount with a value that includes more decimal places than typical currency precision (enter a value with many decimal places)",
+        "4. Click 'Confirm' to submit the repayment"
+      ],
+      "expected_result": "Form accepts the input; the saved transaction displays the Transaction_Amount rounded to the system's monetary precision on the Transactions table and in the loan balance (repayment succeeds and the displayed amount shows the rounded value)",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "boundary": 6,
+    "input_edge": 3,
+    "interaction_edge": 1,
+    "state_edge": 1,
+    "data_edge": 1,
+    "medium_priority": 8,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[22:32:55] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Loan Account",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Principal equals product.min_principal (boundary pass)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_principal and product.max_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.min_principal",
+        "3. Enter exactly <product.min_principal> into the Principal field",
+        "4. (If required by UI) advance through Steps 2-4 without changing Principal",
+        "5. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Form submits successfully; loan is created in 'Submitted and Pending Approval' status and Principal saved value equals <product.min_principal> shown on the loan detail header/page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Principal one unit below product.min_principal (boundary fail)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.min_principal",
+        "3. Enter <one unit below product.min_principal> into the Principal field",
+        "4. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Submission is blocked; Principal field displays a visible validation error indicating the value is below the minimum allowed (error shown next to the Principal field)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Principal equals product.max_principal (boundary pass)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.max_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.max_principal",
+        "3. Enter exactly <product.max_principal> into the Principal field",
+        "4. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Form submits successfully; loan is created in 'Submitted and Pending Approval' status and Principal saved value equals <product.max_principal> shown on the loan detail page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Principal one unit above product.max_principal (boundary fail)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.max_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that has a defined product.max_principal",
+        "3. Enter <one unit above product.max_principal> into the Principal field",
+        "4. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Submission is blocked; Principal field displays a visible validation error indicating the value exceeds the maximum allowed (error shown next to the Principal field)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "boundary",
+      "test_case": "Interest Rate equals product.min_interest_rate and product.max_interest_rate boundaries",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_interest_rate and product.max_interest_rate"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name> that pre-fills interest rate constraints",
+        "3. Enter exactly <product.min_interest_rate> into the Interest_Rate field",
+        "4. Click 'Submit' and confirm loan created",
+        "5. Re-open wizard for a new application, select same <Product_Name>",
+        "6. Enter exactly <product.max_interest_rate> into the Interest_Rate field",
+        "7. Click 'Submit' and confirm loan created"
+      ],
+      "expected_result": "Both submissions succeed; when Interest_Rate is exactly <product.min_interest_rate> and exactly <product.max_interest_rate> the form submits successfully and saved loan shows the entered Interest_Rate values on the loan detail page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "boundary",
+      "test_case": "Interest Rate one unit below min and one unit above max (boundary fail)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A product exists with defined product.min_interest_rate and product.max_interest_rate"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select <Product_Name>",
+        "3. Enter <one unit below product.min_interest_rate> into the Interest_Rate field",
+        "4. Click 'Submit' and observe validation",
+        "5. Re-open wizard for a new application, select same <Product_Name>",
+        "6. Enter <one unit above product.max_interest_rate> into the Interest_Rate field",
+        "7. Click 'Submit' and observe validation"
+      ],
+      "expected_result": "Both submissions are blocked; Interest_Rate field displays a visible validation error when below the minimum and when above the maximum (error shown next to the Interest_Rate field)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "input_edge",
+      "test_case": "Change Product after entering Principal that becomes below new product.min_principal",
+      "preconditions": [
+        "User is on Client Detail page",
+        "Two products exist: Product A with a low product.min_principal, Product B with a higher product.min_principal"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. In Step 1 Details, select Product A",
+        "3. Enter a Principal value of <value >= product.min_principal of Product A and < product.min_principal of Product B>",
+        "4. Change Product_Name selection to Product B",
+        "5. Observe Principal field and any inline validation or auto-adjust behavior"
+      ],
+      "expected_result": "Change is blocked or corrected: either Principal field displays a visible validation error indicating it is below Product B's minimum, or the Principal field is auto-adjusted to meet Product B's <product.min_principal>; the UI displays the adjustment or error next to the Principal field (submission should be blocked until resolved)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click 'Submit' rapidly (prevent duplicate loan creation)",
+      "preconditions": [
+        "User is on Client Detail page",
+        "A valid product selected and all required fields for submission are filled with valid values"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. Complete Step 1 with valid Product_Name and required values",
+        "3. Advance through Steps 2-4 as needed without changing validated values",
+        "4. Rapidly double-click the 'Submit' button (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one loan is created; user is taken to a single loan detail page and the system shows one new loan in the client's loan list (second submission attempt is blocked and no duplicate record appears)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "input_edge",
+      "test_case": "Add then remove all Collateral items and submit (repeating_group edge)",
+      "preconditions": [
+        "User is on Client Detail page"
+      ],
+      "steps": [
+        "1. Click 'Create Loan' to open the Loan Application wizard",
+        "2. Navigate to Step 4 Collateral",
+        "3. Click to add a Collateral_Items entry",
+        "4. For the new Collateral item, enter values into Collateral_Type and Value fields",
+        "5. Remove the added Collateral_Items entry so zero items remain",
+        "6. Navigate back to Step 1 and ensure required fields are valid",
+        "7. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Form submits successfully (since Collateral_Items has no minimum constraint); loan is created in 'Submitted and Pending Approval' status and Collateral section on loan detail shows no collateral items",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-010",
+      "subcategory": "state_edge",
+      "test_case": "Approve then immediately attempt Disburse without waiting for state update (rapid consecutive state transitions)",
+      "preconditions": [
+        "A loan exists in 'Submitted and Pending Approval' status on the loan detail page",
+        "User has permission to Approve and Disburse"
+      ],
+      "steps": [
+        "1. From the loan detail page, click the 'Approve' action in the action bar",
+        "2. In the Approve dialog, enter a valid Approved_On_Date and Approved_Amount and click Confirm/Submit",
+        "3. Immediately (without waiting for the page to fully update) click the 'Disburse' action in the action bar"
+      ],
+      "expected_result": "Second action is blocked; the Disburse action shows a visible error or tooltip indicating the loan is not yet in the Approved state or that the prior action is still processing (Disburse does not open the disbursement form until the Approve transition completes)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-011",
+      "subcategory": "data_edge",
+      "test_case": "Make Repayment Transaction_Amount entered with higher-than-supported decimal precision",
+      "preconditions": [
+        "A loan exists in 'Active' status with an amount due prefilled for repayment",
+        "The Make Repayment action is available"
+      ],
+      "steps": [
+        "1. From the loan detail page, click 'Make Repayment' in the action bar",
+        "2. In the Make Repayment form, observe the pre-filled Transaction_Amount",
+        "3. Replace the pre-filled Transaction_Amount with a value that includes more decimal places than typical currency precision (enter a value with many decimal places)",
+        "4. Click 'Confirm' to submit the repayment"
+      ],
+      "expected_result": "Form accepts the input; the saved transaction displays the Transaction_Amount rounded to the system's monetary precision on the Transactions table and in the loan balance (repayment succeeds and the displayed amount shows the rounded value)",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "boundary": 6,
+    "input_edge": 3,
+    "interaction_edge": 1,
+    "state_edge": 1,
+    "data_edge": 1,
+    "medium_priority": 8,
+    "low_priority": 3
+  }
+}

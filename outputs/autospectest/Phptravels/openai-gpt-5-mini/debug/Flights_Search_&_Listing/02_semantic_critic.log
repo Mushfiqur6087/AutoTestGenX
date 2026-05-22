@@ -1,0 +1,847 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:50:10.007670
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:50:47] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[22:50:47] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The flights search form collects trip type (One-way, Round-trip, Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, First). On success, users are redirected to the listing page, where each result shows airline logo and name, departure and arrival times and airports, total duration, number of stops (Non-stop, 1 stop, 2+ stops), price per passenger, and a Select button. Expanding a result shows baggage allowance, fare rules, and seat availability. Sidebar filters include airlines, number of stops, departure and arrival time ranges, and price range. Results can be sorted by price, duration, departure time, or arrival time.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Flights Search & Listing",
+  "components": {
+    "Flights_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Trip_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "One-way",
+            "Round-trip",
+            "Multi-city"
+          ]
+        },
+        "Origin": {
+          "type": "search",
+          "required": false
+        },
+        "Destination": {
+          "type": "search",
+          "required": false
+        },
+        "Departure_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Return_Date": {
+          "type": "date",
+          "required": false,
+          "visible_when": "Trip_Type == Round-trip"
+        },
+        "Legs": {
+          "type": "repeating_group",
+          "visible_when": "Trip_Type == Multi-city",
+          "item_fields": {
+            "From": {
+              "type": "search",
+              "required": false
+            },
+            "To": {
+              "type": "search",
+              "required": false
+            },
+            "Date": {
+              "type": "date",
+              "required": false
+            }
+          }
+        },
+        "Passengers": {
+          "type": "form",
+          "fields": {
+            "Adults": {
+              "type": "number",
+              "required": false
+            },
+            "Children": {
+              "type": "number",
+              "required": false
+            },
+            "Infants": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        "Cabin_Class": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Economy",
+            "Premium Economy",
+            "Business",
+            "First"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to Listing page"
+        }
+      ]
+    },
+    "Flights_Listing": {
+      "type": "data_table",
+      "row_expandable": true,
+      "sortable_columns": [
+        "Price",
+        "Duration",
+        "Departure Time",
+        "Arrival Time"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Select",
+          "type": "button"
+        },
+        {
+          "action_name": "Expand",
+          "type": "button",
+          "reveals": [
+            "Baggage_Allowance",
+            "Fare_Rules",
+            "Seat_Availability"
+          ]
+        }
+      ]
+    },
+    "Sidebar_Filters": {
+      "type": "form",
+      "fields": {
+        "Airlines": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Number_of_Stops": {
+          "type": "checkbox",
+          "required": false,
+          "options": [
+            "Non-stop",
+            "1 stop",
+            "2+ stops"
+          ]
+        },
+        "Departure_Time_Start": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Departure_Time_End": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Arrival_Time_Start": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Arrival_Time_End": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Price_Min": {
+          "type": "number",
+          "required": false
+        },
+        "Price_Max": {
+          "type": "number",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Apply Filters"
+        },
+        {
+          "element_name": "Clear Filters"
+        }
+      ]
+    },
+    "Sort_Control": {
+      "type": "dropdown",
+      "fields": {},
+      "options": [
+        "Price",
+        "Duration",
+        "Departure Time",
+        "Arrival Time"
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:51:53] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing critical listing row fields and expanded-field definitions, and contains several inferred conditionals and controls that are not explicitly stated in the description.",
+  "missing": [
+    "Flights_Listing.row_fields.Airline_Logo",
+    "Flights_Listing.row_fields.Airline_Name",
+    "Flights_Listing.row_fields.Departure_Time",
+    "Flights_Listing.row_fields.Departure_Airport",
+    "Flights_Listing.row_fields.Arrival_Time",
+    "Flights_Listing.row_fields.Arrival_Airport",
+    "Flights_Listing.row_fields.Total_Duration",
+    "Flights_Listing.row_fields.Number_of_Stops",
+    "Flights_Listing.row_fields.Price_Per_Passenger",
+    "Flights_Listing.expanded_fields.Baggage_Allowance",
+    "Flights_Listing.expanded_fields.Fare_Rules",
+    "Flights_Listing.expanded_fields.Seat_Availability"
+  ],
+  "phantoms": [
+    "Flights_Search_Form.Return_Date.visible_when (conditional shown though description did not explicitly state 'show return date when Round-trip')",
+    "Flights_Search_Form.Legs (repeating_group with item_fields) (multi-city legs fields inferred though description only named Multi-city but provided no fields for legs)",
+    "Flights_Search_Form.Legs.visible_when (conditional inferred without explicit trigger language in description)",
+    "Sidebar_Filters.submit_actions[0] (Apply Filters button not named in description)",
+    "Sidebar_Filters.submit_actions[1] (Clear Filters button not named in description)",
+    "Flights_Listing.row_actions[1] (Expand action button explicitly added; description only states \"expanding a result shows...\" without naming an Expand button)"
+  ],
+  "fixes": [
+    "Add explicit row field definitions under Flights_Listing: create Flights_Listing.row_fields with the following keys and appropriate types: Airline_Logo (image), Airline_Name (text), Departure_Time (time), Departure_Airport (text), Arrival_Time (time), Arrival_Airport (text), Total_Duration (text), Number_of_Stops (enum: Non-stop/1 stop/2+ stops), Price_Per_Passenger (currency/number).",
+    "Define expanded fields instead of only listing reveals: add Flights_Listing.expanded_fields with Baggage_Allowance (text/structured), Fare_Rules (text), and Seat_Availability (number/list) so expansion has concrete fields.",
+    "Remove conditional properties that are not explicitly specified in the description: delete Flights_Search_Form.Return_Date.visible_when and Flights_Search_Form.Legs.visible_when unless the description is updated to explicitly say 'when X is selected, show Y'.",
+    "Replace or remove the inferred repeating_group for multi-city legs: either remove Flights_Search_Form.Legs.repeating_group (if description intentionally left multi-city details unspecified) or, if multi-city leg fields are required, keep Legs but update the description and include only the explicitly specified fields; do not invent item_fields without textual anchor. In other words, change Flights_Search_Form.Legs to a placeholder with fields: {} or remove it.",
+    "Remove Sidebar_Filters.submit_actions array (Sidebar_Filters.submit_actions) since the description did not name 'Apply Filters' or 'Clear Filters' buttons; if filters are meant to be applied via explicit buttons, update the description to name them and then add them back.",
+    "Specify types for time range controls instead of 'unspecified': change Sidebar_Filters.Departure_Time_Start/Departure_Time_End/Arrival_Time_Start/Arrival_Time_End to an explicit control type such as 'time' or a 'time_range' composite (e.g., Departure_Time: { type: 'time_range', fields: { start, end } }).",
+    "If an explicit Expand button is required, keep Flights_Listing.row_actions[1] but rename or document it to align with the description (e.g., 'Expand Details' derived from 'expanding a result'); otherwise remove the explicit 'Expand' button and rely on row_expandable: true to represent row expansion behavior."
+  ]
+}
+
+------------------------------------------------------------
+[22:51:53] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing critical listing row fields and expanded-field definitions, and contains several inferred conditionals and controls that are not explicitly stated in the description.",
+  "missing": [
+    "Flights_Listing.row_fields.Airline_Logo",
+    "Flights_Listing.row_fields.Airline_Name",
+    "Flights_Listing.row_fields.Departure_Time",
+    "Flights_Listing.row_fields.Departure_Airport",
+    "Flights_Listing.row_fields.Arrival_Time",
+    "Flights_Listing.row_fields.Arrival_Airport",
+    "Flights_Listing.row_fields.Total_Duration",
+    "Flights_Listing.row_fields.Number_of_Stops",
+    "Flights_Listing.row_fields.Price_Per_Passenger",
+    "Flights_Listing.expanded_fields.Baggage_Allowance",
+    "Flights_Listing.expanded_fields.Fare_Rules",
+    "Flights_Listing.expanded_fields.Seat_Availability"
+  ],
+  "phantoms": [
+    "Flights_Search_Form.Return_Date.visible_when (conditional shown though description did not explicitly state 'show return date when Round-trip')",
+    "Flights_Search_Form.Legs (repeating_group with item_fields) (multi-city legs fields inferred though description only named Multi-city but provided no fields for legs)",
+    "Flights_Search_Form.Legs.visible_when (conditional inferred without explicit trigger language in description)",
+    "Sidebar_Filters.submit_actions[0] (Apply Filters button not named in description)",
+    "Sidebar_Filters.submit_actions[1] (Clear Filters button not named in description)",
+    "Flights_Listing.row_actions[1] (Expand action button explicitly added; description only states \"expanding a result shows...\" without naming an Expand button)"
+  ],
+  "fixes": [
+    "Add explicit row field definitions under Flights_Listing: create Flights_Listing.row_fields with the following keys and appropriate types: Airline_Logo (image), Airline_Name (text), Departure_Time (time), Departure_Airport (text), Arrival_Time (time), Arrival_Airport (text), Total_Duration (text), Number_of_Stops (enum: Non-stop/1 stop/2+ stops), Price_Per_Passenger (currency/number).",
+    "Define expanded fields instead of only listing reveals: add Flights_Listing.expanded_fields with Baggage_Allowance (text/structured), Fare_Rules (text), and Seat_Availability (number/list) so expansion has concrete fields.",
+    "Remove conditional properties that are not explicitly specified in the description: delete Flights_Search_Form.Return_Date.visible_when and Flights_Search_Form.Legs.visible_when unless the description is updated to explicitly say 'when X is selected, show Y'.",
+    "Replace or remove the inferred repeating_group for multi-city legs: either remove Flights_Search_Form.Legs.repeating_group (if description intentionally left multi-city details unspecified) or, if multi-city leg fields are required, keep Legs but update the description and include only the explicitly specified fields; do not invent item_fields without textual anchor. In other words, change Flights_Search_Form.Legs to a placeholder with fields: {} or remove it.",
+    "Remove Sidebar_Filters.submit_actions array (Sidebar_Filters.submit_actions) since the description did not name 'Apply Filters' or 'Clear Filters' buttons; if filters are meant to be applied via explicit buttons, update the description to name them and then add them back.",
+    "Specify types for time range controls instead of 'unspecified': change Sidebar_Filters.Departure_Time_Start/Departure_Time_End/Arrival_Time_Start/Arrival_Time_End to an explicit control type such as 'time' or a 'time_range' composite (e.g., Departure_Time: { type: 'time_range', fields: { start, end } }).",
+    "If an explicit Expand button is required, keep Flights_Listing.row_actions[1] but rename or document it to align with the description (e.g., 'Expand Details' derived from 'expanding a result'); otherwise remove the explicit 'Expand' button and rely on row_expandable: true to represent row expansion behavior."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:14] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The flights search form collects trip type (One-way, Round-trip, Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, First). On success, users are redirected to the listing page, where each result shows airline logo and name, departure and arrival times and airports, total duration, number of stops (Non-stop, 1 stop, 2+ stops), price per passenger, and a Select button. Expanding a result shows baggage allowance, fare rules, and seat availability. Sidebar filters include airlines, number of stops, departure and arrival time ranges, and price range. Results can be sorted by price, duration, departure time, or arrival time.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Flights Search & Listing",
+  "components": {
+    "Flights_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Trip_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "One-way",
+            "Round-trip",
+            "Multi-city"
+          ]
+        },
+        "Departure_City": {
+          "type": "search",
+          "required": false
+        },
+        "Arrival_City": {
+          "type": "search",
+          "required": false
+        },
+        "Departure_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Return_Date": {
+          "type": "date",
+          "required": false
+        },
+        "Passenger_Count": {
+          "type": "unspecified",
+          "fields": {
+            "Adults": {
+              "type": "number",
+              "required": false
+            },
+            "Children": {
+              "type": "number",
+              "required": false
+            },
+            "Infants": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        "Cabin_Class": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Economy",
+            "Premium Economy",
+            "Business",
+            "First"
+          ]
+        },
+        "Legs": {
+          "type": "repeating_group",
+          "item_fields": {}
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to listing page"
+        }
+      ]
+    },
+    "Sidebar_Filters": {
+      "type": "form",
+      "fields": {
+        "Airlines": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "multi-select allowed"
+          ]
+        },
+        "Number_of_Stops": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Non-stop",
+            "1 stop",
+            "2+ stops"
+          ]
+        },
+        "Departure_Time": {
+          "type": "time_range",
+          "fields": {
+            "Start": {
+              "type": "time"
+            },
+            "End": {
+              "type": "time"
+            }
+          }
+        },
+        "Arrival_Time": {
+          "type": "time_range",
+          "fields": {
+            "Start": {
+              "type": "time"
+            },
+            "End": {
+              "type": "time"
+            }
+          }
+        },
+        "Price_Range": {
+          "type": "number_range",
+          "fields": {
+            "Min": {
+              "type": "number"
+            },
+            "Max": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "Flights_Listing": {
+      "type": "data_table",
+      "row_expandable": true,
+      "row_fields": {
+        "Airline_Logo": {
+          "type": "file_upload",
+          "constraints": [
+            "image"
+          ]
+        },
+        "Airline_Name": {
+          "type": "text"
+        },
+        "Departure_Time": {
+          "type": "time"
+        },
+        "Departure_Airport": {
+          "type": "text"
+        },
+        "Arrival_Time": {
+          "type": "time"
+        },
+        "Arrival_Airport": {
+          "type": "text"
+        },
+        "Total_Duration": {
+          "type": "text"
+        },
+        "Number_of_Stops": {
+          "type": "dropdown",
+          "options": [
+            "Non-stop",
+            "1 stop",
+            "2+ stops"
+          ]
+        },
+        "Price_Per_Passenger": {
+          "type": "number",
+          "constraints": [
+            "currency"
+          ]
+        }
+      },
+      "expanded_fields": {
+        "Baggage_Allowance": {
+          "type": "text"
+        },
+        "Fare_Rules": {
+          "type": "text"
+        },
+        "Seat_Availability": {
+          "type": "number"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Select",
+          "type": "button"
+        }
+      ],
+      "sortable_columns": [
+        "Price",
+        "Duration",
+        "Departure_Time",
+        "Arrival_Time"
+      ],
+      "sorting_controls": {
+        "type": "dropdown",
+        "options": [
+          "Price",
+          "Duration",
+          "Departure Time",
+          "Arrival Time"
+        ]
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:52:50] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST includes multiple passive/display fields and an inferred 'Legs' repeating group that are not supported by the description; remove those phantoms and correct a few type/label mismatches before regenerating.",
+  "missing": [],
+  "phantoms": [
+    "Flights_Search_Form.fields.Legs (repeating_group not specified in description)",
+    "Flights_Listing.row_fields.Airline_Logo (passive display; also incorrectly typed as file_upload)",
+    "Flights_Listing.row_fields.Airline_Name (passive display)",
+    "Flights_Listing.row_fields.Departure_Time (passive display)",
+    "Flights_Listing.row_fields.Departure_Airport (passive display)",
+    "Flights_Listing.row_fields.Arrival_Time (passive display)",
+    "Flights_Listing.row_fields.Arrival_Airport (passive display)",
+    "Flights_Listing.row_fields.Total_Duration (passive display)",
+    "Flights_Listing.row_fields.Number_of_Stops (passive display)",
+    "Flights_Listing.row_fields.Price_Per_Passenger (passive display)",
+    "Flights_Listing.expanded_fields.Baggage_Allowance (passive display inside expanded view)",
+    "Flights_Listing.expanded_fields.Fare_Rules (passive display inside expanded view)",
+    "Flights_Listing.expanded_fields.Seat_Availability (passive display inside expanded view)"
+  ],
+  "fixes": [
+    "Remove Flights_Search_Form.fields.Legs entirely (description does not define multi-city leg fields; do not invent a repeating_group).",
+    "Remove all passive display fields from Flights_Listing.row_fields; the listing should declare row_expandable and row_actions (Select) and may reference sortable column keys, but should not include display-only fields like Airline_Logo, Airline_Name, Departure_Time, Departure_Airport, Arrival_Time, Arrival_Airport, Total_Duration, Number_of_Stops, or Price_Per_Passenger.",
+    "Remove Flights_Listing.expanded_fields.* entries (Baggage_Allowance, Fare_Rules, Seat_Availability). The AST should indicate that rows are expandable, but expanded content is passive display and should not be modeled as interactive fields unless the description specifies interactive controls within the expansion.",
+    "If any visual/display item must be referenced, use a generic 'display_fields' section only when explicitly required by the description; otherwise omit display elements from the AST.",
+    "Fix inconsistent sorting key labels: ensure Flights_Listing.sortable_columns entries exactly match Flights_Listing.sorting_controls.options (e.g., use the same strings/keys for 'Departure Time' vs 'Departure_Time').",
+    "Optional: Change Flights_Search_Form.fields.Passenger_Count.type from 'unspecified' to a clear composite/group type (e.g., 'group' or 'composite') if the generator expects a concrete type for nested fields."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:50] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST includes multiple passive/display fields and an inferred 'Legs' repeating group that are not supported by the description; remove those phantoms and correct a few type/label mismatches before regenerating.",
+  "missing": [],
+  "phantoms": [
+    "Flights_Search_Form.fields.Legs (repeating_group not specified in description)",
+    "Flights_Listing.row_fields.Airline_Logo (passive display; also incorrectly typed as file_upload)",
+    "Flights_Listing.row_fields.Airline_Name (passive display)",
+    "Flights_Listing.row_fields.Departure_Time (passive display)",
+    "Flights_Listing.row_fields.Departure_Airport (passive display)",
+    "Flights_Listing.row_fields.Arrival_Time (passive display)",
+    "Flights_Listing.row_fields.Arrival_Airport (passive display)",
+    "Flights_Listing.row_fields.Total_Duration (passive display)",
+    "Flights_Listing.row_fields.Number_of_Stops (passive display)",
+    "Flights_Listing.row_fields.Price_Per_Passenger (passive display)",
+    "Flights_Listing.expanded_fields.Baggage_Allowance (passive display inside expanded view)",
+    "Flights_Listing.expanded_fields.Fare_Rules (passive display inside expanded view)",
+    "Flights_Listing.expanded_fields.Seat_Availability (passive display inside expanded view)"
+  ],
+  "fixes": [
+    "Remove Flights_Search_Form.fields.Legs entirely (description does not define multi-city leg fields; do not invent a repeating_group).",
+    "Remove all passive display fields from Flights_Listing.row_fields; the listing should declare row_expandable and row_actions (Select) and may reference sortable column keys, but should not include display-only fields like Airline_Logo, Airline_Name, Departure_Time, Departure_Airport, Arrival_Time, Arrival_Airport, Total_Duration, Number_of_Stops, or Price_Per_Passenger.",
+    "Remove Flights_Listing.expanded_fields.* entries (Baggage_Allowance, Fare_Rules, Seat_Availability). The AST should indicate that rows are expandable, but expanded content is passive display and should not be modeled as interactive fields unless the description specifies interactive controls within the expansion.",
+    "If any visual/display item must be referenced, use a generic 'display_fields' section only when explicitly required by the description; otherwise omit display elements from the AST.",
+    "Fix inconsistent sorting key labels: ensure Flights_Listing.sortable_columns entries exactly match Flights_Listing.sorting_controls.options (e.g., use the same strings/keys for 'Departure Time' vs 'Departure_Time').",
+    "Optional: Change Flights_Search_Form.fields.Passenger_Count.type from 'unspecified' to a clear composite/group type (e.g., 'group' or 'composite') if the generator expects a concrete type for nested fields."
+  ]
+}
+
+------------------------------------------------------------
+[22:53:16] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The flights search form collects trip type (One-way, Round-trip, Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, First). On success, users are redirected to the listing page, where each result shows airline logo and name, departure and arrival times and airports, total duration, number of stops (Non-stop, 1 stop, 2+ stops), price per passenger, and a Select button. Expanding a result shows baggage allowance, fare rules, and seat availability. Sidebar filters include airlines, number of stops, departure and arrival time ranges, and price range. Results can be sorted by price, duration, departure time, or arrival time.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Flights Search & Listing",
+  "components": {
+    "Flights_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Trip_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "One-way",
+            "Round-trip",
+            "Multi-city"
+          ]
+        },
+        "Departure_City": {
+          "type": "search",
+          "required": true
+        },
+        "Arrival_City": {
+          "type": "search",
+          "required": true
+        },
+        "Departure_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Return_Date": {
+          "type": "date",
+          "required": false,
+          "visible_when": "Trip_Type == Round-trip"
+        },
+        "Passenger_Count": {
+          "type": "group",
+          "fields": {
+            "Adults": {
+              "type": "number",
+              "required": true
+            },
+            "Children": {
+              "type": "number",
+              "required": false
+            },
+            "Infants": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        "Cabin_Class": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Economy",
+            "Premium Economy",
+            "Business",
+            "First"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to listing page"
+        }
+      ]
+    },
+    "Sidebar_Filters": {
+      "type": "form",
+      "fields": {
+        "Airlines": {
+          "type": "dropdown",
+          "required": false,
+          "multiple": true
+        },
+        "Number_of_Stops": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Non-stop",
+            "1 stop",
+            "2+ stops"
+          ]
+        },
+        "Departure_Time_Range": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Arrival_Time_Range": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Price_Range": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "actions": [
+        {
+          "element_name": "Apply Filters",
+          "on_success": "filters applied to listing"
+        },
+        {
+          "element_name": "Clear Filters",
+          "on_success": "filters cleared"
+        }
+      ]
+    },
+    "Flights_Listing": {
+      "type": "data_table",
+      "row_expandable": true,
+      "on_row_expand": "reveals additional flight details (baggage allowance, fare rules, seat availability) as passive display",
+      "row_actions": [
+        {
+          "action_name": "Select",
+          "on_success": "flight selected"
+        }
+      ],
+      "sorting_controls": {
+        "type": "dropdown",
+        "options": [
+          "Price",
+          "Duration",
+          "Departure Time",
+          "Arrival Time"
+        ]
+      },
+      "sortable_columns": [
+        "Price",
+        "Duration",
+        "Departure Time",
+        "Arrival Time"
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:53:33] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST adds multiple inferred/unsupported interactive items (conditional return date and sidebar Apply/Clear actions) that are not explicitly stated in the description; regenerate after removing or grounding these phantoms.",
+  "missing": [],
+  "phantoms": [
+    "Flights_Search_Form.fields.Return_Date.visible_when (conditional not specified in description)",
+    "Sidebar_Filters.actions[0] (Apply Filters button not mentioned in description)",
+    "Sidebar_Filters.actions[1] (Clear Filters button not mentioned in description)"
+  ],
+  "fixes": [
+    "Remove the conditional visible_when from Flights_Search_Form.fields.Return_Date; the description does not explicitly state a conditional trigger for a return date, so do not infer visibility rules. JSON path: Flights_Search_Form.fields.Return_Date -> remove property 'visible_when'.",
+    "Remove Sidebar_Filters.actions array (Apply Filters and Clear Filters) because the description lists available filter controls but does not specify explicit Apply/Clear buttons. JSON path: Sidebar_Filters -> remove property 'actions' or leave it empty.",
+    "If filter application behavior is required, represent it only if the description explicitly states an Apply/Clear control or that filters apply only after an action; otherwise keep only the filter fields (Airlines, Number_of_Stops, Departure_Time_Range, Arrival_Time_Range, Price_Range) without action buttons. JSON path: Sidebar_Filters -> ensure only 'fields' are present and no implicit action controls are added."
+  ]
+}
+
+------------------------------------------------------------
+[22:53:33] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST adds multiple inferred/unsupported interactive items (conditional return date and sidebar Apply/Clear actions) that are not explicitly stated in the description; regenerate after removing or grounding these phantoms.",
+  "missing": [],
+  "phantoms": [
+    "Flights_Search_Form.fields.Return_Date.visible_when (conditional not specified in description)",
+    "Sidebar_Filters.actions[0] (Apply Filters button not mentioned in description)",
+    "Sidebar_Filters.actions[1] (Clear Filters button not mentioned in description)"
+  ],
+  "fixes": [
+    "Remove the conditional visible_when from Flights_Search_Form.fields.Return_Date; the description does not explicitly state a conditional trigger for a return date, so do not infer visibility rules. JSON path: Flights_Search_Form.fields.Return_Date -> remove property 'visible_when'.",
+    "Remove Sidebar_Filters.actions array (Apply Filters and Clear Filters) because the description lists available filter controls but does not specify explicit Apply/Clear buttons. JSON path: Sidebar_Filters -> remove property 'actions' or leave it empty.",
+    "If filter application behavior is required, represent it only if the description explicitly states an Apply/Clear control or that filters apply only after an action; otherwise keep only the filter fields (Airlines, Number_of_Stops, Departure_Time_Range, Arrival_Time_Range, Price_Range) without action buttons. JSON path: Sidebar_Filters -> ensure only 'fields' are present and no implicit action controls are added."
+  ]
+}

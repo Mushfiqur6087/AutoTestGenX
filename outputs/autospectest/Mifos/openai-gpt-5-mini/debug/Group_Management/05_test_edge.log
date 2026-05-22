@@ -1,0 +1,885 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.521379
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Group Management</module_name>
+
+<ast>
+{
+  "module_name": "Group Management",
+  "components": {
+    "Groups_Page": {
+      "type": "data_table",
+      "columns": [
+        "Group Name",
+        "Account Number",
+        "Office",
+        "Status",
+        "Staff"
+      ],
+      "link_column": "Group Name",
+      "top_actions": [
+        {
+          "element_name": "Import Groups",
+          "type": "button",
+          "on_click_navigates_to": "Bulk_Import_Groups_Page"
+        },
+        {
+          "element_name": "Create New Group",
+          "type": "button",
+          "on_click_navigates_to": "Create_Group_Form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Group Detail",
+          "type": "link",
+          "target": "Group_Detail_Page"
+        }
+      ]
+    },
+    "Create_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "search",
+              "required": true
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "type": "button",
+          "on_success": "creates group"
+        }
+      ]
+    },
+    "Bulk_Import_Groups_Page": {
+      "type": "page",
+      "panels": {
+        "Groups_Template_Panel": {
+          "type": "panel",
+          "fields": {
+            "Office": {
+              "type": "dropdown",
+              "required": false
+            },
+            "Staff": {
+              "type": "dropdown",
+              "required": false
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Download",
+              "type": "button",
+              "on_success": "downloads groups template"
+            }
+          ]
+        },
+        "Groups_Upload_Panel": {
+          "type": "panel",
+          "fields": {
+            "File": {
+              "type": "file_upload",
+              "required": true
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Upload",
+              "type": "button",
+              "on_success": "imports groups from file"
+            }
+          ]
+        }
+      },
+      "components": {
+        "Import_History_Table": {
+          "type": "data_table"
+        }
+      }
+    },
+    "Group_Detail_Page": {
+      "type": "page",
+      "components": {
+        "Detail_Action_Bar": {
+          "type": "state_bound_action_bar",
+          "states": {
+            "Pending": {
+              "available_actions": [
+                {
+                  "action_name": "Activate",
+                  "preconditions": [
+                    "status must be Pending"
+                  ],
+                  "on_success": "transitions to Active"
+                },
+                {
+                  "action_name": "Edit",
+                  "preconditions": [],
+                  "opens_form": "Edit_Group_Form"
+                }
+              ]
+            },
+            "Active": {
+              "available_actions": [
+                {
+                  "action_name": "Close",
+                  "preconditions": [
+                    "status must be Active"
+                  ],
+                  "on_success": "transitions to Closed"
+                },
+                {
+                  "action_name": "Edit",
+                  "preconditions": [],
+                  "opens_form": "Edit_Group_Form"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "preconditions": []
+                },
+                {
+                  "action_name": "Transfer Clients",
+                  "preconditions": []
+                },
+                {
+                  "action_name": "Generate Collection Sheet",
+                  "preconditions": [],
+                  "on_success": "opens collection sheet"
+                }
+              ]
+            },
+            "Closed": {
+              "available_actions": [
+                {
+                  "action_name": "Edit",
+                  "preconditions": [
+                    "status must be Active or Pending"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "Detail_Tabs": {
+          "type": "tab_container",
+          "tabs": [
+            {
+              "tab_name": "Members",
+              "fields": {
+                "Members_Table": {
+                  "type": "data_table",
+                  "columns": [
+                    "Member Name"
+                  ],
+                  "row_actions": [
+                    {
+                      "action_name": "View Member Profile",
+                      "type": "link",
+                      "target": "Client_Profile"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Loan Accounts",
+              "fields": {
+                "Loan_Accounts_Table": {
+                  "type": "data_table"
+                }
+              }
+            },
+            {
+              "tab_name": "Savings Accounts",
+              "fields": {
+                "Savings_Accounts_Table": {
+                  "type": "data_table"
+                }
+              }
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {}
+            },
+            {
+              "tab_name": "Calendar/Meeting",
+              "fields": {
+                "Schedule_Meeting_Form": {
+                  "type": "form",
+                  "fields": {
+                    "Date": {
+                      "type": "date",
+                      "required": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Schedule",
+                      "type": "button",
+                      "on_success": "schedules meeting"
+                    }
+                  ]
+                },
+                "Record_Meeting_Form": {
+                  "type": "form",
+                  "fields": {
+                    "Date": {
+                      "type": "date",
+                      "required": true
+                    },
+                    "Notes": {
+                      "type": "unspecified",
+                      "required": false
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Save Meeting Record",
+                      "type": "button",
+                      "on_success": "records meeting"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Edit_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "search",
+              "required": true
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "updates group"
+        }
+      ]
+    },
+    "Collection_Sheet": {
+      "type": "form",
+      "description": "Batch entry sheet listing group clients with loan repayment and savings deposit amounts",
+      "fields": {
+        "Rows": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "link",
+              "required": true
+            },
+            "Loan_Repayment_Amount": {
+              "type": "number",
+              "required": false
+            },
+            "Savings_Deposit_Amount": {
+              "type": "number",
+              "required": false
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Collection Sheet",
+          "type": "button",
+          "on_success": "saves collection sheet entries"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Groups page displays a data table with columns for Group Name (clickable link), Account Number, Office, Status (Active, Pending, Closed as colored chips), and Staff. Buttons at the top-right allow importing groups or creating a new group. The Create Group form contains Name (required), Office (required), Staff, Submitted On (required), Active checkbox, External Id, and an Add Clients search-and-add interface to associate existing clients. Clicking "Submit" creates the group. The Bulk Import Groups page has a Groups Template panel (Office and Staff dropdowns with a Download button) and a Groups Upload panel (file picker and Upload button), with an import history table below.
+
+The Group Detail page displays the group name, account number, status, office, and staff with action buttons for Activate, Edit, Close, Assign Staff, and Transfer Clients. Tabs show Members (list of client members with links to their profiles), Loan Accounts (group loans and GLIM — Group Linked Individual Micro-loans), Savings Accounts (group savings and GSIM accounts), Notes, and a Calendar/Meeting section for scheduling and recording group meetings. The Collection Sheet feature generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:30:37] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Group Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "input_edge",
+      "test_case": "Leading/trailing whitespace in Group Name is trimmed on save",
+      "preconditions": ["Create Group form is open"],
+      "steps": [
+        "1. Enter Name with leading and trailing whitespace into the Name field",
+        "2. Select a value in the Office dropdown",
+        "3. Fill Submitted_On with a valid date",
+        "4. Click Submit"
+      ],
+      "expected_result": "Form submission succeeds; Group Detail page opens and the displayed Group Name has leading and trailing whitespace removed (trimmed) in the UI",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "input_edge",
+      "test_case": "Very long Group Name (200+ chars) handling in Create Group",
+      "preconditions": ["Create Group form is open"],
+      "steps": [
+        "1. Enter a very long string (200+ characters) into the Name field",
+        "2. Select a value in the Office dropdown",
+        "3. Fill Submitted_On with a valid date",
+        "4. Click Submit"
+      ],
+      "expected_result": "Either the form submission succeeds and the Detail page displays the saved Name (possibly truncated) OR submission is blocked and an inline validation error is shown indicating the Name exceeds allowed length; the UI must show which of these occurred (succeeds OR is blocked / error shown)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "data_edge",
+      "test_case": "Schedule Meeting — Date = today (boundary) accepted",
+      "preconditions": ["Open a Group Detail page, go to Calendar/Meeting tab, Schedule Meeting form is visible"],
+      "steps": [
+        "1. Enter Date = today in the Schedule Meeting Date field",
+        "2. Click Schedule"
+      ],
+      "expected_result": "Scheduling succeeds; a visible confirmation is shown and the meeting appears in the group's calendar/list with the entered date (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "data_edge",
+      "test_case": "Schedule Meeting — Date = yesterday (past-day boundary) blocked",
+      "preconditions": ["Open a Group Detail page, go to Calendar/Meeting tab, Schedule Meeting form is visible"],
+      "steps": [
+        "1. Enter Date = yesterday in the Schedule Meeting Date field",
+        "2. Click Schedule"
+      ],
+      "expected_result": "Submission is blocked; an inline validation error is shown on the Date field indicating the date cannot be before today (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click Submit on Create Group should not create duplicates",
+      "preconditions": ["Create Group form is open", "All required fields are filled with valid values"],
+      "steps": [
+        "1. Double-click the Submit button rapidly (two clicks within UI debounce window)"
+      ],
+      "expected_result": "Only one group creation occurs; after double-clicking the Group Detail page opens once and the Groups data table shows a single new row for the created group (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Browser Back after successful Create does not create a second group",
+      "preconditions": ["User has just successfully created a group and is on the Group Detail page"],
+      "steps": [
+        "1. Click the browser Back button once"
+      ],
+      "expected_result": "No second group is created; either the Create Group form is shown blank or the user is prevented from re-submitting the creation, and the Groups listing contains only the single created group (succeeds)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "state_edge",
+      "test_case": "Activate then immediately attempt Close while transition may still be in progress",
+      "preconditions": ["Open a Group Detail page for a group with status = Pending"],
+      "steps": [
+        "1. Click Activate in the Detail Action Bar",
+        "2. Immediately (without waiting for a status change confirmation) attempt to click Close in the Detail Action Bar"
+      ],
+      "expected_result": "First transition to Active succeeds; the immediate Close attempt is blocked (either Close is not available yet or clicking it shows an error) because Close requires status = Active; UI ends in Active state and only the Activate transition completes (succeeds for Activate; second action is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "state_edge",
+      "test_case": "Attempt Edit action when group status is Closed (precondition mismatch)",
+      "preconditions": ["Open a Group Detail page for a group with status = Closed"],
+      "steps": [
+        "1. Attempt to click Edit in the Detail Action Bar"
+      ],
+      "expected_result": "Action is blocked; Edit is not opened and the UI shows the Edit action disabled or an inline message indicating the action's precondition is not met (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "interaction_edge",
+      "test_case": "Add then remove all Clients in Create Group repeating group and submit",
+      "preconditions": ["Create Group form is open"],
+      "steps": [
+        "1. In the Clients repeating group, add one Client using the search-and-add",
+        "2. Remove the added Client row",
+        "3. Fill all required fields (Name, Office, Submitted_On)",
+        "4. Click Submit"
+      ],
+      "expected_result": "Form submission succeeds (since Clients is optional); a Group is created and Group Detail page opens, with the Members tab showing no clients added (succeeds)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-010",
+      "subcategory": "input_edge",
+      "test_case": "Collection Sheet numeric fields: high decimal precision handling",
+      "preconditions": ["Open a Group Detail page for a group with clients, open Collection Sheet for that group"],
+      "steps": [
+        "1. In the Collection Sheet repeating Rows, enter a Loan_Repayment_Amount with unusually high decimal precision (many decimal places) for one client row",
+        "2. Click Save Collection Sheet"
+      ],
+      "expected_result": "Either the save succeeds and the UI shows the amount rounded/truncated to the system precision OR the submission is blocked with an inline validation error indicating precision exceeds allowed decimals; the UI must show which occurred (succeeds OR is blocked / error shown)",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "boundary": 4,
+    "input_edge": 4,
+    "interaction_edge": 3,
+    "state_edge": 2,
+    "data_edge": 2,
+    "medium_priority": 6,
+    "low_priority": 4
+  }
+}
+
+------------------------------------------------------------
+[22:30:37] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Group Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "input_edge",
+      "test_case": "Leading/trailing whitespace in Group Name is trimmed on save",
+      "preconditions": [
+        "Create Group form is open"
+      ],
+      "steps": [
+        "1. Enter Name with leading and trailing whitespace into the Name field",
+        "2. Select a value in the Office dropdown",
+        "3. Fill Submitted_On with a valid date",
+        "4. Click Submit"
+      ],
+      "expected_result": "Form submission succeeds; Group Detail page opens and the displayed Group Name has leading and trailing whitespace removed (trimmed) in the UI",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "input_edge",
+      "test_case": "Very long Group Name (200+ chars) handling in Create Group",
+      "preconditions": [
+        "Create Group form is open"
+      ],
+      "steps": [
+        "1. Enter a very long string (200+ characters) into the Name field",
+        "2. Select a value in the Office dropdown",
+        "3. Fill Submitted_On with a valid date",
+        "4. Click Submit"
+      ],
+      "expected_result": "Either the form submission succeeds and the Detail page displays the saved Name (possibly truncated) OR submission is blocked and an inline validation error is shown indicating the Name exceeds allowed length; the UI must show which of these occurred (succeeds OR is blocked / error shown)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "data_edge",
+      "test_case": "Schedule Meeting \u2014 Date = today (boundary) accepted",
+      "preconditions": [
+        "Open a Group Detail page, go to Calendar/Meeting tab, Schedule Meeting form is visible"
+      ],
+      "steps": [
+        "1. Enter Date = today in the Schedule Meeting Date field",
+        "2. Click Schedule"
+      ],
+      "expected_result": "Scheduling succeeds; a visible confirmation is shown and the meeting appears in the group's calendar/list with the entered date (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "data_edge",
+      "test_case": "Schedule Meeting \u2014 Date = yesterday (past-day boundary) blocked",
+      "preconditions": [
+        "Open a Group Detail page, go to Calendar/Meeting tab, Schedule Meeting form is visible"
+      ],
+      "steps": [
+        "1. Enter Date = yesterday in the Schedule Meeting Date field",
+        "2. Click Schedule"
+      ],
+      "expected_result": "Submission is blocked; an inline validation error is shown on the Date field indicating the date cannot be before today (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click Submit on Create Group should not create duplicates",
+      "preconditions": [
+        "Create Group form is open",
+        "All required fields are filled with valid values"
+      ],
+      "steps": [
+        "1. Double-click the Submit button rapidly (two clicks within UI debounce window)"
+      ],
+      "expected_result": "Only one group creation occurs; after double-clicking the Group Detail page opens once and the Groups data table shows a single new row for the created group (succeeds)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Browser Back after successful Create does not create a second group",
+      "preconditions": [
+        "User has just successfully created a group and is on the Group Detail page"
+      ],
+      "steps": [
+        "1. Click the browser Back button once"
+      ],
+      "expected_result": "No second group is created; either the Create Group form is shown blank or the user is prevented from re-submitting the creation, and the Groups listing contains only the single created group (succeeds)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "state_edge",
+      "test_case": "Activate then immediately attempt Close while transition may still be in progress",
+      "preconditions": [
+        "Open a Group Detail page for a group with status = Pending"
+      ],
+      "steps": [
+        "1. Click Activate in the Detail Action Bar",
+        "2. Immediately (without waiting for a status change confirmation) attempt to click Close in the Detail Action Bar"
+      ],
+      "expected_result": "First transition to Active succeeds; the immediate Close attempt is blocked (either Close is not available yet or clicking it shows an error) because Close requires status = Active; UI ends in Active state and only the Activate transition completes (succeeds for Activate; second action is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "state_edge",
+      "test_case": "Attempt Edit action when group status is Closed (precondition mismatch)",
+      "preconditions": [
+        "Open a Group Detail page for a group with status = Closed"
+      ],
+      "steps": [
+        "1. Attempt to click Edit in the Detail Action Bar"
+      ],
+      "expected_result": "Action is blocked; Edit is not opened and the UI shows the Edit action disabled or an inline message indicating the action's precondition is not met (is blocked / error shown)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-009",
+      "subcategory": "interaction_edge",
+      "test_case": "Add then remove all Clients in Create Group repeating group and submit",
+      "preconditions": [
+        "Create Group form is open"
+      ],
+      "steps": [
+        "1. In the Clients repeating group, add one Client using the search-and-add",
+        "2. Remove the added Client row",
+        "3. Fill all required fields (Name, Office, Submitted_On)",
+        "4. Click Submit"
+      ],
+      "expected_result": "Form submission succeeds (since Clients is optional); a Group is created and Group Detail page opens, with the Members tab showing no clients added (succeeds)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-010",
+      "subcategory": "input_edge",
+      "test_case": "Collection Sheet numeric fields: high decimal precision handling",
+      "preconditions": [
+        "Open a Group Detail page for a group with clients, open Collection Sheet for that group"
+      ],
+      "steps": [
+        "1. In the Collection Sheet repeating Rows, enter a Loan_Repayment_Amount with unusually high decimal precision (many decimal places) for one client row",
+        "2. Click Save Collection Sheet"
+      ],
+      "expected_result": "Either the save succeeds and the UI shows the amount rounded/truncated to the system precision OR the submission is blocked with an inline validation error indicating precision exceeds allowed decimals; the UI must show which occurred (succeeds OR is blocked / error shown)",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "boundary": 4,
+    "input_edge": 4,
+    "interaction_edge": 3,
+    "state_edge": 2,
+    "data_edge": 2,
+    "medium_priority": 6,
+    "low_priority": 4
+  }
+}

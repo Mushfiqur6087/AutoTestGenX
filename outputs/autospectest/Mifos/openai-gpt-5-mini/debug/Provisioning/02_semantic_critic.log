@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.759740
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.396675
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:06:28] Semantic Critic - SYSTEM PROMPT
+[22:21:52] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:06:28] Semantic Critic - USER PROMPT
+[22:21:52] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -123,24 +123,27 @@ The Provisioning Entries page lists all generated provisioning journal entries w
 {
   "module_name": "Provisioning",
   "components": {
-    "Provisioning_Criteria_Page": {
+    "Provisioning_Criteria_Table": {
       "type": "data_table",
       "columns": [
         "Criteria Name",
         "Created Date"
       ],
-      "row_actions": [
-        {
-          "action_name": "Open",
-          "element_type": "link",
-          "on_trigger": "navigate_to_Provisioning_Criteria_Form"
-        }
+      "clickable_columns": [
+        "Criteria Name"
       ],
-      "actions": [
+      "top_actions": [
         {
           "element_name": "+ Create",
           "element_type": "button",
-          "on_trigger": "open_Provisioning_Criteria_Form"
+          "opens": "Provisioning_Criteria_Form",
+          "on_success": "opens provisioning criteria creation form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Criteria",
+          "on_success": "opens Provisioning_Criteria_Form for viewing/editing"
         }
       ]
     },
@@ -155,7 +158,199 @@ The Provisioning Entries page lists all generated provisioning journal entries w
           "type": "repeating_group",
           "item_fields": {
             "Loan_Product": {
-              "type": "dropdown"
+              "type": "unspecified",
+              "required": true
+            },
+            "Category": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "STANDARD",
+                "SUB-STANDARD",
+                "DOUBTFUL",
+                "LOSS"
+              ]
+            },
+            "Minimum_Age": {
+              "type": "number",
+              "required": true,
+              "description": "overdue days"
+            },
+            "Maximum_Age": {
+              "type": "number",
+              "required": true,
+              "description": "overdue days"
+            },
+            "Provisioning_Percentage": {
+              "type": "number",
+              "required": true,
+              "description": "percentage of outstanding principal",
+              "constraints": [
+                "value between 0 and 100"
+              ]
+            },
+            "Liability_Account": {
+              "type": "dropdown",
+              "required": true,
+              "description": "GL account"
+            },
+            "Expense_Account": {
+              "type": "dropdown",
+              "required": true,
+              "description": "GL account"
+            }
+          },
+          "constraints": [
+            "Within each definition row, Minimum_Age must be <= Maximum_Age"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "element_type": "button",
+          "on_success": "saves provisioning criteria"
+        },
+        {
+          "element_name": "Cancel",
+          "element_type": "button",
+          "on_success": "closes form without saving"
+        }
+      ]
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry Date",
+        "Journal Entry Created",
+        "Created By"
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "element_type": "button",
+          "on_success": "creates provisioning journal entries based on current loan portfolio and configured criteria"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "on_success": "opens detailed breakdown by loan product and category for the entry"
+        },
+        {
+          "action_name": "Recreate",
+          "on_success": "recreates the provisioning journal entry"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:24:06] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing explicit controls for adding definition rows and a dedicated provisioning-entry detail view, and it contains several inferred constraints/buttons that are not stated in the description.",
+  "missing": [
+    "components.Provisioning_Criteria_Form.fields.Definitions.add_row_action",
+    "components.Provisioning_Entry_Detail (component showing detailed breakdown by loan product and category for a selected entry)"
+  ],
+  "phantoms": [
+    "components.Provisioning_Criteria_Form.submit_actions[0] (Save button not named in description)",
+    "components.Provisioning_Criteria_Form.submit_actions[1] (Cancel button not named in description)",
+    "components.Provisioning_Criteria_Form.fields.Definitions.constraints[0] (Minimum_Age must be <= Maximum_Age constraint not specified in description)",
+    "components.Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] (value between 0 and 100 constraint not specified in description)"
+  ],
+  "fixes": [
+    "components.Provisioning_Criteria_Form.fields.Definitions.add_row_action — Add an explicit repeating-group control (e.g., 'Add Definition' button) or an 'add_row_action' entry so the AST clearly represents the ability to add multiple definition rows as stated in the description.",
+    "components.Provisioning_Entry_Detail — Add a component for the provisioning entry detail view (path: components.Provisioning_Entry_Detail) that is opened by the Provisioning_Entries_Table row action 'Review' and includes the detailed breakdown by loan product and category.",
+    "components.Provisioning_Criteria_Form.submit_actions — Remove or rename the Save/Cancel submit_actions unless those exact buttons are explicitly described; if the description intends form submission controls, use names exactly as provided by product requirements.",
+    "components.Provisioning_Criteria_Form.fields.Definitions.constraints[0] — Remove the inferred constraint 'Minimum_Age must be <= Maximum_Age' unless the description explicitly requires it; if required, keep but ensure the description documents it.",
+    "components.Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] — Remove the inferred 'value between 0 and 100' constraint unless explicitly specified in the description; if percentage bounds are required, add explicit mention in the description so the AST can include them."
+  ]
+}
+
+------------------------------------------------------------
+[22:24:06] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing explicit controls for adding definition rows and a dedicated provisioning-entry detail view, and it contains several inferred constraints/buttons that are not stated in the description.",
+  "missing": [
+    "components.Provisioning_Criteria_Form.fields.Definitions.add_row_action",
+    "components.Provisioning_Entry_Detail (component showing detailed breakdown by loan product and category for a selected entry)"
+  ],
+  "phantoms": [
+    "components.Provisioning_Criteria_Form.submit_actions[0] (Save button not named in description)",
+    "components.Provisioning_Criteria_Form.submit_actions[1] (Cancel button not named in description)",
+    "components.Provisioning_Criteria_Form.fields.Definitions.constraints[0] (Minimum_Age must be <= Maximum_Age constraint not specified in description)",
+    "components.Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] (value between 0 and 100 constraint not specified in description)"
+  ],
+  "fixes": [
+    "components.Provisioning_Criteria_Form.fields.Definitions.add_row_action \u2014 Add an explicit repeating-group control (e.g., 'Add Definition' button) or an 'add_row_action' entry so the AST clearly represents the ability to add multiple definition rows as stated in the description.",
+    "components.Provisioning_Entry_Detail \u2014 Add a component for the provisioning entry detail view (path: components.Provisioning_Entry_Detail) that is opened by the Provisioning_Entries_Table row action 'Review' and includes the detailed breakdown by loan product and category.",
+    "components.Provisioning_Criteria_Form.submit_actions \u2014 Remove or rename the Save/Cancel submit_actions unless those exact buttons are explicitly described; if the description intends form submission controls, use names exactly as provided by product requirements.",
+    "components.Provisioning_Criteria_Form.fields.Definitions.constraints[0] \u2014 Remove the inferred constraint 'Minimum_Age must be <= Maximum_Age' unless the description explicitly requires it; if required, keep but ensure the description documents it.",
+    "components.Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] \u2014 Remove the inferred 'value between 0 and 100' constraint unless explicitly specified in the description; if percentage bounds are required, add explicit mention in the description so the AST can include them."
+  ]
+}
+
+------------------------------------------------------------
+[22:25:26] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Provisioning Criteria page displays a data table with columns for Criteria Name (clickable link) and Created Date. A "+ Create" button opens the creation form containing Criteria Name (required) and a Definitions table where each row specifies Loan Product, Category (STANDARD, SUB-STANDARD, DOUBTFUL, LOSS), Minimum Age (overdue days), Maximum Age (overdue days), Provisioning Percentage (percentage of outstanding principal), Liability Account (GL account dropdown), and Expense Account (GL account dropdown). Multiple rows can be added to cover different overdue ranges and product combinations.
+
+The Provisioning Entries page lists all generated provisioning journal entries with columns for Entry Date, Journal Entry Created, Created By, and action buttons. A "+ Create Provisioning Entry" button generates new provisioning entries based on the current loan portfolio status and configured criteria; the system calculates the required provision amount for each loan category and creates the corresponding journal entries. Each entry can be reviewed (showing a detailed breakdown by loan product and category) or recreated.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": [
+        "Criteria Name",
+        "Created Date"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Criteria",
+          "description": "triggered by clicking the Criteria Name link",
+          "opens_component": "Provisioning_Criteria_Form"
+        }
+      ],
+      "actions": [
+        {
+          "element_name": "+ Create",
+          "action_name": "Open Provisioning Criteria Creation Form",
+          "opens_component": "Provisioning_Criteria_Form"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "add_row_action": "Add Definition",
+          "item_fields": {
+            "Loan_Product": {
+              "type": "unspecified"
             },
             "Category": {
               "type": "dropdown",
@@ -176,57 +371,60 @@ The Provisioning Entries page lists all generated provisioning journal entries w
             },
             "Provisioning_Percentage": {
               "type": "number",
-              "description": "percentage of outstanding principal",
-              "constraints": [
-                "must be between 0 and 100"
-              ]
+              "description": "percentage of outstanding principal"
             },
             "Liability_Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "description": "GL account dropdown"
             },
             "Expense_Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "description": "GL account dropdown"
             }
           }
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "element_type": "button",
-          "on_success": "creates provisioning criteria"
-        }
-      ]
+      }
     },
-    "Provisioning_Entries_Page": {
+    "Provisioning_Entries_Table": {
       "type": "data_table",
       "columns": [
         "Entry Date",
         "Journal Entry Created",
         "Created By"
       ],
-      "row_actions": [
-        {
-          "action_name": "Review",
-          "element_type": "button",
-          "on_trigger": "open_provisioning_entry_review",
-          "on_success": "opens detailed breakdown by loan product and category"
-        },
-        {
-          "action_name": "Recreate",
-          "element_type": "button",
-          "on_trigger": "recreate_provisioning_entry",
-          "on_success": "recreates provisioning journal entry based on current portfolio and criteria"
-        }
-      ],
       "actions": [
         {
           "element_name": "+ Create Provisioning Entry",
-          "element_type": "button",
-          "on_trigger": "generate_provisioning_entries",
-          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "creates provisioning journal entries based on current loan portfolio and configured criteria"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "opens_component": "Provisioning_Entry_Detail",
+          "description": "open detailed breakdown by loan product and category"
+        },
+        {
+          "action_name": "Recreate",
+          "on_success": "recreates provisioning entry and associated journal entries"
+        }
+      ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "Detailed breakdown for a single provisioning entry",
+      "columns": [
+        "Loan Product",
+        "Category",
+        "Provision Amount"
+      ],
+      "row_actions": [],
+      "actions": [
+        {
+          "element_name": "Recreate",
+          "action_name": "Recreate Provisioning Entry from Detail",
+          "on_success": "recreates provisioning entry and associated journal entries"
         }
       ]
     }
@@ -237,33 +435,239 @@ The Provisioning Entries page lists all generated provisioning journal entries w
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:08:09] Semantic Critic - LLM RESPONSE
+[22:26:37] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST mostly covers the described pages and fields, but contains several inferred elements (phantoms) and is missing a critical form submit action to create/save criteria.",
+  "missing": [
+    "components.Provisioning_Criteria_Form.submit_actions[0] (Save/Create button to submit the creation form)"
+  ],
+  "phantoms": [
+    "components.Provisioning_Criteria_Form.fields.Definitions.add_row_action (label 'Add Definition' is an inferred label not present in the description)",
+    "components.Provisioning_Entry_Detail.columns[2] (Provision Amount column is not explicitly specified in the description)",
+    "components.Provisioning_Entry_Detail.actions[0] (Recreate button on the detail view is not mentioned; recreation is only explicitly described for entries)"
+  ],
+  "fixes": [
+    "components.Provisioning_Criteria_Form.submit_actions: Add a submit action entry — e.g., submit_actions: [{ \"element_name\": \"Save\", \"action_name\": \"Create Provisioning Criteria\", \"on_success\": \"creates a new provisioning criteria and closes the form\" }]. This makes form creation explicit and testable.",
+    "components.Provisioning_Criteria_Form.fields.Definitions: Remove or neutralize the explicit add_row_action label; either omit add_row_action or rename it to a neutral key (e.g., add_row_action: true) so the generator doesn't assert a specific button text that wasn't provided in the description.",
+    "components.Provisioning_Entry_Detail.columns: Remove the explicit 'Provision Amount' column unless the description is updated to explicitly state that amounts appear in the detailed breakdown; otherwise keep only the explicitly named breakdown axes (Loan Product and Category).",
+    "components.Provisioning_Entry_Detail.actions[0]: Remove the 'Recreate' action from the detail component unless the description is updated to explicitly state that recreation is available from the detail view; keep 'Recreate' only on the Provisioning_Entries_Table row_actions."
+  ]
+}
+
+------------------------------------------------------------
+[22:26:37] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST mostly covers the described pages and fields, but contains several inferred elements (phantoms) and is missing a critical form submit action to create/save criteria.",
+  "missing": [
+    "components.Provisioning_Criteria_Form.submit_actions[0] (Save/Create button to submit the creation form)"
+  ],
+  "phantoms": [
+    "components.Provisioning_Criteria_Form.fields.Definitions.add_row_action (label 'Add Definition' is an inferred label not present in the description)",
+    "components.Provisioning_Entry_Detail.columns[2] (Provision Amount column is not explicitly specified in the description)",
+    "components.Provisioning_Entry_Detail.actions[0] (Recreate button on the detail view is not mentioned; recreation is only explicitly described for entries)"
+  ],
+  "fixes": [
+    "components.Provisioning_Criteria_Form.submit_actions: Add a submit action entry \u2014 e.g., submit_actions: [{ \"element_name\": \"Save\", \"action_name\": \"Create Provisioning Criteria\", \"on_success\": \"creates a new provisioning criteria and closes the form\" }]. This makes form creation explicit and testable.",
+    "components.Provisioning_Criteria_Form.fields.Definitions: Remove or neutralize the explicit add_row_action label; either omit add_row_action or rename it to a neutral key (e.g., add_row_action: true) so the generator doesn't assert a specific button text that wasn't provided in the description.",
+    "components.Provisioning_Entry_Detail.columns: Remove the explicit 'Provision Amount' column unless the description is updated to explicitly state that amounts appear in the detailed breakdown; otherwise keep only the explicitly named breakdown axes (Loan Product and Category).",
+    "components.Provisioning_Entry_Detail.actions[0]: Remove the 'Recreate' action from the detail component unless the description is updated to explicitly state that recreation is available from the detail view; keep 'Recreate' only on the Provisioning_Entries_Table row_actions."
+  ]
+}
+
+------------------------------------------------------------
+[22:27:20] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Provisioning Criteria page displays a data table with columns for Criteria Name (clickable link) and Created Date. A "+ Create" button opens the creation form containing Criteria Name (required) and a Definitions table where each row specifies Loan Product, Category (STANDARD, SUB-STANDARD, DOUBTFUL, LOSS), Minimum Age (overdue days), Maximum Age (overdue days), Provisioning Percentage (percentage of outstanding principal), Liability Account (GL account dropdown), and Expense Account (GL account dropdown). Multiple rows can be added to cover different overdue ranges and product combinations.
+
+The Provisioning Entries page lists all generated provisioning journal entries with columns for Entry Date, Journal Entry Created, Created By, and action buttons. A "+ Create Provisioning Entry" button generates new provisioning entries based on the current loan portfolio status and configured criteria; the system calculates the required provision amount for each loan category and creates the corresponding journal entries. Each entry can be reviewed (showing a detailed breakdown by loan product and category) or recreated.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Criteria Name",
+          "type": "link",
+          "clickable": true
+        },
+        {
+          "name": "Created Date",
+          "type": "date"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create",
+          "action_name": "Open Create Provisioning Criteria Form",
+          "opens": "Provisioning_Criteria_Form"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "add_row_action": true,
+          "item_fields": {
+            "Loan Product": {
+              "type": "unspecified"
+            },
+            "Category": {
+              "type": "dropdown",
+              "options": [
+                "STANDARD",
+                "SUB-STANDARD",
+                "DOUBTFUL",
+                "LOSS"
+              ]
+            },
+            "Minimum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (minimum of the overdue range)"
+              ]
+            },
+            "Maximum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (maximum of the overdue range)"
+              ]
+            },
+            "Provisioning Percentage": {
+              "type": "number",
+              "constraints": [
+                "percentage of outstanding principal"
+              ]
+            },
+            "Liability Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL liability account"
+              ]
+            },
+            "Expense Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL expense account"
+              ]
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "action_name": "Create Provisioning Criteria",
+          "on_success": "creates a new provisioning criteria and closes the form"
+        }
+      ]
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Entry Date",
+          "type": "date"
+        },
+        {
+          "name": "Journal Entry Created",
+          "type": "date"
+        },
+        {
+          "name": "Created By",
+          "type": "unspecified"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "action_description": "opens Provisioning_Entry_Detail for the selected entry",
+          "opens": "Provisioning_Entry_Detail"
+        },
+        {
+          "action_name": "Recreate",
+          "action_description": "recreates provisioning journal entry based on current loan portfolio status and configured criteria",
+          "on_success": "recreates journal entry"
+        }
+      ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "detailed breakdown by loan product and category",
+      "columns": [
+        {
+          "name": "Loan Product",
+          "type": "unspecified"
+        },
+        {
+          "name": "Category",
+          "type": "dropdown",
+          "options": [
+            "STANDARD",
+            "SUB-STANDARD",
+            "DOUBTFUL",
+            "LOSS"
+          ]
+        }
+      ],
+      "row_actions": []
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:27:45] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements; only minor inferred items (an Add-row action missing from the Definitions repeating group and two small inferred items present) were noted but are non-critical.",
-  "missing": [
-    "Provisioning_Criteria_Form.fields.Definitions.add_row_action (ability to add additional definition rows)"
-  ],
+  "summary": "AST captures all interactive elements described (tables, create buttons, form with repeating Definitions rows, entries table with create/review/recreate actions); only minor inferred UI details (save button and category shown as dropdown in detail view) are present but acceptable.",
+  "missing": [],
   "phantoms": [
-    "Provisioning_Criteria_Form.submit_actions[0] (Save button name not specified in description)",
-    "Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] (percentage constraint 'must be between 0 and 100' not stated in description)"
+    "Provisioning_Criteria_Form.submit_actions[0] (Save button and its on_success behavior are not explicitly named in the description)",
+    "Provisioning_Entry_Detail.columns[1] (Category rendered as a dropdown in the detail breakdown is an inferred control not explicitly specified)"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:08:09] Semantic Critic - PARSED JSON
+[22:27:45] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements; only minor inferred items (an Add-row action missing from the Definitions repeating group and two small inferred items present) were noted but are non-critical.",
-  "missing": [
-    "Provisioning_Criteria_Form.fields.Definitions.add_row_action (ability to add additional definition rows)"
-  ],
+  "summary": "AST captures all interactive elements described (tables, create buttons, form with repeating Definitions rows, entries table with create/review/recreate actions); only minor inferred UI details (save button and category shown as dropdown in detail view) are present but acceptable.",
+  "missing": [],
   "phantoms": [
-    "Provisioning_Criteria_Form.submit_actions[0] (Save button name not specified in description)",
-    "Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] (percentage constraint 'must be between 0 and 100' not stated in description)"
+    "Provisioning_Criteria_Form.submit_actions[0] (Save button and its on_success behavior are not explicitly named in the description)",
+    "Provisioning_Entry_Detail.columns[1] (Category rendered as a dropdown in the detail breakdown is an inferred control not explicitly specified)"
   ],
   "fixes": []
 }

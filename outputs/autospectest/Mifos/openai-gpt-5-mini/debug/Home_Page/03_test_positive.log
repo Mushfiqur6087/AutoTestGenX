@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.348830
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.501143
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Home Page</module_name>
 
@@ -243,11 +243,20 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "required": false
         }
       },
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "filters recent system activities"
+        }
+      ],
       "actions": [
         {
           "element_name": "Dashboard",
           "type": "button",
-          "on_success": "navigates to dashboard"
+          "on_success": "navigates to Dashboard",
+          "preconditions": [
+            "user must be logged in"
+          ]
         }
       ]
     }
@@ -267,7 +276,7 @@ The Home page appears after successful login. The main content area displays a w
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:17:47] Test-Positive - LLM RESPONSE
+[22:29:36] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Home Page",
@@ -275,68 +284,55 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Welcome card displays greeting",
+      "test_case": "Search Activity filters recent system activities",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Open the Home page",
-        "2. Look at the main content area"
+        "1. Navigate to the Home page",
+        "2. Enter <search term> in the Search Activity input field",
+        "3. Click the Search button"
       ],
-      "expected_result": "Welcome card is visible with the message \"Welcome, mifos!\"",
-      "priority": "medium"
+      "expected_result": "Recent system activities list displays only activities matching <search term>; unrelated activities are no longer visible (filters recent system activities)",
+      "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "System version information is shown in footer",
+      "test_case": "Dashboard button navigates to Dashboard view",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Open the Home page",
-        "2. Scroll to the bottom of the page"
+        "1. Navigate to the Home page",
+        "2. Click the Dashboard button"
       ],
-      "expected_result": "Mifos and Fineract version information is visible at the bottom of the Home page",
-      "priority": "medium"
+      "expected_result": "Application navigates to the Dashboard page and the page title or header 'Dashboard' is visible (navigates to Dashboard)",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Dashboard button navigates to dashboard",
+      "test_case": "Home page displays welcome message and system version information",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Open the Home page",
-        "2. Click the Dashboard button"
+        "1. Navigate to the Home page",
+        "2. Observe the main content area and page footer"
       ],
-      "expected_result": "navigates to dashboard",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-004",
-      "test_case": "Search Activity filters recent activities by term",
-      "preconditions": [
-        "User logged in as <User>",
-        "Recent activities include an entry matching <search term>"
-      ],
-      "steps": [
-        "1. Open the Home page",
-        "2. Enter <search term> in the Search Activity field and submit the search"
-      ],
-      "expected_result": "Activity list displays only entries matching <search term>; unrelated items are no longer visible",
-      "priority": "high"
+      "expected_result": "Welcome card displays the message \"Welcome, mifos!\"; Mifos and Fineract system version information is visible in the page footer",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 4,
+    "total": 3,
     "high_priority": 2,
-    "medium_priority": 2,
+    "medium_priority": 1,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:17:47] Test-Positive - PARSED JSON
+[22:29:36] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Home Page",
@@ -344,62 +340,49 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Welcome card displays greeting",
+      "test_case": "Search Activity filters recent system activities",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Open the Home page",
-        "2. Look at the main content area"
+        "1. Navigate to the Home page",
+        "2. Enter <search term> in the Search Activity input field",
+        "3. Click the Search button"
       ],
-      "expected_result": "Welcome card is visible with the message \"Welcome, mifos!\"",
-      "priority": "medium"
+      "expected_result": "Recent system activities list displays only activities matching <search term>; unrelated activities are no longer visible (filters recent system activities)",
+      "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "System version information is shown in footer",
+      "test_case": "Dashboard button navigates to Dashboard view",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Open the Home page",
-        "2. Scroll to the bottom of the page"
+        "1. Navigate to the Home page",
+        "2. Click the Dashboard button"
       ],
-      "expected_result": "Mifos and Fineract version information is visible at the bottom of the Home page",
-      "priority": "medium"
+      "expected_result": "Application navigates to the Dashboard page and the page title or header 'Dashboard' is visible (navigates to Dashboard)",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Dashboard button navigates to dashboard",
+      "test_case": "Home page displays welcome message and system version information",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Open the Home page",
-        "2. Click the Dashboard button"
+        "1. Navigate to the Home page",
+        "2. Observe the main content area and page footer"
       ],
-      "expected_result": "navigates to dashboard",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-004",
-      "test_case": "Search Activity filters recent activities by term",
-      "preconditions": [
-        "User logged in as <User>",
-        "Recent activities include an entry matching <search term>"
-      ],
-      "steps": [
-        "1. Open the Home page",
-        "2. Enter <search term> in the Search Activity field and submit the search"
-      ],
-      "expected_result": "Activity list displays only entries matching <search term>; unrelated items are no longer visible",
-      "priority": "high"
+      "expected_result": "Welcome card displays the message \"Welcome, mifos!\"; Mifos and Fineract system version information is visible in the page footer",
+      "priority": "medium"
     }
   ],
   "summary": {
-    "total": 4,
+    "total": 3,
     "high_priority": 2,
-    "medium_priority": 2,
+    "medium_priority": 1,
     "low_priority": 0
   }
 }

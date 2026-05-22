@@ -1,0 +1,766 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.523124
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Center Management</module_name>
+
+<ast>
+{
+  "module_name": "Center Management",
+  "components": {
+    "Centers_Page": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Account #",
+        "External Id",
+        "Status",
+        "Office Name"
+      ],
+      "link_column": "Name",
+      "page_actions": [
+        {
+          "element_name": "Import Center",
+          "type": "button",
+          "on_trigger": "navigates to Bulk_Import_Centers"
+        },
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
+        }
+      ]
+    },
+    "Create_Center_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "search",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups": {
+          "type": "search",
+          "multiple": true,
+          "required": false,
+          "description": "Select and add groups via searchable dropdown"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates center"
+        }
+      ]
+    },
+    "Bulk_Import_Centers": {
+      "type": "form",
+      "fields": {
+        "Template_Download": {
+          "type": "button",
+          "on_trigger": "downloads template"
+        },
+        "File": {
+          "type": "file_upload",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Import",
+          "on_success": "imports centers from file"
+        }
+      ]
+    },
+    "Edit_Center_Form": {
+      "type": "form",
+      "description": "Edit form opened by Edit action on Center Detail (fields prefilled)",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "search",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups": {
+          "type": "search",
+          "multiple": true,
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates center"
+        }
+      ]
+    },
+    "Center_Detail_Page": {
+      "type": "detail_page",
+      "action_bar": {
+        "type": "state_bound_action_bar",
+        "states": {
+          "Any": {
+            "available_actions": [
+              {
+                "action_name": "Activate",
+                "on_success": "status changes to Active"
+              },
+              {
+                "action_name": "Edit",
+                "on_trigger": "opens Edit_Center_Form"
+              },
+              {
+                "action_name": "Close",
+                "on_success": "status changes to Closed"
+              },
+              {
+                "action_name": "Assign Staff",
+                "fields": {
+                  "Staff": {
+                    "type": "search",
+                    "required": true
+                  }
+                },
+                "on_success": "assigns selected staff to center"
+              },
+              {
+                "action_name": "Generate Collection Sheet",
+                "on_trigger": "opens Collection_Sheet"
+              }
+            ]
+          }
+        }
+      },
+      "tabs": [
+        {
+          "tab_name": "Groups",
+          "components": {
+            "Member_Groups_Table": {
+              "type": "data_table",
+              "columns": [
+                "Name",
+                "Group External Id",
+                "Status",
+                "Office Name"
+              ],
+              "link_column": "Name"
+            }
+          }
+        },
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {}
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {}
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {}
+        }
+      ]
+    },
+    "Collection_Sheet": {
+      "type": "data_table",
+      "description": "Sheet showing all groups and their clients with editable amounts for batch data entry",
+      "row_fields": {
+        "Group_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Client_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Loan_Repayment_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
+        },
+        "Savings_Deposit_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit Collection Sheet",
+          "on_success": "saves repayments and deposits in batch"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+Centers are higher-level organizational units that contain groups. The Centers page displays a data table with columns for Name (clickable link), Account #, External Id, Status, and Office Name. Buttons at the top-right provide "Import Center" and "Create Center." The Create Center form contains Name (required), Office (required), Staff, Active checkbox, External Id, Submitted On (required), and a Select and Add groups dropdown search. Clicking "Submit" creates the center. The Bulk Import Centers page follows the same template-download and file-upload pattern as Groups.
+
+The Center Detail page displays the center name, status, office, and staff with action buttons for Activate, Edit, Close, and Assign Staff. Tabs show Groups (list of member groups with links), Loan Accounts, Savings Accounts, Notes, and a Calendar/Meeting section. The Collection Sheet feature generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:30:51] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Center Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Collection Sheet: enter zero for numeric amounts (boundary pass)",
+      "preconditions": [
+        "User has permission to open Collection_Sheet for a center",
+        "Collection_Sheet is generated with at least one client row"
+      ],
+      "steps": [
+        "1. Open the Collection_Sheet for a center",
+        "2. In one client row, enter 0 in Loan_Repayment_Amount",
+        "3. In the same client row, enter 0 in Savings_Deposit_Amount",
+        "4. Click 'Submit Collection Sheet'"
+      ],
+      "expected_result": "Submit Collection Sheet succeeds; a visible success indicator is shown and the saved batch summary or resulting UI shows Loan_Repayment_Amount and Savings_Deposit_Amount as 0 for that client row",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Collection Sheet: enter a negative number (just past boundary) is blocked",
+      "preconditions": [
+        "User has permission to open Collection_Sheet for a center",
+        "Collection_Sheet is generated with at least one client row"
+      ],
+      "steps": [
+        "1. Open the Collection_Sheet for a center",
+        "2. In one client row, enter <one unit below minimum> in Loan_Repayment_Amount (a negative number)",
+        "3. Click 'Submit Collection Sheet'"
+      ],
+      "expected_result": "Submission is blocked; Loan_Repayment_Amount displays an inline error 'must be a non-negative number' and the batch is not saved",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "data_edge",
+      "test_case": "Create Center: Submitted_On = today (required date field at typical boundary)",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. Enter a valid value in Name",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to today",
+        "4. (Optional) Fill other non-required fields or leave empty",
+        "5. Click 'Submit'"
+      ],
+      "expected_result": "Create Center Submit succeeds; the new center is created and appears in the Centers page table with Submitted_On displayed as today",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "data_edge",
+      "test_case": "Create Center: Submitted_On = yesterday (adjacent date edge)",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. Enter a valid value in Name",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to yesterday",
+        "4. Click 'Submit'"
+      ],
+      "expected_result": "Create Center Submit succeeds; the new center is created and appears in the Centers page table with Submitted_On displayed as yesterday",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "input_edge",
+      "test_case": "Create Center: Name with leading and trailing whitespace is trimmed on save",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. In Name, enter a valid name with leading and trailing whitespace around the visible characters",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to a valid date",
+        "4. Click 'Submit'",
+        "5. Navigate to Centers_Page and locate the created center row or open the Center_Detail_Page"
+      ],
+      "expected_result": "Create Center Submit succeeds; the saved center's Name is displayed without leading or trailing whitespace in the Centers table or detail page (whitespace is trimmed)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "input_edge",
+      "test_case": "Create Center: very long Name (200+ characters) handling",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. In Name, enter a very long string (200+ characters)",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to a valid date",
+        "4. Click 'Submit'",
+        "5. Open the created center's Center_Detail_Page or view the row on Centers_Page"
+      ],
+      "expected_result": "If the UI accepts the long Name, Create Center Submit succeeds and the full entered Name is visible on the Center_Detail_Page or in a view where long values are shown (no silent truncation). If the UI enforces a maximum length, an inline error is shown preventing submission (visible error indicating length limit)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Create Center: double-click Submit quickly should not create duplicate centers",
+      "preconditions": [
+        "User is on Centers_Page and opens Create_Center_Form",
+        "All required fields can be filled with valid data"
+      ],
+      "steps": [
+        "1. Fill Name with a valid value",
+        "2. Fill Office with a valid value",
+        "3. Set Submitted_On to a valid date",
+        "4. Double-click the 'Submit' button rapidly (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one center creation occurs; the UI prevents duplicate submissions (only one success result is shown and only one new row appears in the Centers table)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "state_edge",
+      "test_case": "Center Detail: rapid consecutive state actions (Close then Activate) are serialized or blocked",
+      "preconditions": [
+        "A center exists with a status that allows both Close and Activate actions to be available in the action bar",
+        "User is on that center's Center_Detail_Page"
+      ],
+      "steps": [
+        "1. Click 'Close' in the action bar",
+        "2. Immediately click 'Activate' in the action bar (before the first action visibly completes)"
+      ],
+      "expected_result": "The second action is blocked while the first action is in progress (action buttons become disabled or the second click has no effect). Only one state transition occurs at a time; the UI shows processing state and the center ends in the state corresponding to the single successfully completed action",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 2,
+    "input_edge": 3,
+    "interaction_edge": 1,
+    "state_edge": 1,
+    "data_edge": 2,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[22:30:51] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Center Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Collection Sheet: enter zero for numeric amounts (boundary pass)",
+      "preconditions": [
+        "User has permission to open Collection_Sheet for a center",
+        "Collection_Sheet is generated with at least one client row"
+      ],
+      "steps": [
+        "1. Open the Collection_Sheet for a center",
+        "2. In one client row, enter 0 in Loan_Repayment_Amount",
+        "3. In the same client row, enter 0 in Savings_Deposit_Amount",
+        "4. Click 'Submit Collection Sheet'"
+      ],
+      "expected_result": "Submit Collection Sheet succeeds; a visible success indicator is shown and the saved batch summary or resulting UI shows Loan_Repayment_Amount and Savings_Deposit_Amount as 0 for that client row",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Collection Sheet: enter a negative number (just past boundary) is blocked",
+      "preconditions": [
+        "User has permission to open Collection_Sheet for a center",
+        "Collection_Sheet is generated with at least one client row"
+      ],
+      "steps": [
+        "1. Open the Collection_Sheet for a center",
+        "2. In one client row, enter <one unit below minimum> in Loan_Repayment_Amount (a negative number)",
+        "3. Click 'Submit Collection Sheet'"
+      ],
+      "expected_result": "Submission is blocked; Loan_Repayment_Amount displays an inline error 'must be a non-negative number' and the batch is not saved",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "data_edge",
+      "test_case": "Create Center: Submitted_On = today (required date field at typical boundary)",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. Enter a valid value in Name",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to today",
+        "4. (Optional) Fill other non-required fields or leave empty",
+        "5. Click 'Submit'"
+      ],
+      "expected_result": "Create Center Submit succeeds; the new center is created and appears in the Centers page table with Submitted_On displayed as today",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "data_edge",
+      "test_case": "Create Center: Submitted_On = yesterday (adjacent date edge)",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. Enter a valid value in Name",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to yesterday",
+        "4. Click 'Submit'"
+      ],
+      "expected_result": "Create Center Submit succeeds; the new center is created and appears in the Centers page table with Submitted_On displayed as yesterday",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "input_edge",
+      "test_case": "Create Center: Name with leading and trailing whitespace is trimmed on save",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. In Name, enter a valid name with leading and trailing whitespace around the visible characters",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to a valid date",
+        "4. Click 'Submit'",
+        "5. Navigate to Centers_Page and locate the created center row or open the Center_Detail_Page"
+      ],
+      "expected_result": "Create Center Submit succeeds; the saved center's Name is displayed without leading or trailing whitespace in the Centers table or detail page (whitespace is trimmed)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "input_edge",
+      "test_case": "Create Center: very long Name (200+ characters) handling",
+      "preconditions": [
+        "User is on Centers_Page and clicks 'Create Center' to open Create_Center_Form"
+      ],
+      "steps": [
+        "1. In Name, enter a very long string (200+ characters)",
+        "2. Enter a valid value in Office",
+        "3. Set Submitted_On to a valid date",
+        "4. Click 'Submit'",
+        "5. Open the created center's Center_Detail_Page or view the row on Centers_Page"
+      ],
+      "expected_result": "If the UI accepts the long Name, Create Center Submit succeeds and the full entered Name is visible on the Center_Detail_Page or in a view where long values are shown (no silent truncation). If the UI enforces a maximum length, an inline error is shown preventing submission (visible error indicating length limit)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Create Center: double-click Submit quickly should not create duplicate centers",
+      "preconditions": [
+        "User is on Centers_Page and opens Create_Center_Form",
+        "All required fields can be filled with valid data"
+      ],
+      "steps": [
+        "1. Fill Name with a valid value",
+        "2. Fill Office with a valid value",
+        "3. Set Submitted_On to a valid date",
+        "4. Double-click the 'Submit' button rapidly (two clicks in quick succession)"
+      ],
+      "expected_result": "Only one center creation occurs; the UI prevents duplicate submissions (only one success result is shown and only one new row appears in the Centers table)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "state_edge",
+      "test_case": "Center Detail: rapid consecutive state actions (Close then Activate) are serialized or blocked",
+      "preconditions": [
+        "A center exists with a status that allows both Close and Activate actions to be available in the action bar",
+        "User is on that center's Center_Detail_Page"
+      ],
+      "steps": [
+        "1. Click 'Close' in the action bar",
+        "2. Immediately click 'Activate' in the action bar (before the first action visibly completes)"
+      ],
+      "expected_result": "The second action is blocked while the first action is in progress (action buttons become disabled or the second click has no effect). Only one state transition occurs at a time; the UI shows processing state and the center ends in the state corresponding to the single successfully completed action",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 2,
+    "input_edge": 3,
+    "interaction_edge": 1,
+    "state_edge": 1,
+    "data_edge": 2,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}

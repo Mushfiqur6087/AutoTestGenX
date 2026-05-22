@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.374478
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.560953
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Logout</module_name>
 
@@ -232,26 +232,18 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Logout",
   "components": {
-    "User_Profile_Menu": {
+    "User_Profile_Icon": {
+      "type": "button",
+      "visible_when": "user is logged in",
+      "on_click": "toggles Profile_Dropdown"
+    },
+    "Profile_Dropdown": {
       "type": "dropdown",
-      "preconditions": [
-        "user must be logged in"
-      ],
-      "trigger": {
-        "element_name": "Profile Icon",
-        "type": "button",
-        "preconditions": [
-          "user must be logged in"
-        ],
-        "on_action": "reveals dropdown menu"
-      },
-      "menu_items": [
+      "visible_when": "User_Profile_Icon == clicked",
+      "items": [
         {
           "element_name": "Profile Settings",
           "type": "link",
-          "preconditions": [
-            "user must be logged in"
-          ],
           "on_click": "navigates to Profile Settings page"
         },
         {
@@ -260,25 +252,18 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "preconditions": [
             "user must be logged in"
           ],
-          "on_click": "terminates authenticated session; clears authentication token; redirects to login page",
-          "on_success": "terminates authenticated session; clears authentication token; redirects to login page",
-          "state_change": {
-            "auth_state": "Logged_Out"
-          },
-          "postconditions": [
-            "subsequent navigation to authenticated pages redirects to login page"
-          ]
+          "on_click": "initiates logout flow",
+          "on_success": "terminates authenticated session; clears authentication token; redirects to login page"
         }
       ]
     },
-    "Authenticated_Page_Access_Guard": {
+    "Authenticated_Route_Guard": {
       "type": "unspecified",
-      "description": "Global guard applied to routes/pages that require authentication",
       "preconditions": [
         "user must be logged in"
       ],
       "on_failure": "redirects to login page",
-      "applies_to": "any authenticated page"
+      "description": "Global guard applied to all authenticated routes. After logout, attempts to navigate to an authenticated page will trigger this guard and redirect to the login page."
     }
   }
 }
@@ -293,7 +278,7 @@ The logout function is accessible from the user profile icon in the top-right co
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:20:02] Test-Positive - LLM RESPONSE
+[22:36:12] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Logout",
@@ -301,56 +286,70 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Log out via Profile menu redirects to Login page",
-      "preconditions": [
-        "User logged in as <User>",
-        "User is on an <Authenticated Page> where the Profile Icon is visible"
-      ],
+      "test_case": "Open Profile dropdown shows Profile Settings and Log Out",
+      "preconditions": ["User logged in as <User>"],
       "steps": [
-        "1. Click the Profile Icon to open the user dropdown",
-        "2. Click the 'Log Out' button in the dropdown"
+        "1. Click the <User Profile> icon in the top-right corner"
       ],
-      "expected_result": "Application redirects to the Login page; Login form is visible with fields <username> and <password>",
-      "priority": "high"
+      "expected_result": "Profile dropdown is displayed showing the 'Profile Settings' link and the 'Log Out' button",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "After logout, navigating to an authenticated page redirects to Login page",
-      "preconditions": [
-        "User logged in as <User>",
-        "User is on an <Authenticated Page>"
-      ],
+      "test_case": "Navigate to Profile Settings from Profile dropdown",
+      "preconditions": ["User logged in as <User>"],
       "steps": [
-        "1. Click the Profile Icon to open the user dropdown",
-        "2. Click the 'Log Out' button in the dropdown",
-        "3. Attempt to navigate to <Authenticated Page> (for example, enter the page URL or click its navigation link)"
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the 'Profile Settings' item in the dropdown"
       ],
-      "expected_result": "Attempted navigation to <Authenticated Page> results in a redirect to the Login page; Login form is visible with fields <username> and <password>",
-      "priority": "high"
+      "expected_result": "The application navigates to the Profile Settings page; the Profile Settings page is displayed",
+      "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Profile dropdown reveals Profile Settings and Log Out options",
-      "preconditions": [
-        "User logged in as <User>"
-      ],
+      "test_case": "Log out via Profile dropdown redirects to Login page",
+      "preconditions": ["User logged in as <User>"],
       "steps": [
-        "1. Click the Profile Icon to open the user dropdown"
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the 'Log Out' button in the dropdown"
       ],
-      "expected_result": "Dropdown menu is visible showing the 'Profile Settings' link and the 'Log Out' button",
-      "priority": "medium"
+      "expected_result": "User is redirected to the Login page and the Login form is visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "After logout, attempt to open an authenticated page redirects to Login page",
+      "preconditions": ["User logged in as <User>"],
+      "steps": [
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the 'Log Out' button in the dropdown",
+        "3. Attempt to navigate to an authenticated page by entering the <authenticated route> in the browser address bar or clicking a bookmark to an authenticated page"
+      ],
+      "expected_result": "Attempt to access the authenticated page is intercepted and the user is redirected to the Login page; the Login form is visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "test_case": "Profile dropdown toggles closed when Profile icon clicked again",
+      "preconditions": ["User logged in as <User>"],
+      "steps": [
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the <User Profile> icon again"
+      ],
+      "expected_result": "Profile dropdown is no longer visible",
+      "priority": "low"
     }
   ],
   "summary": {
-    "total": 3,
+    "total": 5,
     "high_priority": 2,
-    "medium_priority": 1,
-    "low_priority": 0
+    "medium_priority": 2,
+    "low_priority": 1
   }
 }
 
 ------------------------------------------------------------
-[16:20:02] Test-Positive - PARSED JSON
+[22:36:12] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Logout",
@@ -358,50 +357,74 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Log out via Profile menu redirects to Login page",
-      "preconditions": [
-        "User logged in as <User>",
-        "User is on an <Authenticated Page> where the Profile Icon is visible"
-      ],
-      "steps": [
-        "1. Click the Profile Icon to open the user dropdown",
-        "2. Click the 'Log Out' button in the dropdown"
-      ],
-      "expected_result": "Application redirects to the Login page; Login form is visible with fields <username> and <password>",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "After logout, navigating to an authenticated page redirects to Login page",
-      "preconditions": [
-        "User logged in as <User>",
-        "User is on an <Authenticated Page>"
-      ],
-      "steps": [
-        "1. Click the Profile Icon to open the user dropdown",
-        "2. Click the 'Log Out' button in the dropdown",
-        "3. Attempt to navigate to <Authenticated Page> (for example, enter the page URL or click its navigation link)"
-      ],
-      "expected_result": "Attempted navigation to <Authenticated Page> results in a redirect to the Login page; Login form is visible with fields <username> and <password>",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-003",
-      "test_case": "Profile dropdown reveals Profile Settings and Log Out options",
+      "test_case": "Open Profile dropdown shows Profile Settings and Log Out",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Profile Icon to open the user dropdown"
+        "1. Click the <User Profile> icon in the top-right corner"
       ],
-      "expected_result": "Dropdown menu is visible showing the 'Profile Settings' link and the 'Log Out' button",
+      "expected_result": "Profile dropdown is displayed showing the 'Profile Settings' link and the 'Log Out' button",
       "priority": "medium"
+    },
+    {
+      "tc_id": "P-002",
+      "test_case": "Navigate to Profile Settings from Profile dropdown",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the 'Profile Settings' item in the dropdown"
+      ],
+      "expected_result": "The application navigates to the Profile Settings page; the Profile Settings page is displayed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "test_case": "Log out via Profile dropdown redirects to Login page",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the 'Log Out' button in the dropdown"
+      ],
+      "expected_result": "User is redirected to the Login page and the Login form is visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "After logout, attempt to open an authenticated page redirects to Login page",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the 'Log Out' button in the dropdown",
+        "3. Attempt to navigate to an authenticated page by entering the <authenticated route> in the browser address bar or clicking a bookmark to an authenticated page"
+      ],
+      "expected_result": "Attempt to access the authenticated page is intercepted and the user is redirected to the Login page; the Login form is visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "test_case": "Profile dropdown toggles closed when Profile icon clicked again",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the <User Profile> icon in the top-right corner to open the dropdown",
+        "2. Click the <User Profile> icon again"
+      ],
+      "expected_result": "Profile dropdown is no longer visible",
+      "priority": "low"
     }
   ],
   "summary": {
-    "total": 3,
+    "total": 5,
     "high_priority": 2,
-    "medium_priority": 1,
-    "low_priority": 0
+    "medium_priority": 2,
+    "low_priority": 1
   }
 }

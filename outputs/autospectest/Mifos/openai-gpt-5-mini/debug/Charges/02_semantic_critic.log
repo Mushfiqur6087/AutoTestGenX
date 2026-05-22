@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.757578
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.393229
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:05:45] Semantic Critic - SYSTEM PROMPT
+[22:20:53] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:05:45] Semantic Critic - USER PROMPT
+[22:20:53] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -124,340 +124,45 @@ The Charges page displays a data table with columns for Name (clickable link), C
     "Charges_Table": {
       "type": "data_table",
       "columns": [
-        "Name",
-        "Charge Applies To",
-        "Is Penalty",
-        "Is Active",
-        "Is Paid Derived"
+        {
+          "name": "Name",
+          "interactive": true,
+          "interaction": "clickable_link",
+          "interaction_result": "opens Charge_Detail_View"
+        },
+        {
+          "name": "Charge Applies To"
+        },
+        {
+          "name": "Is Penalty"
+        },
+        {
+          "name": "Is Active"
+        },
+        {
+          "name": "Is Paid Derived"
+        }
       ],
       "row_actions": [
         {
-          "action_name": "Open Details",
-          "type": "link",
-          "trigger": "click Name",
-          "on_success": "navigates to Charge Detail view"
+          "action_name": "Open Detail",
+          "trigger": "click Name link",
+          "on_success": "opens Charge_Detail_View"
         },
         {
           "action_name": "Edit",
-          "type": "button",
-          "on_success": "opens Edit_Charge_Form",
-          "opens": "Edit_Charge_Form"
+          "on_success": "opens Create_Charge_Form in edit mode"
         },
         {
           "action_name": "Delete",
-          "type": "button",
-          "on_success": "deletes charge definition"
-        }
-      ],
-      "actions": [
-        {
-          "element_name": "+ Create Charge",
-          "type": "button",
-          "on_click": "opens Create_Charge_Form",
-          "opens": "Create_Charge_Form"
-        }
-      ]
-    },
-    "Create_Charge_Form": {
-      "type": "form",
-      "fields": {
-        "Charge Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Charge Applies To": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Loan",
-            "Savings Account",
-            "Client",
-            "Shares"
-          ]
-        },
-        "Currency": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Charge Time Type": {
-          "type": "dropdown",
-          "required": false,
-          "options_by_applies_to": {
-            "Loan": [
-              "Disbursement",
-              "Specified Due Date",
-              "Installment Fee",
-              "Overdue Fees",
-              "Tranche Disbursement"
-            ],
-            "Savings Account": [
-              "Specified Due Date",
-              "Savings Activation",
-              "Withdrawal Fee",
-              "Annual Fee",
-              "Monthly Fee",
-              "Overdraft Fee"
-            ],
-            "Client": [],
-            "Shares": []
-          },
-          "constraints": []
-        },
-        "Charge Calculation Type": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Flat",
-            "Percentage of Amount",
-            "Percentage of Interest",
-            "Percentage of Total Outstanding"
-          ]
-        },
-        "Amount": {
-          "type": "number",
-          "required": true
-        },
-        "Is Penalty": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Is Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Tax Group": {
-          "type": "dropdown",
-          "required": false
-        },
-        "Payment Mode": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Regular",
-            "Account Transfer"
-          ]
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Submit",
-          "type": "button",
-          "on_success": "creates charge definition"
-        },
-        {
-          "element_name": "Cancel",
-          "type": "button",
-          "on_click": "closes form"
-        }
-      ]
-    },
-    "Edit_Charge_Form": {
-      "type": "form",
-      "fields": {
-        "Charge Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Charge Applies To": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Loan",
-            "Savings Account",
-            "Client",
-            "Shares"
-          ]
-        },
-        "Currency": {
-          "type": "dropdown",
-          "required": true
-        },
-        "Charge Time Type": {
-          "type": "dropdown",
-          "required": false,
-          "options_by_applies_to": {
-            "Loan": [
-              "Disbursement",
-              "Specified Due Date",
-              "Installment Fee",
-              "Overdue Fees",
-              "Tranche Disbursement"
-            ],
-            "Savings Account": [
-              "Specified Due Date",
-              "Savings Activation",
-              "Withdrawal Fee",
-              "Annual Fee",
-              "Monthly Fee",
-              "Overdraft Fee"
-            ],
-            "Client": [],
-            "Shares": []
-          }
-        },
-        "Charge Calculation Type": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Flat",
-            "Percentage of Amount",
-            "Percentage of Interest",
-            "Percentage of Total Outstanding"
-          ]
-        },
-        "Amount": {
-          "type": "number",
-          "required": true
-        },
-        "Is Penalty": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Is Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Tax Group": {
-          "type": "dropdown",
-          "required": false
-        },
-        "Payment Mode": {
-          "type": "dropdown",
-          "required": false,
-          "options": [
-            "Regular",
-            "Account Transfer"
-          ]
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "type": "button",
-          "on_success": "updates charge definition"
-        },
-        {
-          "element_name": "Cancel",
-          "type": "button",
-          "on_click": "closes form"
-        }
-      ]
-    },
-    "Charge_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_success": "opens Edit_Charge_Form",
-          "opens": "Edit_Charge_Form"
-        },
-        {
-          "action_name": "Delete",
-          "type": "button",
           "on_success": "deletes charge definition"
         }
       ]
-    }
-  }
-}
-</ast>
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[16:07:45] Semantic Critic - LLM RESPONSE
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST includes several elements not present in the description (table row Edit/Delete actions, Cancel buttons, inferred empty options) and omits an explicit Charge Detail view component; regenerate after removing phantoms and adding the missing detail view.",
-  "missing": [
-    "components.Charge_Detail_View (explicit detail view component for opening an existing charge's details)"
-  ],
-  "phantoms": [
-    "components.Charges_Table.row_actions[1] (Edit button not described — table row Edit was not specified; description says Edit exists in the detail view only)",
-    "components.Charges_Table.row_actions[2] (Delete button not described — table row Delete was not specified; description says Delete exists in the detail view only)",
-    "components.Create_Charge_Form.submit_actions[1] (Cancel button not in description)",
-    "components.Edit_Charge_Form.submit_actions[1] (Cancel button not in description)",
-    "components.Create_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client (empty array inferred but not specified in description)",
-    "components.Create_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Shares (empty array inferred but not specified in description)",
-    "components.Edit_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client (empty array inferred but not specified in description)",
-    "components.Edit_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Shares (empty array inferred but not specified in description)"
-  ],
-  "fixes": [
-    "Remove the table-level Edit and Delete row actions: delete components.Charges_Table.row_actions[1] and components.Charges_Table.row_actions[2]; keep only the 'Open Details' row action that is triggered by clicking the Name link.",
-    "Remove Cancel buttons that are not mentioned: delete components.Create_Charge_Form.submit_actions[1] and components.Edit_Charge_Form.submit_actions[1], leaving only the submit action(s) described (Submit for create, Save/Submit for edit).",
-    "Add an explicit Charge Detail view component to represent the opened charge detail page: add components.Charge_Detail_View with type 'detail_view' and include its available actions (Edit and Delete) or reference the existing components.Charge_Detail_Actions inside it so the detail view is represented in the AST.",
-    "Remove the inferred empty options for Client and Shares under Charge Time Type (they are not specified in the description): delete components.Create_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client and .Shares, and delete components.Edit_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client and .Shares; only include the explicitly stated mappings for Loan and Savings Account."
-  ]
-}
-
-------------------------------------------------------------
-[16:07:45] Semantic Critic - PARSED JSON
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST includes several elements not present in the description (table row Edit/Delete actions, Cancel buttons, inferred empty options) and omits an explicit Charge Detail view component; regenerate after removing phantoms and adding the missing detail view.",
-  "missing": [
-    "components.Charge_Detail_View (explicit detail view component for opening an existing charge's details)"
-  ],
-  "phantoms": [
-    "components.Charges_Table.row_actions[1] (Edit button not described \u2014 table row Edit was not specified; description says Edit exists in the detail view only)",
-    "components.Charges_Table.row_actions[2] (Delete button not described \u2014 table row Delete was not specified; description says Delete exists in the detail view only)",
-    "components.Create_Charge_Form.submit_actions[1] (Cancel button not in description)",
-    "components.Edit_Charge_Form.submit_actions[1] (Cancel button not in description)",
-    "components.Create_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client (empty array inferred but not specified in description)",
-    "components.Create_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Shares (empty array inferred but not specified in description)",
-    "components.Edit_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client (empty array inferred but not specified in description)",
-    "components.Edit_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Shares (empty array inferred but not specified in description)"
-  ],
-  "fixes": [
-    "Remove the table-level Edit and Delete row actions: delete components.Charges_Table.row_actions[1] and components.Charges_Table.row_actions[2]; keep only the 'Open Details' row action that is triggered by clicking the Name link.",
-    "Remove Cancel buttons that are not mentioned: delete components.Create_Charge_Form.submit_actions[1] and components.Edit_Charge_Form.submit_actions[1], leaving only the submit action(s) described (Submit for create, Save/Submit for edit).",
-    "Add an explicit Charge Detail view component to represent the opened charge detail page: add components.Charge_Detail_View with type 'detail_view' and include its available actions (Edit and Delete) or reference the existing components.Charge_Detail_Actions inside it so the detail view is represented in the AST.",
-    "Remove the inferred empty options for Client and Shares under Charge Time Type (they are not specified in the description): delete components.Create_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client and .Shares, and delete components.Edit_Charge_Form.fields['Charge Time Type'].options_by_applies_to.Client and .Shares; only include the explicitly stated mappings for Loan and Savings Account."
-  ]
-}
-
-------------------------------------------------------------
-[16:09:08] Semantic Critic - USER PROMPT
-------------------------------------------------------------
-<description>
-
-The Charges page displays a data table with columns for Name (clickable link), Charge Applies To, Is Penalty, Is Active, and Is Paid Derived. A "+ Create Charge" button opens the creation form containing Charge Name (required), Charge Applies To (Loan, Savings Account, Client, Shares — required), Currency (required), Charge Time Type (options vary by entity: for Loans includes Disbursement, Specified Due Date, Installment Fee, Overdue Fees, Tranche Disbursement; for Savings includes Specified Due Date, Savings Activation, Withdrawal Fee, Annual Fee, Monthly Fee, Overdraft Fee), Charge Calculation Type (Flat, Percentage of Amount, Percentage of Interest, Percentage of Total Outstanding), Amount (required), Is Penalty checkbox, Is Active checkbox, Tax Group dropdown, and Payment Mode (Regular, Account Transfer). Clicking "Submit" creates the charge definition. Clicking an existing charge opens its detail view with Edit and Delete options.
-
----
-
-
-</description>
-
-<ast>
-{
-  "module_name": "Charges",
-  "components": {
-    "Charges_Table": {
-      "type": "data_table",
-      "columns": [
-        "Name",
-        "Charge Applies To",
-        "Is Penalty",
-        "Is Active",
-        "Is Paid Derived"
-      ],
-      "row_actions": [
-        {
-          "action_name": "Open Details",
-          "trigger": "Name link",
-          "opens": "Charge_Detail_View"
-        }
-      ],
-      "toolbar_actions": [
-        {
-          "element_name": "+ Create Charge",
-          "type": "button",
-          "opens": "Create_Charge_Form"
-        }
-      ]
+    },
+    "Create_Charge_Button": {
+      "type": "button",
+      "element_name": "+ Create Charge",
+      "on_click": "opens Create_Charge_Form"
     },
     "Create_Charge_Form": {
       "type": "form",
@@ -482,7 +187,8 @@ The Charges page displays a data table with columns for Name (clickable link), C
         },
         "Charge_Time_Type": {
           "type": "dropdown",
-          "options_by_applies_to": {
+          "required": false,
+          "options_map": {
             "Loan": [
               "Disbursement",
               "Specified Due Date",
@@ -498,10 +204,12 @@ The Charges page displays a data table with columns for Name (clickable link), C
               "Monthly Fee",
               "Overdraft Fee"
             ]
-          }
+          },
+          "visible_when": "Charge_Applies_To in [Loan, Savings Account]"
         },
         "Charge_Calculation_Type": {
           "type": "dropdown",
+          "required": false,
           "options": [
             "Flat",
             "Percentage of Amount",
@@ -514,16 +222,20 @@ The Charges page displays a data table with columns for Name (clickable link), C
           "required": true
         },
         "Is_Penalty": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Is_Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Tax_Group": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false
         },
         "Payment_Mode": {
           "type": "dropdown",
+          "required": false,
           "options": [
             "Regular",
             "Account Transfer"
@@ -537,94 +249,16 @@ The Charges page displays a data table with columns for Name (clickable link), C
         }
       ]
     },
-    "Edit_Charge_Form": {
-      "type": "form",
-      "fields": {
-        "Charge_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Charge_Applies_To": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "Loan",
-            "Savings Account",
-            "Client",
-            "Shares"
-          ]
-        },
-        "Currency": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Charge_Time_Type": {
-          "type": "dropdown",
-          "options_by_applies_to": {
-            "Loan": [
-              "Disbursement",
-              "Specified Due Date",
-              "Installment Fee",
-              "Overdue Fees",
-              "Tranche Disbursement"
-            ],
-            "Savings Account": [
-              "Specified Due Date",
-              "Savings Activation",
-              "Withdrawal Fee",
-              "Annual Fee",
-              "Monthly Fee",
-              "Overdraft Fee"
-            ]
-          }
-        },
-        "Charge_Calculation_Type": {
-          "type": "dropdown",
-          "options": [
-            "Flat",
-            "Percentage of Amount",
-            "Percentage of Interest",
-            "Percentage of Total Outstanding"
-          ]
-        },
-        "Amount": {
-          "type": "number",
-          "required": true
-        },
-        "Is_Penalty": {
-          "type": "checkbox"
-        },
-        "Is_Active": {
-          "type": "checkbox"
-        },
-        "Tax_Group": {
-          "type": "dropdown"
-        },
-        "Payment_Mode": {
-          "type": "dropdown",
-          "options": [
-            "Regular",
-            "Account Transfer"
-          ]
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates the charge definition"
-        }
-      ]
-    },
     "Charge_Detail_View": {
       "type": "detail_view",
-      "available_actions": [
+      "actions": [
         {
           "action_name": "Edit",
-          "opens": "Edit_Charge_Form"
+          "on_success": "opens Create_Charge_Form in edit mode"
         },
         {
           "action_name": "Delete",
-          "on_success": "deletes the charge definition"
+          "on_success": "deletes charge definition"
         }
       ]
     }
@@ -635,29 +269,29 @@ The Charges page displays a data table with columns for Name (clickable link), C
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:10:10] Semantic Critic - LLM RESPONSE
+[22:22:50] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements (table, create form with fields and conditional charge time options, submit, detail view with edit/delete); only minor unlabeled button names were added.",
+  "summary": "AST accurately captures the described interactive elements; only minor row-level Edit/Delete actions in the table are extra but non-critical.",
   "missing": [],
   "phantoms": [
-    "Charges_Table.row_actions[0].action_name (action label 'Open Details' is not explicitly named in the description)",
-    "Edit_Charge_Form.submit_actions[0] (button label 'Save' for edit form is not explicitly named in the description)"
+    "components.Charges_Table.row_actions[1] (Edit row action not explicitly described; Edit is only mentioned in the detail view)",
+    "components.Charges_Table.row_actions[2] (Delete row action not explicitly described; Delete is only mentioned in the detail view)"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:10:10] Semantic Critic - PARSED JSON
+[22:22:50] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the interactive elements (table, create form with fields and conditional charge time options, submit, detail view with edit/delete); only minor unlabeled button names were added.",
+  "summary": "AST accurately captures the described interactive elements; only minor row-level Edit/Delete actions in the table are extra but non-critical.",
   "missing": [],
   "phantoms": [
-    "Charges_Table.row_actions[0].action_name (action label 'Open Details' is not explicitly named in the description)",
-    "Edit_Charge_Form.submit_actions[0] (button label 'Save' for edit form is not explicitly named in the description)"
+    "components.Charges_Table.row_actions[1] (Edit row action not explicitly described; Edit is only mentioned in the detail view)",
+    "components.Charges_Table.row_actions[2] (Delete row action not explicitly described; Delete is only mentioned in the detail view)"
   ],
   "fixes": []
 }

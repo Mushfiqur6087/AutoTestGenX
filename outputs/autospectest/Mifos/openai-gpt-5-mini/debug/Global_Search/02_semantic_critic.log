@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.747645
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.377523
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:05:14] Semantic Critic - SYSTEM PROMPT
+[22:20:23] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:05:14] Semantic Critic - USER PROMPT
+[22:20:23] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -121,38 +121,33 @@ Global search is accessible from the search icon in the top toolbar from any pag
 {
   "module_name": "Global Search",
   "components": {
-    "Topbar_Search_Icon": {
+    "Toolbar_Search_Button": {
       "type": "button",
       "element_name": "Search Icon",
       "preconditions": [
         "user must be logged in"
       ],
-      "on_click": "opens Global_Search_Input"
+      "on_click": "opens Global_Search"
     },
-    "Global_Search_Input": {
+    "Global_Search": {
       "type": "search",
-      "element_name": "Search Input",
-      "visible_when": "Topbar_Search_Icon == clicked",
       "preconditions": [
         "user must be logged in"
       ],
-      "constraints": [
-        "supports partial matching",
-        "case-insensitive"
-      ],
-      "triggers": [
-        "on_input"
-      ],
-      "search_scopes": [
-        "Clients",
-        "Groups",
-        "Loans",
-        "Savings accounts"
-      ],
+      "fields": {
+        "Query": {
+          "type": "search",
+          "required": false,
+          "constraints": [
+            "supports partial matching",
+            "case-insensitive"
+          ],
+          "live_search": true
+        }
+      },
       "results_dropdown": {
         "type": "dropdown",
-        "element_name": "Search Results Dropdown",
-        "visible_when": "Global_Search_Input != ''",
+        "visible_when": "Query != ''",
         "grouped_by": [
           "Clients",
           "Groups",
@@ -162,8 +157,7 @@ Global search is accessible from the search icon in the top toolbar from any pag
         "groups": [
           {
             "group_name": "Clients",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -174,20 +168,14 @@ Global search is accessible from the search icon in the top toolbar from any pag
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Client detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Client",
+              "on_select": "navigates to Client detail page"
+            }
           },
           {
             "group_name": "Groups",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -198,20 +186,14 @@ Global search is accessible from the search icon in the top toolbar from any pag
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Group detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Group",
+              "on_select": "navigates to Group detail page"
+            }
           },
           {
             "group_name": "Loans",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -222,20 +204,14 @@ Global search is accessible from the search icon in the top toolbar from any pag
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Loan detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Loan",
+              "on_select": "navigates to Loan detail page"
+            }
           },
           {
             "group_name": "Savings accounts",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -246,20 +222,15 @@ Global search is accessible from the search icon in the top toolbar from any pag
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Savings account detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Savings",
+              "on_select": "navigates to Savings account detail page"
+            }
           }
         ],
-        "no_results_message": {
-          "text": "No results found",
-          "visible_when": "Results_Count == 0 and Global_Search_Input != ''"
+        "empty_state": {
+          "message": "No results found",
+          "visible_when": "no_matches"
         }
       }
     }
@@ -270,22 +241,22 @@ Global search is accessible from the search icon in the top toolbar from any pag
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:07:03] Semantic Critic - LLM RESPONSE
+[22:22:37] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately models the global search icon, input, scoped live search, grouped results with name/identifier/status, selection navigation, no-results message, and stated search constraints.",
+  "summary": "AST accurately captures the global search button, live search input, grouped results (Clients, Groups, Loans, Savings accounts), result item fields (name, identifier, status), navigation on selection, empty state, and matching constraints.",
   "missing": [],
   "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:07:03] Semantic Critic - PARSED JSON
+[22:22:37] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately models the global search icon, input, scoped live search, grouped results with name/identifier/status, selection navigation, no-results message, and stated search constraints.",
+  "summary": "AST accurately captures the global search button, live search input, grouped results (Clients, Groups, Loans, Savings accounts), result item fields (name, identifier, status), navigation on selection, empty state, and matching constraints.",
   "missing": [],
   "phantoms": [],
   "fixes": []

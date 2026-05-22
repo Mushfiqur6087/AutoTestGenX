@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.745301
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.373606
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Dashboard
 
@@ -218,21 +218,15 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:05:10] UI-AST Agent - LLM RESPONSE
+[22:20:40] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Dashboard",
   "components": {
-    "Home_Page": {
-      "type": "page",
-      "fields": {},
-      "components": {
-        "Dashboard_Button": {
-          "type": "button",
-          "element_name": "Dashboard",
-          "on_click": "navigates to Dashboard page"
-        }
-      }
+    "Home_Page_Dashboard_Button": {
+      "type": "link",
+      "element_name": "Dashboard",
+      "on_click_navigates_to": "Dashboard_Page"
     },
     "Dashboard_Page": {
       "type": "page",
@@ -246,56 +240,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Client_Trends_Chart": {
           "type": "unspecified",
           "element_name": "Client Trends Chart",
-          "series": ["New Clients", "Closed Clients"],
-          "preconditions": ["office must be selected"]
-        },
-        "Amount_Pending_Disbursed_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Pending / Disbursed",
-          "preconditions": ["office must be selected"],
-          "on_no_data": "displays 'No Data'"
-        },
-        "Amount_Collected_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Collected",
-          "preconditions": ["office must be selected"],
-          "on_no_data": "displays 'No Data'"
-        }
-      }
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:05:10] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Dashboard",
-  "components": {
-    "Home_Page": {
-      "type": "page",
-      "fields": {},
-      "components": {
-        "Dashboard_Button": {
-          "type": "button",
-          "element_name": "Dashboard",
-          "on_click": "navigates to Dashboard page"
-        }
-      }
-    },
-    "Dashboard_Page": {
-      "type": "page",
-      "fields": {
-        "Search_Activity": {
-          "type": "search",
-          "required": false
-        }
-      },
-      "components": {
-        "Client_Trends_Chart": {
-          "type": "unspecified",
-          "element_name": "Client Trends Chart",
-          "series": [
+          "legend_items": [
             "New Clients",
             "Closed Clients"
           ],
@@ -303,21 +248,75 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "office must be selected"
           ]
         },
-        "Amount_Pending_Disbursed_Card": {
+        "Summary_Cards": {
+          "type": "group",
+          "fields": {
+            "Amount_Pending_Disbursed": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            },
+            "Amount_Collected": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:20:40] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Dashboard",
+  "components": {
+    "Home_Page_Dashboard_Button": {
+      "type": "link",
+      "element_name": "Dashboard",
+      "on_click_navigates_to": "Dashboard_Page"
+    },
+    "Dashboard_Page": {
+      "type": "page",
+      "fields": {
+        "Search_Activity": {
+          "type": "search",
+          "required": false
+        }
+      },
+      "components": {
+        "Client_Trends_Chart": {
           "type": "unspecified",
-          "element_name": "Amount Pending / Disbursed",
+          "element_name": "Client Trends Chart",
+          "legend_items": [
+            "New Clients",
+            "Closed Clients"
+          ],
           "preconditions": [
             "office must be selected"
-          ],
-          "on_no_data": "displays 'No Data'"
+          ]
         },
-        "Amount_Collected_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Collected",
-          "preconditions": [
-            "office must be selected"
-          ],
-          "on_no_data": "displays 'No Data'"
+        "Summary_Cards": {
+          "type": "group",
+          "fields": {
+            "Amount_Pending_Disbursed": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            },
+            "Amount_Collected": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            }
+          }
         }
       }
     }

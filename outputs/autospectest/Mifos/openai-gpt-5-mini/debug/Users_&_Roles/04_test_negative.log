@@ -1,0 +1,700 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.552375
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Negative - SYSTEM PROMPT
+------------------------------------------------------------
+You are a Negative Test Case Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY negative test cases — tests where invalid input is provided or business rules are violated, and the system correctly rejects or blocks the action.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Negative Testing:**
+
+The AST represents every interactive element in the module. Each node type has a corresponding failure category:
+
+| AST node / field | What to test for failure |
+|---|---|
+| `required: true` field | Leave it blank and submit — inline validation error |
+| `constraints: []` on a field or action | One TC per unique constraint: violate it specifically |
+| `preconditions: []` on an action | One TC attempting the action when the precondition is NOT met |
+| `visible_when` / `required_when` conditional field | Trigger the condition, then submit the revealed field blank or invalid |
+| `state_bound_action_bar` states | Attempt an action from the wrong state (e.g., Approve an already-Active entity) |
+| `on_success` with quoted text | The negative expected_result is the *blocking* behavior — the entity stays unchanged |
+| `submit_actions[]` | If any button has `preconditions`, test that button when precondition fails |
+
+> If a module has no `form`, no `wizard`, no `state_bound_action_bar`, and no `constraints` — it is display-only. Generate at most 1–2 tests (unauthenticated access, or a non-implemented link if described). Do not invent validation scenarios.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — Name the field, the violated rule, and the visible error indicator.**
+Never write a vague expected result. Always specify what the tester sees.
+
+- ❌ `"Validation error shown"` — too vague
+- ❌ `"Error is displayed"` — too vague
+- ✅ `"Inline validation error appears on the <Field Name> field indicating it is required"`
+- ✅ `"<Field Name> field displays an error: 'Must be a valid email address'"`
+- ✅ `"Submit button remains disabled / form does not submit; <Field> is highlighted"`
+
+**Rule B — Quote exact error text when the spec provides it.**
+If the description quotes a specific error string, copy it verbatim into the expected_result.
+- ❌ `"incorrect credentials error shown"` when spec says `"Incorrect email or password. Please try again."`
+- ✅ `"Page displays 'Incorrect email or password. Please try again.' and the Password field is cleared"`
+
+**Rule C — Assert the blocking behavior, not just the error.**
+The expected_result must confirm the action was blocked: the entity was not created, the status did not change, the user was not redirected.
+- ❌ `"Error shown"` (doesn't confirm the action was blocked)
+- ✅ `"Form does not submit; <Entity> is not created; error shown on <Field>"`
+- ✅ `"Status remains <Current State>; no transition occurs"`
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Use generic placeholders in angle brackets.
+
+- ✅ `"Enter <invalid email format> in the Email field"`
+- ✅ `"Enter <amount exceeding available balance> in the Amount field"`
+- ✅ `"Enter <password shorter than minimum length> in the Password field"`
+- ❌ `"Enter 'notanemail' in the Email field"`
+- ❌ `"Enter 'abc123' in the Password field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic user action — one field, one click, one navigation. No grouping.
+
+- ✅ `"1. Leave the <Required Field> blank"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill all fields except <Required Field> and submit"`
+
+---
+
+**SCOPE GATE (run before writing any test):**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact sentence in the description or field/constraint/state in the AST justifies this test? If you cannot point to one → delete it.
+2. **UI-executable:** Can a tester trigger this by clicking, typing, selecting, or navigating in a browser? If verification requires dev tools, DOM inspection, concurrent users, API calls, or server-side error simulation → out of scope.
+3. **Not a positive test in disguise:** Display-only behavior ("the page shows X") produces positive tests, not negative ones.
+
+Do NOT generate tests for: backend data integrity, security vulnerabilities, infrastructure failures, race conditions, or anything not described in the spec.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Required field representatives (deduplicated by field type):**
+
+Group required fields by type: `text/unspecified`, `email`, `password`, `number`, `date`, `dropdown`, `file_upload`. Generate:
+- ONE "leave blank and submit" test per **type group** (not per field) — use the most prominent field as representative
+- ONE "submit with ALL required fields empty" test
+
+Do NOT generate a separate blank-field test for every required field. If 5 text fields are all required, one representative covers them all.
+
+**2. Format violations:**
+
+For fields with type-specific format rules (from AST type or description):
+- `email` → one test with invalid format
+- `number` → one test with non-numeric input
+- `date` → one test with invalid/impossible date
+- `password` → ONE representative test for policy violation (not one per sub-rule — see Deduplication)
+
+Only generate if the spec or AST implies format validation for that field.
+
+**3. Numeric bounds and balance violations:**
+
+If the spec describes minimum/maximum values, amount ranges, or balance checks:
+- One test per distinct bound violation (e.g., amount below minimum, amount above maximum, amount exceeding available balance)
+- Use `<amount below minimum>`, `<amount exceeding available balance>` as placeholders
+
+Examples across the dataset:
+- Transfer amount > available balance → error
+- Loan amount outside product min/max → error
+- Deposit below minimum requirement → error
+
+**4. Constraint violations:**
+
+For each unique `constraints[]` entry in the AST, and for cross-field rules described in the spec:
+- `"must be unique"` → submit with a duplicate value
+- `"must match"` (confirm fields) → enter mismatched values
+- `"must not be same as current"` → select the current value
+- `"cannot perform <action> while <condition>"` → attempt the action when the condition is true
+- `"<date> must be after <other date>"` → enter reversed dates
+
+One test per unique constraint. Do not duplicate the same mechanism.
+
+**5. Precondition violations (auth, role, and state):**
+
+For each `preconditions[]` entry on any action — and for auth/role rules described in the spec:
+
+- **Unauthenticated access:** If any page or action requires login, generate one test: an unauthenticated user attempts to access it and is redirected to the login page.
+- **Wrong role:** If the spec explicitly states a feature is restricted to a specific role (e.g., Teacher only, Admin only), generate one test: a user of the wrong role attempts the action and is blocked or the control is not visible.
+- **Precondition not met:** For each AST `preconditions[]` entry, attempt the action when that precondition is not satisfied.
+
+**6. State-machine violations:**
+
+From `state_bound_action_bar` nodes:
+- For each state where an action is NOT listed in `available_actions`, generate one test attempting that action from that state. Example: attempting "Approve" on an entity already in "Active" state.
+- If a state has an empty `available_actions` array, generate one test verifying no action buttons are visible in that state.
+
+One test per unique wrong-state scenario — do not enumerate every action × every invalid state.
+
+---
+
+**DEDUPLICATION GATE (run before outputting):**
+
+1. **Required field dedup:** Multiple required text fields → ONE representative test, not one per field.
+2. **Sub-rule dedup:** A field with multiple validation sub-rules (e.g., password: length + uppercase + lowercase + number + special char) → ONE representative violation test, not one per sub-rule.
+3. **Cross-form dedup:** If two forms in the same module share the same validation mechanism (e.g., both have a required text field) → test it on the primary form only.
+4. **Uniqueness check:** Before outputting, ask for each TC: "Does this test catch a bug that NO other test in this module would catch?" If no → remove it.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (standard CRUD form, form with constraints): **4–8 tests**
+- Complex module (state machine, multi-form, wizard with many constraints): **8–12 tests**
+
+If you exceed these ranges, you are generating redundant tests. Apply the deduplication gate again before outputting.
+
+---
+
+**PRIORITY:**
+
+- **High:** State precondition violations, constraint violations that could corrupt data, unauthenticated access, required field representatives
+- **Medium:** Format violations, cross-field validation, numeric bounds, wrong-role access, wrong-state action attempts
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "What error/block should occur, naming the field and indicator",
+      "priority": "high | medium"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "high_priority": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Negative - USER PROMPT
+------------------------------------------------------------
+<module_name>Users & Roles</module_name>
+
+<ast>
+{
+  "module_name": "Users & Roles",
+  "components": {
+    "Users_Table": {
+      "type": "data_table",
+      "columns": [
+        "Username",
+        "First Name",
+        "Last Name",
+        "Email",
+        "Office",
+        "Status"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open User",
+          "type": "link",
+          "triggered_by_column": "Username",
+          "target": "User_Detail"
+        }
+      ]
+    },
+    "Create_User_Button": {
+      "type": "button",
+      "element_name": "+ Create User",
+      "opens": "Create_User_Form"
+    },
+    "Create_User_Form": {
+      "type": "form",
+      "fields": {
+        "Username": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": [
+            "must be unique"
+          ]
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true,
+          "constraints": [
+            "must be valid email format"
+          ]
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown"
+        },
+        "Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must meet password policy"
+          ]
+        },
+        "Repeat_Password": {
+          "type": "password",
+          "constraints": [
+            "must match Password"
+          ]
+        },
+        "Roles": {
+          "type": "checkbox",
+          "multiple": true
+        },
+        "Override_Password_Expiry_Policy": {
+          "type": "checkbox"
+        },
+        "Send_Password_to_Email": {
+          "type": "checkbox"
+        }
+      },
+      "submit_actions": [
+        {
+          "on_success": "creates user"
+        }
+      ]
+    },
+    "Roles_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Description"
+      ]
+    },
+    "Create_Role_Button": {
+      "type": "button",
+      "element_name": "+ Create Role",
+      "opens": "Create_Role_Form"
+    },
+    "Create_Role_Form": {
+      "type": "form",
+      "fields": {
+        "Role_Name": {
+          "type": "unspecified"
+        },
+        "Description": {
+          "type": "unspecified"
+        }
+      },
+      "submit_actions": [
+        {
+          "on_success": "navigates to Role_Permissions_Page"
+        }
+      ]
+    },
+    "Role_Permissions_Page": {
+      "type": "form",
+      "fields": {
+        "Permission_Categories": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Category_Name": {
+              "type": "dropdown",
+              "options": [
+                "User Management",
+                "Portfolio",
+                "Organization",
+                "Accounting",
+                "Reports",
+                "etc."
+              ]
+            },
+            "Permissions": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Permission_Name": {
+                  "type": "unspecified"
+                },
+                "Enabled": {
+                  "type": "checkbox"
+                }
+              }
+            }
+          }
+        }
+      },
+      "on_change_effects": "Enabling or disabling permissions controls what menu items, pages, and actions the role can access"
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Users page displays a data table with columns for Username (clickable link), First Name, Last Name, Email, Office, and Status. A "+ Create User" button opens the creation form containing Username (required, must be unique), First Name (required), Last Name (required), Email (required, validated for email format), Office (required), Staff dropdown (links the user to a staff record), Password (required, must meet password policy), Repeat Password (must match — shows a validation error if they differ), Roles (multi-select checkboxes), Override Password Expiry Policy checkbox, and Send Password to Email checkbox.
+
+The Roles page displays all roles with Name and Description columns. A "+ Create Role" button opens a form with Role Name and Description. After creation, a permissions page displays a categorized matrix of all system permissions (User Management, Portfolio, Organization, Accounting, Reports, etc.) with checkboxes for each permission. Enabling or disabling permissions controls what menu items, pages, and actions the role can access.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:35:15] Test-Negative - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Users & Roles",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Required text field left blank (representative: First Name)",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave the First Name field blank",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid last name> in the Last Name field",
+        "5. Enter <valid email address> in the Email field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the First Name field indicating it is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Required email field left blank",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave the Email field blank",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid first name> in the First Name field",
+        "5. Enter <valid last name> in the Last Name field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Email field indicating it is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Required dropdown left unselected (Office)",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave the Office dropdown unselected",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid first name> in the First Name field",
+        "5. Enter <valid last name> in the Last Name field",
+        "6. Enter <valid email address> in the Email field",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Office field indicating it is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Submit with ALL required fields empty",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave Username, First Name, Last Name, Email, Office, and Password all blank",
+        "3. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation errors appear on Username, First Name, Last Name, Email, Office, and Password fields indicating each is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Email field with invalid format",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <invalid email format> in the Email field",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid first name> in the First Name field",
+        "5. Enter <valid last name> in the Last Name field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Email field displays an inline validation error indicating it must be a valid email address; the form does not submit and no user is created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Password does not meet password policy",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <password that does not meet password policy> in the Password field",
+        "3. Enter the same value in Repeat Password",
+        "4. Enter <unique username> in the Username field",
+        "5. Enter <valid first name> in the First Name field",
+        "6. Enter <valid last name> in the Last Name field",
+        "7. Enter <valid email address> in the Email field",
+        "8. Select <valid office> in the Office dropdown",
+        "9. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Password field indicating it must meet the password policy; the form does not submit and no user is created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Repeat Password does not match Password",
+      "preconditions": ["User is on the Users page"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <valid password> in the Password field",
+        "3. Enter a different value <mismatched password> in the Repeat Password field",
+        "4. Enter <unique username> in the Username field",
+        "5. Enter <valid first name> in the First Name field",
+        "6. Enter <valid last name> in the Last Name field",
+        "7. Enter <valid email address> in the Email field",
+        "8. Select <valid office> in the Office dropdown",
+        "9. Click Submit / Save"
+      ],
+      "expected_result": "Repeat Password field displays an inline validation error: 'Must match Password' (or equivalent); the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Username uniqueness constraint violated (duplicate username)",
+      "preconditions": ["User is on the Users page", "A user with Username <existing username> already exists in the system"],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <existing username> in the Username field",
+        "3. Enter <valid first name> in the First Name field",
+        "4. Enter <valid last name> in the Last Name field",
+        "5. Enter <valid email address> in the Email field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Username field indicating the username must be unique (e.g. 'Username already exists'); the form does not submit and no new user is created",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 6,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+------------------------------------------------------------
+[22:35:15] Test-Negative - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Users & Roles",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Required text field left blank (representative: First Name)",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave the First Name field blank",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid last name> in the Last Name field",
+        "5. Enter <valid email address> in the Email field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the First Name field indicating it is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Required email field left blank",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave the Email field blank",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid first name> in the First Name field",
+        "5. Enter <valid last name> in the Last Name field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Email field indicating it is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Required dropdown left unselected (Office)",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave the Office dropdown unselected",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid first name> in the First Name field",
+        "5. Enter <valid last name> in the Last Name field",
+        "6. Enter <valid email address> in the Email field",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Office field indicating it is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Submit with ALL required fields empty",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Leave Username, First Name, Last Name, Email, Office, and Password all blank",
+        "3. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation errors appear on Username, First Name, Last Name, Email, Office, and Password fields indicating each is required; the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Email field with invalid format",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <invalid email format> in the Email field",
+        "3. Enter <unique username> in the Username field",
+        "4. Enter <valid first name> in the First Name field",
+        "5. Enter <valid last name> in the Last Name field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Email field displays an inline validation error indicating it must be a valid email address; the form does not submit and no user is created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Password does not meet password policy",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <password that does not meet password policy> in the Password field",
+        "3. Enter the same value in Repeat Password",
+        "4. Enter <unique username> in the Username field",
+        "5. Enter <valid first name> in the First Name field",
+        "6. Enter <valid last name> in the Last Name field",
+        "7. Enter <valid email address> in the Email field",
+        "8. Select <valid office> in the Office dropdown",
+        "9. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Password field indicating it must meet the password policy; the form does not submit and no user is created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Repeat Password does not match Password",
+      "preconditions": [
+        "User is on the Users page"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <valid password> in the Password field",
+        "3. Enter a different value <mismatched password> in the Repeat Password field",
+        "4. Enter <unique username> in the Username field",
+        "5. Enter <valid first name> in the First Name field",
+        "6. Enter <valid last name> in the Last Name field",
+        "7. Enter <valid email address> in the Email field",
+        "8. Select <valid office> in the Office dropdown",
+        "9. Click Submit / Save"
+      ],
+      "expected_result": "Repeat Password field displays an inline validation error: 'Must match Password' (or equivalent); the form does not submit and no user is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Username uniqueness constraint violated (duplicate username)",
+      "preconditions": [
+        "User is on the Users page",
+        "A user with Username <existing username> already exists in the system"
+      ],
+      "steps": [
+        "1. Click the '+ Create User' button to open the Create User form",
+        "2. Enter <existing username> in the Username field",
+        "3. Enter <valid first name> in the First Name field",
+        "4. Enter <valid last name> in the Last Name field",
+        "5. Enter <valid email address> in the Email field",
+        "6. Select <valid office> in the Office dropdown",
+        "7. Enter <password meeting policy> in the Password field and the same value in Repeat Password",
+        "8. Click Submit / Save"
+      ],
+      "expected_result": "Inline validation error appears on the Username field indicating the username must be unique (e.g. 'Username already exists'); the form does not submit and no new user is created",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 6,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}

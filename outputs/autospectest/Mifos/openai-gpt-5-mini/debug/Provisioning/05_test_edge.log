@@ -1,0 +1,701 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.547426
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Provisioning</module_name>
+
+<ast>
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Criteria Name",
+          "type": "link",
+          "clickable": true
+        },
+        {
+          "name": "Created Date",
+          "type": "date"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create",
+          "action_name": "Open Create Provisioning Criteria Form",
+          "opens": "Provisioning_Criteria_Form"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "add_row_action": true,
+          "item_fields": {
+            "Loan Product": {
+              "type": "unspecified"
+            },
+            "Category": {
+              "type": "dropdown",
+              "options": [
+                "STANDARD",
+                "SUB-STANDARD",
+                "DOUBTFUL",
+                "LOSS"
+              ]
+            },
+            "Minimum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (minimum of the overdue range)"
+              ]
+            },
+            "Maximum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (maximum of the overdue range)"
+              ]
+            },
+            "Provisioning Percentage": {
+              "type": "number",
+              "constraints": [
+                "percentage of outstanding principal"
+              ]
+            },
+            "Liability Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL liability account"
+              ]
+            },
+            "Expense Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL expense account"
+              ]
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "action_name": "Create Provisioning Criteria",
+          "on_success": "creates a new provisioning criteria and closes the form"
+        }
+      ]
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Entry Date",
+          "type": "date"
+        },
+        {
+          "name": "Journal Entry Created",
+          "type": "date"
+        },
+        {
+          "name": "Created By",
+          "type": "unspecified"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "action_description": "opens Provisioning_Entry_Detail for the selected entry",
+          "opens": "Provisioning_Entry_Detail"
+        },
+        {
+          "action_name": "Recreate",
+          "action_description": "recreates provisioning journal entry based on current loan portfolio status and configured criteria",
+          "on_success": "recreates journal entry"
+        }
+      ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "detailed breakdown by loan product and category",
+      "columns": [
+        {
+          "name": "Loan Product",
+          "type": "unspecified"
+        },
+        {
+          "name": "Category",
+          "type": "dropdown",
+          "options": [
+            "STANDARD",
+            "SUB-STANDARD",
+            "DOUBTFUL",
+            "LOSS"
+          ]
+        }
+      ],
+      "row_actions": []
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Provisioning Criteria page displays a data table with columns for Criteria Name (clickable link) and Created Date. A "+ Create" button opens the creation form containing Criteria Name (required) and a Definitions table where each row specifies Loan Product, Category (STANDARD, SUB-STANDARD, DOUBTFUL, LOSS), Minimum Age (overdue days), Maximum Age (overdue days), Provisioning Percentage (percentage of outstanding principal), Liability Account (GL account dropdown), and Expense Account (GL account dropdown). Multiple rows can be added to cover different overdue ranges and product combinations.
+
+The Provisioning Entries page lists all generated provisioning journal entries with columns for Entry Date, Journal Entry Created, Created By, and action buttons. A "+ Create Provisioning Entry" button generates new provisioning entries based on the current loan portfolio status and configured criteria; the system calculates the required provision amount for each loan category and creates the corresponding journal entries. Each entry can be reviewed (showing a detailed breakdown by loan product and category) or recreated.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:34:37] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Provisioning",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Minimum Age equals Maximum Age in a Definition row",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter <value> in Minimum Age (overdue days)",
+        "5. Enter <same value> in Maximum Age (overdue days)",
+        "6. (Optional) Enter valid values for other definition fields if required by UI",
+        "7. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; a new provisioning criteria row appears in the Provisioning Criteria table. Opening the created criteria shows the Definitions row with Minimum Age equal to Maximum Age.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Minimum Age one unit greater than Maximum Age is rejected",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter <value> in Maximum Age (overdue days)",
+        "5. Enter <one unit above the Maximum Age value> in Minimum Age (overdue days)",
+        "6. (Optional) Enter valid values for other definition fields if required by UI",
+        "7. Click Save"
+      ],
+      "expected_result": "Save is blocked / error shown: Minimum Age (overdue days) displays an inline error indicating it must be less than or equal to Maximum Age; the form remains open and the provisioning criteria is not created.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "input_edge",
+      "test_case": "Very long Criteria Name (>200 characters) saved",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <very long string with more than 200 characters> in Criteria Name",
+        "3. (Optional) Add at least one Definitions row if UI requires a definition to enable Save",
+        "4. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; Provisioning Criteria table shows the new row. Opening the created criteria displays the full entered Criteria Name (no truncation indicator shown).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "input_edge",
+      "test_case": "Leading and trailing whitespace in Criteria Name is trimmed on save",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter a name with leading and trailing spaces (e.g. '  <name>  ') in Criteria Name",
+        "3. (Optional) Add at least one Definitions row if UI requires a definition to enable Save",
+        "4. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; Provisioning Criteria table shows the Criteria Name without leading/trailing whitespace (value is trimmed in the table and in the opened criteria detail).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click Save does not create duplicate criteria",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Add at least one Definitions row and enter required values",
+        "4. Rapidly double-click the Save button (two clicks within a short interval)"
+      ],
+      "expected_result": "Only one save action succeeds; the second submission is blocked / ignored. Exactly one new provisioning criteria row appears in the Provisioning Criteria table; the Save button shows a processing/disabled state after the first click.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click + Create Provisioning Entry does not create duplicate journal entries",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Entries page",
+        "Provisioning Entries table is visible"
+      ],
+      "steps": [
+        "1. Rapidly double-click the + Create Provisioning Entry top action (two clicks within a short interval)"
+      ],
+      "expected_result": "Only one provisioning entry generation action succeeds; the second click is blocked / ignored. Exactly one new provisioning entry row (or one set of journal entries) appears in the Provisioning Entries table; the Create button displays a processing/disabled state after the first click.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "data_edge",
+      "test_case": "Provisioning Percentage with high decimal precision is normalized on save",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter a provisioning percentage with excessive decimal places in Provisioning Percentage (e.g. a value with more than typical decimal precision)",
+        "5. Fill other required definition fields as needed",
+        "6. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; opening the created criteria shows the Provisioning Percentage for the definition normalized in the UI (rounded/normalized to the system's displayed precision in the definition row).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Add then remove all Definitions rows, then save (no minimum definitions)",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter values in the added Definitions row as needed",
+        "5. Remove the added Definitions row so zero rows remain",
+        "6. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; a new provisioning criteria row appears in the Provisioning Criteria table. Opening the created criteria shows an empty Definitions table (no definition rows saved).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 2,
+    "input_edge": 2,
+    "interaction_edge": 3,
+    "state_edge": 0,
+    "data_edge": 1,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[22:34:37] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Provisioning",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Minimum Age equals Maximum Age in a Definition row",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter <value> in Minimum Age (overdue days)",
+        "5. Enter <same value> in Maximum Age (overdue days)",
+        "6. (Optional) Enter valid values for other definition fields if required by UI",
+        "7. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; a new provisioning criteria row appears in the Provisioning Criteria table. Opening the created criteria shows the Definitions row with Minimum Age equal to Maximum Age.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Minimum Age one unit greater than Maximum Age is rejected",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter <value> in Maximum Age (overdue days)",
+        "5. Enter <one unit above the Maximum Age value> in Minimum Age (overdue days)",
+        "6. (Optional) Enter valid values for other definition fields if required by UI",
+        "7. Click Save"
+      ],
+      "expected_result": "Save is blocked / error shown: Minimum Age (overdue days) displays an inline error indicating it must be less than or equal to Maximum Age; the form remains open and the provisioning criteria is not created.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "input_edge",
+      "test_case": "Very long Criteria Name (>200 characters) saved",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <very long string with more than 200 characters> in Criteria Name",
+        "3. (Optional) Add at least one Definitions row if UI requires a definition to enable Save",
+        "4. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; Provisioning Criteria table shows the new row. Opening the created criteria displays the full entered Criteria Name (no truncation indicator shown).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "input_edge",
+      "test_case": "Leading and trailing whitespace in Criteria Name is trimmed on save",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter a name with leading and trailing spaces (e.g. '  <name>  ') in Criteria Name",
+        "3. (Optional) Add at least one Definitions row if UI requires a definition to enable Save",
+        "4. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; Provisioning Criteria table shows the Criteria Name without leading/trailing whitespace (value is trimmed in the table and in the opened criteria detail).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click Save does not create duplicate criteria",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Add at least one Definitions row and enter required values",
+        "4. Rapidly double-click the Save button (two clicks within a short interval)"
+      ],
+      "expected_result": "Only one save action succeeds; the second submission is blocked / ignored. Exactly one new provisioning criteria row appears in the Provisioning Criteria table; the Save button shows a processing/disabled state after the first click.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click + Create Provisioning Entry does not create duplicate journal entries",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Entries page",
+        "Provisioning Entries table is visible"
+      ],
+      "steps": [
+        "1. Rapidly double-click the + Create Provisioning Entry top action (two clicks within a short interval)"
+      ],
+      "expected_result": "Only one provisioning entry generation action succeeds; the second click is blocked / ignored. Exactly one new provisioning entry row (or one set of journal entries) appears in the Provisioning Entries table; the Create button displays a processing/disabled state after the first click.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "data_edge",
+      "test_case": "Provisioning Percentage with high decimal precision is normalized on save",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter a provisioning percentage with excessive decimal places in Provisioning Percentage (e.g. a value with more than typical decimal precision)",
+        "5. Fill other required definition fields as needed",
+        "6. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; opening the created criteria shows the Provisioning Percentage for the definition normalized in the UI (rounded/normalized to the system's displayed precision in the definition row).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Add then remove all Definitions rows, then save (no minimum definitions)",
+      "preconditions": [
+        "User is on Provisioning -> Provisioning Criteria page",
+        "Provisioning Criteria table is visible"
+      ],
+      "steps": [
+        "1. Click + Create to open Provisioning_Criteria_Form",
+        "2. Enter <valid name> in Criteria Name",
+        "3. Click Add row in Definitions",
+        "4. Enter values in the added Definitions row as needed",
+        "5. Remove the added Definitions row so zero rows remain",
+        "6. Click Save"
+      ],
+      "expected_result": "Save succeeds; form closes; a new provisioning criteria row appears in the Provisioning Criteria table. Opening the created criteria shows an empty Definitions table (no definition rows saved).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 2,
+    "input_edge": 2,
+    "interaction_edge": 3,
+    "state_edge": 0,
+    "data_edge": 1,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}

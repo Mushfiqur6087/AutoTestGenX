@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.370969
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.548796
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Employees</module_name>
 
@@ -232,25 +232,41 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Employees",
   "components": {
-    "Employees_Page": {
-      "type": "page",
-      "components": {
-        "Employees_Table": {
-          "type": "data_table",
-          "columns": {
-            "Name": {
-              "type": "link",
-              "target": "Employee_Detail_Page",
-              "description": "clicking navigates to the Employee Detail page"
-            }
-          }
+    "Employees_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "column_name": "Name",
+          "type": "link",
+          "action": "navigates to Staff_Detail_Page"
         },
-        "Create_Employee_Button": {
-          "type": "button",
-          "element_name": "+ Create Employee",
-          "action_type": "open_form",
-          "target": "Create_Employee_Form"
+        {
+          "column_name": "Office",
+          "type": "unspecified"
+        },
+        {
+          "column_name": "Is Loan Officer",
+          "type": "unspecified"
+        },
+        {
+          "column_name": "Status",
+          "type": "unspecified",
+          "options": [
+            "Active",
+            "Inactive"
+          ]
         }
+      ],
+      "row_actions": [
+        {
+          "action_name": "View Details",
+          "triggers": "navigates to Staff_Detail_Page"
+        }
+      ],
+      "create_button": {
+        "element_name": "+ Create Employee",
+        "action": "opens",
+        "target": "Create_Employee_Form"
       }
     },
     "Create_Employee_Form": {
@@ -258,21 +274,15 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "fields": {
         "Office": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "First_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Last_Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Is_Loan_Officer": {
           "type": "checkbox"
@@ -292,31 +302,57 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       },
       "submit_actions": [
         {
-          "action_name": "Save",
-          "action_type": "submit",
-          "on_success": "creates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+          "element_name": "Create Employee",
+          "on_success": "creates employee; if Is Loan Officer is true, the staff member becomes selectable in the Loan Officer dropdown when creating loans and available for assignment to clients, groups, and centers"
         }
       ]
     },
-    "Employee_Detail_Page": {
-      "type": "page",
-      "components": {
-        "Edit_Button": {
-          "type": "button",
-          "element_name": "Edit",
-          "action_type": "open_form",
-          "target": "Edit_Employee_Form"
-        }
-      }
-    },
     "Edit_Employee_Form": {
       "type": "form",
-      "fields": {},
+      "fields": {
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Loan_Officer": {
+          "type": "checkbox"
+        },
+        "Mobile_Number": {
+          "type": "unspecified"
+        },
+        "Is_Active": {
+          "type": "checkbox"
+        },
+        "Joining_Date": {
+          "type": "date"
+        },
+        "External_ID": {
+          "type": "unspecified"
+        }
+      },
       "submit_actions": [
         {
-          "action_name": "Save",
-          "action_type": "submit",
-          "on_success": "updates employee; if Is_Loan_Officer == true then the staff member appears in the Loan Officer dropdown when creating loans and can be assigned to clients, groups, and centers"
+          "element_name": "Save Changes",
+          "on_success": "updates employee; if Is Loan Officer is true, the staff member becomes selectable in the Loan Officer dropdown when creating loans and available for assignment to clients, groups, and centers"
+        }
+      ]
+    },
+    "Staff_Detail_Page": {
+      "type": "detail_page",
+      "fields": {},
+      "actions": [
+        {
+          "action_name": "Edit",
+          "triggers": "opens Edit Employee form",
+          "target": "Edit_Employee_Form"
         }
       ]
     }
@@ -336,7 +372,7 @@ The Employees page displays a data table with columns for Name (clickable link),
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:47] Test-Positive - LLM RESPONSE
+[22:34:47] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Employees",
@@ -344,80 +380,83 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create employee with required fields",
+      "test_case": "Open Create Employee form from Employees page",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employees page is open"
+        "User is on the Employees page"
       ],
       "steps": [
-        "1. Click the '+ Create Employee' button",
-        "2. Enter <Office> in the Office field",
-        "3. Enter <First Name> in the First Name field",
-        "4. Enter <Last Name> in the Last Name field",
-        "5. Click Save"
+        "1. Click the '+ Create Employee' button on the Employees page"
       ],
-      "expected_result": "New row appears in the Employees table with the entered <First Name> <Last Name> and <Office>",
-      "priority": "high"
+      "expected_result": "The Create Employee form is displayed containing fields: Office, First Name, Last Name, Is Loan Officer (checkbox), Mobile Number, Is Active (checkbox), Joining Date, External ID, and a 'Create Employee' submit button",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create employee and mark as Loan Officer",
+      "test_case": "Create a new active employee (not a loan officer)",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employees page is open"
+        "User is on the Employees page"
       ],
       "steps": [
         "1. Click the '+ Create Employee' button",
-        "2. Enter <Office> in the Office field",
+        "2. Select <Office> in the Office field",
         "3. Enter <First Name> in the First Name field",
         "4. Enter <Last Name> in the Last Name field",
-        "5. Check the Is Loan Officer checkbox",
-        "6. Click Save"
+        "5. Check the 'Is Active' checkbox",
+        "6. Ensure the 'Is Loan Officer' checkbox is unchecked",
+        "7. (Optional) Enter <Mobile Number> and <External ID>",
+        "8. Click the 'Create Employee' button"
       ],
-      "expected_result": "New row appears in the Employees table with the entered <First Name> <Last Name> and <Office>; the Is Loan Officer indicator is shown as checked for that employee",
+      "expected_result": "A new row appears in the Employees table showing the entered First Name and Last Name together as the Name link, the selected <Office> in the Office column, the 'Is Loan Officer' indicator not shown for that row, and Status shows 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open Employee Detail page from the table",
+      "test_case": "Create a new employee and mark as Loan Officer",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employees page is open with <existing employee> present in the list"
+        "User is on the Employees page"
       ],
       "steps": [
-        "1. Click the <existing employee>'s Name link in the Employees table"
+        "1. Click the '+ Create Employee' button",
+        "2. Select <Office> in the Office field",
+        "3. Enter <First Name> in the First Name field",
+        "4. Enter <Last Name> in the Last Name field",
+        "5. Check the 'Is Loan Officer' checkbox",
+        "6. (Optional) Enter <Mobile Number> and <Joining Date>",
+        "7. Click the 'Create Employee' button"
       ],
-      "expected_result": "Employee Detail page is displayed showing the employee's Name, Office, Is Loan Officer indicator, and Status",
-      "priority": "medium"
+      "expected_result": "A new row appears in the Employees table showing the entered Name and Office, and the 'Is Loan Officer' indicator is shown for that row",
+      "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit employee's Last Name and save",
+      "test_case": "Open Staff Detail page from Employees table row",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employee Detail page for <existing employee> is open"
+        "An existing employee <existing staff> is present in the Employees table"
       ],
       "steps": [
-        "1. Click the Edit button on the Employee Detail page",
-        "2. Enter <updated last name> in the Last Name field",
-        "3. Click Save"
+        "1. Click the Name link for <existing staff> in the Employees table (or select View Details from the row actions)"
       ],
-      "expected_result": "Employee Detail page shows Last Name updated to <updated last name>",
+      "expected_result": "The Staff Detail page for <existing staff> is displayed showing the employee's Name, Office, Is Loan Officer indicator (if applicable), Status, and an 'Edit' action/button",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Toggle Is Loan Officer on an existing employee",
+      "test_case": "Edit an employee's Mobile Number via Edit Employee form",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employee Detail page for <existing employee> is open and current Is Loan Officer state is unchecked"
+        "An existing employee <existing staff> is present in the Employees table"
       ],
       "steps": [
-        "1. Click the Edit button on the Employee Detail page",
-        "2. Check the Is Loan Officer checkbox",
-        "3. Click Save"
+        "1. Click the Name link for <existing staff> to open the Staff Detail page",
+        "2. Click the 'Edit' action on the Staff Detail page to open the Edit Employee form",
+        "3. Enter <new Mobile Number> in the Mobile Number field",
+        "4. Click the 'Save Changes' button"
       ],
-      "expected_result": "Employee Detail page displays the Is Loan Officer indicator as checked for <existing employee>",
+      "expected_result": "The Staff Detail page shows the updated Mobile Number value for <existing staff>; the Employees table row for <existing staff> also reflects the updated Mobile Number when visible",
       "priority": "medium"
     }
   ],
@@ -430,7 +469,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:19:47] Test-Positive - PARSED JSON
+[22:34:47] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Employees",
@@ -438,80 +477,83 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create employee with required fields",
+      "test_case": "Open Create Employee form from Employees page",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employees page is open"
+        "User is on the Employees page"
       ],
       "steps": [
-        "1. Click the '+ Create Employee' button",
-        "2. Enter <Office> in the Office field",
-        "3. Enter <First Name> in the First Name field",
-        "4. Enter <Last Name> in the Last Name field",
-        "5. Click Save"
+        "1. Click the '+ Create Employee' button on the Employees page"
       ],
-      "expected_result": "New row appears in the Employees table with the entered <First Name> <Last Name> and <Office>",
-      "priority": "high"
+      "expected_result": "The Create Employee form is displayed containing fields: Office, First Name, Last Name, Is Loan Officer (checkbox), Mobile Number, Is Active (checkbox), Joining Date, External ID, and a 'Create Employee' submit button",
+      "priority": "medium"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create employee and mark as Loan Officer",
+      "test_case": "Create a new active employee (not a loan officer)",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employees page is open"
+        "User is on the Employees page"
       ],
       "steps": [
         "1. Click the '+ Create Employee' button",
-        "2. Enter <Office> in the Office field",
+        "2. Select <Office> in the Office field",
         "3. Enter <First Name> in the First Name field",
         "4. Enter <Last Name> in the Last Name field",
-        "5. Check the Is Loan Officer checkbox",
-        "6. Click Save"
+        "5. Check the 'Is Active' checkbox",
+        "6. Ensure the 'Is Loan Officer' checkbox is unchecked",
+        "7. (Optional) Enter <Mobile Number> and <External ID>",
+        "8. Click the 'Create Employee' button"
       ],
-      "expected_result": "New row appears in the Employees table with the entered <First Name> <Last Name> and <Office>; the Is Loan Officer indicator is shown as checked for that employee",
+      "expected_result": "A new row appears in the Employees table showing the entered First Name and Last Name together as the Name link, the selected <Office> in the Office column, the 'Is Loan Officer' indicator not shown for that row, and Status shows 'Active'",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Open Employee Detail page from the table",
+      "test_case": "Create a new employee and mark as Loan Officer",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employees page is open with <existing employee> present in the list"
+        "User is on the Employees page"
       ],
       "steps": [
-        "1. Click the <existing employee>'s Name link in the Employees table"
+        "1. Click the '+ Create Employee' button",
+        "2. Select <Office> in the Office field",
+        "3. Enter <First Name> in the First Name field",
+        "4. Enter <Last Name> in the Last Name field",
+        "5. Check the 'Is Loan Officer' checkbox",
+        "6. (Optional) Enter <Mobile Number> and <Joining Date>",
+        "7. Click the 'Create Employee' button"
       ],
-      "expected_result": "Employee Detail page is displayed showing the employee's Name, Office, Is Loan Officer indicator, and Status",
-      "priority": "medium"
+      "expected_result": "A new row appears in the Employees table showing the entered Name and Office, and the 'Is Loan Officer' indicator is shown for that row",
+      "priority": "high"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Edit employee's Last Name and save",
+      "test_case": "Open Staff Detail page from Employees table row",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employee Detail page for <existing employee> is open"
+        "An existing employee <existing staff> is present in the Employees table"
       ],
       "steps": [
-        "1. Click the Edit button on the Employee Detail page",
-        "2. Enter <updated last name> in the Last Name field",
-        "3. Click Save"
+        "1. Click the Name link for <existing staff> in the Employees table (or select View Details from the row actions)"
       ],
-      "expected_result": "Employee Detail page shows Last Name updated to <updated last name>",
+      "expected_result": "The Staff Detail page for <existing staff> is displayed showing the employee's Name, Office, Is Loan Officer indicator (if applicable), Status, and an 'Edit' action/button",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Toggle Is Loan Officer on an existing employee",
+      "test_case": "Edit an employee's Mobile Number via Edit Employee form",
       "preconditions": [
         "User logged in as <Admin>",
-        "Employee Detail page for <existing employee> is open and current Is Loan Officer state is unchecked"
+        "An existing employee <existing staff> is present in the Employees table"
       ],
       "steps": [
-        "1. Click the Edit button on the Employee Detail page",
-        "2. Check the Is Loan Officer checkbox",
-        "3. Click Save"
+        "1. Click the Name link for <existing staff> to open the Staff Detail page",
+        "2. Click the 'Edit' action on the Staff Detail page to open the Edit Employee form",
+        "3. Enter <new Mobile Number> in the Mobile Number field",
+        "4. Click the 'Save Changes' button"
       ],
-      "expected_result": "Employee Detail page displays the Is Loan Officer indicator as checked for <existing employee>",
+      "expected_result": "The Staff Detail page shows the updated Mobile Number value for <existing staff>; the Employees table row for <existing staff> also reflects the updated Mobile Number when visible",
       "priority": "medium"
     }
   ],

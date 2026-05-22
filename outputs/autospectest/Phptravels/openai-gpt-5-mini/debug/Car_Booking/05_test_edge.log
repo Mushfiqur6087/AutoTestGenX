@@ -1,0 +1,499 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:54:00.271432
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Car Booking</module_name>
+
+<ast>
+{
+  "module_name": "Car Booking",
+  "components": {
+    "Car_Booking_Form": {
+      "type": "form",
+      "fields": {
+        "Driver_Full_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Age": {
+          "type": "number",
+          "required": true
+        },
+        "License_Number": {
+          "type": "unspecified",
+          "required": true
+        },
+        "License_Issue_Country": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true
+        },
+        "Phone_Number": {
+          "type": "unspecified",
+          "required": true
+        },
+        "GPS": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Child_Seat": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Additional_Driver": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Insurance_Plan": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Accept_Terms": {
+          "type": "checkbox",
+          "required": true,
+          "constraints": [
+            "must be checked to enable Confirm Booking"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Confirm Booking",
+          "type": "button",
+          "preconditions": [
+            "Accept_Terms must be accepted"
+          ],
+          "constraints": [
+            "all fields must be valid"
+          ],
+          "on_success": "proceeds to payment",
+          "on_failure": "displays inline errors and blocks progression"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The car booking page displays selected vehicle details, rental period, pick-up and drop-off locations and times, and a full pricing breakdown including daily rate, number of rental days, taxes, insurance options, and additional fees. The booking form collects driver full name, age, license number, license issue country, email, and phone number. Optional add-ons include GPS, child seat, and additional driver. Users select an insurance plan and review terms covering fuel policy, mileage limits, damage liability, and cancellation. After accepting terms, the user clicks Confirm Booking to proceed to payment. Invalid fields display inline errors and block progression.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:57:07] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Car Booking",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "input_edge",
+      "test_case": "Driver Full Name with leading and trailing whitespace is trimmed on save",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "User is on the booking form"
+      ],
+      "steps": [
+        "1. Enter <name with leading and trailing spaces> in the Driver_Full_Name field",
+        "2. Enter <valid age> in the Age field",
+        "3. Enter <valid license number> in the License_Number field",
+        "4. Select <valid country> in the License_Issue_Country dropdown",
+        "5. Enter <valid email> in the Email field",
+        "6. Enter <valid phone number> in the Phone_Number field",
+        "7. Select an option in the Insurance_Plan dropdown",
+        "8. Check Accept_Terms",
+        "9. Click Confirm Booking"
+      ],
+      "expected_result": "Form submission succeeds and proceeds to payment; the booking summary/confirmation displays Driver_Full_Name with leading and trailing whitespace removed (trimmed).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Confirm Booking remains disabled / blocked until Accept_Terms is checked",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "User is on the booking form"
+      ],
+      "steps": [
+        "1. Enter <valid full name> in the Driver_Full_Name field",
+        "2. Enter <valid age> in the Age field",
+        "3. Enter <valid license number> in the License_Number field",
+        "4. Select <valid country> in the License_Issue_Country dropdown",
+        "5. Enter <valid email> in the Email field",
+        "6. Enter <valid phone number> in the Phone_Number field",
+        "7. Select an option in the Insurance_Plan dropdown",
+        "8. Ensure Accept_Terms is unchecked",
+        "9. Attempt to click Confirm Booking"
+      ],
+      "expected_result": "Click is blocked; Confirm Booking cannot be activated while Accept_Terms is unchecked. An inline indicator/message near the checkbox displays the constraint text: \"must be checked to enable Confirm Booking\" (progression is blocked / error shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click of Confirm Booking prevents duplicate bookings",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "All required fields are filled with valid values",
+        "Accept_Terms is checked"
+      ],
+      "steps": [
+        "1. Click Confirm Booking twice rapidly (double-click) within a short interval"
+      ],
+      "expected_result": "First submission succeeds and proceeds to payment; the second rapid click is ignored/blocked and does not create a duplicate booking. Only one booking record appears in the booking list/confirmation and only a single redirect to payment occurs (second attempt is blocked / error shown if the UI displays duplicate-prevention feedback).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "input_edge",
+      "test_case": "Very long License Number input (>200 characters) is rejected with visible error",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "User is on the booking form"
+      ],
+      "steps": [
+        "1. Enter <very long string of 200+ characters> in the License_Number field",
+        "2. Enter <valid full name> in the Driver_Full_Name field",
+        "3. Enter <valid age> in the Age field",
+        "4. Select <valid country> in the License_Issue_Country dropdown",
+        "5. Enter <valid email> in the Email field",
+        "6. Enter <valid phone number> in the Phone_Number field",
+        "7. Select an option in the Insurance_Plan dropdown",
+        "8. Check Accept_Terms",
+        "9. Click Confirm Booking"
+      ],
+      "expected_result": "Form submission is blocked; an inline error is shown next to License_Number indicating the input exceeds allowed length (progression is blocked / error shown).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "boundary": 1,
+    "input_edge": 2,
+    "interaction_edge": 1,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 2,
+    "low_priority": 2
+  }
+}
+
+------------------------------------------------------------
+[22:57:07] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Car Booking",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "input_edge",
+      "test_case": "Driver Full Name with leading and trailing whitespace is trimmed on save",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "User is on the booking form"
+      ],
+      "steps": [
+        "1. Enter <name with leading and trailing spaces> in the Driver_Full_Name field",
+        "2. Enter <valid age> in the Age field",
+        "3. Enter <valid license number> in the License_Number field",
+        "4. Select <valid country> in the License_Issue_Country dropdown",
+        "5. Enter <valid email> in the Email field",
+        "6. Enter <valid phone number> in the Phone_Number field",
+        "7. Select an option in the Insurance_Plan dropdown",
+        "8. Check Accept_Terms",
+        "9. Click Confirm Booking"
+      ],
+      "expected_result": "Form submission succeeds and proceeds to payment; the booking summary/confirmation displays Driver_Full_Name with leading and trailing whitespace removed (trimmed).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Confirm Booking remains disabled / blocked until Accept_Terms is checked",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "User is on the booking form"
+      ],
+      "steps": [
+        "1. Enter <valid full name> in the Driver_Full_Name field",
+        "2. Enter <valid age> in the Age field",
+        "3. Enter <valid license number> in the License_Number field",
+        "4. Select <valid country> in the License_Issue_Country dropdown",
+        "5. Enter <valid email> in the Email field",
+        "6. Enter <valid phone number> in the Phone_Number field",
+        "7. Select an option in the Insurance_Plan dropdown",
+        "8. Ensure Accept_Terms is unchecked",
+        "9. Attempt to click Confirm Booking"
+      ],
+      "expected_result": "Click is blocked; Confirm Booking cannot be activated while Accept_Terms is unchecked. An inline indicator/message near the checkbox displays the constraint text: \"must be checked to enable Confirm Booking\" (progression is blocked / error shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "interaction_edge",
+      "test_case": "Rapid double-click of Confirm Booking prevents duplicate bookings",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "All required fields are filled with valid values",
+        "Accept_Terms is checked"
+      ],
+      "steps": [
+        "1. Click Confirm Booking twice rapidly (double-click) within a short interval"
+      ],
+      "expected_result": "First submission succeeds and proceeds to payment; the second rapid click is ignored/blocked and does not create a duplicate booking. Only one booking record appears in the booking list/confirmation and only a single redirect to payment occurs (second attempt is blocked / error shown if the UI displays duplicate-prevention feedback).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "input_edge",
+      "test_case": "Very long License Number input (>200 characters) is rejected with visible error",
+      "preconditions": [
+        "Car Booking page open with a vehicle selected and rental details visible",
+        "User is on the booking form"
+      ],
+      "steps": [
+        "1. Enter <very long string of 200+ characters> in the License_Number field",
+        "2. Enter <valid full name> in the Driver_Full_Name field",
+        "3. Enter <valid age> in the Age field",
+        "4. Select <valid country> in the License_Issue_Country dropdown",
+        "5. Enter <valid email> in the Email field",
+        "6. Enter <valid phone number> in the Phone_Number field",
+        "7. Select an option in the Insurance_Plan dropdown",
+        "8. Check Accept_Terms",
+        "9. Click Confirm Booking"
+      ],
+      "expected_result": "Form submission is blocked; an inline error is shown next to License_Number indicating the input exceeds allowed length (progression is blocked / error shown).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "boundary": 1,
+    "input_edge": 2,
+    "interaction_edge": 1,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 2,
+    "low_priority": 2
+  }
+}

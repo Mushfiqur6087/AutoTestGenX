@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.349813
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.507675
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Dashboard</module_name>
 
@@ -232,16 +232,10 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Dashboard",
   "components": {
-    "Home_Page": {
-      "type": "page",
-      "fields": {},
-      "components": {
-        "Dashboard_Button": {
-          "type": "button",
-          "element_name": "Dashboard",
-          "on_click": "navigates to Dashboard page"
-        }
-      }
+    "Home_Page_Dashboard_Button": {
+      "type": "link",
+      "element_name": "Dashboard",
+      "on_click_navigates_to": "Dashboard_Page"
     },
     "Dashboard_Page": {
       "type": "page",
@@ -255,7 +249,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         "Client_Trends_Chart": {
           "type": "unspecified",
           "element_name": "Client Trends Chart",
-          "series": [
+          "legend_items": [
             "New Clients",
             "Closed Clients"
           ],
@@ -263,21 +257,22 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
             "office must be selected"
           ]
         },
-        "Amount_Pending_Disbursed_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Pending / Disbursed",
-          "preconditions": [
-            "office must be selected"
-          ],
-          "on_no_data": "displays 'No Data'"
-        },
-        "Amount_Collected_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Collected",
-          "preconditions": [
-            "office must be selected"
-          ],
-          "on_no_data": "displays 'No Data'"
+        "Summary_Cards": {
+          "type": "group",
+          "fields": {
+            "Amount_Pending_Disbursed": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            },
+            "Amount_Collected": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            }
+          }
         }
       }
     }
@@ -297,7 +292,7 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:17:59] Test-Positive - LLM RESPONSE
+[22:29:39] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Dashboard",
@@ -305,29 +300,30 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Navigate from Home to Dashboard and view Search Activity field",
+      "test_case": "Navigate to Dashboard from Home",
       "preconditions": [
-        "User logged in as <User>"
+        "User logged in as <User>",
+        "Home page is open"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button"
+        "1. Click the 'Dashboard' button on the Home page"
       ],
-      "expected_result": "Dashboard page is displayed; the Search Activity field is visible at the top of the page",
+      "expected_result": "Dashboard page is displayed with the 'Search Activity' field visible at the top",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Display Client Trends chart for a selected office",
+      "test_case": "Client Trends chart displays when an office is selected",
       "preconditions": [
         "User logged in as <User>",
-        "Office <office> has client activity data",
-        "Office <office> is selectable"
+        "Home page is open",
+        "Office <selected office> is selected and has client data"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Select <office> from the Office selector"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Observe the main chart area"
       ],
-      "expected_result": "Client Trends Chart is visible for the selected office and shows legend entries 'New Clients' and 'Closed Clients' with data series plotted",
+      "expected_result": "Client Trends Chart is visible for the selected office and shows legend items 'New Clients' and 'Closed Clients'",
       "priority": "high"
     },
     {
@@ -335,39 +331,42 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "test_case": "Summary cards show amounts when data exists for the selected office",
       "preconditions": [
         "User logged in as <User>",
-        "Office <office> has pending/disbursed and collected amount data"
+        "Home page is open",
+        "Office <selected office> is selected and has dashboard financial data"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Select <office> from the Office selector"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Observe the summary cards below the chart"
       ],
-      "expected_result": "Amount Pending / Disbursed card displays the pending and disbursed totals for the selected office; Amount Collected card displays the collected total for the selected office",
-      "priority": "high"
+      "expected_result": "Summary cards display Amount Pending / Disbursed and Amount Collected values for the selected office (numeric values visible on each card)",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Summary cards display 'No Data' when selected office has no financial information",
+      "test_case": "Summary cards show 'No Data' when no information is available for the selected office",
       "preconditions": [
         "User logged in as <User>",
-        "Office <office> has no financial data"
+        "Home page is open",
+        "Office <selected office> is selected and has no dashboard data"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Select <office> from the Office selector"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Observe the summary cards area below the chart"
       ],
-      "expected_result": "Amount Pending / Disbursed card displays 'No Data' and Amount Collected card displays 'No Data' for the selected office",
+      "expected_result": "Both summary cards display 'No Data' for Amount Pending / Disbursed and Amount Collected",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Search Activity filters activity list to matching items",
+      "test_case": "Search Activity filters activity results on the Dashboard",
       "preconditions": [
         "User logged in as <User>",
+        "Home page is open",
         "Dashboard contains activity items for the selected office"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Enter <search term> in the Search Activity field and press Enter"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Enter <search term> in the 'Search Activity' field and submit the search"
       ],
       "expected_result": "Activity list displays only items matching <search term>; unrelated activity items are no longer visible",
       "priority": "medium"
@@ -375,14 +374,14 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   ],
   "summary": {
     "total": 5,
-    "high_priority": 3,
-    "medium_priority": 2,
+    "high_priority": 2,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:17:59] Test-Positive - PARSED JSON
+[22:29:39] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Dashboard",
@@ -390,29 +389,30 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Navigate from Home to Dashboard and view Search Activity field",
+      "test_case": "Navigate to Dashboard from Home",
       "preconditions": [
-        "User logged in as <User>"
+        "User logged in as <User>",
+        "Home page is open"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button"
+        "1. Click the 'Dashboard' button on the Home page"
       ],
-      "expected_result": "Dashboard page is displayed; the Search Activity field is visible at the top of the page",
+      "expected_result": "Dashboard page is displayed with the 'Search Activity' field visible at the top",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Display Client Trends chart for a selected office",
+      "test_case": "Client Trends chart displays when an office is selected",
       "preconditions": [
         "User logged in as <User>",
-        "Office <office> has client activity data",
-        "Office <office> is selectable"
+        "Home page is open",
+        "Office <selected office> is selected and has client data"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Select <office> from the Office selector"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Observe the main chart area"
       ],
-      "expected_result": "Client Trends Chart is visible for the selected office and shows legend entries 'New Clients' and 'Closed Clients' with data series plotted",
+      "expected_result": "Client Trends Chart is visible for the selected office and shows legend items 'New Clients' and 'Closed Clients'",
       "priority": "high"
     },
     {
@@ -420,39 +420,42 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "test_case": "Summary cards show amounts when data exists for the selected office",
       "preconditions": [
         "User logged in as <User>",
-        "Office <office> has pending/disbursed and collected amount data"
+        "Home page is open",
+        "Office <selected office> is selected and has dashboard financial data"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Select <office> from the Office selector"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Observe the summary cards below the chart"
       ],
-      "expected_result": "Amount Pending / Disbursed card displays the pending and disbursed totals for the selected office; Amount Collected card displays the collected total for the selected office",
-      "priority": "high"
+      "expected_result": "Summary cards display Amount Pending / Disbursed and Amount Collected values for the selected office (numeric values visible on each card)",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Summary cards display 'No Data' when selected office has no financial information",
+      "test_case": "Summary cards show 'No Data' when no information is available for the selected office",
       "preconditions": [
         "User logged in as <User>",
-        "Office <office> has no financial data"
+        "Home page is open",
+        "Office <selected office> is selected and has no dashboard data"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Select <office> from the Office selector"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Observe the summary cards area below the chart"
       ],
-      "expected_result": "Amount Pending / Disbursed card displays 'No Data' and Amount Collected card displays 'No Data' for the selected office",
+      "expected_result": "Both summary cards display 'No Data' for Amount Pending / Disbursed and Amount Collected",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Search Activity filters activity list to matching items",
+      "test_case": "Search Activity filters activity results on the Dashboard",
       "preconditions": [
         "User logged in as <User>",
+        "Home page is open",
         "Dashboard contains activity items for the selected office"
       ],
       "steps": [
-        "1. On the Home page, click the Dashboard button to open the Dashboard page",
-        "2. Enter <search term> in the Search Activity field and press Enter"
+        "1. Click the 'Dashboard' button on the Home page",
+        "2. Enter <search term> in the 'Search Activity' field and submit the search"
       ],
       "expected_result": "Activity list displays only items matching <search term>; unrelated activity items are no longer visible",
       "priority": "medium"
@@ -460,8 +463,8 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   ],
   "summary": {
     "total": 5,
-    "high_priority": 3,
-    "medium_priority": 2,
+    "high_priority": 2,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }

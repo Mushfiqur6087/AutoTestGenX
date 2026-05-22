@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.370738
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.547875
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Offices</module_name>
 
@@ -234,6 +234,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
   "components": {
     "Offices_Table": {
       "type": "data_table",
+      "hierarchical": true,
       "columns": [
         "Office Name",
         "External ID",
@@ -243,47 +244,46 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       ],
       "row_actions": [
         {
-          "action_name": "Open Office",
-          "action_type": "link",
-          "opens": "Office_Detail_Page",
-          "trigger_column": "Office Name"
+          "action_name": "Open",
+          "type": "link",
+          "on_trigger": "opens Office_Detail_Page",
+          "target_column": "Office Name"
         }
       ],
       "page_actions": [
         {
-          "element_name": "+ Create Office",
-          "action_type": "button",
-          "opens": "Create_Office_Form"
+          "element_name": "Create Office",
+          "type": "button",
+          "on_trigger": "opens Create_Office_Form"
         }
       ]
     },
     "Create_Office_Form": {
       "type": "form",
       "fields": {
-        "Office_Name": {
+        "Office Name": {
           "type": "unspecified",
           "required": true
         },
-        "Parent_Office": {
+        "Parent Office": {
           "type": "dropdown",
           "required": true,
           "constraints": [
-            "must select an existing office as parent",
-            "Head Office is the root"
+            "Head Office is the root and may be selected as Parent Office"
           ]
         },
-        "Opened_On": {
+        "Opened On Date": {
           "type": "date",
           "required": true
         },
-        "External_ID": {
+        "External ID": {
           "type": "unspecified",
           "required": false
         }
       },
       "submit_actions": [
         {
-          "type": "submit",
+          "element_name": "Submit",
           "on_success": "creates office"
         }
       ]
@@ -293,18 +293,8 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "actions": [
         {
           "action_name": "Edit",
-          "action_type": "button",
-          "opens": "Edit_Office_Form"
-        }
-      ]
-    },
-    "Edit_Office_Form": {
-      "type": "form",
-      "fields": {},
-      "submit_actions": [
-        {
-          "type": "submit",
-          "on_success": "updates office"
+          "type": "button",
+          "on_trigger": "opens edit flow"
         }
       ]
     }
@@ -324,7 +314,7 @@ The Offices page displays a hierarchical table of all offices with columns for O
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:27] Test-Positive - LLM RESPONSE
+[22:34:33] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Offices",
@@ -332,67 +322,69 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open an existing office from the Offices table",
+      "test_case": "Open Office Detail from Offices table",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "An office <existing office> is present in the Offices table"
+        "User logged in as <User with office management privileges>",
+        "Office named <existing office> exists in the Offices table"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Click <existing office> in the Office Name column"
+        "2. Click the <existing office> link in the Office Name column"
       ],
-      "expected_result": "Office Detail page is displayed for <existing office> showing Office Name, External ID, Parent Office, Opened On Date, and Hierarchy Position; the Edit button is visible",
+      "expected_result": "Office Detail page is displayed showing Office Name '<existing office>', Parent Office, Opened On Date, External ID, and an Edit button is visible",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new office using the Create Office form (happy path)",
+      "test_case": "Create a new Office with a non-root Parent Office",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "Head Office exists as the root office",
-        "At least one existing office <existing parent office> is available to select as Parent Office"
+        "User logged in as <User with office management privileges>"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Click the '+ Create Office' button",
-        "3. Enter <valid office name> in the Office Name field",
+        "2. Click Create Office",
+        "3. Enter <new office name> in the Office Name field",
         "4. Select <existing parent office> from the Parent Office dropdown",
-        "5. Enter <valid date> in the Opened On field",
-        "6. Enter <optional external id> in the External ID field (optional)",
-        "7. Click Submit on the Create Office form"
+        "5. Enter <valid date> in the Opened On Date field",
+        "6. Enter <external id> in the External ID field (optional)",
+        "7. Click Submit"
       ],
-      "expected_result": "A new row appears in the Offices table with the entered Office Name, Parent Office, Opened On Date, and External ID visible in the respective columns",
+      "expected_result": "A new row appears in the Offices table with Office Name '<new office name>', Parent Office '<existing parent office>', Opened On Date '<valid date>' and External ID '<external id>' visible in the corresponding columns",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Edit an office's name from the Office Detail page and save changes",
+      "test_case": "Create a new Office with Parent Office set to Head Office (root)",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "An office <existing office> is present in the Offices table"
+        "User logged in as <User with office management privileges>"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Click <existing office> in the Office Name column to open its detail page",
-        "3. Click the Edit button on the Office Detail page",
-        "4. Enter <new office name> in the Office Name field in the Edit form",
-        "5. Click Submit on the Edit Office form"
+        "2. Click Create Office",
+        "3. Enter <new office name> in the Office Name field",
+        "4. Select <Head Office> from the Parent Office dropdown",
+        "5. Enter <valid date> in the Opened On Date field",
+        "6. Click Submit"
       ],
-      "expected_result": "Office Detail page displays Office Name updated to <new office name>",
+      "expected_result": "A new row appears in the Offices table with Office Name '<new office name>' and Parent Office 'Head Office' visible in the corresponding columns",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Filter the Offices table using the search to show matching offices only",
+      "test_case": "Edit an existing Office from the Detail page",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "Multiple offices exist including some that match <search term> and some that do not"
+        "User logged in as <User with office management privileges>",
+        "Office named <existing office> exists in the Offices table"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Enter <search term> in the Offices table search input and trigger the search"
+        "2. Click the <existing office> link in the Office Name column to open the Office Detail page",
+        "3. Click Edit",
+        "4. Change Office Name to <updated office name>",
+        "5. Change External ID to <updated external id>",
+        "6. Click Save on the edit form"
       ],
-      "expected_result": "Offices table displays only rows matching <search term>; unrelated rows are no longer visible",
+      "expected_result": "Office Detail page displays Office Name '<updated office name>' and External ID '<updated external id>' reflecting the edits",
       "priority": "medium"
     }
   ],
@@ -405,7 +397,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:19:27] Test-Positive - PARSED JSON
+[22:34:33] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Offices",
@@ -413,67 +405,69 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open an existing office from the Offices table",
+      "test_case": "Open Office Detail from Offices table",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "An office <existing office> is present in the Offices table"
+        "User logged in as <User with office management privileges>",
+        "Office named <existing office> exists in the Offices table"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Click <existing office> in the Office Name column"
+        "2. Click the <existing office> link in the Office Name column"
       ],
-      "expected_result": "Office Detail page is displayed for <existing office> showing Office Name, External ID, Parent Office, Opened On Date, and Hierarchy Position; the Edit button is visible",
+      "expected_result": "Office Detail page is displayed showing Office Name '<existing office>', Parent Office, Opened On Date, External ID, and an Edit button is visible",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Create a new office using the Create Office form (happy path)",
+      "test_case": "Create a new Office with a non-root Parent Office",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "Head Office exists as the root office",
-        "At least one existing office <existing parent office> is available to select as Parent Office"
+        "User logged in as <User with office management privileges>"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Click the '+ Create Office' button",
-        "3. Enter <valid office name> in the Office Name field",
+        "2. Click Create Office",
+        "3. Enter <new office name> in the Office Name field",
         "4. Select <existing parent office> from the Parent Office dropdown",
-        "5. Enter <valid date> in the Opened On field",
-        "6. Enter <optional external id> in the External ID field (optional)",
-        "7. Click Submit on the Create Office form"
+        "5. Enter <valid date> in the Opened On Date field",
+        "6. Enter <external id> in the External ID field (optional)",
+        "7. Click Submit"
       ],
-      "expected_result": "A new row appears in the Offices table with the entered Office Name, Parent Office, Opened On Date, and External ID visible in the respective columns",
+      "expected_result": "A new row appears in the Offices table with Office Name '<new office name>', Parent Office '<existing parent office>', Opened On Date '<valid date>' and External ID '<external id>' visible in the corresponding columns",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Edit an office's name from the Office Detail page and save changes",
+      "test_case": "Create a new Office with Parent Office set to Head Office (root)",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "An office <existing office> is present in the Offices table"
+        "User logged in as <User with office management privileges>"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Click <existing office> in the Office Name column to open its detail page",
-        "3. Click the Edit button on the Office Detail page",
-        "4. Enter <new office name> in the Office Name field in the Edit form",
-        "5. Click Submit on the Edit Office form"
+        "2. Click Create Office",
+        "3. Enter <new office name> in the Office Name field",
+        "4. Select <Head Office> from the Parent Office dropdown",
+        "5. Enter <valid date> in the Opened On Date field",
+        "6. Click Submit"
       ],
-      "expected_result": "Office Detail page displays Office Name updated to <new office name>",
+      "expected_result": "A new row appears in the Offices table with Office Name '<new office name>' and Parent Office 'Head Office' visible in the corresponding columns",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Filter the Offices table using the search to show matching offices only",
+      "test_case": "Edit an existing Office from the Detail page",
       "preconditions": [
-        "User logged in as <User with Office management privileges>",
-        "Multiple offices exist including some that match <search term> and some that do not"
+        "User logged in as <User with office management privileges>",
+        "Office named <existing office> exists in the Offices table"
       ],
       "steps": [
         "1. Navigate to the Offices page",
-        "2. Enter <search term> in the Offices table search input and trigger the search"
+        "2. Click the <existing office> link in the Office Name column to open the Office Detail page",
+        "3. Click Edit",
+        "4. Change Office Name to <updated office name>",
+        "5. Change External ID to <updated external id>",
+        "6. Click Save on the edit form"
       ],
-      "expected_result": "Offices table displays only rows matching <search term>; unrelated rows are no longer visible",
+      "expected_result": "Office Detail page displays Office Name '<updated office name>' and External ID '<updated external id>' reflecting the edits",
       "priority": "medium"
     }
   ],

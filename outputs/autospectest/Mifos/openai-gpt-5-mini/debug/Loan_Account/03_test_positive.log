@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.367813
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.536472
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Loan Account</module_name>
 
@@ -232,16 +232,6 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Loan Account",
   "components": {
-    "Client_Detail_Page": {
-      "type": "detail_page",
-      "start_actions": [
-        {
-          "element_name": "Start Loan Application",
-          "type": "button",
-          "triggers": "components.Loan_Application_Wizard"
-        }
-      ]
-    },
     "Loan_Application_Wizard": {
       "type": "wizard",
       "submit_actions": [
@@ -258,7 +248,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
             "Product_Name": {
               "type": "dropdown",
               "required": true,
-              "on_change": "auto-populate default values from selected product"
+              "on_change": "auto_populate_product_defaults"
             },
             "Loan_Officer": {
               "type": "unspecified",
@@ -282,30 +272,30 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
             },
             "Principal": {
               "type": "number",
-              "required": true,
+              "required": false,
               "constraints": [
-                "min: product.min_principal",
-                "max: product.max_principal"
+                ">= product.min_principal",
+                "<= product.max_principal"
               ]
             },
             "Number_of_Repayments": {
               "type": "number",
-              "required": true
+              "required": false
             },
-            "Repaid_Every": {
+            "Repaid_Every_Frequency": {
               "type": "number",
-              "required": true
+              "required": false
             },
             "Repaid_Every_Unit": {
-              "type": "dropdown",
-              "required": true
+              "type": "unspecified",
+              "required": false
             },
             "Interest_Rate": {
               "type": "number",
-              "required": true,
+              "required": false,
               "constraints": [
-                "min: product.min_interest_rate",
-                "max: product.max_interest_rate"
+                ">= product.min_interest_rate",
+                "<= product.max_interest_rate"
               ]
             },
             "External_ID": {
@@ -321,25 +311,29 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
             "Repayment_Strategy": {
               "type": "dropdown",
               "required": false,
-              "prefill_from_product": true
+              "prefilled_from_product": true
             },
             "Amortization": {
               "type": "dropdown",
               "required": false,
-              "prefill_from_product": true
+              "prefilled_from_product": true
             },
             "Interest_Method": {
               "type": "dropdown",
               "required": false,
-              "prefill_from_product": true
+              "prefilled_from_product": true
             },
             "Interest_Calculation_Period": {
               "type": "dropdown",
               "required": false,
-              "prefill_from_product": true
+              "prefilled_from_product": true
             },
-            "Grace_Period": {
-              "type": "unspecified",
+            "Grace_Period_Days": {
+              "type": "number",
+              "required": false
+            },
+            "Grace_Period_Repayments": {
+              "type": "number",
               "required": false
             }
           }
@@ -348,18 +342,21 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 3,
           "step_name": "Charges",
           "fields": {
-            "Charges": {
+            "Inherited_Product_Charges_List": {
+              "type": "unspecified",
+              "required": false,
+              "description": "lists charges inherited from the product (display-only)"
+            },
+            "Add_Charge": {
+              "type": "button",
+              "element_name": "Add Charge",
+              "on_success": "adds an additional charge entry to Additional_Charges"
+            },
+            "Additional_Charges": {
               "type": "repeating_group",
               "item_fields": {}
             }
-          },
-          "actions": [
-            {
-              "element_name": "Add Charge",
-              "type": "button",
-              "triggers": "adds row to Charges"
-            }
-          ]
+          }
         },
         {
           "step_index": 4,
@@ -371,11 +368,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
               "item_fields": {
                 "Collateral_Type": {
                   "type": "unspecified",
-                  "required": true
+                  "required": false
                 },
                 "Value": {
                   "type": "number",
-                  "required": true
+                  "required": false
                 },
                 "Description": {
                   "type": "unspecified",
@@ -387,16 +384,12 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         }
       ]
     },
-    "Loan_Detail_Page": {
-      "type": "detail_page",
-      "header_links": {
-        "Client": {
-          "type": "link",
-          "target": "components.Client_Detail_Page"
-        }
-      }
+    "Loan_Detail_Client_Link": {
+      "type": "link",
+      "element_name": "Client Name Link",
+      "on_click": "navigates to Client Detail page"
     },
-    "Loan_Detail_Actions": {
+    "Loan_Detail_Action_Bar": {
       "type": "state_bound_action_bar",
       "states": {
         "Submitted and Pending Approval": {
@@ -420,16 +413,23 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                   "type": "unspecified",
                   "required": false
                 }
-              }
+              },
+              "on_success": "changes status to Approved"
             },
             {
-              "action_name": "Reject"
+              "action_name": "Reject",
+              "fields": {},
+              "on_success": "changes status to Rejected"
             },
             {
-              "action_name": "Withdraw"
+              "action_name": "Withdraw",
+              "fields": {},
+              "on_success": "withdraws application"
             },
             {
-              "action_name": "Delete"
+              "action_name": "Delete",
+              "fields": {},
+              "on_success": "deletes loan application"
             }
           ]
         },
@@ -464,10 +464,13 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                   "type": "checkbox",
                   "required": false
                 }
-              }
+              },
+              "on_success": "changes status to Active or Active with disbursement recorded"
             },
             {
-              "action_name": "Undo Approval"
+              "action_name": "Undo Approval",
+              "fields": {},
+              "on_success": "reverts status from Approved to Submitted and Pending Approval"
             }
           ]
         },
@@ -483,7 +486,9 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Transaction_Amount": {
                   "type": "number",
                   "required": true,
-                  "prefill": "amount_due"
+                  "constraints": [
+                    "pre-filled with amount due"
+                  ]
                 },
                 "Payment_Type": {
                   "type": "dropdown",
@@ -501,18 +506,24 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 }
               },
               "constraints": [
-                "partial repayments are applied per the configured repayment strategy"
+                "partial repayments are applied per configured repayment strategy"
               ],
-              "on_success": "if full settlement then status changes to Closed obligations met"
+              "on_success": "applies payment; full settlement changes status to Closed (Closed obligations met)"
             },
             {
-              "action_name": "Waive Interest"
+              "action_name": "Waive Interest",
+              "fields": {},
+              "on_success": "applies interest waiver"
             },
             {
-              "action_name": "Write Off"
+              "action_name": "Write Off",
+              "fields": {},
+              "on_success": "changes status to Written Off"
             },
             {
-              "action_name": "Close"
+              "action_name": "Close",
+              "fields": {},
+              "on_success": "changes status to Closed"
             },
             {
               "action_name": "Reschedule",
@@ -529,7 +540,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                   "type": "date",
                   "required": true
                 },
-                "Grace_Period": {
+                "Grace_Fields": {
                   "type": "unspecified",
                   "required": false
                 },
@@ -542,32 +553,39 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                   "required": false
                 }
               },
-              "on_success": "creates a pending request requiring separate approval"
+              "on_success": "creates a pending reschedule request requiring separate approval"
             },
             {
-              "action_name": "Prepay Loan"
+              "action_name": "Prepay Loan",
+              "fields": {},
+              "on_success": "processes prepayment"
             },
             {
-              "action_name": "Foreclosure"
+              "action_name": "Foreclosure",
+              "fields": {},
+              "on_success": "processes foreclosure"
             },
             {
-              "action_name": "Charge Off"
+              "action_name": "Charge Off",
+              "fields": {},
+              "on_success": "changes status to Written Off or Charged Off per business rules"
             },
             {
               "action_name": "Assign Loan Officer",
-              "fields": {
-                "Loan_Officer": {
-                  "type": "unspecified",
-                  "required": true
-                }
-              }
+              "fields": {},
+              "on_success": "assigns loan officer"
             }
           ]
         },
-        "Approved (no further actions)": {},
-        "Closed": {},
-        "Overpaid": {},
-        "Written Off": {}
+        "Closed": {
+          "available_actions": []
+        },
+        "Overpaid": {
+          "available_actions": []
+        },
+        "Written Off": {
+          "available_actions": []
+        }
       }
     },
     "Loan_Detail_Tabs": {
@@ -590,14 +608,12 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Fees Due",
                 "Penalties Due",
                 "Total Due",
-                "Principal Paid",
-                "Interest Paid",
-                "Fees Paid",
-                "Penalties Paid",
+                "Amounts Paid",
                 "Total Outstanding",
-                "Status"
+                "Status Indicator"
               ],
-              "row_actions": []
+              "row_actions": [],
+              "bulk_actions": []
             }
           }
         },
@@ -610,17 +626,17 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Date",
                 "Type",
                 "Amount",
-                "Principal Portion",
-                "Interest Portion",
-                "Fees Portion",
-                "Penalties Portion",
+                "Principal/Interest/Fees/Penalties Portions",
                 "Outstanding Balance"
               ],
               "row_actions": [
                 {
-                  "action_name": "Undo"
+                  "action_name": "Undo",
+                  "element_type": "link",
+                  "on_success": "reverses transaction where allowed"
                 }
-              ]
+              ],
+              "bulk_actions": []
             }
           }
         },
@@ -637,7 +653,8 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Waived",
                 "Outstanding"
               ],
-              "row_actions": []
+              "row_actions": [],
+              "bulk_actions": []
             }
           }
         },
@@ -675,7 +692,7 @@ Tabs on the detail page show Summary (disbursement details, repayment schedule s
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:34] Test-Positive - LLM RESPONSE
+[22:33:28] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Loan Account",
@@ -683,336 +700,269 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Submit new loan application via wizard creates Submitted and Pending Approval loan",
+      "test_case": "Create new loan application via wizard (happy path) with product defaults populated",
       "preconditions": [
         "User logged in as <Loan Officer>",
         "Client Detail page for <client> is open"
       ],
       "steps": [
-        "1. Click Start Loan Application on the Client Detail page",
-        "2. On Step 1 (Details) select <product> from Product Name",
-        "3. Enter valid values in required fields: Principal within product bounds in Principal, enter <number_of_repayments> in Number of Repayments, enter <repaid_every> in Repaid Every and select <repaid_every_unit> in Repaid Every Unit, and enter Interest Rate within product bounds in Interest Rate",
-        "4. Click Next to go to Step 2 (Terms)",
-        "5. Verify prefilled terms and adjust optional fields if needed, then click Next",
-        "6. On Step 3 (Charges) optionally click Add Charge and then click Next",
-        "7. On Step 4 (Collateral) optionally click Add Row and fill required Collateral_Type and Value, then click Submit on the wizard",
-        "8. Wait for navigation to Loan Detail page"
+        "1. Click 'New Loan Application' on the Client Detail page to open the Loan Application wizard",
+        "2. In Step 1 (Details), select <product> from the Product Name dropdown",
+        "3. Verify product selection auto-populates default values in Details (e.g., loan term or interest defaults become visible)",
+        "4. Enter <valid principal> in Principal (within product min/max), enter <number of repayments> in Number of Repayments, enter <interest rate> in Interest Rate (within product min/max), and fill other optional fields as needed",
+        "5. Click Next to go to Step 2 (Terms); verify Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period are prefilled from the product",
+        "6. Click Next to go to Step 3 (Charges); optionally click 'Add Charge' and add one additional charge row",
+        "7. Click Next to go to Step 4 (Collateral); click 'Add Row' on Collateral_Items and enter <collateral type>, <value>, and <description>",
+        "8. Click Submit on the wizard"
       ],
-      "expected_result": "Loan Detail page is shown and the status badge displays 'Submitted and Pending Approval' (yellow); loan header displays the loan account number, product name, and client name",
+      "expected_result": "Loan Detail page opens for the newly created loan; header shows loan account number and product name; status badge displays 'Submitted and Pending Approval' (yellow)",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Selecting a product auto-populates default loan values across Details and Terms steps",
+      "test_case": "Approve a Submitted application via Approve action",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Client Detail page for <client> is open",
-        "Loan Application wizard is started"
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. On Step 1 (Details) select <product> from Product Name",
-        "2. Observe Step 1 fields for default population (do not change them)",
-        "3. Click Next to go to Step 2 (Terms)",
-        "4. Observe Step 2 dropdowns for Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period"
+        "1. On the Loan Detail page, click the 'Approve' action button in the action bar",
+        "2. In the Approve dialog, enter <approved date> in Approved_On_Date and enter <approved amount> in Approved_Amount; optionally enter <expected disbursement date> and <note>",
+        "3. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "Step 1 shows default values populated for applicable fields (for example Principal, Interest Rate, Number of Repayments, Repaid Every and Repaid Every Unit) and Step 2 dropdowns display values prefilled from the selected product",
-      "priority": "medium"
+      "expected_result": "Status badge updates to 'Approved' (blue) on the Loan Detail page and the approved amount/date are visible in the loan summary",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Add an additional charge in Charges step",
+      "test_case": "Reject a Submitted application via Reject action",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Application wizard is open on Step 3 (Charges)"
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. Click Add Charge on the Charges step",
-        "2. Enter valid values for the new charge fields",
-        "3. Observe the Charges list within the Charges step"
+        "1. On the Loan Detail page, click the 'Reject' action button in the action bar",
+        "2. Click Confirm on the Reject confirmation dialog"
       ],
-      "expected_result": "New row appears in the Charges list on the Charges step with the entered charge details visible",
+      "expected_result": "Status badge updates to 'Rejected' on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Add a collateral item on the Collateral step",
+      "test_case": "Withdraw a Submitted application via Withdraw action",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Application wizard is open on Step 4 (Collateral)"
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. Click Add Row in the Collateral section",
-        "2. Enter <Collateral_Type> in Collateral Type and a valid number in Value (Description optional)",
-        "3. Observe the new collateral row inside the Collateral step"
+        "1. On the Loan Detail page, click the 'Withdraw' action button in the action bar",
+        "2. Click Confirm on the Withdraw confirmation dialog"
       ],
-      "expected_result": "New collateral item appears in the Collateral list showing the entered Collateral Type and Value",
+      "expected_result": "Status badge updates to 'Withdrawn' on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Navigate between all tabs on the Loan Detail page",
+      "test_case": "Delete a Submitted application via Delete action and confirm redirect",
       "preconditions": [
-        "User logged in as <User>",
-        "Loan Detail page for a loan in any status is open"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. Click the Summary tab",
-        "2. Click the Repayment Schedule tab",
-        "3. Click the Transactions tab",
-        "4. Click the Charges tab",
-        "5. Click the Collateral tab",
-        "6. Click the Notes tab",
-        "7. Click the Documents tab"
+        "1. On the Loan Detail page, click the 'Delete' action button in the action bar",
+        "2. Click Confirm on the Delete confirmation dialog"
       ],
-      "expected_result": "Each tab opens in turn and displays its content area; the Repayment Schedule tab shows the Repayment Schedule table with the expected columns and the Transactions tab shows the Transactions table",
-      "priority": "low"
+      "expected_result": "The UI redirects to the Client Detail page (user is taken back to the Client Detail page)",
+      "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Approve a loan in Submitted and Pending Approval state",
+      "test_case": "Disburse an Approved loan and record disbursement transaction",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Teller or Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Approved status"
       ],
       "steps": [
-        "1. Click Approve in the action bar",
-        "2. Enter a valid date in Approved On Date and a valid number in Approved Amount (Expected Disbursement Date and Note optional)",
-        "3. Click Confirm on the Approve dialog"
+        "1. On the Loan Detail page, click the 'Disburse' action button in the action bar",
+        "2. In the Disburse dialog, enter <disbursed on date> in Disbursed_On_Date, enter <transaction amount> in Transaction_Amount, select <payment type> from Payment_Type, optionally enter <payment details>, and optionally check or uncheck Disburse_to_Savings",
+        "3. Click Confirm on the Disburse dialog",
+        "4. Open the Transactions tab"
       ],
-      "expected_result": "Status badge on the Loan Detail page updates to 'Approved' (blue)",
+      "expected_result": "Status badge updates to 'Active' (green) on the Loan Detail page and the Transactions tab shows a disbursement transaction row with the entered amount",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Reject a loan in Submitted and Pending Approval state",
+      "test_case": "Undo Approval to revert Approved back to Submitted and Pending Approval",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Approved status"
       ],
       "steps": [
-        "1. Click Reject in the action bar",
-        "2. If a confirmation dialog appears, click Confirm"
+        "1. On the Loan Detail page, click the 'Undo Approval' action button in the action bar",
+        "2. Click Confirm on the Undo Approval confirmation dialog"
       ],
-      "expected_result": "A success notification is displayed and the status badge no longer shows 'Submitted and Pending Approval'",
+      "expected_result": "Status badge updates to 'Submitted and Pending Approval' (yellow) on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Withdraw a loan in Submitted and Pending Approval state",
+      "test_case": "Make a repayment on an Active loan that fully settles and closes the loan",
       "preconditions": [
-        "User logged in as <Maker>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Cashier or Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status with an amount due"
       ],
       "steps": [
-        "1. Click Withdraw in the action bar",
-        "2. If a confirmation dialog appears, click Confirm"
+        "1. On the Loan Detail page, click the 'Make Repayment' action button in the action bar",
+        "2. Verify Transaction_Amount is pre-filled with the amount due",
+        "3. Enter <transaction date> in Transaction_Date, leave Transaction_Amount as the pre-filled amount to fully settle, select <payment type> from Payment_Type, optionally enter <payment details>",
+        "4. Click Confirm on the Make Repayment dialog",
+        "5. Open the Transactions tab"
       ],
-      "expected_result": "A success notification is displayed and the status badge no longer shows 'Submitted and Pending Approval'",
-      "priority": "medium"
+      "expected_result": "Transaction with the entered amount appears in the Transactions tab and the status badge updates to 'Closed' (Closed obligations met) on the Loan Detail page",
+      "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Delete a loan in Submitted and Pending Approval state",
+      "test_case": "Apply Waive Interest on an Active loan and observe interest reduction",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status with interest due"
       ],
       "steps": [
-        "1. Click Delete in the action bar",
-        "2. Click Confirm on the Delete confirmation dialog"
+        "1. On the Loan Detail page, click the 'Waive Interest' action button in the action bar",
+        "2. Click Confirm on the Waive Interest confirmation dialog",
+        "3. Open the Summary section of the Loan Detail page"
       ],
-      "expected_result": "A success notification is displayed and the Loan Detail header (account number) is no longer visible",
+      "expected_result": "A success notification is displayed and the Summary shows a reduced interest due amount reflecting the applied interest waiver",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Disburse an approved loan and show disbursement transaction and Active status",
+      "test_case": "Write Off an Active loan",
       "preconditions": [
-        "User logged in as <Teller>",
-        "Loan Detail page open for a loan in 'Approved' state"
+        "User logged in as <Collections Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Disburse in the action bar",
-        "2. Enter a valid date in Disbursed On Date and a valid number in Transaction Amount",
-        "3. Select <Payment_Type> from Payment Type and optionally fill Payment Details; toggle Disburse to Savings if desired",
-        "4. Click Confirm on the Disburse dialog",
-        "5. Open the Transactions tab"
+        "1. On the Loan Detail page, click the 'Write Off' action button in the action bar",
+        "2. Click Confirm on the Write Off confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Active' (green) and the Transactions table contains a new row with Type 'Disbursement' and the entered Transaction Amount",
-      "priority": "high"
+      "expected_result": "Status badge updates to 'Written Off' (red) on the Loan Detail page",
+      "priority": "medium"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Undo Approval on an approved loan returns it to Submitted and Pending Approval",
+      "test_case": "Close an Active loan using Close action",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Loan Detail page open for a loan in 'Approved' state"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Undo Approval in the action bar",
-        "2. Click Confirm on the Undo Approval dialog if shown"
+        "1. On the Loan Detail page, click the 'Close' action button in the action bar",
+        "2. Click Confirm on the Close confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Submitted and Pending Approval' (yellow)",
+      "expected_result": "Status badge updates to 'Closed' (gray) on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Make a full repayment on an Active loan results in Closed status (full settlement)",
+      "test_case": "Create a reschedule request from an Active loan",
       "preconditions": [
-        "User logged in as <Cashier>",
-        "Loan Detail page open for a loan in 'Active' state with outstanding amount",
-        "The loan has an amount due of <amount_due>"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Make Repayment in the action bar",
-        "2. Verify Transaction Amount is prefilled with <amount_due> and leave or enter <amount_due>",
-        "3. Select <Payment_Type> from Payment Type and enter Payment Details if required",
-        "4. Click Confirm on the Make Repayment dialog",
-        "5. Open the Transactions tab"
+        "1. On the Loan Detail page, click the 'Reschedule' action button in the action bar",
+        "2. In the Reschedule form, enter <reschedule from date> in Reschedule_From_Date, enter <reason> in Reason, enter <adjusted due date> in Adjusted_Due_Date, and optionally fill Grace_Fields, Extra_Terms, and New_Interest_Rate",
+        "3. Click Submit on the Reschedule form"
       ],
-      "expected_result": "Status badge on the Loan Detail page updates to 'Closed' (gray) and a new repayment row appears in the Transactions table with Amount equal to <amount_due>",
-      "priority": "high"
+      "expected_result": "A pending reschedule request is shown on the Loan Detail page indicating the reschedule requires separate approval",
+      "priority": "medium"
     },
     {
       "tc_id": "P-013",
-      "test_case": "Waive interest on an Active loan shows waiver reflected in Charges",
+      "test_case": "Process a Prepay Loan action on an Active loan",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Detail page open for a loan in 'Active' state"
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Waive Interest in the action bar",
-        "2. If a Waive dialog appears, enter required information and click Confirm",
-        "3. Open the Charges tab"
+        "1. On the Loan Detail page, click the 'Prepay Loan' action button in the action bar",
+        "2. Complete any confirmation prompts and click Confirm"
       ],
-      "expected_result": "A success notification is displayed and the Charges table shows the waived interest reflected (waived amount visible in the Waived column)",
+      "expected_result": "A success notification is displayed and the Transactions tab shows a prepayment transaction row with the prepayment amount",
       "priority": "low"
     },
     {
       "tc_id": "P-014",
-      "test_case": "Write off a loan from Active state updates status to Written Off",
+      "test_case": "Process Foreclosure action on an Active loan",
       "preconditions": [
-        "User logged in as <CollectionsOfficer>",
-        "Loan Detail page open for a loan in 'Active' state eligible for write off"
+        "User logged in as <Collections Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Write Off in the action bar",
-        "2. If a Write Off dialog appears, enter required details and click Confirm"
+        "1. On the Loan Detail page, click the 'Foreclosure' action button in the action bar",
+        "2. Click Confirm on the Foreclosure confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Written Off' (red)",
-      "priority": "medium"
+      "expected_result": "A success notification is displayed indicating the foreclosure was processed and a foreclosure entry is visible on the Loan Detail page (e.g., in Transactions or Notes)",
+      "priority": "low"
     },
     {
       "tc_id": "P-015",
-      "test_case": "Reschedule a loan from Active state creates a pending reschedule request",
+      "test_case": "Charge Off an Active loan and observe status change per business rules",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Loan Detail page open for a loan in 'Active' state"
+        "User logged in as <Collections Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Reschedule in the action bar",
-        "2. Enter a valid Reschedule From Date, provide a Reason, enter an Adjusted Due Date and required fields, then click Confirm"
+        "1. On the Loan Detail page, click the 'Charge Off' action button in the action bar",
+        "2. Click Confirm on the Charge Off confirmation dialog"
       ],
-      "expected_result": "A pending reschedule request is shown on the Loan Detail page requiring separate approval",
+      "expected_result": "Status badge updates to either 'Written Off' or 'Charged Off' on the Loan Detail page (per business rules)",
       "priority": "medium"
     },
     {
       "tc_id": "P-016",
-      "test_case": "Prepay loan action is available and a prepayment shows as a transaction",
+      "test_case": "Assign a Loan Officer to an Active loan",
       "preconditions": [
-        "User logged in as <Cashier>",
-        "Loan Detail page open for a loan in 'Active' state"
+        "User logged in as <Admin or Manager>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Prepay Loan in the action bar",
-        "2. Enter required prepayment details (amount and date) and click Confirm",
-        "3. Open the Transactions tab"
+        "1. On the Loan Detail page, click the 'Assign Loan Officer' action button in the action bar",
+        "2. In the Assign Loan Officer control, enter <loan officer> in the autocomplete and select the matching result",
+        "3. Click Save or Confirm to complete the assignment"
       ],
-      "expected_result": "A success notification is displayed and the Transactions table contains a new prepayment row with the entered amount",
+      "expected_result": "The Loan Detail header or Assignment field shows the selected <loan officer> as the assigned loan officer",
       "priority": "low"
     },
     {
       "tc_id": "P-017",
-      "test_case": "Foreclosure action on Active loan shows a foreclosure transaction or status change",
-      "preconditions": [
-        "User logged in as <CollectionsOfficer>",
-        "Loan Detail page open for a loan in 'Active' state"
-      ],
-      "steps": [
-        "1. Click Foreclosure in the action bar",
-        "2. Enter required foreclosure details if prompted and click Confirm"
-      ],
-      "expected_result": "A success notification is displayed and the Loan Detail page reflects the foreclosure (for example a foreclosure transaction appears in Transactions or status is updated)",
-      "priority": "low"
-    },
-    {
-      "tc_id": "P-018",
-      "test_case": "Charge Off action on Active loan is reflected in loan status or transactions",
-      "preconditions": [
-        "User logged in as <CollectionsOfficer>",
-        "Loan Detail page open for a loan in 'Active' state"
-      ],
-      "steps": [
-        "1. Click Charge Off in the action bar",
-        "2. Enter required details in the Charge Off dialog if shown and click Confirm"
-      ],
-      "expected_result": "A success notification is displayed and the Loan Detail page reflects the charge off (for example status changes or a charge off entry appears in Transactions/Charges)",
-      "priority": "low"
-    },
-    {
-      "tc_id": "P-019",
-      "test_case": "Assign Loan Officer updates the loan's assigned officer on the detail page",
-      "preconditions": [
-        "User logged in as <Manager>",
-        "Loan Detail page open for a loan in 'Active' state"
-      ],
-      "steps": [
-        "1. Click Assign Loan Officer in the action bar",
-        "2. Select <Loan_Officer> from the Loan Officer field and click Confirm",
-        "3. Observe the Loan Detail header/assignment area"
-      ],
-      "expected_result": "The Loan Detail page shows <Loan_Officer> as the assigned Loan Officer",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-020",
-      "test_case": "Use Undo row action on a Transactions table entry",
-      "preconditions": [
-        "User logged in as <Cashier>",
-        "Loan Detail page open and Transactions tab selected with at least one transaction present"
-      ],
-      "steps": [
-        "1. In the Transactions table click the Undo action for a transaction row",
-        "2. Click Confirm on the Undo confirmation dialog"
-      ],
-      "expected_result": "A confirmation or success notification is displayed and the Transactions table reflects that the selected transaction has been undone (the row shows reversal or is flagged accordingly)",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-021",
-      "test_case": "Close loan from Active state updates status to Closed",
+      "test_case": "Navigate between Loan Detail tabs and view Transactions Undo link availability",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Detail page open for a loan in 'Active' state eligible to be closed"
+        "Loan Detail page for <loan> is open"
       ],
       "steps": [
-        "1. Click Close in the action bar",
-        "2. If a Close dialog appears, enter required details and click Confirm"
+        "1. Click the 'Summary' tab and observe summary content is visible",
+        "2. Click the 'Repayment Schedule' tab and verify the Repayment Schedule table is visible with Installment Number and Due Date columns",
+        "3. Click the 'Transactions' tab and verify the Transactions table is visible and at least one transaction row shows an 'Undo' link where allowed"
       ],
-      "expected_result": "Status badge updates to 'Closed' (gray)",
+      "expected_result": "All tabs load their respective content; the Transactions tab displays transaction rows and any allowed row shows an 'Undo' link",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 21,
-    "high_priority": 4,
-    "medium_priority": 12,
-    "low_priority": 5
+    "total": 17,
+    "high_priority": 5,
+    "medium_priority": 9,
+    "low_priority": 3
   }
 }
 
 ------------------------------------------------------------
-[16:19:34] Test-Positive - PARSED JSON
+[22:33:28] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Loan Account",
@@ -1020,330 +970,263 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Submit new loan application via wizard creates Submitted and Pending Approval loan",
+      "test_case": "Create new loan application via wizard (happy path) with product defaults populated",
       "preconditions": [
         "User logged in as <Loan Officer>",
         "Client Detail page for <client> is open"
       ],
       "steps": [
-        "1. Click Start Loan Application on the Client Detail page",
-        "2. On Step 1 (Details) select <product> from Product Name",
-        "3. Enter valid values in required fields: Principal within product bounds in Principal, enter <number_of_repayments> in Number of Repayments, enter <repaid_every> in Repaid Every and select <repaid_every_unit> in Repaid Every Unit, and enter Interest Rate within product bounds in Interest Rate",
-        "4. Click Next to go to Step 2 (Terms)",
-        "5. Verify prefilled terms and adjust optional fields if needed, then click Next",
-        "6. On Step 3 (Charges) optionally click Add Charge and then click Next",
-        "7. On Step 4 (Collateral) optionally click Add Row and fill required Collateral_Type and Value, then click Submit on the wizard",
-        "8. Wait for navigation to Loan Detail page"
+        "1. Click 'New Loan Application' on the Client Detail page to open the Loan Application wizard",
+        "2. In Step 1 (Details), select <product> from the Product Name dropdown",
+        "3. Verify product selection auto-populates default values in Details (e.g., loan term or interest defaults become visible)",
+        "4. Enter <valid principal> in Principal (within product min/max), enter <number of repayments> in Number of Repayments, enter <interest rate> in Interest Rate (within product min/max), and fill other optional fields as needed",
+        "5. Click Next to go to Step 2 (Terms); verify Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period are prefilled from the product",
+        "6. Click Next to go to Step 3 (Charges); optionally click 'Add Charge' and add one additional charge row",
+        "7. Click Next to go to Step 4 (Collateral); click 'Add Row' on Collateral_Items and enter <collateral type>, <value>, and <description>",
+        "8. Click Submit on the wizard"
       ],
-      "expected_result": "Loan Detail page is shown and the status badge displays 'Submitted and Pending Approval' (yellow); loan header displays the loan account number, product name, and client name",
+      "expected_result": "Loan Detail page opens for the newly created loan; header shows loan account number and product name; status badge displays 'Submitted and Pending Approval' (yellow)",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Selecting a product auto-populates default loan values across Details and Terms steps",
+      "test_case": "Approve a Submitted application via Approve action",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Client Detail page for <client> is open",
-        "Loan Application wizard is started"
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. On Step 1 (Details) select <product> from Product Name",
-        "2. Observe Step 1 fields for default population (do not change them)",
-        "3. Click Next to go to Step 2 (Terms)",
-        "4. Observe Step 2 dropdowns for Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period"
+        "1. On the Loan Detail page, click the 'Approve' action button in the action bar",
+        "2. In the Approve dialog, enter <approved date> in Approved_On_Date and enter <approved amount> in Approved_Amount; optionally enter <expected disbursement date> and <note>",
+        "3. Click Confirm on the Approve dialog"
       ],
-      "expected_result": "Step 1 shows default values populated for applicable fields (for example Principal, Interest Rate, Number of Repayments, Repaid Every and Repaid Every Unit) and Step 2 dropdowns display values prefilled from the selected product",
-      "priority": "medium"
+      "expected_result": "Status badge updates to 'Approved' (blue) on the Loan Detail page and the approved amount/date are visible in the loan summary",
+      "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Add an additional charge in Charges step",
+      "test_case": "Reject a Submitted application via Reject action",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Application wizard is open on Step 3 (Charges)"
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. Click Add Charge on the Charges step",
-        "2. Enter valid values for the new charge fields",
-        "3. Observe the Charges list within the Charges step"
+        "1. On the Loan Detail page, click the 'Reject' action button in the action bar",
+        "2. Click Confirm on the Reject confirmation dialog"
       ],
-      "expected_result": "New row appears in the Charges list on the Charges step with the entered charge details visible",
+      "expected_result": "Status badge updates to 'Rejected' on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Add a collateral item on the Collateral step",
+      "test_case": "Withdraw a Submitted application via Withdraw action",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Application wizard is open on Step 4 (Collateral)"
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. Click Add Row in the Collateral section",
-        "2. Enter <Collateral_Type> in Collateral Type and a valid number in Value (Description optional)",
-        "3. Observe the new collateral row inside the Collateral step"
+        "1. On the Loan Detail page, click the 'Withdraw' action button in the action bar",
+        "2. Click Confirm on the Withdraw confirmation dialog"
       ],
-      "expected_result": "New collateral item appears in the Collateral list showing the entered Collateral Type and Value",
+      "expected_result": "Status badge updates to 'Withdrawn' on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Navigate between all tabs on the Loan Detail page",
+      "test_case": "Delete a Submitted application via Delete action and confirm redirect",
       "preconditions": [
-        "User logged in as <User>",
-        "Loan Detail page for a loan in any status is open"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Submitted and Pending Approval status"
       ],
       "steps": [
-        "1. Click the Summary tab",
-        "2. Click the Repayment Schedule tab",
-        "3. Click the Transactions tab",
-        "4. Click the Charges tab",
-        "5. Click the Collateral tab",
-        "6. Click the Notes tab",
-        "7. Click the Documents tab"
+        "1. On the Loan Detail page, click the 'Delete' action button in the action bar",
+        "2. Click Confirm on the Delete confirmation dialog"
       ],
-      "expected_result": "Each tab opens in turn and displays its content area; the Repayment Schedule tab shows the Repayment Schedule table with the expected columns and the Transactions tab shows the Transactions table",
-      "priority": "low"
+      "expected_result": "The UI redirects to the Client Detail page (user is taken back to the Client Detail page)",
+      "priority": "high"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Approve a loan in Submitted and Pending Approval state",
+      "test_case": "Disburse an Approved loan and record disbursement transaction",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Teller or Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Approved status"
       ],
       "steps": [
-        "1. Click Approve in the action bar",
-        "2. Enter a valid date in Approved On Date and a valid number in Approved Amount (Expected Disbursement Date and Note optional)",
-        "3. Click Confirm on the Approve dialog"
+        "1. On the Loan Detail page, click the 'Disburse' action button in the action bar",
+        "2. In the Disburse dialog, enter <disbursed on date> in Disbursed_On_Date, enter <transaction amount> in Transaction_Amount, select <payment type> from Payment_Type, optionally enter <payment details>, and optionally check or uncheck Disburse_to_Savings",
+        "3. Click Confirm on the Disburse dialog",
+        "4. Open the Transactions tab"
       ],
-      "expected_result": "Status badge on the Loan Detail page updates to 'Approved' (blue)",
+      "expected_result": "Status badge updates to 'Active' (green) on the Loan Detail page and the Transactions tab shows a disbursement transaction row with the entered amount",
       "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Reject a loan in Submitted and Pending Approval state",
+      "test_case": "Undo Approval to revert Approved back to Submitted and Pending Approval",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Approved status"
       ],
       "steps": [
-        "1. Click Reject in the action bar",
-        "2. If a confirmation dialog appears, click Confirm"
+        "1. On the Loan Detail page, click the 'Undo Approval' action button in the action bar",
+        "2. Click Confirm on the Undo Approval confirmation dialog"
       ],
-      "expected_result": "A success notification is displayed and the status badge no longer shows 'Submitted and Pending Approval'",
+      "expected_result": "Status badge updates to 'Submitted and Pending Approval' (yellow) on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Withdraw a loan in Submitted and Pending Approval state",
+      "test_case": "Make a repayment on an Active loan that fully settles and closes the loan",
       "preconditions": [
-        "User logged in as <Maker>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Cashier or Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status with an amount due"
       ],
       "steps": [
-        "1. Click Withdraw in the action bar",
-        "2. If a confirmation dialog appears, click Confirm"
+        "1. On the Loan Detail page, click the 'Make Repayment' action button in the action bar",
+        "2. Verify Transaction_Amount is pre-filled with the amount due",
+        "3. Enter <transaction date> in Transaction_Date, leave Transaction_Amount as the pre-filled amount to fully settle, select <payment type> from Payment_Type, optionally enter <payment details>",
+        "4. Click Confirm on the Make Repayment dialog",
+        "5. Open the Transactions tab"
       ],
-      "expected_result": "A success notification is displayed and the status badge no longer shows 'Submitted and Pending Approval'",
-      "priority": "medium"
+      "expected_result": "Transaction with the entered amount appears in the Transactions tab and the status badge updates to 'Closed' (Closed obligations met) on the Loan Detail page",
+      "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Delete a loan in Submitted and Pending Approval state",
+      "test_case": "Apply Waive Interest on an Active loan and observe interest reduction",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Loan Detail page open for a loan in 'Submitted and Pending Approval' state"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status with interest due"
       ],
       "steps": [
-        "1. Click Delete in the action bar",
-        "2. Click Confirm on the Delete confirmation dialog"
+        "1. On the Loan Detail page, click the 'Waive Interest' action button in the action bar",
+        "2. Click Confirm on the Waive Interest confirmation dialog",
+        "3. Open the Summary section of the Loan Detail page"
       ],
-      "expected_result": "A success notification is displayed and the Loan Detail header (account number) is no longer visible",
+      "expected_result": "A success notification is displayed and the Summary shows a reduced interest due amount reflecting the applied interest waiver",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Disburse an approved loan and show disbursement transaction and Active status",
+      "test_case": "Write Off an Active loan",
       "preconditions": [
-        "User logged in as <Teller>",
-        "Loan Detail page open for a loan in 'Approved' state"
+        "User logged in as <Collections Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Disburse in the action bar",
-        "2. Enter a valid date in Disbursed On Date and a valid number in Transaction Amount",
-        "3. Select <Payment_Type> from Payment Type and optionally fill Payment Details; toggle Disburse to Savings if desired",
-        "4. Click Confirm on the Disburse dialog",
-        "5. Open the Transactions tab"
+        "1. On the Loan Detail page, click the 'Write Off' action button in the action bar",
+        "2. Click Confirm on the Write Off confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Active' (green) and the Transactions table contains a new row with Type 'Disbursement' and the entered Transaction Amount",
-      "priority": "high"
+      "expected_result": "Status badge updates to 'Written Off' (red) on the Loan Detail page",
+      "priority": "medium"
     },
     {
       "tc_id": "P-011",
-      "test_case": "Undo Approval on an approved loan returns it to Submitted and Pending Approval",
+      "test_case": "Close an Active loan using Close action",
       "preconditions": [
-        "User logged in as <Approver>",
-        "Loan Detail page open for a loan in 'Approved' state"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Undo Approval in the action bar",
-        "2. Click Confirm on the Undo Approval dialog if shown"
+        "1. On the Loan Detail page, click the 'Close' action button in the action bar",
+        "2. Click Confirm on the Close confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Submitted and Pending Approval' (yellow)",
+      "expected_result": "Status badge updates to 'Closed' (gray) on the Loan Detail page",
       "priority": "medium"
     },
     {
       "tc_id": "P-012",
-      "test_case": "Make a full repayment on an Active loan results in Closed status (full settlement)",
+      "test_case": "Create a reschedule request from an Active loan",
       "preconditions": [
-        "User logged in as <Cashier>",
-        "Loan Detail page open for a loan in 'Active' state with outstanding amount",
-        "The loan has an amount due of <amount_due>"
+        "User logged in as <Loan Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Make Repayment in the action bar",
-        "2. Verify Transaction Amount is prefilled with <amount_due> and leave or enter <amount_due>",
-        "3. Select <Payment_Type> from Payment Type and enter Payment Details if required",
-        "4. Click Confirm on the Make Repayment dialog",
-        "5. Open the Transactions tab"
+        "1. On the Loan Detail page, click the 'Reschedule' action button in the action bar",
+        "2. In the Reschedule form, enter <reschedule from date> in Reschedule_From_Date, enter <reason> in Reason, enter <adjusted due date> in Adjusted_Due_Date, and optionally fill Grace_Fields, Extra_Terms, and New_Interest_Rate",
+        "3. Click Submit on the Reschedule form"
       ],
-      "expected_result": "Status badge on the Loan Detail page updates to 'Closed' (gray) and a new repayment row appears in the Transactions table with Amount equal to <amount_due>",
-      "priority": "high"
+      "expected_result": "A pending reschedule request is shown on the Loan Detail page indicating the reschedule requires separate approval",
+      "priority": "medium"
     },
     {
       "tc_id": "P-013",
-      "test_case": "Waive interest on an Active loan shows waiver reflected in Charges",
+      "test_case": "Process a Prepay Loan action on an Active loan",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Detail page open for a loan in 'Active' state"
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Waive Interest in the action bar",
-        "2. If a Waive dialog appears, enter required information and click Confirm",
-        "3. Open the Charges tab"
+        "1. On the Loan Detail page, click the 'Prepay Loan' action button in the action bar",
+        "2. Complete any confirmation prompts and click Confirm"
       ],
-      "expected_result": "A success notification is displayed and the Charges table shows the waived interest reflected (waived amount visible in the Waived column)",
+      "expected_result": "A success notification is displayed and the Transactions tab shows a prepayment transaction row with the prepayment amount",
       "priority": "low"
     },
     {
       "tc_id": "P-014",
-      "test_case": "Write off a loan from Active state updates status to Written Off",
+      "test_case": "Process Foreclosure action on an Active loan",
       "preconditions": [
-        "User logged in as <CollectionsOfficer>",
-        "Loan Detail page open for a loan in 'Active' state eligible for write off"
+        "User logged in as <Collections Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Write Off in the action bar",
-        "2. If a Write Off dialog appears, enter required details and click Confirm"
+        "1. On the Loan Detail page, click the 'Foreclosure' action button in the action bar",
+        "2. Click Confirm on the Foreclosure confirmation dialog"
       ],
-      "expected_result": "Status badge updates to 'Written Off' (red)",
-      "priority": "medium"
+      "expected_result": "A success notification is displayed indicating the foreclosure was processed and a foreclosure entry is visible on the Loan Detail page (e.g., in Transactions or Notes)",
+      "priority": "low"
     },
     {
       "tc_id": "P-015",
-      "test_case": "Reschedule a loan from Active state creates a pending reschedule request",
+      "test_case": "Charge Off an Active loan and observe status change per business rules",
       "preconditions": [
-        "User logged in as <Loan Officer>",
-        "Loan Detail page open for a loan in 'Active' state"
+        "User logged in as <Collections Officer>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Reschedule in the action bar",
-        "2. Enter a valid Reschedule From Date, provide a Reason, enter an Adjusted Due Date and required fields, then click Confirm"
+        "1. On the Loan Detail page, click the 'Charge Off' action button in the action bar",
+        "2. Click Confirm on the Charge Off confirmation dialog"
       ],
-      "expected_result": "A pending reschedule request is shown on the Loan Detail page requiring separate approval",
+      "expected_result": "Status badge updates to either 'Written Off' or 'Charged Off' on the Loan Detail page (per business rules)",
       "priority": "medium"
     },
     {
       "tc_id": "P-016",
-      "test_case": "Prepay loan action is available and a prepayment shows as a transaction",
+      "test_case": "Assign a Loan Officer to an Active loan",
       "preconditions": [
-        "User logged in as <Cashier>",
-        "Loan Detail page open for a loan in 'Active' state"
+        "User logged in as <Admin or Manager>",
+        "Loan Detail page for <loan> is open and the loan is in Active status"
       ],
       "steps": [
-        "1. Click Prepay Loan in the action bar",
-        "2. Enter required prepayment details (amount and date) and click Confirm",
-        "3. Open the Transactions tab"
+        "1. On the Loan Detail page, click the 'Assign Loan Officer' action button in the action bar",
+        "2. In the Assign Loan Officer control, enter <loan officer> in the autocomplete and select the matching result",
+        "3. Click Save or Confirm to complete the assignment"
       ],
-      "expected_result": "A success notification is displayed and the Transactions table contains a new prepayment row with the entered amount",
+      "expected_result": "The Loan Detail header or Assignment field shows the selected <loan officer> as the assigned loan officer",
       "priority": "low"
     },
     {
       "tc_id": "P-017",
-      "test_case": "Foreclosure action on Active loan shows a foreclosure transaction or status change",
-      "preconditions": [
-        "User logged in as <CollectionsOfficer>",
-        "Loan Detail page open for a loan in 'Active' state"
-      ],
-      "steps": [
-        "1. Click Foreclosure in the action bar",
-        "2. Enter required foreclosure details if prompted and click Confirm"
-      ],
-      "expected_result": "A success notification is displayed and the Loan Detail page reflects the foreclosure (for example a foreclosure transaction appears in Transactions or status is updated)",
-      "priority": "low"
-    },
-    {
-      "tc_id": "P-018",
-      "test_case": "Charge Off action on Active loan is reflected in loan status or transactions",
-      "preconditions": [
-        "User logged in as <CollectionsOfficer>",
-        "Loan Detail page open for a loan in 'Active' state"
-      ],
-      "steps": [
-        "1. Click Charge Off in the action bar",
-        "2. Enter required details in the Charge Off dialog if shown and click Confirm"
-      ],
-      "expected_result": "A success notification is displayed and the Loan Detail page reflects the charge off (for example status changes or a charge off entry appears in Transactions/Charges)",
-      "priority": "low"
-    },
-    {
-      "tc_id": "P-019",
-      "test_case": "Assign Loan Officer updates the loan's assigned officer on the detail page",
-      "preconditions": [
-        "User logged in as <Manager>",
-        "Loan Detail page open for a loan in 'Active' state"
-      ],
-      "steps": [
-        "1. Click Assign Loan Officer in the action bar",
-        "2. Select <Loan_Officer> from the Loan Officer field and click Confirm",
-        "3. Observe the Loan Detail header/assignment area"
-      ],
-      "expected_result": "The Loan Detail page shows <Loan_Officer> as the assigned Loan Officer",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-020",
-      "test_case": "Use Undo row action on a Transactions table entry",
-      "preconditions": [
-        "User logged in as <Cashier>",
-        "Loan Detail page open and Transactions tab selected with at least one transaction present"
-      ],
-      "steps": [
-        "1. In the Transactions table click the Undo action for a transaction row",
-        "2. Click Confirm on the Undo confirmation dialog"
-      ],
-      "expected_result": "A confirmation or success notification is displayed and the Transactions table reflects that the selected transaction has been undone (the row shows reversal or is flagged accordingly)",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-021",
-      "test_case": "Close loan from Active state updates status to Closed",
+      "test_case": "Navigate between Loan Detail tabs and view Transactions Undo link availability",
       "preconditions": [
         "User logged in as <Loan Officer>",
-        "Loan Detail page open for a loan in 'Active' state eligible to be closed"
+        "Loan Detail page for <loan> is open"
       ],
       "steps": [
-        "1. Click Close in the action bar",
-        "2. If a Close dialog appears, enter required details and click Confirm"
+        "1. Click the 'Summary' tab and observe summary content is visible",
+        "2. Click the 'Repayment Schedule' tab and verify the Repayment Schedule table is visible with Installment Number and Due Date columns",
+        "3. Click the 'Transactions' tab and verify the Transactions table is visible and at least one transaction row shows an 'Undo' link where allowed"
       ],
-      "expected_result": "Status badge updates to 'Closed' (gray)",
+      "expected_result": "All tabs load their respective content; the Transactions tab displays transaction rows and any allowed row shows an 'Undo' link",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 21,
-    "high_priority": 4,
-    "medium_priority": 12,
-    "low_priority": 5
+    "total": 17,
+    "high_priority": 5,
+    "medium_priority": 9,
+    "low_priority": 3
   }
 }

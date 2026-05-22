@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.760581
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.398343
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Reports
 
@@ -218,269 +218,89 @@ The Reports page lists available reports grouped by category: All, Clients, Loan
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:07:19] UI-AST Agent - LLM RESPONSE
+[22:22:27] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Reports",
   "components": {
-    "Report_Categories": {
+    "Reports_Categories": {
       "type": "tab_container",
       "tabs": [
         {
           "tab_name": "All",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "description": "Lists available reports; Name is a clickable link that opens parameters form.",
-              "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": [
-                { "Name": "Loans Awaiting Disbursal", "Type": "unspecified", "Category": "Loans" },
-                { "Name": "Loans Pending Approval", "Type": "unspecified", "Category": "Loans" },
-                { "Name": "Active Loans Summary", "Type": "unspecified", "Category": "Loans" },
-                { "Name": "Active Loans Details", "Type": "unspecified", "Category": "Loans" },
-                { "Name": "Obligation Met Loans Details", "Type": "unspecified", "Category": "Loans" },
-                { "Name": "Portfolio at Risk", "Type": "unspecified", "Category": "Loans" },
-                { "Name": "Portfolio at Risk by Branch", "Type": "unspecified", "Category": "Loans" }
-              ]
-            }
-          }
-        },
-        {
-          "tab_name": "Clients",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": []
-            }
-          }
-        },
-        {
-          "tab_name": "Loans",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": []
-            }
-          }
-        },
-        {
-          "tab_name": "Savings",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": []
-            }
-          }
-        },
-        {
-          "tab_name": "Funds",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": []
-            }
-          }
-        },
-        {
-          "tab_name": "Accounting",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": []
-            }
-          }
-        },
-        {
-          "tab_name": "XBRL",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
-              "rows": []
-            }
-          }
-        }
-      ]
-    },
-    "Report_Parameters_Form": {
-      "type": "form",
-      "fields": {
-        "Office": { "type": "dropdown", "required": false },
-        "Branch": { "type": "dropdown", "required": false },
-        "Currency": { "type": "dropdown", "required": false },
-        "Loan_Product": { "type": "dropdown", "required": false },
-        "Start_Date": { "type": "date", "required": false },
-        "End_Date": { "type": "date", "required": false },
-        "Loan_Officer": { "type": "dropdown", "required": false },
-        "Fund": { "type": "dropdown", "required": false },
-        "Output_Format": {
-          "type": "dropdown",
-          "required": true,
-          "options": ["On Screen", "Excel", "CSV", "PDF"]
-        }
-      },
-      "constraints": [
-        "Start_Date <= End_Date"
-      ],
-      "submit_actions": [
-        {
-          "element_name": "Run Report",
-          "on_success": "generates report as data_table with sorting and pagination and exposes export actions",
-          "produces": "Report_Results"
-        }
-      ]
-    },
-    "Report_Results": {
-      "type": "data_table",
-      "description": "Generated report output. Columns depend on selected report parameters.",
-      "features": {
-        "sorting": true,
-        "pagination": true
-      },
-      "sortable_columns": [],
-      "row_actions": [],
-      "table_actions": [
-        {
-          "action_name": "View On Screen",
-          "preconditions": [],
-          "on_trigger": "renders report in table view"
-        },
-        {
-          "action_name": "Export to Excel",
-          "preconditions": [],
-          "on_trigger": "downloads report as Excel"
-        },
-        {
-          "action_name": "Export to CSV",
-          "preconditions": [],
-          "on_trigger": "downloads report as CSV"
-        },
-        {
-          "action_name": "Export to PDF",
-          "preconditions": [],
-          "on_trigger": "downloads report as PDF"
-        }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:07:19] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Reports",
-  "components": {
-    "Report_Categories": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "All",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "description": "Lists available reports; Name is a clickable link that opens parameters form.",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
-                }
-              ],
               "rows": [
                 {
                   "Name": "Loans Awaiting Disbursal",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Loans Pending Approval",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Active Loans Summary",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Active Loans Details",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Obligation Met Loans Details",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Portfolio at Risk",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Portfolio at Risk by Branch",
-                  "Type": "unspecified",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
+                }
+              ],
+              "row_actions": [
+                {
+                  "action_name": "Open Parameters",
+                  "on_trigger": "opens Parameters_Form"
                 }
               ]
             }
@@ -488,133 +308,103 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         {
           "tab_name": "Clients",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
+              "columns": ["Name", "Type", "Category"],
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "rows": []
+              ]
             }
           }
         },
         {
           "tab_name": "Loans",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
+              "columns": ["Name", "Type", "Category"],
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "rows": []
+              ]
             }
           }
         },
         {
           "tab_name": "Savings",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
+              "columns": ["Name", "Type", "Category"],
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "rows": []
+              ]
             }
           }
         },
         {
           "tab_name": "Funds",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
+              "columns": ["Name", "Type", "Category"],
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "rows": []
+              ]
             }
           }
         },
         {
           "tab_name": "Accounting",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
+              "columns": ["Name", "Type", "Category"],
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "rows": []
+              ]
             }
           }
         },
         {
           "tab_name": "XBRL",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
-              "columns": [
-                "Name",
-                "Type",
-                "Category"
-              ],
+              "columns": ["Name", "Type", "Category"],
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "trigger": "click Name",
-                  "on_trigger": "opens Report_Parameters_Form for selected report"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "rows": []
+              ]
             }
           }
         }
       ]
     },
-    "Report_Parameters_Form": {
+    "Parameters_Form": {
       "type": "form",
       "fields": {
         "Office": {
@@ -633,11 +423,11 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "dropdown",
           "required": false
         },
-        "Start_Date": {
+        "Date_From": {
           "type": "date",
           "required": false
         },
-        "End_Date": {
+        "Date_To": {
           "type": "date",
           "required": false
         },
@@ -648,58 +438,45 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Fund": {
           "type": "dropdown",
           "required": false
-        },
-        "Output_Format": {
-          "type": "dropdown",
-          "required": true,
-          "options": [
-            "On Screen",
-            "Excel",
-            "CSV",
-            "PDF"
-          ]
         }
       },
-      "constraints": [
-        "Start_Date <= End_Date"
-      ],
       "submit_actions": [
         {
           "element_name": "Run Report",
-          "on_success": "generates report as data_table with sorting and pagination and exposes export actions",
-          "produces": "Report_Results"
+          "on_success": "displays Generated_Report_Table (data table) with sorting and pagination"
+        },
+        {
+          "element_name": "Export to Excel",
+          "on_success": "downloads Excel file for selected report and parameters"
+        },
+        {
+          "element_name": "Export to CSV",
+          "on_success": "downloads CSV file for selected report and parameters"
+        },
+        {
+          "element_name": "Export to PDF",
+          "on_success": "downloads PDF file for selected report and parameters"
         }
       ]
     },
-    "Report_Results": {
+    "Generated_Report_Table": {
       "type": "data_table",
-      "description": "Generated report output. Columns depend on selected report parameters.",
-      "features": {
-        "sorting": true,
-        "pagination": true
-      },
-      "sortable_columns": [],
+      "sortable": true,
+      "pagination": true,
+      "columns": [],
       "row_actions": [],
-      "table_actions": [
-        {
-          "action_name": "View On Screen",
-          "preconditions": [],
-          "on_trigger": "renders report in table view"
-        },
+      "available_actions": [
         {
           "action_name": "Export to Excel",
-          "preconditions": [],
-          "on_trigger": "downloads report as Excel"
+          "on_trigger": "downloads Excel file for current report view"
         },
         {
           "action_name": "Export to CSV",
-          "preconditions": [],
-          "on_trigger": "downloads report as CSV"
+          "on_trigger": "downloads CSV file for current report view"
         },
         {
           "action_name": "Export to PDF",
-          "preconditions": [],
-          "on_trigger": "downloads report as PDF"
+          "on_trigger": "downloads PDF file for current report view"
         }
       ]
     }
@@ -707,294 +484,93 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:08:48] UI-AST Agent - USER PROMPT
-------------------------------------------------------------
-Module: Reports
-
-
-The Reports page lists available reports grouped by category: All, Clients, Loans, Savings, Funds, Accounting, and XBRL. Each row shows Name (clickable link), Type (Table, Pentaho, Chart), and Category. Clicking a report opens a parameters form with fields such as Office, Branch, Currency, Loan Product, Date Range, Loan Officer, and Fund dropdowns. A "Run Report" button generates the report as a data table with sorting and pagination. Output options include viewing on screen, exporting to Excel, CSV, or PDF. Common reports include Loans Awaiting Disbursal, Loans Pending Approval, Active Loans Summary, Active Loans Details, Obligation Met Loans Details, Portfolio at Risk, and Portfolio at Risk by Branch.
-
----
-
-
-
-**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
-1. Remove or omit Report_Parameters_Form.constraints unless the functional description explicitly requires date validation — change path: components.Report_Parameters_Form.constraints (remove array or leave empty).
-2. Do not assume Output_Format is required; set components.Report_Parameters_Form.fields.Output_Format.required to false or remove the 'required' attribute entirely so requirement is not inferred.
-3. Remove the unused/empty components.Report_Results.sortable_columns property (delete components.Report_Results.sortable_columns) or populate it only if the description provides column names that are sortable.
-4. Remove components.Report_Results.table_actions[*].preconditions arrays (delete the 'preconditions' key from each table action) since no preconditions were described.
-5. Explicitly declare the allowed Type values for report rows: add a column metadata entry under each Reports_List describing Type options. Example change: components.Report_Categories.tabs[*].components.Reports_List.column_metadata.Type = { "options": ["Table","Pentaho","Chart"] } so that report Type values are not left implicit.
-
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[16:10:23] UI-AST Agent - LLM RESPONSE
+[22:22:27] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Reports",
   "components": {
-    "Report_Categories": {
+    "Reports_Categories": {
       "type": "tab_container",
       "tabs": [
         {
           "tab_name": "All",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "sample_rows": [
-                { "Name": "Loans Awaiting Disbursal", "Type": "Table", "Category": "Loans" },
-                { "Name": "Loans Pending Approval", "Type": "Table", "Category": "Loans" },
-                { "Name": "Active Loans Summary", "Type": "Table", "Category": "Loans" },
-                { "Name": "Active Loans Details", "Type": "Table", "Category": "Loans" },
-                { "Name": "Obligation Met Loans Details", "Type": "Table", "Category": "Loans" },
-                { "Name": "Portfolio at Risk", "Type": "Chart", "Category": "Loans" },
-                { "Name": "Portfolio at Risk by Branch", "Type": "Chart", "Category": "Loans" }
-              ]
-            }
-          }
-        },
-        {
-          "tab_name": "Clients",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "fields": {}
-            }
-          }
-        },
-        {
-          "tab_name": "Loans",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "fields": {}
-            }
-          }
-        },
-        {
-          "tab_name": "Savings",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "fields": {}
-            }
-          }
-        },
-        {
-          "tab_name": "Funds",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "fields": {}
-            }
-          }
-        },
-        {
-          "tab_name": "Accounting",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "fields": {}
-            }
-          }
-        },
-        {
-          "tab_name": "XBRL",
-          "components": {
-            "Reports_List": {
-              "type": "data_table",
-              "columns": ["Name", "Type", "Category"],
-              "column_metadata": {
-                "Type": { "options": ["Table", "Pentaho", "Chart"] }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "fields": {}
-            }
-          }
-        }
-      ]
-    },
-    "Report_Parameters_Form": {
-      "type": "form",
-      "fields": {
-        "Office": { "type": "dropdown" },
-        "Branch": { "type": "dropdown" },
-        "Currency": { "type": "dropdown" },
-        "Loan_Product": { "type": "dropdown" },
-        "Start_Date": { "type": "date" },
-        "End_Date": { "type": "date" },
-        "Loan_Officer": { "type": "dropdown" },
-        "Fund": { "type": "dropdown" },
-        "Output_Format": {
-          "type": "dropdown",
-          "options": ["View on screen", "Excel", "CSV", "PDF"]
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Run Report",
-          "on_success": "generates report results table (Report_Results)"
-        }
-      ]
-    },
-    "Report_Results": {
-      "type": "data_table",
-      "pagination": true,
-      "sortable": true,
-      "row_actions": [],
-      "table_actions": [
-        { "action_name": "View on screen", "action_type": "button", "on_success": "renders results in-browser" },
-        { "action_name": "Export to Excel", "action_type": "button", "on_success": "downloads .xlsx file" },
-        { "action_name": "Export to CSV", "action_type": "button", "on_success": "downloads .csv file" },
-        { "action_name": "Export to PDF", "action_type": "button", "on_success": "downloads .pdf file" }
-      ]
-    }
-  }
-}
-
-------------------------------------------------------------
-[16:10:23] UI-AST Agent - PARSED JSON
-------------------------------------------------------------
-{
-  "module_name": "Reports",
-  "components": {
-    "Report_Categories": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "All",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
-              "row_actions": [
-                {
-                  "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
-                }
-              ],
-              "sample_rows": [
+              "rows": [
                 {
                   "Name": "Loans Awaiting Disbursal",
-                  "Type": "Table",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Loans Pending Approval",
-                  "Type": "Table",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Active Loans Summary",
-                  "Type": "Table",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Active Loans Details",
-                  "Type": "Table",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Obligation Met Loans Details",
-                  "Type": "Table",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Portfolio at Risk",
-                  "Type": "Chart",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
                 },
                 {
                   "Name": "Portfolio at Risk by Branch",
-                  "Type": "Chart",
-                  "Category": "Loans"
+                  "row_actions": [
+                    {
+                      "action_name": "Open Parameters",
+                      "on_trigger": "opens Parameters_Form"
+                    }
+                  ]
+                }
+              ],
+              "row_actions": [
+                {
+                  "action_name": "Open Parameters",
+                  "on_trigger": "opens Parameters_Form"
                 }
               ]
             }
@@ -1002,255 +578,199 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         {
           "tab_name": "Clients",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "fields": {}
+              ]
             }
           }
         },
         {
           "tab_name": "Loans",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "fields": {}
+              ]
             }
           }
         },
         {
           "tab_name": "Savings",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "fields": {}
+              ]
             }
           }
         },
         {
           "tab_name": "Funds",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "fields": {}
+              ]
             }
           }
         },
         {
           "tab_name": "Accounting",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "fields": {}
+              ]
             }
           }
         },
         {
           "tab_name": "XBRL",
-          "components": {
-            "Reports_List": {
+          "fields": {
+            "Reports_Table": {
               "type": "data_table",
               "columns": [
                 "Name",
                 "Type",
                 "Category"
               ],
-              "column_metadata": {
-                "Type": {
-                  "options": [
-                    "Table",
-                    "Pentaho",
-                    "Chart"
-                  ]
-                }
-              },
+              "rows": [],
               "row_actions": [
                 {
                   "action_name": "Open Parameters",
-                  "action_type": "link",
-                  "opens": "Report_Parameters_Form"
+                  "on_trigger": "opens Parameters_Form"
                 }
-              ],
-              "fields": {}
+              ]
             }
           }
         }
       ]
     },
-    "Report_Parameters_Form": {
+    "Parameters_Form": {
       "type": "form",
       "fields": {
         "Office": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false
         },
         "Branch": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false
         },
         "Currency": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false
         },
         "Loan_Product": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false
         },
-        "Start_Date": {
-          "type": "date"
+        "Date_From": {
+          "type": "date",
+          "required": false
         },
-        "End_Date": {
-          "type": "date"
+        "Date_To": {
+          "type": "date",
+          "required": false
         },
         "Loan_Officer": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false
         },
         "Fund": {
-          "type": "dropdown"
-        },
-        "Output_Format": {
           "type": "dropdown",
-          "options": [
-            "View on screen",
-            "Excel",
-            "CSV",
-            "PDF"
-          ]
+          "required": false
         }
       },
       "submit_actions": [
         {
           "element_name": "Run Report",
-          "on_success": "generates report results table (Report_Results)"
+          "on_success": "displays Generated_Report_Table (data table) with sorting and pagination"
+        },
+        {
+          "element_name": "Export to Excel",
+          "on_success": "downloads Excel file for selected report and parameters"
+        },
+        {
+          "element_name": "Export to CSV",
+          "on_success": "downloads CSV file for selected report and parameters"
+        },
+        {
+          "element_name": "Export to PDF",
+          "on_success": "downloads PDF file for selected report and parameters"
         }
       ]
     },
-    "Report_Results": {
+    "Generated_Report_Table": {
       "type": "data_table",
-      "pagination": true,
       "sortable": true,
+      "pagination": true,
+      "columns": [],
       "row_actions": [],
-      "table_actions": [
-        {
-          "action_name": "View on screen",
-          "action_type": "button",
-          "on_success": "renders results in-browser"
-        },
+      "available_actions": [
         {
           "action_name": "Export to Excel",
-          "action_type": "button",
-          "on_success": "downloads .xlsx file"
+          "on_trigger": "downloads Excel file for current report view"
         },
         {
           "action_name": "Export to CSV",
-          "action_type": "button",
-          "on_success": "downloads .csv file"
+          "on_trigger": "downloads CSV file for current report view"
         },
         {
           "action_name": "Export to PDF",
-          "action_type": "button",
-          "on_success": "downloads .pdf file"
+          "on_trigger": "downloads PDF file for current report view"
         }
       ]
     }

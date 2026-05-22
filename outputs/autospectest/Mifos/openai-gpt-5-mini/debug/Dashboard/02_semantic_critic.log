@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.745378
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.374354
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:05:10] Semantic Critic - SYSTEM PROMPT
+[22:20:40] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:05:10] Semantic Critic - USER PROMPT
+[22:20:40] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -121,16 +121,10 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
 {
   "module_name": "Dashboard",
   "components": {
-    "Home_Page": {
-      "type": "page",
-      "fields": {},
-      "components": {
-        "Dashboard_Button": {
-          "type": "button",
-          "element_name": "Dashboard",
-          "on_click": "navigates to Dashboard page"
-        }
-      }
+    "Home_Page_Dashboard_Button": {
+      "type": "link",
+      "element_name": "Dashboard",
+      "on_click_navigates_to": "Dashboard_Page"
     },
     "Dashboard_Page": {
       "type": "page",
@@ -144,7 +138,7 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
         "Client_Trends_Chart": {
           "type": "unspecified",
           "element_name": "Client Trends Chart",
-          "series": [
+          "legend_items": [
             "New Clients",
             "Closed Clients"
           ],
@@ -152,21 +146,22 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
             "office must be selected"
           ]
         },
-        "Amount_Pending_Disbursed_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Pending / Disbursed",
-          "preconditions": [
-            "office must be selected"
-          ],
-          "on_no_data": "displays 'No Data'"
-        },
-        "Amount_Collected_Card": {
-          "type": "unspecified",
-          "element_name": "Amount Collected",
-          "preconditions": [
-            "office must be selected"
-          ],
-          "on_no_data": "displays 'No Data'"
+        "Summary_Cards": {
+          "type": "group",
+          "fields": {
+            "Amount_Pending_Disbursed": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            },
+            "Amount_Collected": {
+              "type": "unspecified",
+              "constraints": [
+                "shows 'No Data' if no information is available for the selected office"
+              ]
+            }
+          }
         }
       }
     }
@@ -177,22 +172,22 @@ The Dashboard is accessed from the "Dashboard" button on the Home page. A "Searc
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:49] Semantic Critic - LLM RESPONSE
+[22:22:32] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "The AST accurately includes the Home page Dashboard button, the Dashboard page with the Search Activity field, the Client Trends chart with legends for New Clients and Closed Clients, and the two summary cards that display 'No Data' when appropriate.",
+  "summary": "AST correctly models the Dashboard button navigation, the Search Activity field, the Client Trends chart with legends for New Clients and Closed Clients, and the two summary cards with 'No Data' behavior.",
   "missing": [],
   "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:06:49] Semantic Critic - PARSED JSON
+[22:22:32] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "The AST accurately includes the Home page Dashboard button, the Dashboard page with the Search Activity field, the Client Trends chart with legends for New Clients and Closed Clients, and the two summary cards that display 'No Data' when appropriate.",
+  "summary": "AST correctly models the Dashboard button navigation, the Search Activity field, the Client Trends chart with legends for New Clients and Closed Clients, and the two summary cards with 'No Data' behavior.",
   "missing": [],
   "phantoms": [],
   "fixes": []

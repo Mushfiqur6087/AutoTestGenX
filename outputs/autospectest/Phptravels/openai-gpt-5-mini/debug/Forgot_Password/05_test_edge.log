@@ -1,0 +1,559 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:54:00.257846
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:54:00] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Forgot Password</module_name>
+
+<ast>
+{
+  "module_name": "Forgot Password",
+  "components": {
+    "Forgot_Password_Form": {
+      "type": "form",
+      "fields": {
+        "Email": {
+          "type": "email",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Reset Password",
+          "type": "button",
+          "on_success": "sends reset link to provided email and shows confirmation message",
+          "constraints": [
+            "reset link expires after 24 hours"
+          ],
+          "on_failure": "shows error 'email not found' and leaves form editable"
+        }
+      ]
+    },
+    "Password_Reset_Link": {
+      "type": "link",
+      "element_name": "Password Reset Link",
+      "preconditions": [
+        "link must be valid (not expired)"
+      ],
+      "on_success": "navigates to Password_Reset_Page",
+      "constraints": [
+        "expires after 24 hours"
+      ]
+    },
+    "Password_Reset_Page": {
+      "type": "form",
+      "fields": {
+        "New_Password": {
+          "type": "password",
+          "required": true
+        },
+        "Confirm_Password": {
+          "type": "password",
+          "required": true,
+          "constraints": [
+            "must match New_Password"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Change Password",
+          "type": "button",
+          "preconditions": [
+            "reset link must be valid (not expired)"
+          ],
+          "on_success": "changes password and redirects to login page with success message",
+          "on_failure": "shows error and allows retry"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The page presents an Email field and a Reset Password button. If the email exists in the system, a reset link is sent to that address and a confirmation message is shown. The reset link expires after 24 hours. Clicking the link takes the user to a password reset page where they enter and confirm a new password; after a successful change, they are redirected to the login page with a success message. If the email is not found, an error is shown and the form remains editable.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:55:10] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Forgot Password",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Use password reset link at exactly 24 hours after issuance",
+      "preconditions": [
+        "A password reset link was issued to <existing account email> at time T (link URL available)"
+      ],
+      "steps": [
+        "1. Open the password reset link URL at time = T + 24 hours (exactly 24 hours after issuance)",
+        "2. Observe whether the app navigates to Password_Reset_Page or shows an error"
+      ],
+      "expected_result": "Clicking the Password Reset Link is blocked; the UI displays a visible error indicating the link has expired (link does not navigate to Password_Reset_Page) — is blocked / error shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Use password reset link just under the 24-hour expiration boundary",
+      "preconditions": [
+        "A password reset link was issued to <existing account email> at time T (link URL available)"
+      ],
+      "steps": [
+        "1. Open the password reset link URL at time = T + (24 hours minus 1 second)",
+        "2. Observe whether the app navigates to Password_Reset_Page"
+      ],
+      "expected_result": "Clicking the Password Reset Link succeeds; the app navigates to Password_Reset_Page and displays the New_Password and Confirm_Password fields — succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Change password when Confirm_Password exactly matches New_Password",
+      "preconditions": [
+        "User is on Password_Reset_Page reached via a valid (not expired) reset link"
+      ],
+      "steps": [
+        "1. Enter <New_Password> in the New_Password field",
+        "2. Enter the exact same <New_Password> value in the Confirm_Password field",
+        "3. Click the Change Password button"
+      ],
+      "expected_result": "Form submits successfully; password is changed and the user is redirected to the login page with a success message — succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Change password when Confirm_Password differs by one character from New_Password",
+      "preconditions": [
+        "User is on Password_Reset_Page reached via a valid (not expired) reset link"
+      ],
+      "steps": [
+        "1. Enter <New_Password> in the New_Password field",
+        "2. Enter a value in Confirm_Password that differs by one character from New_Password",
+        "3. Click the Change Password button"
+      ],
+      "expected_result": "Confirm_Password displays an inline validation error indicating it 'must match New_Password' and the password change is blocked — is blocked / error shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "input_edge",
+      "test_case": "Submit Reset Password with Email containing leading and trailing whitespace (existing account)",
+      "preconditions": [
+        "There exists an account for <existing account email>"
+      ],
+      "steps": [
+        "1. Enter the existing account email with leading and trailing spaces around it in the Email field (e.g., ' <existing account email> ' )",
+        "2. Click the Reset Password button"
+      ],
+      "expected_result": "Form trims leading/trailing whitespace and submits successfully; confirmation message is shown indicating a reset link was sent to the email — succeeds (trimmed and link sent)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "input_edge",
+      "test_case": "Enter a very long value in the Email field (200+ characters) and attempt reset",
+      "preconditions": [
+        "Forgot Password form is displayed"
+      ],
+      "steps": [
+        "1. Enter a very long string (> 200 characters) in the Email field",
+        "2. Click the Reset Password button"
+      ],
+      "expected_result": "Email field displays an inline validation error indicating the value is too long or invalid and the form is not submitted; no confirmation message is shown — is blocked / error shown",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click the Reset Password button rapidly",
+      "preconditions": [
+        "Forgot Password form is displayed and Email contains a valid/recognized address"
+      ],
+      "steps": [
+        "1. Enter <existing account email> in the Email field",
+        "2. Rapidly double-click the Reset Password button (two clicks in quick succession)"
+      ],
+      "expected_result": "Second submission attempt is blocked by the UI; only one confirmation message is shown and the form does not trigger duplicate visible confirmations — second submission is blocked / single confirmation visible",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click the Change Password button on Password_Reset_Page",
+      "preconditions": [
+        "User is on Password_Reset_Page reached via a valid (not expired) reset link",
+        "New_Password and Confirm_Password have been entered and match"
+      ],
+      "steps": [
+        "1. Rapidly double-click the Change Password button (two clicks in quick succession)",
+        "2. Observe resulting navigation and messages"
+      ],
+      "expected_result": "Only a single password-change action completes; user is redirected once to the login page with one success message and duplicate redirects or duplicate success messages do not appear — second submission is blocked / single redirect and message visible",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 4,
+    "input_edge": 2,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 4,
+    "low_priority": 4
+  }
+}
+
+------------------------------------------------------------
+[22:55:10] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Forgot Password",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Use password reset link at exactly 24 hours after issuance",
+      "preconditions": [
+        "A password reset link was issued to <existing account email> at time T (link URL available)"
+      ],
+      "steps": [
+        "1. Open the password reset link URL at time = T + 24 hours (exactly 24 hours after issuance)",
+        "2. Observe whether the app navigates to Password_Reset_Page or shows an error"
+      ],
+      "expected_result": "Clicking the Password Reset Link is blocked; the UI displays a visible error indicating the link has expired (link does not navigate to Password_Reset_Page) \u2014 is blocked / error shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "boundary",
+      "test_case": "Use password reset link just under the 24-hour expiration boundary",
+      "preconditions": [
+        "A password reset link was issued to <existing account email> at time T (link URL available)"
+      ],
+      "steps": [
+        "1. Open the password reset link URL at time = T + (24 hours minus 1 second)",
+        "2. Observe whether the app navigates to Password_Reset_Page"
+      ],
+      "expected_result": "Clicking the Password Reset Link succeeds; the app navigates to Password_Reset_Page and displays the New_Password and Confirm_Password fields \u2014 succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "boundary",
+      "test_case": "Change password when Confirm_Password exactly matches New_Password",
+      "preconditions": [
+        "User is on Password_Reset_Page reached via a valid (not expired) reset link"
+      ],
+      "steps": [
+        "1. Enter <New_Password> in the New_Password field",
+        "2. Enter the exact same <New_Password> value in the Confirm_Password field",
+        "3. Click the Change Password button"
+      ],
+      "expected_result": "Form submits successfully; password is changed and the user is redirected to the login page with a success message \u2014 succeeds",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Change password when Confirm_Password differs by one character from New_Password",
+      "preconditions": [
+        "User is on Password_Reset_Page reached via a valid (not expired) reset link"
+      ],
+      "steps": [
+        "1. Enter <New_Password> in the New_Password field",
+        "2. Enter a value in Confirm_Password that differs by one character from New_Password",
+        "3. Click the Change Password button"
+      ],
+      "expected_result": "Confirm_Password displays an inline validation error indicating it 'must match New_Password' and the password change is blocked \u2014 is blocked / error shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "input_edge",
+      "test_case": "Submit Reset Password with Email containing leading and trailing whitespace (existing account)",
+      "preconditions": [
+        "There exists an account for <existing account email>"
+      ],
+      "steps": [
+        "1. Enter the existing account email with leading and trailing spaces around it in the Email field (e.g., ' <existing account email> ' )",
+        "2. Click the Reset Password button"
+      ],
+      "expected_result": "Form trims leading/trailing whitespace and submits successfully; confirmation message is shown indicating a reset link was sent to the email \u2014 succeeds (trimmed and link sent)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "input_edge",
+      "test_case": "Enter a very long value in the Email field (200+ characters) and attempt reset",
+      "preconditions": [
+        "Forgot Password form is displayed"
+      ],
+      "steps": [
+        "1. Enter a very long string (> 200 characters) in the Email field",
+        "2. Click the Reset Password button"
+      ],
+      "expected_result": "Email field displays an inline validation error indicating the value is too long or invalid and the form is not submitted; no confirmation message is shown \u2014 is blocked / error shown",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click the Reset Password button rapidly",
+      "preconditions": [
+        "Forgot Password form is displayed and Email contains a valid/recognized address"
+      ],
+      "steps": [
+        "1. Enter <existing account email> in the Email field",
+        "2. Rapidly double-click the Reset Password button (two clicks in quick succession)"
+      ],
+      "expected_result": "Second submission attempt is blocked by the UI; only one confirmation message is shown and the form does not trigger duplicate visible confirmations \u2014 second submission is blocked / single confirmation visible",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click the Change Password button on Password_Reset_Page",
+      "preconditions": [
+        "User is on Password_Reset_Page reached via a valid (not expired) reset link",
+        "New_Password and Confirm_Password have been entered and match"
+      ],
+      "steps": [
+        "1. Rapidly double-click the Change Password button (two clicks in quick succession)",
+        "2. Observe resulting navigation and messages"
+      ],
+      "expected_result": "Only a single password-change action completes; user is redirected once to the login page with one success message and duplicate redirects or duplicate success messages do not appear \u2014 second submission is blocked / single redirect and message visible",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 4,
+    "input_edge": 2,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 4,
+    "low_priority": 4
+  }
+}

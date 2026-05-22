@@ -1,0 +1,1044 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.537403
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Negative - SYSTEM PROMPT
+------------------------------------------------------------
+You are a Negative Test Case Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY negative test cases — tests where invalid input is provided or business rules are violated, and the system correctly rejects or blocks the action.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Negative Testing:**
+
+The AST represents every interactive element in the module. Each node type has a corresponding failure category:
+
+| AST node / field | What to test for failure |
+|---|---|
+| `required: true` field | Leave it blank and submit — inline validation error |
+| `constraints: []` on a field or action | One TC per unique constraint: violate it specifically |
+| `preconditions: []` on an action | One TC attempting the action when the precondition is NOT met |
+| `visible_when` / `required_when` conditional field | Trigger the condition, then submit the revealed field blank or invalid |
+| `state_bound_action_bar` states | Attempt an action from the wrong state (e.g., Approve an already-Active entity) |
+| `on_success` with quoted text | The negative expected_result is the *blocking* behavior — the entity stays unchanged |
+| `submit_actions[]` | If any button has `preconditions`, test that button when precondition fails |
+
+> If a module has no `form`, no `wizard`, no `state_bound_action_bar`, and no `constraints` — it is display-only. Generate at most 1–2 tests (unauthenticated access, or a non-implemented link if described). Do not invent validation scenarios.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — Name the field, the violated rule, and the visible error indicator.**
+Never write a vague expected result. Always specify what the tester sees.
+
+- ❌ `"Validation error shown"` — too vague
+- ❌ `"Error is displayed"` — too vague
+- ✅ `"Inline validation error appears on the <Field Name> field indicating it is required"`
+- ✅ `"<Field Name> field displays an error: 'Must be a valid email address'"`
+- ✅ `"Submit button remains disabled / form does not submit; <Field> is highlighted"`
+
+**Rule B — Quote exact error text when the spec provides it.**
+If the description quotes a specific error string, copy it verbatim into the expected_result.
+- ❌ `"incorrect credentials error shown"` when spec says `"Incorrect email or password. Please try again."`
+- ✅ `"Page displays 'Incorrect email or password. Please try again.' and the Password field is cleared"`
+
+**Rule C — Assert the blocking behavior, not just the error.**
+The expected_result must confirm the action was blocked: the entity was not created, the status did not change, the user was not redirected.
+- ❌ `"Error shown"` (doesn't confirm the action was blocked)
+- ✅ `"Form does not submit; <Entity> is not created; error shown on <Field>"`
+- ✅ `"Status remains <Current State>; no transition occurs"`
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Use generic placeholders in angle brackets.
+
+- ✅ `"Enter <invalid email format> in the Email field"`
+- ✅ `"Enter <amount exceeding available balance> in the Amount field"`
+- ✅ `"Enter <password shorter than minimum length> in the Password field"`
+- ❌ `"Enter 'notanemail' in the Email field"`
+- ❌ `"Enter 'abc123' in the Password field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic user action — one field, one click, one navigation. No grouping.
+
+- ✅ `"1. Leave the <Required Field> blank"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill all fields except <Required Field> and submit"`
+
+---
+
+**SCOPE GATE (run before writing any test):**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact sentence in the description or field/constraint/state in the AST justifies this test? If you cannot point to one → delete it.
+2. **UI-executable:** Can a tester trigger this by clicking, typing, selecting, or navigating in a browser? If verification requires dev tools, DOM inspection, concurrent users, API calls, or server-side error simulation → out of scope.
+3. **Not a positive test in disguise:** Display-only behavior ("the page shows X") produces positive tests, not negative ones.
+
+Do NOT generate tests for: backend data integrity, security vulnerabilities, infrastructure failures, race conditions, or anything not described in the spec.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Required field representatives (deduplicated by field type):**
+
+Group required fields by type: `text/unspecified`, `email`, `password`, `number`, `date`, `dropdown`, `file_upload`. Generate:
+- ONE "leave blank and submit" test per **type group** (not per field) — use the most prominent field as representative
+- ONE "submit with ALL required fields empty" test
+
+Do NOT generate a separate blank-field test for every required field. If 5 text fields are all required, one representative covers them all.
+
+**2. Format violations:**
+
+For fields with type-specific format rules (from AST type or description):
+- `email` → one test with invalid format
+- `number` → one test with non-numeric input
+- `date` → one test with invalid/impossible date
+- `password` → ONE representative test for policy violation (not one per sub-rule — see Deduplication)
+
+Only generate if the spec or AST implies format validation for that field.
+
+**3. Numeric bounds and balance violations:**
+
+If the spec describes minimum/maximum values, amount ranges, or balance checks:
+- One test per distinct bound violation (e.g., amount below minimum, amount above maximum, amount exceeding available balance)
+- Use `<amount below minimum>`, `<amount exceeding available balance>` as placeholders
+
+Examples across the dataset:
+- Transfer amount > available balance → error
+- Loan amount outside product min/max → error
+- Deposit below minimum requirement → error
+
+**4. Constraint violations:**
+
+For each unique `constraints[]` entry in the AST, and for cross-field rules described in the spec:
+- `"must be unique"` → submit with a duplicate value
+- `"must match"` (confirm fields) → enter mismatched values
+- `"must not be same as current"` → select the current value
+- `"cannot perform <action> while <condition>"` → attempt the action when the condition is true
+- `"<date> must be after <other date>"` → enter reversed dates
+
+One test per unique constraint. Do not duplicate the same mechanism.
+
+**5. Precondition violations (auth, role, and state):**
+
+For each `preconditions[]` entry on any action — and for auth/role rules described in the spec:
+
+- **Unauthenticated access:** If any page or action requires login, generate one test: an unauthenticated user attempts to access it and is redirected to the login page.
+- **Wrong role:** If the spec explicitly states a feature is restricted to a specific role (e.g., Teacher only, Admin only), generate one test: a user of the wrong role attempts the action and is blocked or the control is not visible.
+- **Precondition not met:** For each AST `preconditions[]` entry, attempt the action when that precondition is not satisfied.
+
+**6. State-machine violations:**
+
+From `state_bound_action_bar` nodes:
+- For each state where an action is NOT listed in `available_actions`, generate one test attempting that action from that state. Example: attempting "Approve" on an entity already in "Active" state.
+- If a state has an empty `available_actions` array, generate one test verifying no action buttons are visible in that state.
+
+One test per unique wrong-state scenario — do not enumerate every action × every invalid state.
+
+---
+
+**DEDUPLICATION GATE (run before outputting):**
+
+1. **Required field dedup:** Multiple required text fields → ONE representative test, not one per field.
+2. **Sub-rule dedup:** A field with multiple validation sub-rules (e.g., password: length + uppercase + lowercase + number + special char) → ONE representative violation test, not one per sub-rule.
+3. **Cross-form dedup:** If two forms in the same module share the same validation mechanism (e.g., both have a required text field) → test it on the primary form only.
+4. **Uniqueness check:** Before outputting, ask for each TC: "Does this test catch a bug that NO other test in this module would catch?" If no → remove it.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (standard CRUD form, form with constraints): **4–8 tests**
+- Complex module (state machine, multi-form, wizard with many constraints): **8–12 tests**
+
+If you exceed these ranges, you are generating redundant tests. Apply the deduplication gate again before outputting.
+
+---
+
+**PRIORITY:**
+
+- **High:** State precondition violations, constraint violations that could corrupt data, unauthenticated access, required field representatives
+- **Medium:** Format violations, cross-field validation, numeric bounds, wrong-role access, wrong-state action attempts
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "What error/block should occur, naming the field and indicator",
+      "priority": "high | medium"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "high_priority": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Negative - USER PROMPT
+------------------------------------------------------------
+<module_name>Loan Account</module_name>
+
+<ast>
+{
+  "module_name": "Loan Account",
+  "components": {
+    "Loan_Application_Wizard": {
+      "type": "wizard",
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates loan in Submitted and Pending Approval status"
+        }
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_name": "Details",
+          "fields": {
+            "Product_Name": {
+              "type": "dropdown",
+              "required": true,
+              "on_change": "auto_populate_product_defaults"
+            },
+            "Loan_Officer": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Loan_Purpose": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Fund": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Submitted_On": {
+              "type": "date",
+              "required": false
+            },
+            "Expected_Disbursement_Date": {
+              "type": "date",
+              "required": false
+            },
+            "Principal": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                ">= product.min_principal",
+                "<= product.max_principal"
+              ]
+            },
+            "Number_of_Repayments": {
+              "type": "number",
+              "required": false
+            },
+            "Repaid_Every_Frequency": {
+              "type": "number",
+              "required": false
+            },
+            "Repaid_Every_Unit": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Interest_Rate": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                ">= product.min_interest_rate",
+                "<= product.max_interest_rate"
+              ]
+            },
+            "External_ID": {
+              "type": "unspecified",
+              "required": false
+            }
+          }
+        },
+        {
+          "step_index": 2,
+          "step_name": "Terms",
+          "fields": {
+            "Repayment_Strategy": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Amortization": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Interest_Method": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Interest_Calculation_Period": {
+              "type": "dropdown",
+              "required": false,
+              "prefilled_from_product": true
+            },
+            "Grace_Period_Days": {
+              "type": "number",
+              "required": false
+            },
+            "Grace_Period_Repayments": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        {
+          "step_index": 3,
+          "step_name": "Charges",
+          "fields": {
+            "Inherited_Product_Charges_List": {
+              "type": "unspecified",
+              "required": false,
+              "description": "lists charges inherited from the product (display-only)"
+            },
+            "Add_Charge": {
+              "type": "button",
+              "element_name": "Add Charge",
+              "on_success": "adds an additional charge entry to Additional_Charges"
+            },
+            "Additional_Charges": {
+              "type": "repeating_group",
+              "item_fields": {}
+            }
+          }
+        },
+        {
+          "step_index": 4,
+          "step_name": "Collateral",
+          "fields": {
+            "Collateral_Items": {
+              "type": "repeating_group",
+              "required": false,
+              "item_fields": {
+                "Collateral_Type": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Value": {
+                  "type": "number",
+                  "required": false
+                },
+                "Description": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Loan_Detail_Client_Link": {
+      "type": "link",
+      "element_name": "Client Name Link",
+      "on_click": "navigates to Client Detail page"
+    },
+    "Loan_Detail_Action_Bar": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Submitted and Pending Approval": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "fields": {
+                "Approved_On_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Approved_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Expected_Disbursement_Date": {
+                  "type": "date",
+                  "required": false
+                },
+                "Note": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "on_success": "changes status to Approved"
+            },
+            {
+              "action_name": "Reject",
+              "fields": {},
+              "on_success": "changes status to Rejected"
+            },
+            {
+              "action_name": "Withdraw",
+              "fields": {},
+              "on_success": "withdraws application"
+            },
+            {
+              "action_name": "Delete",
+              "fields": {},
+              "on_success": "deletes loan application"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Disburse",
+              "fields": {
+                "Disbursed_On_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Payment_Type": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money",
+                    "Bank Transfer"
+                  ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Disburse_to_Savings": {
+                  "type": "checkbox",
+                  "required": false
+                }
+              },
+              "on_success": "changes status to Active or Active with disbursement recorded"
+            },
+            {
+              "action_name": "Undo Approval",
+              "fields": {},
+              "on_success": "reverts status from Approved to Submitted and Pending Approval"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Make Repayment",
+              "fields": {
+                "Transaction_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": true,
+                  "constraints": [
+                    "pre-filled with amount due"
+                  ]
+                },
+                "Payment_Type": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money",
+                    "Bank Transfer"
+                  ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "constraints": [
+                "partial repayments are applied per configured repayment strategy"
+              ],
+              "on_success": "applies payment; full settlement changes status to Closed (Closed obligations met)"
+            },
+            {
+              "action_name": "Waive Interest",
+              "fields": {},
+              "on_success": "applies interest waiver"
+            },
+            {
+              "action_name": "Write Off",
+              "fields": {},
+              "on_success": "changes status to Written Off"
+            },
+            {
+              "action_name": "Close",
+              "fields": {},
+              "on_success": "changes status to Closed"
+            },
+            {
+              "action_name": "Reschedule",
+              "fields": {
+                "Reschedule_From_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Reason": {
+                  "type": "unspecified",
+                  "required": true
+                },
+                "Adjusted_Due_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Grace_Fields": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Extra_Terms": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "New_Interest_Rate": {
+                  "type": "number",
+                  "required": false
+                }
+              },
+              "on_success": "creates a pending reschedule request requiring separate approval"
+            },
+            {
+              "action_name": "Prepay Loan",
+              "fields": {},
+              "on_success": "processes prepayment"
+            },
+            {
+              "action_name": "Foreclosure",
+              "fields": {},
+              "on_success": "processes foreclosure"
+            },
+            {
+              "action_name": "Charge Off",
+              "fields": {},
+              "on_success": "changes status to Written Off or Charged Off per business rules"
+            },
+            {
+              "action_name": "Assign Loan Officer",
+              "fields": {},
+              "on_success": "assigns loan officer"
+            }
+          ]
+        },
+        "Closed": {
+          "available_actions": []
+        },
+        "Overpaid": {
+          "available_actions": []
+        },
+        "Written Off": {
+          "available_actions": []
+        }
+      }
+    },
+    "Loan_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Repayment Schedule",
+          "fields": {
+            "Repayment_Schedule_Table": {
+              "type": "data_table",
+              "columns": [
+                "Installment Number",
+                "Due Date",
+                "Principal Due",
+                "Interest Due",
+                "Fees Due",
+                "Penalties Due",
+                "Total Due",
+                "Amounts Paid",
+                "Total Outstanding",
+                "Status Indicator"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {
+            "Transactions_Table": {
+              "type": "data_table",
+              "columns": [
+                "Date",
+                "Type",
+                "Amount",
+                "Principal/Interest/Fees/Penalties Portions",
+                "Outstanding Balance"
+              ],
+              "row_actions": [
+                {
+                  "action_name": "Undo",
+                  "element_type": "link",
+                  "on_success": "reverses transaction where allowed"
+                }
+              ],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {
+            "Charges_Table": {
+              "type": "data_table",
+              "columns": [
+                "Charge Name",
+                "Amount",
+                "Due Date",
+                "Paid",
+                "Waived",
+                "Outstanding"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Collateral",
+          "fields": {}
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+A new loan application is initiated from the Client Detail page. The Loan Application form is a multi-step wizard. Step 1 (Details) contains Product Name dropdown (selecting a product auto-populates default values), Loan Officer, Loan Purpose, Fund, Submitted On date, Expected Disbursement Date, Principal (bounded by product min/max), Number of Repayments, Repaid Every frequency and unit, Interest Rate (bounded by product min/max), and External ID. Step 2 (Terms) contains Repayment Strategy, Amortization, Interest Method, and Interest Calculation Period dropdowns (pre-filled from the product but adjustable), plus grace period fields. Step 3 (Charges) lists charges inherited from the product and includes an "Add Charge" button for additional charges. Step 4 (Collateral, optional) allows adding collateral items with Collateral Type, Value, and Description. Clicking "Submit" creates the loan in "Submitted and Pending Approval" status.
+
+The Loan Detail page header displays the loan account number, product name, client name (clickable link), status badge, and loan balance. Status badges are color-coded: Submitted and Pending Approval (yellow), Approved (blue), Active (green), Closed (gray), Overpaid (purple), Written Off (red). Action buttons change based on status: Pending Approval offers Approve (dialog with Approved On Date, Approved Amount, Expected Disbursement Date, and Note), Reject, Withdraw, and Delete; Approved offers Disburse (form with Disbursed On Date, Transaction Amount, Payment Type — Cash, Check, Mobile Money, Bank Transfer — and payment detail fields; a "Disburse to Savings" option deposits directly into the client's linked savings account) and Undo Approval; Active offers Make Repayment (form with Transaction Date, Transaction Amount pre-filled with amount due, and Payment Type — partial repayments are applied per the configured repayment strategy; full settlement changes status to "Closed obligations met"), Waive Interest, Write Off, Close, Reschedule (form with Reschedule From Date, Reason, Adjusted Due Date, grace fields, Extra Terms, and New Interest Rate — creates a pending request requiring separate approval), Prepay Loan, Foreclosure, Charge Off, and Assign Loan Officer.
+
+Tabs on the detail page show Summary (disbursement details, repayment schedule summary, total paid, total outstanding, total overdue, and charges summary), Repayment Schedule (table with Installment Number, Due Date, Principal Due, Interest Due, Fees Due, Penalties Due, Total Due, amounts paid, Total Outstanding, and status indicators), Transactions (table with Date, Type, Amount, Principal/Interest/Fees/Penalties portions, Outstanding Balance, and undo link), Charges (Charge Name, Amount, Due Date, Paid, Waived, Outstanding), Collateral, Notes, and Documents.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:32:57] Test-Negative - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Loan Account",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Submit loan wizard with required Product Name left blank",
+      "preconditions": ["User is authenticated and on the Client Detail page with Loan Application wizard opened"],
+      "steps": [
+        "1. Ensure the Loan Application wizard is open on Step 1 (Details)",
+        "2. Leave the Product Name dropdown unselected",
+        "3. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Product Name field indicating it is required; the wizard does not submit; no loan is created in 'Submitted and Pending Approval' status",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Attempt Approve action with all required Approve fields empty",
+      "preconditions": ["A loan exists in 'Submitted and Pending Approval' status and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Submitted and Pending Approval' status",
+        "2. Click the 'Approve' action button to open the Approve dialog",
+        "3. Leave Approved On Date blank",
+        "4. Leave Approved Amount blank",
+        "5. Click the 'Approve' / submit button in the Approve dialog"
+      ],
+      "expected_result": "Inline validation errors appear on both Approved On Date and Approved Amount fields indicating they are required; the Approve action does not complete; loan remains in 'Submitted and Pending Approval' status",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Disburse with non-numeric Transaction Amount",
+      "preconditions": ["A loan exists in 'Approved' status and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Approved' status",
+        "2. Click the 'Disburse' action button to open the Disburse form",
+        "3. Enter <non-numeric input> in the Transaction Amount field",
+        "4. Fill Disbursed On Date with a valid date and select a valid Payment Type",
+        "5. Click the 'Disburse' submit button"
+      ],
+      "expected_result": "Inline validation error appears on the Transaction Amount field indicating it must be a numeric value; disbursement is not processed; loan remains in 'Approved' status",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Enter Principal below product minimum",
+      "preconditions": ["User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined min_principal exists"],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <amount below minimum> in the Principal field",
+        "4. Complete remaining required interactions as needed and click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Principal field indicating the amount must be >= product.min_principal; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Enter Principal above product maximum",
+      "preconditions": ["User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined max_principal exists"],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <amount exceeding product.max_principal> in the Principal field",
+        "4. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Principal field indicating the amount must be <= product.max_principal; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Enter Interest Rate below product minimum",
+      "preconditions": ["User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined min_interest_rate exists"],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <interest rate below minimum> in the Interest Rate field",
+        "4. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Interest Rate field indicating the rate must be >= product.min_interest_rate; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Enter Interest Rate above product maximum",
+      "preconditions": ["User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined max_interest_rate exists"],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <interest rate exceeding product.max_interest_rate> in the Interest Rate field",
+        "4. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Interest Rate field indicating the rate must be <= product.max_interest_rate; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Attempt 'Approve' action while loan is already in 'Approved' state (wrong-state action)",
+      "preconditions": ["A loan exists in 'Approved' status and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Approved' status",
+        "2. Inspect the action bar for the Approve action/button"
+      ],
+      "expected_result": "Approve action/button is not available/visible for loans in 'Approved' state; status remains 'Approved' and no approval dialog can be opened",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-009",
+      "test_case": "Attempt 'Disburse' action while loan is in 'Submitted and Pending Approval' state (wrong-state action)",
+      "preconditions": ["A loan exists in 'Submitted and Pending Approval' status and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Submitted and Pending Approval' status",
+        "2. Inspect the action bar for the Disburse action/button"
+      ],
+      "expected_result": "Disburse action/button is not available/visible when loan status is 'Submitted and Pending Approval'; no disburse form can be opened and status remains unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-010",
+      "test_case": "Verify no action buttons are available for a loan in 'Closed' state",
+      "preconditions": ["A loan exists in 'Closed' status and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Closed' status",
+        "2. Inspect the action bar for any available action buttons"
+      ],
+      "expected_result": "No action buttons are visible in the action bar for a loan in 'Closed' state (available_actions is empty); status remains 'Closed'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-011",
+      "test_case": "Reschedule request creation blocked when required Reason is left blank",
+      "preconditions": ["A loan exists in 'Active' status and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Active' status",
+        "2. Click the 'Reschedule' action button to open the Reschedule form",
+        "3. Enter a valid Reschedule From Date",
+        "4. Leave the Reason field blank",
+        "5. Enter a valid Adjusted Due Date",
+        "6. Click the 'Submit' button in the Reschedule form"
+      ],
+      "expected_result": "Inline validation error appears on the Reason field indicating it is required; the reschedule request is not created and loan remains in 'Active' status",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-012",
+      "test_case": "Make Repayment with Transaction Amount left blank",
+      "preconditions": ["A loan exists in 'Active' status with an outstanding due and user is authenticated and on the Loan Detail page"],
+      "steps": [
+        "1. Open the loan in 'Active' status",
+        "2. Click the 'Make Repayment' action button to open the repayment form",
+        "3. Leave Transaction Amount blank (even though it may be pre-filled)",
+        "4. Select a valid Transaction Date and Payment Type",
+        "5. Click the 'Submit' button in the Make Repayment form"
+      ],
+      "expected_result": "Inline validation error appears on the Transaction Amount field indicating it is required and must be numeric; payment is not applied; loan status and outstanding amounts remain unchanged",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "high_priority": 8,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}
+
+------------------------------------------------------------
+[22:32:57] Test-Negative - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Loan Account",
+  "category": "negative",
+  "test_cases": [
+    {
+      "tc_id": "N-001",
+      "test_case": "Submit loan wizard with required Product Name left blank",
+      "preconditions": [
+        "User is authenticated and on the Client Detail page with Loan Application wizard opened"
+      ],
+      "steps": [
+        "1. Ensure the Loan Application wizard is open on Step 1 (Details)",
+        "2. Leave the Product Name dropdown unselected",
+        "3. Click the 'Submit' button on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Product Name field indicating it is required; the wizard does not submit; no loan is created in 'Submitted and Pending Approval' status",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "test_case": "Attempt Approve action with all required Approve fields empty",
+      "preconditions": [
+        "A loan exists in 'Submitted and Pending Approval' status and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Submitted and Pending Approval' status",
+        "2. Click the 'Approve' action button to open the Approve dialog",
+        "3. Leave Approved On Date blank",
+        "4. Leave Approved Amount blank",
+        "5. Click the 'Approve' / submit button in the Approve dialog"
+      ],
+      "expected_result": "Inline validation errors appear on both Approved On Date and Approved Amount fields indicating they are required; the Approve action does not complete; loan remains in 'Submitted and Pending Approval' status",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "test_case": "Disburse with non-numeric Transaction Amount",
+      "preconditions": [
+        "A loan exists in 'Approved' status and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Approved' status",
+        "2. Click the 'Disburse' action button to open the Disburse form",
+        "3. Enter <non-numeric input> in the Transaction Amount field",
+        "4. Fill Disbursed On Date with a valid date and select a valid Payment Type",
+        "5. Click the 'Disburse' submit button"
+      ],
+      "expected_result": "Inline validation error appears on the Transaction Amount field indicating it must be a numeric value; disbursement is not processed; loan remains in 'Approved' status",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "test_case": "Enter Principal below product minimum",
+      "preconditions": [
+        "User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined min_principal exists"
+      ],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <amount below minimum> in the Principal field",
+        "4. Complete remaining required interactions as needed and click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Principal field indicating the amount must be >= product.min_principal; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "test_case": "Enter Principal above product maximum",
+      "preconditions": [
+        "User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined max_principal exists"
+      ],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <amount exceeding product.max_principal> in the Principal field",
+        "4. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Principal field indicating the amount must be <= product.max_principal; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "test_case": "Enter Interest Rate below product minimum",
+      "preconditions": [
+        "User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined min_interest_rate exists"
+      ],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <interest rate below minimum> in the Interest Rate field",
+        "4. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Interest Rate field indicating the rate must be >= product.min_interest_rate; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "test_case": "Enter Interest Rate above product maximum",
+      "preconditions": [
+        "User is authenticated and on the Client Detail page with Loan Application wizard opened; a product with defined max_interest_rate exists"
+      ],
+      "steps": [
+        "1. Open the Loan Application wizard to Step 1 (Details)",
+        "2. Select a Product Name (to load product constraints)",
+        "3. Enter <interest rate exceeding product.max_interest_rate> in the Interest Rate field",
+        "4. Click 'Submit' on the wizard"
+      ],
+      "expected_result": "Inline validation error appears on the Interest Rate field indicating the rate must be <= product.max_interest_rate; the wizard does not submit; no loan is created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-008",
+      "test_case": "Attempt 'Approve' action while loan is already in 'Approved' state (wrong-state action)",
+      "preconditions": [
+        "A loan exists in 'Approved' status and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Approved' status",
+        "2. Inspect the action bar for the Approve action/button"
+      ],
+      "expected_result": "Approve action/button is not available/visible for loans in 'Approved' state; status remains 'Approved' and no approval dialog can be opened",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-009",
+      "test_case": "Attempt 'Disburse' action while loan is in 'Submitted and Pending Approval' state (wrong-state action)",
+      "preconditions": [
+        "A loan exists in 'Submitted and Pending Approval' status and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Submitted and Pending Approval' status",
+        "2. Inspect the action bar for the Disburse action/button"
+      ],
+      "expected_result": "Disburse action/button is not available/visible when loan status is 'Submitted and Pending Approval'; no disburse form can be opened and status remains unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-010",
+      "test_case": "Verify no action buttons are available for a loan in 'Closed' state",
+      "preconditions": [
+        "A loan exists in 'Closed' status and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Closed' status",
+        "2. Inspect the action bar for any available action buttons"
+      ],
+      "expected_result": "No action buttons are visible in the action bar for a loan in 'Closed' state (available_actions is empty); status remains 'Closed'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-011",
+      "test_case": "Reschedule request creation blocked when required Reason is left blank",
+      "preconditions": [
+        "A loan exists in 'Active' status and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Active' status",
+        "2. Click the 'Reschedule' action button to open the Reschedule form",
+        "3. Enter a valid Reschedule From Date",
+        "4. Leave the Reason field blank",
+        "5. Enter a valid Adjusted Due Date",
+        "6. Click the 'Submit' button in the Reschedule form"
+      ],
+      "expected_result": "Inline validation error appears on the Reason field indicating it is required; the reschedule request is not created and loan remains in 'Active' status",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-012",
+      "test_case": "Make Repayment with Transaction Amount left blank",
+      "preconditions": [
+        "A loan exists in 'Active' status with an outstanding due and user is authenticated and on the Loan Detail page"
+      ],
+      "steps": [
+        "1. Open the loan in 'Active' status",
+        "2. Click the 'Make Repayment' action button to open the repayment form",
+        "3. Leave Transaction Amount blank (even though it may be pre-filled)",
+        "4. Select a valid Transaction Date and Payment Type",
+        "5. Click the 'Submit' button in the Make Repayment form"
+      ],
+      "expected_result": "Inline validation error appears on the Transaction Amount field indicating it is required and must be numeric; payment is not applied; loan status and outstanding amounts remain unchanged",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "high_priority": 8,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}

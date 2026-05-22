@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.760928
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.399009
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Tax Management
 
@@ -220,38 +220,34 @@ The Tax Groups page displays a data table with columns for Name (clickable link)
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:07:07] UI-AST Agent - LLM RESPONSE
+[22:22:28] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Tax Management",
   "components": {
-    "Tax_Components_Page": {
+    "Tax_Components_Table": {
       "type": "data_table",
-      "columns": [
-        "Name",
-        "Percentage",
-        "Debit Account Type",
-        "Debit Account",
-        "Credit Account Type",
-        "Credit Account",
-        "Start Date"
-      ],
       "row_actions": [
         {
-          "action_name": "View",
+          "action_name": "Open",
           "action_type": "link",
-          "description": "Name column is a clickable link that opens the Tax Component detail"
-        }
-      ],
-      "page_actions": [
-        {
-          "element_name": "+ Create Tax Component",
-          "opens": "Create_Tax_Component_Form"
+          "on_action": "navigates to Tax Component detail"
         }
       ]
     },
-    "Create_Tax_Component_Form": {
+    "Create_Tax_Component_Button": {
+      "type": "button",
+      "element_name": "+ Create Tax Component",
+      "on_click": "opens Tax_Component_Form"
+    },
+    "Tax_Component_Form": {
       "type": "form",
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates Tax Component"
+        }
+      ],
       "fields": {
         "Name": {
           "type": "unspecified",
@@ -264,69 +260,52 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Debit_Account_Type": {
           "type": "dropdown",
           "required": false,
-          "options": [
-            "Asset",
-            "Liability",
-            "Equity",
-            "Income",
-            "Expense"
-          ]
+          "options": ["Asset", "Liability", "Equity", "Income", "Expense"]
         },
         "Debit_Account": {
           "type": "unspecified",
           "required": false,
-          "description": "Select GL account"
+          "constraints": ["must be a GL account"]
         },
         "Credit_Account_Type": {
           "type": "dropdown",
           "required": false,
-          "options": [
-            "Asset",
-            "Liability",
-            "Equity",
-            "Income",
-            "Expense"
-          ]
+          "options": ["Asset", "Liability", "Equity", "Income", "Expense"]
         },
         "Credit_Account": {
           "type": "unspecified",
           "required": false,
-          "description": "Select GL account"
+          "constraints": ["must be a GL account"]
         },
         "Start_Date": {
           "type": "date",
           "required": true
         }
-      },
+      }
+    },
+    "Tax_Groups_Table": {
+      "type": "data_table",
+      "row_actions": [
+        {
+          "action_name": "Open",
+          "action_type": "link",
+          "on_action": "navigates to Tax Group detail"
+        }
+      ]
+    },
+    "Create_Tax_Group_Button": {
+      "type": "button",
+      "element_name": "+ Create Tax Group",
+      "on_click": "opens Tax_Group_Form"
+    },
+    "Tax_Group_Form": {
+      "type": "form",
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "creates tax component"
-        }
-      ]
-    },
-    "Tax_Groups_Page": {
-      "type": "data_table",
-      "columns": [
-        "Name",
-        "Associated Components"
-      ],
-      "row_actions": [
-        {
-          "action_name": "View",
-          "action_type": "link",
-          "description": "Name column is a clickable link that opens the Tax Group detail"
+          "on_success": "creates Tax Group"
         }
       ],
-      "page_actions": [
-        {
-          "element_name": "+ Create Tax Group",
-          "opens": "Create_Tax_Group_Form"
-        }
-      ]
-    },
-    "Create_Tax_Group_Form": {
-      "type": "form",
       "fields": {
         "Name": {
           "type": "unspecified",
@@ -338,7 +317,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "Tax_Component": {
               "type": "unspecified",
               "required": true,
-              "description": "Reference to an existing Tax Component"
+              "constraints": ["references an existing Tax Component"]
             },
             "Start_Date": {
               "type": "date",
@@ -350,37 +329,35 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             }
           }
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates tax group"
-        }
-      ]
+      }
     },
-    "Savings_Product_Tax_Settings": {
-      "type": "form_fragment",
+    "Savings_Product_Form": {
+      "type": "form",
       "fields": {
         "Enable_Withhold_Tax": {
           "type": "checkbox",
-          "required": false,
-          "on_change": "when enabled, system automatically applies the configured tax rate on interest income or fees and posts the corresponding journal entries to the mapped GL accounts"
+          "required": false
         },
         "Tax_Group": {
           "type": "dropdown",
-          "required_when": "Enable_Withhold_Tax == true",
+          "required": false,
           "visible_when": "Enable_Withhold_Tax == true",
-          "description": "Select Tax Group to apply when withholding is enabled"
+          "constraints": ["must select an existing Tax Group when visible"]
         }
-      }
+      },
+      "constraints": [
+        "If Enable_Withhold_Tax == true and a Tax_Group is selected then the system automatically applies the configured tax rate on interest income and posts corresponding journal entries to the mapped GL accounts"
+      ]
     },
-    "Charge_Definition_Tax_Reference": {
-      "type": "form_fragment",
+    "Charge_Definition_Form": {
+      "type": "form",
       "fields": {
         "Tax_Group": {
           "type": "dropdown",
           "required": false,
-          "description": "Optional reference to a Tax Group used for applying tax on this charge; when set, system applies configured tax rate on fees and posts journal entries to the mapped GL accounts"
+          "constraints": [
+            "When a Tax_Group is selected for a charge definition the system applies the configured tax rate on the fee and posts corresponding journal entries to the mapped GL accounts"
+          ]
         }
       }
     }
@@ -388,38 +365,34 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:07:07] UI-AST Agent - PARSED JSON
+[22:22:28] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Tax Management",
   "components": {
-    "Tax_Components_Page": {
+    "Tax_Components_Table": {
       "type": "data_table",
-      "columns": [
-        "Name",
-        "Percentage",
-        "Debit Account Type",
-        "Debit Account",
-        "Credit Account Type",
-        "Credit Account",
-        "Start Date"
-      ],
       "row_actions": [
         {
-          "action_name": "View",
+          "action_name": "Open",
           "action_type": "link",
-          "description": "Name column is a clickable link that opens the Tax Component detail"
-        }
-      ],
-      "page_actions": [
-        {
-          "element_name": "+ Create Tax Component",
-          "opens": "Create_Tax_Component_Form"
+          "on_action": "navigates to Tax Component detail"
         }
       ]
     },
-    "Create_Tax_Component_Form": {
+    "Create_Tax_Component_Button": {
+      "type": "button",
+      "element_name": "+ Create Tax Component",
+      "on_click": "opens Tax_Component_Form"
+    },
+    "Tax_Component_Form": {
       "type": "form",
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates Tax Component"
+        }
+      ],
       "fields": {
         "Name": {
           "type": "unspecified",
@@ -443,7 +416,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Debit_Account": {
           "type": "unspecified",
           "required": false,
-          "description": "Select GL account"
+          "constraints": [
+            "must be a GL account"
+          ]
         },
         "Credit_Account_Type": {
           "type": "dropdown",
@@ -459,42 +434,39 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Credit_Account": {
           "type": "unspecified",
           "required": false,
-          "description": "Select GL account"
+          "constraints": [
+            "must be a GL account"
+          ]
         },
         "Start_Date": {
           "type": "date",
           "required": true
         }
-      },
+      }
+    },
+    "Tax_Groups_Table": {
+      "type": "data_table",
+      "row_actions": [
+        {
+          "action_name": "Open",
+          "action_type": "link",
+          "on_action": "navigates to Tax Group detail"
+        }
+      ]
+    },
+    "Create_Tax_Group_Button": {
+      "type": "button",
+      "element_name": "+ Create Tax Group",
+      "on_click": "opens Tax_Group_Form"
+    },
+    "Tax_Group_Form": {
+      "type": "form",
       "submit_actions": [
         {
           "element_name": "Create",
-          "on_success": "creates tax component"
-        }
-      ]
-    },
-    "Tax_Groups_Page": {
-      "type": "data_table",
-      "columns": [
-        "Name",
-        "Associated Components"
-      ],
-      "row_actions": [
-        {
-          "action_name": "View",
-          "action_type": "link",
-          "description": "Name column is a clickable link that opens the Tax Group detail"
+          "on_success": "creates Tax Group"
         }
       ],
-      "page_actions": [
-        {
-          "element_name": "+ Create Tax Group",
-          "opens": "Create_Tax_Group_Form"
-        }
-      ]
-    },
-    "Create_Tax_Group_Form": {
-      "type": "form",
       "fields": {
         "Name": {
           "type": "unspecified",
@@ -506,7 +478,9 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             "Tax_Component": {
               "type": "unspecified",
               "required": true,
-              "description": "Reference to an existing Tax Component"
+              "constraints": [
+                "references an existing Tax Component"
+              ]
             },
             "Start_Date": {
               "type": "date",
@@ -518,37 +492,393 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             }
           }
         }
+      }
+    },
+    "Savings_Product_Form": {
+      "type": "form",
+      "fields": {
+        "Enable_Withhold_Tax": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Tax_Group": {
+          "type": "dropdown",
+          "required": false,
+          "visible_when": "Enable_Withhold_Tax == true",
+          "constraints": [
+            "must select an existing Tax Group when visible"
+          ]
+        }
+      },
+      "constraints": [
+        "If Enable_Withhold_Tax == true and a Tax_Group is selected then the system automatically applies the configured tax rate on interest income and posts corresponding journal entries to the mapped GL accounts"
+      ]
+    },
+    "Charge_Definition_Form": {
+      "type": "form",
+      "fields": {
+        "Tax_Group": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": [
+            "When a Tax_Group is selected for a charge definition the system applies the configured tax rate on the fee and posts corresponding journal entries to the mapped GL accounts"
+          ]
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:24:31] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Tax Management
+
+
+The Tax Components page displays a data table with columns for Name (clickable link), Percentage, Debit Account Type, Debit Account, Credit Account Type, Credit Account, and Start Date. A "+ Create Tax Component" button opens the creation form containing Name (required), Percentage (required), Debit Account Type (Asset, Liability, Equity, Income, Expense) and Debit Account (GL account), Credit Account Type and Credit Account (GL account), and Start Date (required).
+
+The Tax Groups page displays a data table with columns for Name (clickable link) and associated components. A "+ Create Tax Group" button opens the form with Name (required) and a Tax Components section allowing multiple components to be added, each with a Start Date and End Date. Tax groups are referenced by Savings Products (Enable Withhold Tax checkbox with Tax Group dropdown) and Charge definitions; when a product has tax enabled, the system automatically applies the configured tax rate on interest income or fees and posts the corresponding journal entries to the mapped GL accounts.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. Remove or mark unspecified the submit_actions.element_name for Tax_Component_Form: clear components.Tax_Component_Form.submit_actions[0].element_name or replace it with a neutral unspecified submit action (components.Tax_Component_Form.submit_actions[0] should not invent the label 'Create' unless the description names it).
+2. Remove or mark unspecified the submit_actions.element_name for Tax_Group_Form: clear components.Tax_Group_Form.submit_actions[0].element_name or replace it with a neutral unspecified submit action (components.Tax_Group_Form.submit_actions[0] should not invent the label 'Create' unless the description names it).
+3. Do not add visibility condition for Savings_Product_Form.fields.Tax_Group unless the description explicitly states it: remove components.Savings_Product_Form.fields.Tax_Group.visible_when; if the dropdown is intended to be present only when Enable_Withhold_Tax is checked, update the description to explicitly state that behavior so the AST can include the conditional.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:25:54] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Tax Management",
+  "components": {
+    "Tax_Components_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Percentage",
+        "Debit Account Type",
+        "Debit Account",
+        "Credit Account Type",
+        "Credit Account",
+        "Start Date"
+      ],
+      "row_actions": [
+        {
+          "action_name": "View",
+          "type": "link",
+          "description": "navigates to Tax Component detail via clickable Name link"
+        }
+      ],
+      "toolbar_actions": [
+        {
+          "element_name": "unspecified",
+          "opens": "Tax_Component_Form"
+        }
+      ]
+    },
+    "Tax_Component_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Percentage": {
+          "type": "number",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Debit_Account_Type": {
+          "type": "dropdown",
+          "options": [
+            "Asset",
+            "Liability",
+            "Equity",
+            "Income",
+            "Expense"
+          ]
+        },
+        "Debit_Account": {
+          "type": "unspecified",
+          "description": "select GL account"
+        },
+        "Credit_Account_Type": {
+          "type": "dropdown",
+          "options": [
+            "Asset",
+            "Liability",
+            "Equity",
+            "Income",
+            "Expense"
+          ]
+        },
+        "Credit_Account": {
+          "type": "unspecified",
+          "description": "select GL account"
+        },
+        "Start_Date": {
+          "type": "date",
+          "constraints": [
+            "required"
+          ]
+        }
       },
       "submit_actions": [
         {
-          "element_name": "Create",
+          "element_name": "unspecified",
+          "on_success": "creates tax component"
+        }
+      ]
+    },
+    "Tax_Groups_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Associated Components"
+      ],
+      "row_actions": [
+        {
+          "action_name": "View",
+          "type": "link",
+          "description": "navigates to Tax Group detail via clickable Name link"
+        }
+      ],
+      "toolbar_actions": [
+        {
+          "element_name": "unspecified",
+          "opens": "Tax_Group_Form"
+        }
+      ]
+    },
+    "Tax_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Tax_Components": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Tax_Component": {
+              "type": "unspecified",
+              "description": "select existing Tax Component"
+            },
+            "Start_Date": {
+              "type": "date"
+            },
+            "End_Date": {
+              "type": "date"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
           "on_success": "creates tax group"
         }
       ]
     },
-    "Savings_Product_Tax_Settings": {
-      "type": "form_fragment",
+    "Savings_Product_Form": {
+      "type": "form",
       "fields": {
         "Enable_Withhold_Tax": {
           "type": "checkbox",
-          "required": false,
-          "on_change": "when enabled, system automatically applies the configured tax rate on interest income or fees and posts the corresponding journal entries to the mapped GL accounts"
+          "effects": [
+            "when enabled, system automatically applies the configured tax rate on interest income or fees and posts corresponding journal entries to the mapped GL accounts"
+          ]
         },
         "Tax_Group": {
           "type": "dropdown",
-          "required_when": "Enable_Withhold_Tax == true",
-          "visible_when": "Enable_Withhold_Tax == true",
-          "description": "Select Tax Group to apply when withholding is enabled"
+          "description": "select Tax Group to associate with this product"
         }
       }
     },
-    "Charge_Definition_Tax_Reference": {
-      "type": "form_fragment",
+    "Charge_Definition_Form": {
+      "type": "form",
       "fields": {
         "Tax_Group": {
           "type": "dropdown",
-          "required": false,
-          "description": "Optional reference to a Tax Group used for applying tax on this charge; when set, system applies configured tax rate on fees and posts journal entries to the mapped GL accounts"
+          "description": "select Tax Group to associate with this charge definition"
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:25:54] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Tax Management",
+  "components": {
+    "Tax_Components_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Percentage",
+        "Debit Account Type",
+        "Debit Account",
+        "Credit Account Type",
+        "Credit Account",
+        "Start Date"
+      ],
+      "row_actions": [
+        {
+          "action_name": "View",
+          "type": "link",
+          "description": "navigates to Tax Component detail via clickable Name link"
+        }
+      ],
+      "toolbar_actions": [
+        {
+          "element_name": "unspecified",
+          "opens": "Tax_Component_Form"
+        }
+      ]
+    },
+    "Tax_Component_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Percentage": {
+          "type": "number",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Debit_Account_Type": {
+          "type": "dropdown",
+          "options": [
+            "Asset",
+            "Liability",
+            "Equity",
+            "Income",
+            "Expense"
+          ]
+        },
+        "Debit_Account": {
+          "type": "unspecified",
+          "description": "select GL account"
+        },
+        "Credit_Account_Type": {
+          "type": "dropdown",
+          "options": [
+            "Asset",
+            "Liability",
+            "Equity",
+            "Income",
+            "Expense"
+          ]
+        },
+        "Credit_Account": {
+          "type": "unspecified",
+          "description": "select GL account"
+        },
+        "Start_Date": {
+          "type": "date",
+          "constraints": [
+            "required"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "creates tax component"
+        }
+      ]
+    },
+    "Tax_Groups_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Associated Components"
+      ],
+      "row_actions": [
+        {
+          "action_name": "View",
+          "type": "link",
+          "description": "navigates to Tax Group detail via clickable Name link"
+        }
+      ],
+      "toolbar_actions": [
+        {
+          "element_name": "unspecified",
+          "opens": "Tax_Group_Form"
+        }
+      ]
+    },
+    "Tax_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Tax_Components": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Tax_Component": {
+              "type": "unspecified",
+              "description": "select existing Tax Component"
+            },
+            "Start_Date": {
+              "type": "date"
+            },
+            "End_Date": {
+              "type": "date"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "creates tax group"
+        }
+      ]
+    },
+    "Savings_Product_Form": {
+      "type": "form",
+      "fields": {
+        "Enable_Withhold_Tax": {
+          "type": "checkbox",
+          "effects": [
+            "when enabled, system automatically applies the configured tax rate on interest income or fees and posts corresponding journal entries to the mapped GL accounts"
+          ]
+        },
+        "Tax_Group": {
+          "type": "dropdown",
+          "description": "select Tax Group to associate with this product"
+        }
+      }
+    },
+    "Charge_Definition_Form": {
+      "type": "form",
+      "fields": {
+        "Tax_Group": {
+          "type": "dropdown",
+          "description": "select Tax Group to associate with this charge definition"
         }
       }
     }

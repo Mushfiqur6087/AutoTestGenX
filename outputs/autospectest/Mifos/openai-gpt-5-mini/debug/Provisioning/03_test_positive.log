@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.370495
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.546465
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Provisioning</module_name>
 
@@ -232,39 +232,40 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Provisioning",
   "components": {
-    "Provisioning_Criteria_Page": {
+    "Provisioning_Criteria_Table": {
       "type": "data_table",
       "columns": [
-        "Criteria Name",
-        "Created Date"
-      ],
-      "row_actions": [
         {
-          "action_name": "Open",
-          "element_type": "link",
-          "on_trigger": "navigate_to_Provisioning_Criteria_Form"
+          "name": "Criteria Name",
+          "type": "link",
+          "clickable": true
+        },
+        {
+          "name": "Created Date",
+          "type": "date"
         }
       ],
-      "actions": [
+      "top_actions": [
         {
           "element_name": "+ Create",
-          "element_type": "button",
-          "on_trigger": "open_Provisioning_Criteria_Form"
+          "action_name": "Open Create Provisioning Criteria Form",
+          "opens": "Provisioning_Criteria_Form"
         }
       ]
     },
     "Provisioning_Criteria_Form": {
       "type": "form",
       "fields": {
-        "Criteria_Name": {
+        "Criteria Name": {
           "type": "unspecified",
           "required": true
         },
         "Definitions": {
           "type": "repeating_group",
+          "add_row_action": true,
           "item_fields": {
-            "Loan_Product": {
-              "type": "dropdown"
+            "Loan Product": {
+              "type": "unspecified"
             },
             "Category": {
               "type": "dropdown",
@@ -275,28 +276,35 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "LOSS"
               ]
             },
-            "Minimum_Age": {
+            "Minimum Age (overdue days)": {
               "type": "number",
-              "description": "overdue days"
-            },
-            "Maximum_Age": {
-              "type": "number",
-              "description": "overdue days"
-            },
-            "Provisioning_Percentage": {
-              "type": "number",
-              "description": "percentage of outstanding principal",
               "constraints": [
-                "must be between 0 and 100"
+                "represents overdue days (minimum of the overdue range)"
               ]
             },
-            "Liability_Account": {
-              "type": "dropdown",
-              "description": "GL account"
+            "Maximum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (maximum of the overdue range)"
+              ]
             },
-            "Expense_Account": {
+            "Provisioning Percentage": {
+              "type": "number",
+              "constraints": [
+                "percentage of outstanding principal"
+              ]
+            },
+            "Liability Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "constraints": [
+                "select GL liability account"
+              ]
+            },
+            "Expense Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL expense account"
+              ]
             }
           }
         }
@@ -304,40 +312,67 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "submit_actions": [
         {
           "element_name": "Save",
-          "element_type": "button",
-          "on_success": "creates provisioning criteria"
+          "action_name": "Create Provisioning Criteria",
+          "on_success": "creates a new provisioning criteria and closes the form"
         }
       ]
     },
-    "Provisioning_Entries_Page": {
+    "Provisioning_Entries_Table": {
       "type": "data_table",
       "columns": [
-        "Entry Date",
-        "Journal Entry Created",
-        "Created By"
+        {
+          "name": "Entry Date",
+          "type": "date"
+        },
+        {
+          "name": "Journal Entry Created",
+          "type": "date"
+        },
+        {
+          "name": "Created By",
+          "type": "unspecified"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+        }
       ],
       "row_actions": [
         {
           "action_name": "Review",
-          "element_type": "button",
-          "on_trigger": "open_provisioning_entry_review",
-          "on_success": "opens detailed breakdown by loan product and category"
+          "action_description": "opens Provisioning_Entry_Detail for the selected entry",
+          "opens": "Provisioning_Entry_Detail"
         },
         {
           "action_name": "Recreate",
-          "element_type": "button",
-          "on_trigger": "recreate_provisioning_entry",
-          "on_success": "recreates provisioning journal entry based on current portfolio and criteria"
-        }
-      ],
-      "actions": [
-        {
-          "element_name": "+ Create Provisioning Entry",
-          "element_type": "button",
-          "on_trigger": "generate_provisioning_entries",
-          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+          "action_description": "recreates provisioning journal entry based on current loan portfolio status and configured criteria",
+          "on_success": "recreates journal entry"
         }
       ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "detailed breakdown by loan product and category",
+      "columns": [
+        {
+          "name": "Loan Product",
+          "type": "unspecified"
+        },
+        {
+          "name": "Category",
+          "type": "dropdown",
+          "options": [
+            "STANDARD",
+            "SUB-STANDARD",
+            "DOUBTFUL",
+            "LOSS"
+          ]
+        }
+      ],
+      "row_actions": []
     }
   }
 }
@@ -357,7 +392,7 @@ The Provisioning Entries page lists all generated provisioning journal entries w
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:19:38] Test-Positive - LLM RESPONSE
+[22:34:13] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Provisioning",
@@ -365,133 +400,96 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Create Provisioning Criteria form",
+      "test_case": "Create Provisioning Criteria with one Definition row",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <User with provisioning management role>",
+        "Provisioning > Criteria page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the '+ Create' button"
+        "1. Click the '+ Create' button in the Provisioning Criteria table",
+        "2. Enter <valid criteria name> in the Criteria Name field",
+        "3. Click 'Add Row' in the Definitions section",
+        "4. In the new Definitions row select <loan product> in Loan Product",
+        "5. Select 'STANDARD' from the Category dropdown",
+        "6. Enter <minimum overdue days> in Minimum Age (overdue days)",
+        "7. Enter <maximum overdue days> in Maximum Age (overdue days)",
+        "8. Enter <provisioning percentage> in Provisioning Percentage",
+        "9. Select <liability GL account> from Liability Account",
+        "10. Select <expense GL account> from Expense Account",
+        "11. Click the 'Save' button"
       ],
-      "expected_result": "Provisioning Criteria form is displayed with a Criteria Name field and an 'Add Row' control for Definitions",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "Create Provisioning Criteria with one Definitions row",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the '+ Create' button to open the Provisioning Criteria form",
-        "3. Enter <valid criteria name> in the Criteria Name field",
-        "4. Click 'Add Row' in the Definitions area",
-        "5. In Definitions row 1: select <loan product> from the Loan Product dropdown",
-        "6. In Definitions row 1: select 'STANDARD' from the Category dropdown",
-        "7. In Definitions row 1: enter <minimum overdue days> in Minimum_Age",
-        "8. In Definitions row 1: enter <maximum overdue days> in Maximum_Age",
-        "9. In Definitions row 1: enter <percentage between 0 and 100> in Provisioning_Percentage",
-        "10. In Definitions row 1: select <liability GL account> from Liability_Account",
-        "11. In Definitions row 1: select <expense GL account> from Expense_Account",
-        "12. Click the 'Save' button"
-      ],
-      "expected_result": "creates provisioning criteria",
+      "expected_result": "The Provisioning Criteria form closes and the Provisioning Criteria table displays a new row with the entered Criteria Name; the Created Date column is populated for that row",
       "priority": "high"
     },
     {
-      "tc_id": "P-003",
-      "test_case": "Create Provisioning Criteria with multiple Definitions rows",
+      "tc_id": "P-002",
+      "test_case": "Open Provisioning Criteria detail by clicking Criteria Name link",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <User with provisioning management role>",
+        "A provisioning criteria named <existing criteria> exists and appears in the Provisioning Criteria table",
+        "Provisioning > Criteria page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the '+ Create' button to open the Provisioning Criteria form",
-        "3. Enter <valid criteria name> in the Criteria Name field",
-        "4. Click 'Add Row' in the Definitions area to add row 1",
-        "5. In Definitions row 1: select <loan product> from the Loan Product dropdown",
-        "6. In Definitions row 1: select 'STANDARD' from the Category dropdown",
-        "7. In Definitions row 1: enter <minimum overdue days> in Minimum_Age and <maximum overdue days> in Maximum_Age",
-        "8. In Definitions row 1: enter <percentage between 0 and 100> in Provisioning_Percentage and select <liability GL account> and <expense GL account>",
-        "9. Click 'Add Row' to create Definitions row 2",
-        "10. In Definitions row 2: select <loan product> from the Loan Product dropdown",
-        "11. In Definitions row 2: select 'DOUBTFUL' from the Category dropdown",
-        "12. In Definitions row 2: enter <minimum overdue days> and <maximum overdue days>",
-        "13. In Definitions row 2: enter <percentage between 0 and 100> in Provisioning_Percentage and select <liability GL account> and <expense GL account>",
-        "14. Click the 'Save' button"
+        "1. Click the Criteria Name link for the row with name <existing criteria>"
       ],
-      "expected_result": "creates provisioning criteria",
+      "expected_result": "Provisioning Criteria detail view opens showing the Criteria Name '<existing criteria>' and the Definitions table with its definition rows visible",
       "priority": "medium"
     },
     {
-      "tc_id": "P-004",
-      "test_case": "Open existing Provisioning Criteria from the list",
+      "tc_id": "P-003",
+      "test_case": "Generate Provisioning Entries (Create Provisioning Entry)",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Provisioning criteria named <existing criteria> exists"
+        "User logged in as <User with provisioning management role>",
+        "Configured provisioning criteria exist",
+        "A loan portfolio with balances that will trigger provisioning entries exists",
+        "Provisioning > Entries page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the Criteria Name link for <existing criteria> in the table"
+        "1. Click the '+ Create Provisioning Entry' button in the Provisioning Entries table"
       ],
-      "expected_result": "Provisioning Criteria form is displayed with Criteria Name set to <existing criteria> and Definitions rows shown",
+      "expected_result": "One or more new rows appear in the Provisioning Entries table for the generated provisioning run: the Entry Date column shows <current date> and the Journal Entry Created column is populated; the Created By column shows <current user> for the new rows",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "Review a Provisioning Entry shows detailed breakdown by loan product and category",
+      "preconditions": [
+        "User logged in as <User with provisioning management role>",
+        "A provisioning entry <existing provisioning entry> exists in the Provisioning Entries table",
+        "Provisioning > Entries page is open"
+      ],
+      "steps": [
+        "1. Click 'Review' for the row representing <existing provisioning entry>"
+      ],
+      "expected_result": "Provisioning Entry Detail opens and displays a detailed breakdown table with columns 'Loan Product' and 'Category' and one or more breakdown rows visible",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Generate Provisioning Entries",
+      "test_case": "Recreate a Provisioning Entry updates the Journal Entry Created date",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Provisioning criteria configured",
-        "Loan portfolio with outstanding balances exists"
+        "User logged in as <User with provisioning management role>",
+        "A provisioning entry <existing provisioning entry> exists in the Provisioning Entries table",
+        "Provisioning > Entries page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Entries page",
-        "2. Click the '+ Create Provisioning Entry' button"
+        "1. Click 'Recreate' for the row representing <existing provisioning entry>",
+        "2. If a confirmation dialog appears, click Confirm on the Recreate dialog"
       ],
-      "expected_result": "calculates required provision amount for each loan category and creates corresponding journal entries",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-006",
-      "test_case": "Review a Provisioning Entry's detailed breakdown",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "A provisioning entry <existing entry> exists in the Provisioning Entries list"
-      ],
-      "steps": [
-        "1. Navigate to the Provisioning Entries page",
-        "2. Click the 'Review' button for <existing entry>"
-      ],
-      "expected_result": "opens detailed breakdown by loan product and category",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-007",
-      "test_case": "Recreate an existing Provisioning Entry",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "A provisioning entry <existing entry> exists in the Provisioning Entries list"
-      ],
-      "steps": [
-        "1. Navigate to the Provisioning Entries page",
-        "2. Click the 'Recreate' button for <existing entry>"
-      ],
-      "expected_result": "recreates provisioning journal entry based on current portfolio and criteria",
+      "expected_result": "The Journal Entry Created date for <existing provisioning entry> is updated to <current date> in the Provisioning Entries table",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 7,
+    "total": 5,
     "high_priority": 2,
-    "medium_priority": 5,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:19:38] Test-Positive - PARSED JSON
+[22:34:13] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Provisioning",
@@ -499,127 +497,90 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Create Provisioning Criteria form",
+      "test_case": "Create Provisioning Criteria with one Definition row",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <User with provisioning management role>",
+        "Provisioning > Criteria page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the '+ Create' button"
+        "1. Click the '+ Create' button in the Provisioning Criteria table",
+        "2. Enter <valid criteria name> in the Criteria Name field",
+        "3. Click 'Add Row' in the Definitions section",
+        "4. In the new Definitions row select <loan product> in Loan Product",
+        "5. Select 'STANDARD' from the Category dropdown",
+        "6. Enter <minimum overdue days> in Minimum Age (overdue days)",
+        "7. Enter <maximum overdue days> in Maximum Age (overdue days)",
+        "8. Enter <provisioning percentage> in Provisioning Percentage",
+        "9. Select <liability GL account> from Liability Account",
+        "10. Select <expense GL account> from Expense Account",
+        "11. Click the 'Save' button"
       ],
-      "expected_result": "Provisioning Criteria form is displayed with a Criteria Name field and an 'Add Row' control for Definitions",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "Create Provisioning Criteria with one Definitions row",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the '+ Create' button to open the Provisioning Criteria form",
-        "3. Enter <valid criteria name> in the Criteria Name field",
-        "4. Click 'Add Row' in the Definitions area",
-        "5. In Definitions row 1: select <loan product> from the Loan Product dropdown",
-        "6. In Definitions row 1: select 'STANDARD' from the Category dropdown",
-        "7. In Definitions row 1: enter <minimum overdue days> in Minimum_Age",
-        "8. In Definitions row 1: enter <maximum overdue days> in Maximum_Age",
-        "9. In Definitions row 1: enter <percentage between 0 and 100> in Provisioning_Percentage",
-        "10. In Definitions row 1: select <liability GL account> from Liability_Account",
-        "11. In Definitions row 1: select <expense GL account> from Expense_Account",
-        "12. Click the 'Save' button"
-      ],
-      "expected_result": "creates provisioning criteria",
+      "expected_result": "The Provisioning Criteria form closes and the Provisioning Criteria table displays a new row with the entered Criteria Name; the Created Date column is populated for that row",
       "priority": "high"
     },
     {
-      "tc_id": "P-003",
-      "test_case": "Create Provisioning Criteria with multiple Definitions rows",
+      "tc_id": "P-002",
+      "test_case": "Open Provisioning Criteria detail by clicking Criteria Name link",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <User with provisioning management role>",
+        "A provisioning criteria named <existing criteria> exists and appears in the Provisioning Criteria table",
+        "Provisioning > Criteria page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the '+ Create' button to open the Provisioning Criteria form",
-        "3. Enter <valid criteria name> in the Criteria Name field",
-        "4. Click 'Add Row' in the Definitions area to add row 1",
-        "5. In Definitions row 1: select <loan product> from the Loan Product dropdown",
-        "6. In Definitions row 1: select 'STANDARD' from the Category dropdown",
-        "7. In Definitions row 1: enter <minimum overdue days> in Minimum_Age and <maximum overdue days> in Maximum_Age",
-        "8. In Definitions row 1: enter <percentage between 0 and 100> in Provisioning_Percentage and select <liability GL account> and <expense GL account>",
-        "9. Click 'Add Row' to create Definitions row 2",
-        "10. In Definitions row 2: select <loan product> from the Loan Product dropdown",
-        "11. In Definitions row 2: select 'DOUBTFUL' from the Category dropdown",
-        "12. In Definitions row 2: enter <minimum overdue days> and <maximum overdue days>",
-        "13. In Definitions row 2: enter <percentage between 0 and 100> in Provisioning_Percentage and select <liability GL account> and <expense GL account>",
-        "14. Click the 'Save' button"
+        "1. Click the Criteria Name link for the row with name <existing criteria>"
       ],
-      "expected_result": "creates provisioning criteria",
+      "expected_result": "Provisioning Criteria detail view opens showing the Criteria Name '<existing criteria>' and the Definitions table with its definition rows visible",
       "priority": "medium"
     },
     {
-      "tc_id": "P-004",
-      "test_case": "Open existing Provisioning Criteria from the list",
+      "tc_id": "P-003",
+      "test_case": "Generate Provisioning Entries (Create Provisioning Entry)",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Provisioning criteria named <existing criteria> exists"
+        "User logged in as <User with provisioning management role>",
+        "Configured provisioning criteria exist",
+        "A loan portfolio with balances that will trigger provisioning entries exists",
+        "Provisioning > Entries page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Criteria page",
-        "2. Click the Criteria Name link for <existing criteria> in the table"
+        "1. Click the '+ Create Provisioning Entry' button in the Provisioning Entries table"
       ],
-      "expected_result": "Provisioning Criteria form is displayed with Criteria Name set to <existing criteria> and Definitions rows shown",
+      "expected_result": "One or more new rows appear in the Provisioning Entries table for the generated provisioning run: the Entry Date column shows <current date> and the Journal Entry Created column is populated; the Created By column shows <current user> for the new rows",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "test_case": "Review a Provisioning Entry shows detailed breakdown by loan product and category",
+      "preconditions": [
+        "User logged in as <User with provisioning management role>",
+        "A provisioning entry <existing provisioning entry> exists in the Provisioning Entries table",
+        "Provisioning > Entries page is open"
+      ],
+      "steps": [
+        "1. Click 'Review' for the row representing <existing provisioning entry>"
+      ],
+      "expected_result": "Provisioning Entry Detail opens and displays a detailed breakdown table with columns 'Loan Product' and 'Category' and one or more breakdown rows visible",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Generate Provisioning Entries",
+      "test_case": "Recreate a Provisioning Entry updates the Journal Entry Created date",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Provisioning criteria configured",
-        "Loan portfolio with outstanding balances exists"
+        "User logged in as <User with provisioning management role>",
+        "A provisioning entry <existing provisioning entry> exists in the Provisioning Entries table",
+        "Provisioning > Entries page is open"
       ],
       "steps": [
-        "1. Navigate to the Provisioning Entries page",
-        "2. Click the '+ Create Provisioning Entry' button"
+        "1. Click 'Recreate' for the row representing <existing provisioning entry>",
+        "2. If a confirmation dialog appears, click Confirm on the Recreate dialog"
       ],
-      "expected_result": "calculates required provision amount for each loan category and creates corresponding journal entries",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-006",
-      "test_case": "Review a Provisioning Entry's detailed breakdown",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "A provisioning entry <existing entry> exists in the Provisioning Entries list"
-      ],
-      "steps": [
-        "1. Navigate to the Provisioning Entries page",
-        "2. Click the 'Review' button for <existing entry>"
-      ],
-      "expected_result": "opens detailed breakdown by loan product and category",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-007",
-      "test_case": "Recreate an existing Provisioning Entry",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "A provisioning entry <existing entry> exists in the Provisioning Entries list"
-      ],
-      "steps": [
-        "1. Navigate to the Provisioning Entries page",
-        "2. Click the 'Recreate' button for <existing entry>"
-      ],
-      "expected_result": "recreates provisioning journal entry based on current portfolio and criteria",
+      "expected_result": "The Journal Entry Created date for <existing provisioning entry> is updated to <current date> in the Provisioning Entries table",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 7,
+    "total": 5,
     "high_priority": 2,
-    "medium_priority": 5,
+    "medium_priority": 3,
     "low_priority": 0
   }
 }

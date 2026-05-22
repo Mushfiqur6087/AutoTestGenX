@@ -1,0 +1,757 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.531566
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Share Products</module_name>
+
+<ast>
+{
+  "module_name": "Share Products",
+  "components": {
+    "Share_Products_Table": {
+      "type": "data_table",
+      "columns": [
+        "Product Name",
+        "Short Name",
+        "Total Shares"
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Product",
+          "trigger": "click Product Name link",
+          "target": "Product_Detail_View"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Share Product",
+          "type": "button",
+          "opens": "Create_Share_Product_Wizard"
+        }
+      ]
+    },
+    "Create_Share_Product_Wizard": {
+      "type": "wizard",
+      "steps": [
+        {
+          "step_index": 1,
+          "step_name": "Details",
+          "fields": {
+            "Product_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Short_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Description": {
+              "type": "unspecified",
+              "required": true
+            }
+          }
+        },
+        {
+          "step_index": 2,
+          "step_name": "Currency",
+          "fields": {
+            "Currency": {
+              "type": "dropdown"
+            },
+            "Decimal_Places": {
+              "type": "number"
+            },
+            "Currency_In_Multiples_Of": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "step_index": 3,
+          "step_name": "Terms",
+          "fields": {
+            "Total_Number_of_Shares": {
+              "type": "number",
+              "required": true
+            },
+            "Shares_to_be_Issued": {
+              "type": "number"
+            },
+            "Nominal_Unit_Price": {
+              "type": "number",
+              "required": true
+            },
+            "Capital_Value": {
+              "type": "unspecified",
+              "visible_when": null,
+              "note": "auto-calculated (display-only)"
+            }
+          }
+        },
+        {
+          "step_index": 4,
+          "step_name": "Settings",
+          "fields": {
+            "Allow_Dividends_for_Inactive_Clients": {
+              "type": "checkbox"
+            },
+            "Minimum_Shares_per_Client": {
+              "type": "number"
+            },
+            "Maximum_Shares_per_Client": {
+              "type": "number"
+            },
+            "Nominal_Shares_per_Client": {
+              "type": "number"
+            },
+            "Minimum_Active_Period_Frequency": {
+              "type": "unspecified"
+            },
+            "Lock_in_Period": {
+              "type": "unspecified"
+            }
+          }
+        },
+        {
+          "step_index": 5,
+          "step_name": "Market Price",
+          "fields": {
+            "Market_Prices": {
+              "type": "repeating_group",
+              "min": 0,
+              "item_fields": {
+                "From_Date": {
+                  "type": "date"
+                },
+                "Share_Value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "step_index": 6,
+          "step_name": "Charges",
+          "fields": {
+            "Charges": {
+              "type": "search",
+              "description": "search-and-add interface for charges",
+              "selected_items": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Charge": {
+                    "type": "unspecified"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "step_index": 7,
+          "step_name": "Accounting",
+          "fields": {
+            "Accounting_Method": {
+              "type": "radio",
+              "options": [
+                "None",
+                "Cash-based"
+              ]
+            },
+            "GL_Share_Reference": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Share_Suspense": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Equity_in_Shares": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Income_from_Fees": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            },
+            "GL_Share_Equity": {
+              "type": "unspecified",
+              "visible_when": "Accounting_Method == Cash-based"
+            }
+          }
+        }
+      ]
+    },
+    "Product_Detail_View": {
+      "type": "detail_view",
+      "actions": [
+        {
+          "action_name": "Edit"
+        },
+        {
+          "action_name": "Delete"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Share Products page displays a data table with columns for Product Name (clickable link), Short Name, and Total Shares. A "+ Create Share Product" button opens a 7-step stepper wizard. Step 1 (Details) contains Product Name (required), Short Name (required), and Description (required). Step 2 (Currency) contains Currency, Decimal Places, and Currency In Multiples Of. Step 3 (Terms) contains Total Number of Shares (required), Shares to be Issued, Nominal/Unit Price (required), and Capital Value (auto-calculated). Step 4 (Settings) contains Allow Dividends for Inactive Clients checkbox, Minimum/Maximum/Nominal Shares per Client, Minimum Active Period Frequency, and Lock-in Period. Step 5 (Market Price) is a table where each row defines a From Date and Share Value; rows can be added or removed. Step 6 (Charges) is a search-and-add interface. Step 7 (Accounting) contains a radio button for None or Cash-based; selecting Cash-based reveals GL account mappings for Share Reference, Share Suspense, Equity in Shares, Income from Fees, and Share Equity. Clicking an existing product opens its detail view with Edit and Delete options.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:32:00] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Share Products",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Add then remove all Market Prices rows when repeating_group min = 0",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened (via '+ Create Share Product' button)",
+        "Market_Prices repeating_group exists with min = 0 (Step 5: Market Price)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 (Details)",
+        "2. Enter valid values into all required fields on Step 1 (Product_Name, Short_Name, Description)",
+        "3. Navigate to Step 3 (Terms) and enter values for required numeric fields (Total_Number_of_Shares, Nominal_Unit_Price)",
+        "4. Navigate to Step 5 (Market Price)",
+        "5. Click 'Add row' (or equivalent) to add one Market Prices row",
+        "6. In the new row, set From_Date to <today> and fill Share_Value with a number",
+        "7. Remove the only Market Prices row (use the row's remove/delete control)",
+        "8. Complete any remaining steps as needed and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully; product is created (succeeds). On the product detail page, the Market Prices section displays zero entries (no rows shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "data_edge",
+      "test_case": "Save a Market Prices row with From_Date = today",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Market_Prices repeating_group present (Step 5: Market Price)",
+        "A valid product can be created (required fields exist and can be filled)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 3 and fill required numeric fields (Total_Number_of_Shares, Nominal_Unit_Price)",
+        "3. Navigate to Step 5 (Market Price)",
+        "4. Click 'Add row' to add one Market Prices row",
+        "5. Set From_Date to <today>",
+        "6. Enter a numeric value into Share_Value",
+        "7. Complete remaining steps and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully; product is created (succeeds). On the product detail page the Market Prices table shows one row with From Date exactly equal to <today> and the displayed Share Value equals the entered numeric value.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "data_edge",
+      "test_case": "Enter a far-future From_Date in a Market Prices row",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Market_Prices repeating_group present (Step 5: Market Price)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 3 and fill required numeric fields (Total_Number_of_Shares, Nominal_Unit_Price)",
+        "3. Navigate to Step 5 (Market Price)",
+        "4. Click 'Add row' to add one Market Prices row",
+        "5. Set From_Date to a far future date (many years ahead of <today>)",
+        "6. Enter a numeric value into Share_Value",
+        "7. Complete remaining steps and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully; product is created (succeeds). On the product detail page the Market Prices table shows the row with the far-future From Date displayed exactly as entered and the Share Value shown as entered.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Nominal_Unit_Price decimal precision vs Decimal_Places rounding",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Step 2 contains Decimal_Places (number) and Step 3 contains Nominal_Unit_Price (number)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required text fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 2 (Currency)",
+        "3. Enter <Decimal_Places = P> into Decimal_Places",
+        "4. Navigate to Step 3 (Terms)",
+        "5. Enter a Nominal_Unit_Price value that has <P + 1> decimal places",
+        "6. Fill other required fields and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully (succeeds). On the saved product detail, the displayed Nominal/Unit Price is rounded to <P> decimal places (the extra decimal precision is not present in the saved display).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "input_edge",
+      "test_case": "Leading/trailing whitespace in GL account field revealed by Accounting_Method visible_when",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Step 7 (Accounting) has Accounting_Method radio with option 'Cash-based' that reveals GL_Share_Reference (visible_when)",
+        "GL_Share_Reference is a free-text (unspecified) field"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 7 (Accounting)",
+        "3. Select Accounting_Method = 'Cash-based' to reveal GL_Share_Reference",
+        "4. Enter a value with leading and trailing whitespace into GL_Share_Reference (e.g., leading and trailing spaces around the intended text)",
+        "5. Change Accounting_Method to 'None' (fields hide)",
+        "6. Change Accounting_Method back to 'Cash-based' (fields reappear)",
+        "7. Complete any remaining steps and submit the wizard"
+      ],
+      "expected_result": "The wizard allows toggling (succeeds). After toggling back to 'Cash-based' the GL_Share_Reference field still shows the entered value but with leading/trailing whitespace trimmed in the UI; after submit the product detail displays the GL_Share_Reference value without leading/trailing spaces (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Attempt to jump to Step 3 directly from Step 1 in enforced-sequence wizard",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Wizard presents step navigation tabs (Steps 1..7) and Step 1 contains required fields"
+      ],
+      "steps": [
+        "1. On Step 1, do not fill required fields",
+        "2. Click the step tab for Step 3 (Terms) directly in the stepper navigation"
+      ],
+      "expected_result": "Navigation to Step 3 is blocked (is blocked / error shown). The wizard remains on Step 1 and an inline indication is shown that required fields on the current step must be completed before moving to Step 3.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click the final submit action to check duplicate creation prevention",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened and can be completed",
+        "Product listing table 'Share Products' is accessible after create"
+      ],
+      "steps": [
+        "1. Fill all required fields across Steps 1..7 with valid values",
+        "2. Reach the final step and ensure the wizard shows the submit/finish action",
+        "3. Rapidly double-click the submit/finish button in quick succession"
+      ],
+      "expected_result": "Only one creation request is processed; the product is created once (succeeds). On the Share Products table after return, exactly one new row appears for the created Product Name and no duplicate rows are present.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "input_edge",
+      "test_case": "Enter very long Description text (200+ characters)",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened and Step 1 contains Description (unspecified/textarea)",
+        "No explicit max-length constraint is specified in the AST for Description"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 (Details)",
+        "2. Enter a very long string (200+ characters) into the Description field",
+        "3. Fill other required fields on Step 1 and the wizard's required fields on other steps",
+        "4. Submit the wizard"
+      ],
+      "expected_result": "Form submits successfully (succeeds). On the product detail page the Description shows the full entered text (no truncation in the displayed detail). If UI truncation occurs, an inline indicator or tooltip is shown that the full text is available in the detail view (either outcome must present a visible indicator).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 2,
+    "input_edge": 3,
+    "interaction_edge": 3,
+    "state_edge": 0,
+    "data_edge": 2,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[22:32:00] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Share Products",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary",
+      "test_case": "Add then remove all Market Prices rows when repeating_group min = 0",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened (via '+ Create Share Product' button)",
+        "Market_Prices repeating_group exists with min = 0 (Step 5: Market Price)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 (Details)",
+        "2. Enter valid values into all required fields on Step 1 (Product_Name, Short_Name, Description)",
+        "3. Navigate to Step 3 (Terms) and enter values for required numeric fields (Total_Number_of_Shares, Nominal_Unit_Price)",
+        "4. Navigate to Step 5 (Market Price)",
+        "5. Click 'Add row' (or equivalent) to add one Market Prices row",
+        "6. In the new row, set From_Date to <today> and fill Share_Value with a number",
+        "7. Remove the only Market Prices row (use the row's remove/delete control)",
+        "8. Complete any remaining steps as needed and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully; product is created (succeeds). On the product detail page, the Market Prices section displays zero entries (no rows shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "data_edge",
+      "test_case": "Save a Market Prices row with From_Date = today",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Market_Prices repeating_group present (Step 5: Market Price)",
+        "A valid product can be created (required fields exist and can be filled)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 3 and fill required numeric fields (Total_Number_of_Shares, Nominal_Unit_Price)",
+        "3. Navigate to Step 5 (Market Price)",
+        "4. Click 'Add row' to add one Market Prices row",
+        "5. Set From_Date to <today>",
+        "6. Enter a numeric value into Share_Value",
+        "7. Complete remaining steps and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully; product is created (succeeds). On the product detail page the Market Prices table shows one row with From Date exactly equal to <today> and the displayed Share Value equals the entered numeric value.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "data_edge",
+      "test_case": "Enter a far-future From_Date in a Market Prices row",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Market_Prices repeating_group present (Step 5: Market Price)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 3 and fill required numeric fields (Total_Number_of_Shares, Nominal_Unit_Price)",
+        "3. Navigate to Step 5 (Market Price)",
+        "4. Click 'Add row' to add one Market Prices row",
+        "5. Set From_Date to a far future date (many years ahead of <today>)",
+        "6. Enter a numeric value into Share_Value",
+        "7. Complete remaining steps and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully; product is created (succeeds). On the product detail page the Market Prices table shows the row with the far-future From Date displayed exactly as entered and the Share Value shown as entered.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "boundary",
+      "test_case": "Nominal_Unit_Price decimal precision vs Decimal_Places rounding",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Step 2 contains Decimal_Places (number) and Step 3 contains Nominal_Unit_Price (number)"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required text fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 2 (Currency)",
+        "3. Enter <Decimal_Places = P> into Decimal_Places",
+        "4. Navigate to Step 3 (Terms)",
+        "5. Enter a Nominal_Unit_Price value that has <P + 1> decimal places",
+        "6. Fill other required fields and submit the wizard"
+      ],
+      "expected_result": "Form submits successfully (succeeds). On the saved product detail, the displayed Nominal/Unit Price is rounded to <P> decimal places (the extra decimal precision is not present in the saved display).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "input_edge",
+      "test_case": "Leading/trailing whitespace in GL account field revealed by Accounting_Method visible_when",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Step 7 (Accounting) has Accounting_Method radio with option 'Cash-based' that reveals GL_Share_Reference (visible_when)",
+        "GL_Share_Reference is a free-text (unspecified) field"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 and fill required fields (Product_Name, Short_Name, Description)",
+        "2. Navigate to Step 7 (Accounting)",
+        "3. Select Accounting_Method = 'Cash-based' to reveal GL_Share_Reference",
+        "4. Enter a value with leading and trailing whitespace into GL_Share_Reference (e.g., leading and trailing spaces around the intended text)",
+        "5. Change Accounting_Method to 'None' (fields hide)",
+        "6. Change Accounting_Method back to 'Cash-based' (fields reappear)",
+        "7. Complete any remaining steps and submit the wizard"
+      ],
+      "expected_result": "The wizard allows toggling (succeeds). After toggling back to 'Cash-based' the GL_Share_Reference field still shows the entered value but with leading/trailing whitespace trimmed in the UI; after submit the product detail displays the GL_Share_Reference value without leading/trailing spaces (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Attempt to jump to Step 3 directly from Step 1 in enforced-sequence wizard",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened",
+        "Wizard presents step navigation tabs (Steps 1..7) and Step 1 contains required fields"
+      ],
+      "steps": [
+        "1. On Step 1, do not fill required fields",
+        "2. Click the step tab for Step 3 (Terms) directly in the stepper navigation"
+      ],
+      "expected_result": "Navigation to Step 3 is blocked (is blocked / error shown). The wizard remains on Step 1 and an inline indication is shown that required fields on the current step must be completed before moving to Step 3.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click the final submit action to check duplicate creation prevention",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened and can be completed",
+        "Product listing table 'Share Products' is accessible after create"
+      ],
+      "steps": [
+        "1. Fill all required fields across Steps 1..7 with valid values",
+        "2. Reach the final step and ensure the wizard shows the submit/finish action",
+        "3. Rapidly double-click the submit/finish button in quick succession"
+      ],
+      "expected_result": "Only one creation request is processed; the product is created once (succeeds). On the Share Products table after return, exactly one new row appears for the created Product Name and no duplicate rows are present.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-008",
+      "subcategory": "input_edge",
+      "test_case": "Enter very long Description text (200+ characters)",
+      "preconditions": [
+        "Create_Share_Product_Wizard is opened and Step 1 contains Description (unspecified/textarea)",
+        "No explicit max-length constraint is specified in the AST for Description"
+      ],
+      "steps": [
+        "1. Navigate to Step 1 (Details)",
+        "2. Enter a very long string (200+ characters) into the Description field",
+        "3. Fill other required fields on Step 1 and the wizard's required fields on other steps",
+        "4. Submit the wizard"
+      ],
+      "expected_result": "Form submits successfully (succeeds). On the product detail page the Description shows the full entered text (no truncation in the displayed detail). If UI truncation occurs, an inline indicator or tooltip is shown that the full text is available in the detail view (either outcome must present a visible indicator).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 2,
+    "input_edge": 3,
+    "interaction_edge": 3,
+    "state_edge": 0,
+    "data_edge": 2,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}

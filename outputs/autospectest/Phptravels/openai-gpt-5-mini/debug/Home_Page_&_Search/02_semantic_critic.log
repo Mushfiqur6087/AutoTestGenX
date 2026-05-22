@@ -1,0 +1,754 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:50:09.984565
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:50:44] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[22:50:44] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The home page features a prominent search widget with four tabs: Hotels, Flights, Tours, and Cars. Clicking a tab switches the visible search fields for that service type. The Hotels tab collects destination, check-in/check-out dates, number of rooms, and guest count (adults and children). The Flights tab collects trip type (One-way, Round-trip, or Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, or First). The Tours tab collects destination and a travel date range. The Cars tab collects pick-up and drop-off location, pick-up and drop-off date and time. The Search button validates that all required fields for the active tab are filled; inline errors appear on invalid fields. On success, the user is redirected to the corresponding results listing page.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Home Page & Search",
+  "components": {
+    "Search_Widget": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Hotels",
+          "fields": {
+            "Destination": {
+              "type": "search",
+              "required": true
+            },
+            "Check_In_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Check_Out_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Number_of_Rooms": {
+              "type": "number",
+              "required": true
+            },
+            "Adults": {
+              "type": "number",
+              "required": true
+            },
+            "Children": {
+              "type": "number",
+              "required": true
+            }
+          }
+        },
+        {
+          "tab_name": "Flights",
+          "fields": {
+            "Trip_Type": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "One-way",
+                "Round-trip",
+                "Multi-city"
+              ]
+            },
+            "Departure_City": {
+              "type": "search",
+              "required": true
+            },
+            "Arrival_City": {
+              "type": "search",
+              "required": true
+            },
+            "Departure_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Return_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Adults": {
+              "type": "number",
+              "required": true
+            },
+            "Children": {
+              "type": "number",
+              "required": true
+            },
+            "Infants": {
+              "type": "number",
+              "required": true
+            },
+            "Cabin_Class": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "Economy",
+                "Premium Economy",
+                "Business",
+                "First"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Tours",
+          "fields": {
+            "Destination": {
+              "type": "search",
+              "required": true
+            },
+            "Travel_Start_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Travel_End_Date": {
+              "type": "date",
+              "required": true
+            }
+          }
+        },
+        {
+          "tab_name": "Cars",
+          "fields": {
+            "Pick_Up_Location": {
+              "type": "search",
+              "required": true
+            },
+            "Drop_Off_Location": {
+              "type": "search",
+              "required": true
+            },
+            "Pick_Up_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Pick_Up_Time": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Drop_Off_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Drop_Off_Time": {
+              "type": "unspecified",
+              "required": true
+            }
+          }
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "visible_when": "active_tab == Hotels",
+          "constraints": [
+            "all required fields for Hotels tab must be filled"
+          ],
+          "on_failure": "shows inline field errors for invalid or missing fields",
+          "on_success": "redirects to Hotels results listing page"
+        },
+        {
+          "element_name": "Search",
+          "visible_when": "active_tab == Flights",
+          "constraints": [
+            "all required fields for Flights tab must be filled"
+          ],
+          "on_failure": "shows inline field errors for invalid or missing fields",
+          "on_success": "redirects to Flights results listing page"
+        },
+        {
+          "element_name": "Search",
+          "visible_when": "active_tab == Tours",
+          "constraints": [
+            "all required fields for Tours tab must be filled"
+          ],
+          "on_failure": "shows inline field errors for invalid or missing fields",
+          "on_success": "redirects to Tours results listing page"
+        },
+        {
+          "element_name": "Search",
+          "visible_when": "active_tab == Cars",
+          "constraints": [
+            "all required fields for Cars tab must be filled"
+          ],
+          "on_failure": "shows inline field errors for invalid or missing fields",
+          "on_success": "redirects to Cars results listing page"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:51:51] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is mostly complete but has incorrect/ambiguous field typing and adds multiple per-tab Search actions instead of a single Search button; these need correction before use.",
+  "missing": [],
+  "phantoms": [
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Time.type (uses 'unspecified' which is not a valid/expected type; description specifies a pick-up time)",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Time.type (uses 'unspecified' which is not a valid/expected type; description specifies a drop-off time)",
+    "components.Search_Widget.submit_actions (four separate 'Search' submit_action entries created per tab — description mentions a single Search button that validates the active tab)"
+  ],
+  "fixes": [
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Time.type: change value from 'unspecified' to 'time' (represents a time input field).",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Time.type: change value from 'unspecified' to 'time' (represents a time input field).",
+    "components.Search_Widget.submit_actions: collapse the four per-tab entries into a single submit action at components.Search_Widget.submit_actions[0] with: { \"element_name\": \"Search\", \"constraints\": [\"all required fields for the active tab must be filled\"], \"on_failure\": \"shows inline field errors for invalid or missing fields\", \"on_success\": \"redirects to the corresponding results listing page for the currently active tab\" }. Remove the other three submit_action objects.",
+    "components.Search_Widget.tabs[1].fields.Return_Date.required: consider changing to false and add an explicit conditional constraint (only if you want the UI to reflect trip-type logic) such as adding metadata: \"required_if\": { \"Trip_Type\": \"Round-trip\" }. Note: only add this conditional if the specification is intended to require a return date only for round-trip; otherwise keep it required."
+  ]
+}
+
+------------------------------------------------------------
+[22:51:51] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is mostly complete but has incorrect/ambiguous field typing and adds multiple per-tab Search actions instead of a single Search button; these need correction before use.",
+  "missing": [],
+  "phantoms": [
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Time.type (uses 'unspecified' which is not a valid/expected type; description specifies a pick-up time)",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Time.type (uses 'unspecified' which is not a valid/expected type; description specifies a drop-off time)",
+    "components.Search_Widget.submit_actions (four separate 'Search' submit_action entries created per tab \u2014 description mentions a single Search button that validates the active tab)"
+  ],
+  "fixes": [
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Time.type: change value from 'unspecified' to 'time' (represents a time input field).",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Time.type: change value from 'unspecified' to 'time' (represents a time input field).",
+    "components.Search_Widget.submit_actions: collapse the four per-tab entries into a single submit action at components.Search_Widget.submit_actions[0] with: { \"element_name\": \"Search\", \"constraints\": [\"all required fields for the active tab must be filled\"], \"on_failure\": \"shows inline field errors for invalid or missing fields\", \"on_success\": \"redirects to the corresponding results listing page for the currently active tab\" }. Remove the other three submit_action objects.",
+    "components.Search_Widget.tabs[1].fields.Return_Date.required: consider changing to false and add an explicit conditional constraint (only if you want the UI to reflect trip-type logic) such as adding metadata: \"required_if\": { \"Trip_Type\": \"Round-trip\" }. Note: only add this conditional if the specification is intended to require a return date only for round-trip; otherwise keep it required."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:10] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The home page features a prominent search widget with four tabs: Hotels, Flights, Tours, and Cars. Clicking a tab switches the visible search fields for that service type. The Hotels tab collects destination, check-in/check-out dates, number of rooms, and guest count (adults and children). The Flights tab collects trip type (One-way, Round-trip, or Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, or First). The Tours tab collects destination and a travel date range. The Cars tab collects pick-up and drop-off location, pick-up and drop-off date and time. The Search button validates that all required fields for the active tab are filled; inline errors appear on invalid fields. On success, the user is redirected to the corresponding results listing page.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Home Page & Search",
+  "components": {
+    "Search_Widget": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Hotels",
+          "fields": {
+            "Destination": {
+              "type": "search",
+              "required": true
+            },
+            "Check_In_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Check_Out_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Number_of_Rooms": {
+              "type": "number",
+              "required": true
+            },
+            "Adults": {
+              "type": "number",
+              "required": true
+            },
+            "Children": {
+              "type": "number",
+              "required": false
+            }
+          }
+        },
+        {
+          "tab_name": "Flights",
+          "fields": {
+            "Trip_Type": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "One-way",
+                "Round-trip",
+                "Multi-city"
+              ]
+            },
+            "Departure_City": {
+              "type": "search",
+              "required": true
+            },
+            "Arrival_City": {
+              "type": "search",
+              "required": true
+            },
+            "Departure_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Return_Date": {
+              "type": "date",
+              "required": false,
+              "required_if": {
+                "Trip_Type": "Round-trip"
+              }
+            },
+            "Adults": {
+              "type": "number",
+              "required": true
+            },
+            "Children": {
+              "type": "number",
+              "required": false
+            },
+            "Infants": {
+              "type": "number",
+              "required": false
+            },
+            "Cabin_Class": {
+              "type": "dropdown",
+              "required": false,
+              "options": [
+                "Economy",
+                "Premium Economy",
+                "Business",
+                "First"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Tours",
+          "fields": {
+            "Destination": {
+              "type": "search",
+              "required": true
+            },
+            "Start_Date": {
+              "type": "date",
+              "required": true
+            },
+            "End_Date": {
+              "type": "date",
+              "required": true
+            }
+          }
+        },
+        {
+          "tab_name": "Cars",
+          "fields": {
+            "Pick_Up_Location": {
+              "type": "search",
+              "required": true
+            },
+            "Drop_Off_Location": {
+              "type": "search",
+              "required": true
+            },
+            "Pick_Up_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Pick_Up_Time": {
+              "type": "time",
+              "required": true
+            },
+            "Drop_Off_Date": {
+              "type": "date",
+              "required": true
+            },
+            "Drop_Off_Time": {
+              "type": "time",
+              "required": true
+            }
+          }
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "constraints": [
+            "all required fields for the active tab must be filled"
+          ],
+          "on_failure": "shows inline field errors for invalid or missing fields",
+          "on_success": "redirects to the corresponding results listing page for the currently active tab"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:52:35] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST includes many inferred 'required' flags and a conditional (Return_Date.required_if) that are not stated in the description; remove or limit these inferred constraints and the conditional or make them explicit in the description.",
+  "missing": [],
+  "phantoms": [
+    "components.Search_Widget.tabs[0].fields.Destination.required",
+    "components.Search_Widget.tabs[0].fields.Check_In_Date.required",
+    "components.Search_Widget.tabs[0].fields.Check_Out_Date.required",
+    "components.Search_Widget.tabs[0].fields.Number_of_Rooms.required",
+    "components.Search_Widget.tabs[0].fields.Adults.required",
+    "components.Search_Widget.tabs[0].fields.Children.required",
+    "components.Search_Widget.tabs[1].fields.Trip_Type.required",
+    "components.Search_Widget.tabs[1].fields.Departure_City.required",
+    "components.Search_Widget.tabs[1].fields.Arrival_City.required",
+    "components.Search_Widget.tabs[1].fields.Departure_Date.required",
+    "components.Search_Widget.tabs[1].fields.Return_Date.required",
+    "components.Search_Widget.tabs[1].fields.Return_Date.required_if",
+    "components.Search_Widget.tabs[1].fields.Adults.required",
+    "components.Search_Widget.tabs[1].fields.Children.required",
+    "components.Search_Widget.tabs[1].fields.Infants.required",
+    "components.Search_Widget.tabs[1].fields.Cabin_Class.required",
+    "components.Search_Widget.tabs[2].fields.Destination.required",
+    "components.Search_Widget.tabs[2].fields.Start_Date.required",
+    "components.Search_Widget.tabs[2].fields.End_Date.required",
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Location.required",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Location.required",
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Date.required",
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Time.required",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Date.required",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Time.required"
+  ],
+  "fixes": [
+    "Remove all explicit 'required' properties from individual field definitions (e.g., remove components.Search_Widget.tabs[0].fields.Destination.required) unless the description explicitly states a field is required.",
+    "Remove the conditional Return_Date.required_if at components.Search_Widget.tabs[1].fields.Return_Date.required_if; only add conditional validation if the description explicitly specifies 'when Trip_Type is Round-trip then Return_Date is required'.",
+    "If specific required fields are intended, update the description to enumerate which fields are required per tab; then re-run generation so required flags appear only for those explicitly specified fields.",
+    "If conditional behaviors are intended (e.g., Round-trip requiring a return date), update the description to include explicit trigger language (e.g., 'when Trip_Type is Round-trip, Return_Date is required') and then re-run generation."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:35] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST includes many inferred 'required' flags and a conditional (Return_Date.required_if) that are not stated in the description; remove or limit these inferred constraints and the conditional or make them explicit in the description.",
+  "missing": [],
+  "phantoms": [
+    "components.Search_Widget.tabs[0].fields.Destination.required",
+    "components.Search_Widget.tabs[0].fields.Check_In_Date.required",
+    "components.Search_Widget.tabs[0].fields.Check_Out_Date.required",
+    "components.Search_Widget.tabs[0].fields.Number_of_Rooms.required",
+    "components.Search_Widget.tabs[0].fields.Adults.required",
+    "components.Search_Widget.tabs[0].fields.Children.required",
+    "components.Search_Widget.tabs[1].fields.Trip_Type.required",
+    "components.Search_Widget.tabs[1].fields.Departure_City.required",
+    "components.Search_Widget.tabs[1].fields.Arrival_City.required",
+    "components.Search_Widget.tabs[1].fields.Departure_Date.required",
+    "components.Search_Widget.tabs[1].fields.Return_Date.required",
+    "components.Search_Widget.tabs[1].fields.Return_Date.required_if",
+    "components.Search_Widget.tabs[1].fields.Adults.required",
+    "components.Search_Widget.tabs[1].fields.Children.required",
+    "components.Search_Widget.tabs[1].fields.Infants.required",
+    "components.Search_Widget.tabs[1].fields.Cabin_Class.required",
+    "components.Search_Widget.tabs[2].fields.Destination.required",
+    "components.Search_Widget.tabs[2].fields.Start_Date.required",
+    "components.Search_Widget.tabs[2].fields.End_Date.required",
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Location.required",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Location.required",
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Date.required",
+    "components.Search_Widget.tabs[3].fields.Pick_Up_Time.required",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Date.required",
+    "components.Search_Widget.tabs[3].fields.Drop_Off_Time.required"
+  ],
+  "fixes": [
+    "Remove all explicit 'required' properties from individual field definitions (e.g., remove components.Search_Widget.tabs[0].fields.Destination.required) unless the description explicitly states a field is required.",
+    "Remove the conditional Return_Date.required_if at components.Search_Widget.tabs[1].fields.Return_Date.required_if; only add conditional validation if the description explicitly specifies 'when Trip_Type is Round-trip then Return_Date is required'.",
+    "If specific required fields are intended, update the description to enumerate which fields are required per tab; then re-run generation so required flags appear only for those explicitly specified fields.",
+    "If conditional behaviors are intended (e.g., Round-trip requiring a return date), update the description to include explicit trigger language (e.g., 'when Trip_Type is Round-trip, Return_Date is required') and then re-run generation."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:53] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The home page features a prominent search widget with four tabs: Hotels, Flights, Tours, and Cars. Clicking a tab switches the visible search fields for that service type. The Hotels tab collects destination, check-in/check-out dates, number of rooms, and guest count (adults and children). The Flights tab collects trip type (One-way, Round-trip, or Multi-city), departure and arrival city, travel dates, passenger count (adults, children, infants), and cabin class (Economy, Premium Economy, Business, or First). The Tours tab collects destination and a travel date range. The Cars tab collects pick-up and drop-off location, pick-up and drop-off date and time. The Search button validates that all required fields for the active tab are filled; inline errors appear on invalid fields. On success, the user is redirected to the corresponding results listing page.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Home Page & Search",
+  "components": {
+    "Search_Widget": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Hotels",
+          "fields": {
+            "Destination": {
+              "type": "search"
+            },
+            "Check_In_Date": {
+              "type": "date"
+            },
+            "Check_Out_Date": {
+              "type": "date"
+            },
+            "Number_of_Rooms": {
+              "type": "number"
+            },
+            "Adults": {
+              "type": "number"
+            },
+            "Children": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "tab_name": "Flights",
+          "fields": {
+            "Trip_Type": {
+              "type": "dropdown",
+              "options": [
+                "One-way",
+                "Round-trip",
+                "Multi-city"
+              ]
+            },
+            "Departure_City": {
+              "type": "search"
+            },
+            "Arrival_City": {
+              "type": "search"
+            },
+            "Departure_Date": {
+              "type": "date"
+            },
+            "Return_Date": {
+              "type": "date"
+            },
+            "Adults": {
+              "type": "number"
+            },
+            "Children": {
+              "type": "number"
+            },
+            "Infants": {
+              "type": "number"
+            },
+            "Cabin_Class": {
+              "type": "dropdown",
+              "options": [
+                "Economy",
+                "Premium Economy",
+                "Business",
+                "First"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Tours",
+          "fields": {
+            "Destination": {
+              "type": "search"
+            },
+            "Travel_Start_Date": {
+              "type": "date"
+            },
+            "Travel_End_Date": {
+              "type": "date"
+            }
+          }
+        },
+        {
+          "tab_name": "Cars",
+          "fields": {
+            "Pick_Up_Location": {
+              "type": "search"
+            },
+            "Drop_Off_Location": {
+              "type": "search"
+            },
+            "Pick_Up_Date": {
+              "type": "date"
+            },
+            "Pick_Up_Time": {
+              "type": "unspecified"
+            },
+            "Drop_Off_Date": {
+              "type": "date"
+            },
+            "Drop_Off_Time": {
+              "type": "unspecified"
+            }
+          }
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "constraints": [
+            "validates that all required fields for the active tab are filled"
+          ],
+          "on_success": "redirects to corresponding results listing page",
+          "on_failure": "shows inline field errors on invalid fields"
+        }
+      ],
+      "interaction_notes": [
+        "clicking a tab switches the visible search fields to that service type"
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:53:03] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "yes",
+  "summary": "AST accurately captures the four-tab search widget, all specified fields per tab, the Search action with validation, inline errors, and redirect behavior; no significant elements are missing or invented.",
+  "missing": [],
+  "phantoms": [],
+  "fixes": []
+}
+
+------------------------------------------------------------
+[22:53:03] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "yes",
+  "summary": "AST accurately captures the four-tab search widget, all specified fields per tab, the Search action with validation, inline errors, and redirect behavior; no significant elements are missing or invented.",
+  "missing": [],
+  "phantoms": [],
+  "fixes": []
+}

@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.758564
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.394744
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:06:11] Semantic Critic - SYSTEM PROMPT
+[22:21:46] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:06:11] Semantic Critic - USER PROMPT
+[22:21:46] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -125,51 +125,389 @@ The Savings Account Detail page displays the account number, product name, clien
   "components": {
     "Savings_Account_Creation_Form": {
       "type": "form",
-      "context": "created_from_client_detail_page",
       "fields": {
         "Product_Name": {
           "type": "dropdown",
-          "required": false,
-          "on_change": "auto-populates default values for fields: Field_Officer, Nominal_Annual_Interest_Rate, Interest_Compounding_Period, Interest_Posting_Period, Interest_Calculated_Using, Days_in_Year, Minimum_Opening_Balance, Lock_in_Period, Charges"
+          "required": true,
+          "on_change_effect": "auto_populates default values for Nominal_Annual_Interest_Rate, Interest_Compounding_Period, Interest_Posting_Period, Interest_Calculated_Using, Days_in_Year, Minimum_Opening_Balance, Lock_in_Period, Allow_Overdraft, and Charges"
         },
         "Field_Officer": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Submitted_On": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "Nominal_Annual_Interest_Rate": {
-          "type": "number"
+          "type": "dropdown",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Interest_Compounding_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Interest_Posting_Period": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Interest_Calculated_Using": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Days_in_Year": {
-          "type": "dropdown"
+          "type": "dropdown",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Minimum_Opening_Balance": {
-          "type": "number"
+          "type": "number",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Lock_in_Period": {
-          "type": "unspecified"
+          "type": "number",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Allow_Overdraft": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false,
+          "visible_when": "Product_Name is selected"
         },
         "Charges": {
           "type": "repeating_group",
+          "required": false,
+          "prefilled_when": "Product_Name is selected",
+          "item_fields": {}
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates account in Submitted and Pending Approval status"
+        }
+      ]
+    },
+    "Savings_Account_Detail_Page": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {
+            "Transactions_Table": {
+              "type": "data_table",
+              "description": "table of all deposits, withdrawals, and interest postings",
+              "columns": [
+                "Date",
+                "Type",
+                "Amount",
+                "Running Balance"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ]
+    },
+    "Savings_Account_State_Bound_Action_Bar": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Submitted and Pending Approval": {
+          "available_actions": [
+            {
+              "action_name": "Approve",
+              "on_success": "changes status to Approved"
+            },
+            {
+              "action_name": "Reject",
+              "on_success": "rejects the application"
+            },
+            {
+              "action_name": "Withdraw Application",
+              "on_success": "withdraws the application"
+            }
+          ]
+        },
+        "Approved": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "on_success": "changes status to Active"
+            },
+            {
+              "action_name": "Undo Approval",
+              "on_success": "reverts status to Submitted and Pending Approval"
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Deposit",
+              "fields": {
+                "Transaction_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Payment_Type": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money"
+                  ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false,
+                  "visible_when": "Payment_Type != Cash"
+                }
+              },
+              "on_success": "credits the account"
+            },
+            {
+              "action_name": "Withdraw",
+              "fields": {
+                "Transaction_Date": {
+                  "type": "date",
+                  "required": true
+                },
+                "Transaction_Amount": {
+                  "type": "number",
+                  "required": true
+                },
+                "Payment_Type": {
+                  "type": "dropdown",
+                  "required": true,
+                  "options": [
+                    "Cash",
+                    "Check",
+                    "Mobile Money"
+                  ]
+                },
+                "Payment_Details": {
+                  "type": "unspecified",
+                  "required": false,
+                  "visible_when": "Payment_Type != Cash"
+                }
+              },
+              "constraints": [
+                "must not exceed available balance unless Allow_Overdraft is enabled",
+                "if Minimum_Opening_Balance enforcement applies and withdrawal would breach Minimum_Opening_Balance, show error"
+              ],
+              "on_success": "debits the account"
+            },
+            {
+              "action_name": "Post Interest",
+              "on_success": "posts interest to the account"
+            },
+            {
+              "action_name": "Calculate Interest",
+              "on_success": "calculates interest for the account"
+            },
+            {
+              "action_name": "Close"
+            },
+            {
+              "action_name": "Block Account"
+            },
+            {
+              "action_name": "Block Debit"
+            },
+            {
+              "action_name": "Block Credit"
+            }
+          ]
+        },
+        "Dormant": {
+          "available_actions": []
+        },
+        "Closed": {
+          "available_actions": []
+        },
+        "Blocked": {
+          "available_actions": []
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:23:50] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains several inferred conditionals not stated in the description and omits the explicit 'Add more' action for Charges; regenerate with those changes.",
+  "missing": [
+    "Savings_Account_Creation_Form.fields.Charges.add_action (Add More / Add Charge button to allow adding additional charges)"
+  ],
+  "phantoms": [
+    "Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Interest_Compounding_Period.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Interest_Posting_Period.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Interest_Calculated_Using.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Days_in_Year.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Minimum_Opening_Balance.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Lock_in_Period.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Allow_Overdraft.visible_when (visibility conditional not specified in description)"
+  ],
+  "fixes": [
+    "Remove inferred visibility conditions: delete the 'visible_when' properties from the following paths so fields are present and simply prefilled by product selection per the description: Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.visible_when, Savings_Account_Creation_Form.fields.Interest_Compounding_Period.visible_when, Savings_Account_Creation_Form.fields.Interest_Posting_Period.visible_when, Savings_Account_Creation_Form.fields.Interest_Calculated_Using.visible_when, Savings_Account_Creation_Form.fields.Days_in_Year.visible_when, Savings_Account_Creation_Form.fields.Minimum_Opening_Balance.visible_when, Savings_Account_Creation_Form.fields.Lock_in_Period.visible_when, Savings_Account_Creation_Form.fields.Allow_Overdraft.visible_when.",
+    "Add explicit 'Add more' action for Charges at: Savings_Account_Creation_Form.fields.Charges.add_action — e.g. add_action: { \"element_name\": \"Add Charge\", \"action\": \"append_item\", \"item_template\": { /* minimal fields or reference to product charge structure */ } } so the UI exposes an Add Charge control as required by the description."
+  ]
+}
+
+------------------------------------------------------------
+[22:23:50] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains several inferred conditionals not stated in the description and omits the explicit 'Add more' action for Charges; regenerate with those changes.",
+  "missing": [
+    "Savings_Account_Creation_Form.fields.Charges.add_action (Add More / Add Charge button to allow adding additional charges)"
+  ],
+  "phantoms": [
+    "Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Interest_Compounding_Period.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Interest_Posting_Period.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Interest_Calculated_Using.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Days_in_Year.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Minimum_Opening_Balance.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Lock_in_Period.visible_when (visibility conditional not specified in description)",
+    "Savings_Account_Creation_Form.fields.Allow_Overdraft.visible_when (visibility conditional not specified in description)"
+  ],
+  "fixes": [
+    "Remove inferred visibility conditions: delete the 'visible_when' properties from the following paths so fields are present and simply prefilled by product selection per the description: Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.visible_when, Savings_Account_Creation_Form.fields.Interest_Compounding_Period.visible_when, Savings_Account_Creation_Form.fields.Interest_Posting_Period.visible_when, Savings_Account_Creation_Form.fields.Interest_Calculated_Using.visible_when, Savings_Account_Creation_Form.fields.Days_in_Year.visible_when, Savings_Account_Creation_Form.fields.Minimum_Opening_Balance.visible_when, Savings_Account_Creation_Form.fields.Lock_in_Period.visible_when, Savings_Account_Creation_Form.fields.Allow_Overdraft.visible_when.",
+    "Add explicit 'Add more' action for Charges at: Savings_Account_Creation_Form.fields.Charges.add_action \u2014 e.g. add_action: { \"element_name\": \"Add Charge\", \"action\": \"append_item\", \"item_template\": { /* minimal fields or reference to product charge structure */ } } so the UI exposes an Add Charge control as required by the description."
+  ]
+}
+
+------------------------------------------------------------
+[22:25:31] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+A new savings account is created from the Client Detail page. The creation form contains Product Name dropdown (selecting a product auto-populates default values), Field Officer, Submitted On date, Nominal Annual Interest Rate, Interest Compounding Period, Interest Posting Period, Interest Calculated Using, Days in Year (all dropdowns, pre-filled from product), Minimum Opening Balance, Lock-in Period, Allow Overdraft checkbox, and a Charges section listing product charges with an option to add more. Clicking "Submit" creates the account in "Submitted and Pending Approval" status.
+
+The Savings Account Detail page displays the account number, product name, client name, status badge, account balance, and available balance. Status badges include Submitted and Pending Approval, Approved, Active, Dormant, Closed, and Blocked. Action buttons change based on status: Pending offers Approve, Reject, and Withdraw Application; Approved offers Activate and Undo Approval; Active offers Deposit (form with Transaction Date, Transaction Amount, Payment Type — Cash, Check, Mobile Money — and payment detail fields; submitting credits the account), Withdraw (same form as Deposit — the system validates the withdrawal does not exceed available balance unless overdraft is enabled; if minimum balance is enforced and the withdrawal would breach it, an error is shown), Post Interest, Calculate Interest, Close, Block Account, Block Debit, and Block Credit. Tabs show Summary, Transactions (table of all deposits, withdrawals, and interest postings with Date, Type, Amount, and Running Balance), Charges, and Documents.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Savings Account",
+  "components": {
+    "Savings_Account_Creation_Form": {
+      "type": "form",
+      "fields": {
+        "Product_Name": {
+          "type": "dropdown",
+          "required": true,
+          "constraints": [],
+          "on_change": "populates default values into Nominal_Annual_Interest_Rate, Interest_Compounding_Period, Interest_Posting_Period, Interest_Calculated_Using, Days_in_Year, Minimum_Opening_Balance, Lock_in_Period, Allow_Overdraft and Charges from selected product"
+        },
+        "Field_Officer": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Nominal_Annual_Interest_Rate": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": []
+        },
+        "Interest_Compounding_Period": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": []
+        },
+        "Interest_Posting_Period": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": []
+        },
+        "Interest_Calculated_Using": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": []
+        },
+        "Days_in_Year": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": []
+        },
+        "Minimum_Opening_Balance": {
+          "type": "number",
+          "required": false,
+          "constraints": []
+        },
+        "Lock_in_Period": {
+          "type": "dropdown",
+          "required": false,
+          "constraints": []
+        },
+        "Allow_Overdraft": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Charges": {
+          "type": "repeating_group",
+          "required": false,
           "item_fields": {
             "Charge": {
-              "type": "unspecified"
+              "type": "unspecified",
+              "required": true
+            },
+            "Amount": {
+              "type": "number",
+              "required": true
             }
           },
-          "description": "lists product charges with option to add additional charges"
+          "add_action": {
+            "element_name": "Add Charge",
+            "action": "append_item",
+            "item_template": {
+              "Charge": {
+                "type": "unspecified"
+              },
+              "Amount": {
+                "type": "number"
+              }
+            }
+          }
         }
       },
       "submit_actions": [
@@ -190,7 +528,7 @@ The Savings Account Detail page displays the account number, product name, clien
             },
             {
               "action_name": "Reject",
-              "on_success": "changes status to Rejected"
+              "on_success": "marks application as Rejected"
             },
             {
               "action_name": "Withdraw Application",
@@ -217,23 +555,35 @@ The Savings Account Detail page displays the account number, product name, clien
               "fields": {
                 "Transaction_Date": {
                   "type": "date",
-                  "required": false
+                  "required": true
                 },
                 "Transaction_Amount": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
                 "Payment_Type": {
                   "type": "dropdown",
+                  "required": true,
                   "options": [
                     "Cash",
                     "Check",
                     "Mobile Money"
                   ]
                 },
-                "Payment_Details": {
+                "Check_Number": {
                   "type": "unspecified",
-                  "visible_when": "Payment_Type == Check OR Payment_Type == Mobile Money"
+                  "required_when": "Payment_Type == Check",
+                  "visible_when": "Payment_Type == Check"
+                },
+                "Check_Bank_Name": {
+                  "type": "unspecified",
+                  "required_when": "Payment_Type == Check",
+                  "visible_when": "Payment_Type == Check"
+                },
+                "Mobile_Transaction_ID": {
+                  "type": "unspecified",
+                  "required_when": "Payment_Type == Mobile Money",
+                  "visible_when": "Payment_Type == Mobile Money"
                 }
               },
               "on_success": "credits the account"
@@ -243,28 +593,41 @@ The Savings Account Detail page displays the account number, product name, clien
               "fields": {
                 "Transaction_Date": {
                   "type": "date",
-                  "required": false
+                  "required": true
                 },
                 "Transaction_Amount": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
                 "Payment_Type": {
                   "type": "dropdown",
+                  "required": true,
                   "options": [
                     "Cash",
                     "Check",
                     "Mobile Money"
                   ]
                 },
-                "Payment_Details": {
+                "Check_Number": {
                   "type": "unspecified",
-                  "visible_when": "Payment_Type == Check OR Payment_Type == Mobile Money"
+                  "required_when": "Payment_Type == Check",
+                  "visible_when": "Payment_Type == Check"
+                },
+                "Check_Bank_Name": {
+                  "type": "unspecified",
+                  "required_when": "Payment_Type == Check",
+                  "visible_when": "Payment_Type == Check"
+                },
+                "Mobile_Transaction_ID": {
+                  "type": "unspecified",
+                  "required_when": "Payment_Type == Mobile Money",
+                  "visible_when": "Payment_Type == Mobile Money"
                 }
               },
               "constraints": [
-                "transaction amount must not exceed available balance unless Allow_Overdraft is enabled on the account",
-                "if minimum balance enforcement is enabled, withdrawal that would result in balance below the enforced minimum is rejected with an error"
+                "Transaction_Amount must not exceed available_balance unless Allow_Overdraft == true",
+                "Post-withdrawal balance must be >= minimum_balance unless minimum balance enforcement is disabled",
+                "System validates available balance and minimum balance rules on submit and shows an error if violated"
               ],
               "on_success": "debits the account"
             },
@@ -274,23 +637,23 @@ The Savings Account Detail page displays the account number, product name, clien
             },
             {
               "action_name": "Calculate Interest",
-              "on_success": "calculates interest (no posting)"
+              "on_success": "calculates interest for posting/reporting"
             },
             {
               "action_name": "Close",
-              "on_success": "closes the account"
+              "on_success": "changes status to Closed"
             },
             {
               "action_name": "Block Account",
-              "on_success": "changes status to Blocked"
+              "on_success": "changes account block state to Blocked"
             },
             {
               "action_name": "Block Debit",
-              "on_success": "blocks debit transactions on the account"
+              "on_success": "prevents debit transactions on account"
             },
             {
               "action_name": "Block Credit",
-              "on_success": "blocks credit transactions on the account"
+              "on_success": "prevents credit transactions on account"
             }
           ]
         },
@@ -314,17 +677,14 @@ The Savings Account Detail page displays the account number, product name, clien
         },
         {
           "tab_name": "Transactions",
-          "fields": {
-            "Transactions_Table": {
-              "type": "data_table",
-              "columns": [
-                "Date",
-                "Type",
-                "Amount",
-                "Running Balance"
-              ]
-            }
-          }
+          "fields": {},
+          "type": "data_table",
+          "columns": [
+            "Date",
+            "Type",
+            "Amount",
+            "Running Balance"
+          ]
         },
         {
           "tab_name": "Charges",
@@ -343,49 +703,87 @@ The Savings Account Detail page displays the account number, product name, clien
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:08:02] Semantic Critic - LLM RESPONSE
+[22:26:58] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST largely covers the interactive elements but includes inferred conditionals and an inferred 'Rejected' status and has a type mismatch for Nominal_Annual_Interest_Rate; regenerate to remove phantoms and correct types.",
+  "summary": "The AST broadly covers the described interactions but contains multiple inferred/phantom fields and conditional attributes not explicitly described (notably specific charge item fields and payment-detail fields/conditions); regenerate after removing or generalizing these inferences.",
   "missing": [],
   "phantoms": [
-    "Savings_Account_Detail_Actions.states['Submitted and Pending Approval'].available_actions[1].on_success (sets status to 'Rejected' — 'Rejected' status is not specified in the description)",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Details.visible_when (conditional visibility for payment details was inferred but not specified in the description)",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Payment_Details.visible_when (conditional visibility for payment details was inferred but not specified in the description)"
+    "Savings_Account_Creation_Form.fields.Charges.item_fields.Charge",
+    "Savings_Account_Creation_Form.fields.Charges.item_fields.Amount",
+    "Savings_Account_Creation_Form.fields.Charges.add_action.item_template.Charge",
+    "Savings_Account_Creation_Form.fields.Charges.add_action.item_template.Amount",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Number",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Bank_Name",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Mobile_Transaction_ID",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Number.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Number.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Bank_Name.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Bank_Name.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Mobile_Transaction_ID.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Mobile_Transaction_ID.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Number",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Bank_Name",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Mobile_Transaction_ID",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Number.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Number.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Bank_Name.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Bank_Name.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Mobile_Transaction_ID.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Mobile_Transaction_ID.visible_when"
   ],
   "fixes": [
-    "Savings_Account_Detail_Actions.states['Submitted and Pending Approval'].available_actions[1].on_success — remove the explicit change-to-'Rejected' status; the description names a 'Reject' action but does not introduce a 'Rejected' badge/state, so either omit the resulting status or phrase it as a generic reject action without adding a new state.",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Details — remove the visible_when conditional; the description mentions payment detail fields but does not specify conditional logic, so do not infer visibility rules unless explicitly stated.",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Payment_Details — remove the visible_when conditional; do not infer conditional visibility for withdraw payment details unless description explicitly states triggers.",
-    "Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.type — change to 'dropdown' (the description lists this among the dropdowns pre-filled from product).",
-    "Savings_Account_Creation_Form.fields.Field_Officer.type — set an explicit control type (e.g., 'dropdown' or 'select') instead of 'unspecified' to match typical UX and the description's context."
+    "Savings_Account_Creation_Form.fields.Charges: Remove explicit item_fields (Charge, Amount) and add_action.item_template details unless the description specifies the exact structure of a charge item; instead represent Charges as a repeating_group with item_fields: {} (or a single unspecified 'Charge' item) and keep the 'add' action label (since the description says 'option to add more').",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0] (Deposit).fields: Remove the explicit payment-detail fields (Check_Number, Check_Bank_Name, Mobile_Transaction_ID) and any required_when/visible_when properties because the description only mentions 'payment detail fields' without explicit conditional trigger language; replace them with a single Payment_Details field of unspecified type or leave as fields: { Payment_Details: { type: 'unspecified' } }.",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1] (Withdraw).fields: Same as for Deposit — remove Check_Number, Check_Bank_Name, Mobile_Transaction_ID and all required_when/visible_when attributes; replace with a generic Payment_Details field or leave unspecified unless the description supplies explicit conditional rules.",
+    "Remove all required_when/visible_when conditional attributes for payment detail fields across Deposit and Withdraw (paths listed in phantoms) unless the description explicitly states conditional display rules (e.g., 'when Payment Type is Check'). If conditional behavior is intended, the description must explicitly specify trigger language so the AST can encode it.",
+    "General: Where the description is vague about internal field names or field-level conditions (e.g., 'payment detail fields', 'product charges'), prefer generic placeholders (unspecified types or grouped fields) instead of inventing specific field names and conditional logic. Update the AST accordingly before reuse."
   ]
 }
 
 ------------------------------------------------------------
-[16:08:02] Semantic Critic - PARSED JSON
+[22:26:58] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST largely covers the interactive elements but includes inferred conditionals and an inferred 'Rejected' status and has a type mismatch for Nominal_Annual_Interest_Rate; regenerate to remove phantoms and correct types.",
+  "summary": "The AST broadly covers the described interactions but contains multiple inferred/phantom fields and conditional attributes not explicitly described (notably specific charge item fields and payment-detail fields/conditions); regenerate after removing or generalizing these inferences.",
   "missing": [],
   "phantoms": [
-    "Savings_Account_Detail_Actions.states['Submitted and Pending Approval'].available_actions[1].on_success (sets status to 'Rejected' \u2014 'Rejected' status is not specified in the description)",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Details.visible_when (conditional visibility for payment details was inferred but not specified in the description)",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Payment_Details.visible_when (conditional visibility for payment details was inferred but not specified in the description)"
+    "Savings_Account_Creation_Form.fields.Charges.item_fields.Charge",
+    "Savings_Account_Creation_Form.fields.Charges.item_fields.Amount",
+    "Savings_Account_Creation_Form.fields.Charges.add_action.item_template.Charge",
+    "Savings_Account_Creation_Form.fields.Charges.add_action.item_template.Amount",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Number",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Bank_Name",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Mobile_Transaction_ID",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Number.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Number.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Bank_Name.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Check_Bank_Name.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Mobile_Transaction_ID.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Mobile_Transaction_ID.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Number",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Bank_Name",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Mobile_Transaction_ID",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Number.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Number.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Bank_Name.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Check_Bank_Name.visible_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Mobile_Transaction_ID.required_when",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Mobile_Transaction_ID.visible_when"
   ],
   "fixes": [
-    "Savings_Account_Detail_Actions.states['Submitted and Pending Approval'].available_actions[1].on_success \u2014 remove the explicit change-to-'Rejected' status; the description names a 'Reject' action but does not introduce a 'Rejected' badge/state, so either omit the resulting status or phrase it as a generic reject action without adding a new state.",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[0].fields.Payment_Details \u2014 remove the visible_when conditional; the description mentions payment detail fields but does not specify conditional logic, so do not infer visibility rules unless explicitly stated.",
-    "Savings_Account_Detail_Actions.states.Active.available_actions[1].fields.Payment_Details \u2014 remove the visible_when conditional; do not infer conditional visibility for withdraw payment details unless description explicitly states triggers.",
-    "Savings_Account_Creation_Form.fields.Nominal_Annual_Interest_Rate.type \u2014 change to 'dropdown' (the description lists this among the dropdowns pre-filled from product).",
-    "Savings_Account_Creation_Form.fields.Field_Officer.type \u2014 set an explicit control type (e.g., 'dropdown' or 'select') instead of 'unspecified' to match typical UX and the description's context."
+    "Savings_Account_Creation_Form.fields.Charges: Remove explicit item_fields (Charge, Amount) and add_action.item_template details unless the description specifies the exact structure of a charge item; instead represent Charges as a repeating_group with item_fields: {} (or a single unspecified 'Charge' item) and keep the 'add' action label (since the description says 'option to add more').",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[0] (Deposit).fields: Remove the explicit payment-detail fields (Check_Number, Check_Bank_Name, Mobile_Transaction_ID) and any required_when/visible_when properties because the description only mentions 'payment detail fields' without explicit conditional trigger language; replace them with a single Payment_Details field of unspecified type or leave as fields: { Payment_Details: { type: 'unspecified' } }.",
+    "Savings_Account_Detail_Actions.states.Active.available_actions[1] (Withdraw).fields: Same as for Deposit \u2014 remove Check_Number, Check_Bank_Name, Mobile_Transaction_ID and all required_when/visible_when attributes; replace with a generic Payment_Details field or leave unspecified unless the description supplies explicit conditional rules.",
+    "Remove all required_when/visible_when conditional attributes for payment detail fields across Deposit and Withdraw (paths listed in phantoms) unless the description explicitly states conditional display rules (e.g., 'when Payment Type is Check'). If conditional behavior is intended, the description must explicitly specify trigger language so the AST can encode it.",
+    "General: Where the description is vague about internal field names or field-level conditions (e.g., 'payment detail fields', 'product charges'), prefer generic placeholders (unspecified types or grouped fields) instead of inventing specific field names and conditional logic. Update the AST accordingly before reuse."
   ]
 }
 
 ------------------------------------------------------------
-[16:09:44] Semantic Critic - USER PROMPT
+[22:27:57] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -404,100 +802,65 @@ The Savings Account Detail page displays the account number, product name, clien
   "components": {
     "Savings_Account_Creation_Form": {
       "type": "form",
-      "location_hint": "Client Detail page",
       "fields": {
         "Product_Name": {
           "type": "dropdown",
-          "required": true,
-          "on_change": "auto-populates default values for interest and charges",
-          "affects": [
-            "Nominal_Annual_Interest_Rate",
-            "Interest_Compounding_Period",
-            "Interest_Posting_Period",
-            "Interest_Calculated_Using",
-            "Days_in_Year",
-            "Charges"
-          ]
+          "required": false,
+          "on_change": "auto-populates product default values"
         },
         "Field_Officer": {
-          "type": "dropdown"
+          "type": "unspecified",
+          "required": false
         },
         "Submitted_On": {
-          "type": "date"
+          "type": "date",
+          "required": false
         },
         "Nominal_Annual_Interest_Rate": {
           "type": "dropdown",
-          "description": "pre-filled from selected product"
+          "required": false
         },
         "Interest_Compounding_Period": {
           "type": "dropdown",
-          "description": "pre-filled from selected product"
+          "required": false
         },
         "Interest_Posting_Period": {
           "type": "dropdown",
-          "description": "pre-filled from selected product"
+          "required": false
         },
         "Interest_Calculated_Using": {
           "type": "dropdown",
-          "description": "pre-filled from selected product"
+          "required": false
         },
         "Days_in_Year": {
           "type": "dropdown",
-          "description": "pre-filled from selected product"
+          "required": false
         },
         "Minimum_Opening_Balance": {
-          "type": "number"
+          "type": "number",
+          "required": false
         },
         "Lock_in_Period": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Allow_Overdraft": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "Charges": {
           "type": "repeating_group",
-          "description": "lists product charges and allows adding more",
-          "pre_filled_from_product": true,
-          "item_fields": {}
+          "item_fields": {},
+          "add_action": {
+            "element_name": "Add Charge",
+            "item_template": "unspecified"
+          }
         }
       },
       "submit_actions": [
         {
           "element_name": "Submit",
           "on_success": "creates account in Submitted and Pending Approval status"
-        }
-      ]
-    },
-    "Savings_Account_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Summary",
-          "fields": {}
-        },
-        {
-          "tab_name": "Transactions",
-          "fields": {
-            "Transactions_Table": {
-              "type": "data_table",
-              "columns": [
-                "Date",
-                "Type",
-                "Amount",
-                "Running Balance"
-              ],
-              "row_actions": [],
-              "bulk_actions": []
-            }
-          }
-        },
-        {
-          "tab_name": "Charges",
-          "fields": {}
-        },
-        {
-          "tab_name": "Documents",
-          "fields": {}
         }
       ]
     },
@@ -511,7 +874,8 @@ The Savings Account Detail page displays the account number, product name, clien
               "on_success": "changes status to Approved"
             },
             {
-              "action_name": "Reject"
+              "action_name": "Reject",
+              "on_success": "marks application as Rejected"
             },
             {
               "action_name": "Withdraw Application",
@@ -527,7 +891,7 @@ The Savings Account Detail page displays the account number, product name, clien
             },
             {
               "action_name": "Undo Approval",
-              "on_success": "changes status to Submitted and Pending Approval"
+              "on_success": "reverts status to Submitted and Pending Approval"
             }
           ]
         },
@@ -579,17 +943,17 @@ The Savings Account Detail page displays the account number, product name, clien
               },
               "constraints": [
                 "withdrawal must not exceed available balance unless overdraft is enabled",
-                "if minimum balance is enforced, withdrawal that would breach minimum balance is disallowed and returns an error"
+                "if minimum balance enforcement is enabled, withdrawal that would breach minimum balance results in an error"
               ],
               "on_success": "debits the account"
             },
             {
               "action_name": "Post Interest",
-              "on_success": "posts accrued interest to the account"
+              "on_success": "posts interest to account"
             },
             {
               "action_name": "Calculate Interest",
-              "on_success": "calculates accrued interest"
+              "on_success": "calculates interest (no posting)"
             },
             {
               "action_name": "Close",
@@ -597,15 +961,15 @@ The Savings Account Detail page displays the account number, product name, clien
             },
             {
               "action_name": "Block Account",
-              "on_success": "changes status to Blocked"
+              "on_success": "sets account to Blocked"
             },
             {
               "action_name": "Block Debit",
-              "on_success": "blocks debits on the account"
+              "on_success": "blocks debit transactions on the account"
             },
             {
               "action_name": "Block Credit",
-              "on_success": "blocks credits on the account"
+              "on_success": "blocks credit transactions on the account"
             }
           ]
         },
@@ -619,6 +983,39 @@ The Savings Account Detail page displays the account number, product name, clien
           "available_actions": []
         }
       }
+    },
+    "Savings_Account_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "Summary",
+          "fields": {}
+        },
+        {
+          "tab_name": "Transactions",
+          "fields": {
+            "Transactions_Table": {
+              "type": "data_table",
+              "columns": [
+                "Date",
+                "Type",
+                "Amount",
+                "Running Balance"
+              ],
+              "row_actions": [],
+              "bulk_actions": []
+            }
+          }
+        },
+        {
+          "tab_name": "Charges",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ]
     }
   }
 }
@@ -627,23 +1024,29 @@ The Savings Account Detail page displays the account number, product name, clien
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:10:49] Semantic Critic - LLM RESPONSE
+[22:28:16] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "The AST accurately captures the interactive elements, states, actions, forms, and transaction table described; no critical items are missing.",
+  "summary": "AST accurately captures the interactive elements, states, actions, forms, and tabs described; only minor non-critical extras (empty row/bulk action placeholders) are present.",
   "missing": [],
-  "phantoms": [],
+  "phantoms": [
+    "Savings_Account_Detail_Tabs.tabs[1].fields.Transactions_Table.row_actions",
+    "Savings_Account_Detail_Tabs.tabs[1].fields.Transactions_Table.bulk_actions"
+  ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:10:49] Semantic Critic - PARSED JSON
+[22:28:16] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "The AST accurately captures the interactive elements, states, actions, forms, and transaction table described; no critical items are missing.",
+  "summary": "AST accurately captures the interactive elements, states, actions, forms, and tabs described; only minor non-critical extras (empty row/bulk action placeholders) are present.",
   "missing": [],
-  "phantoms": [],
+  "phantoms": [
+    "Savings_Account_Detail_Tabs.tabs[1].fields.Transactions_Table.row_actions",
+    "Savings_Account_Detail_Tabs.tabs[1].fields.Transactions_Table.bulk_actions"
+  ],
   "fixes": []
 }

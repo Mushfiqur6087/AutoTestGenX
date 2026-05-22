@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.757774
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.393621
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:05:55] Semantic Critic - SYSTEM PROMPT
+[22:21:08] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,224 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:05:55] Semantic Critic - USER PROMPT
-------------------------------------------------------------
-<description>
-
-The Floating Rates page displays a data table with columns for Floating Rate Name (clickable link), Is Base Lending Rate, Is Active, and Created By. A "+ Create Floating Rate" button opens the creation form containing Floating Rate Name (required), Is Base Lending Rate checkbox (only one base rate can exist at a time), Is Active checkbox, and a Rate Periods table where each row has a From Date, Interest Rate (percentage), and Is Differential Rate checkbox (if checked, the rate is added to or subtracted from the base lending rate rather than used as an absolute value). Multiple rows can be added to define rate changes over time. When a loan product is linked to a floating rate, the loan's interest rate adjusts automatically based on the applicable rate period. The detail view shows the full rate history with an Edit option.
-
----
-
-
-</description>
-
-<ast>
-{
-  "module_name": "Floating Rates",
-  "components": {
-    "Floating_Rates_Table": {
-      "type": "data_table",
-      "clickable_column": "Floating Rate Name",
-      "row_actions": [
-        {
-          "action_name": "Open Detail",
-          "trigger": "click Floating Rate Name link",
-          "navigates_to": "Floating_Rate_Detail"
-        }
-      ],
-      "table_actions": [
-        {
-          "element_name": "+ Create Floating Rate",
-          "action": "open_form",
-          "opens": "Create_Floating_Rate_Form"
-        }
-      ]
-    },
-    "Create_Floating_Rate_Form": {
-      "type": "form",
-      "fields": {
-        "Floating_Rate_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Is_Base_Lending_Rate": {
-          "type": "checkbox",
-          "required": false,
-          "constraints": [
-            "only one base rate can exist at a time"
-          ]
-        },
-        "Is_Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Rate_Periods": {
-          "type": "repeating_group",
-          "item_fields": {
-            "From_Date": {
-              "type": "date",
-              "required": false
-            },
-            "Interest_Rate": {
-              "type": "number",
-              "required": false,
-              "constraints": [
-                "percentage value"
-              ]
-            },
-            "Is_Differential_Rate": {
-              "type": "checkbox",
-              "required": false,
-              "constraints": [
-                "when checked, this period's rate is applied relative to the base lending rate (added to or subtracted from base) instead of used as an absolute rate"
-              ]
-            }
-          },
-          "min": 0
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Create",
-          "on_success": "creates floating rate with defined rate periods"
-        },
-        {
-          "element_name": "Cancel",
-          "action": "close_form"
-        }
-      ]
-    },
-    "Floating_Rate_Detail": {
-      "type": "detail_view",
-      "fields": {},
-      "components": {
-        "Full_Rate_History": {
-          "type": "data_table",
-          "row_actions": [],
-          "fields": {}
-        }
-      },
-      "actions": [
-        {
-          "action_name": "Edit",
-          "opens": "Edit_Floating_Rate_Form",
-          "on_success": "updates floating rate and rate periods"
-        }
-      ],
-      "notes": {
-        "on_loan_product_link": "When a loan product is linked to a floating rate, the loan's interest rate adjusts automatically based on the applicable rate period."
-      }
-    },
-    "Edit_Floating_Rate_Form": {
-      "type": "form",
-      "fields": {
-        "Floating_Rate_Name": {
-          "type": "unspecified",
-          "required": true
-        },
-        "Is_Base_Lending_Rate": {
-          "type": "checkbox",
-          "required": false,
-          "constraints": [
-            "only one base rate can exist at a time"
-          ]
-        },
-        "Is_Active": {
-          "type": "checkbox",
-          "required": false
-        },
-        "Rate_Periods": {
-          "type": "repeating_group",
-          "item_fields": {
-            "From_Date": {
-              "type": "date",
-              "required": false
-            },
-            "Interest_Rate": {
-              "type": "number",
-              "required": false,
-              "constraints": [
-                "percentage value"
-              ]
-            },
-            "Is_Differential_Rate": {
-              "type": "checkbox",
-              "required": false,
-              "constraints": [
-                "when checked, this period's rate is applied relative to the base lending rate (added to or subtracted from base) instead of used as an absolute rate"
-              ]
-            }
-          },
-          "min": 0
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "on_success": "updates floating rate and rate periods"
-        },
-        {
-          "element_name": "Cancel",
-          "action": "close_form"
-        }
-      ]
-    }
-  }
-}
-</ast>
-
-IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
-
-------------------------------------------------------------
-[16:07:56] Semantic Critic - LLM RESPONSE
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST is mostly aligned but missing an explicit Add Row action for Rate Periods and contains several phantom submit buttons and an inferred 'min' property that are not specified in the description.",
-  "missing": [
-    "Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action"
-  ],
-  "phantoms": [
-    "Create_Floating_Rate_Form.submit_actions[0] (Create button not named in description)",
-    "Create_Floating_Rate_Form.submit_actions[1] (Cancel button not named in description)",
-    "Edit_Floating_Rate_Form.submit_actions[0] (Save button not named in description)",
-    "Edit_Floating_Rate_Form.submit_actions[1] (Cancel button not named in description)",
-    "Create_Floating_Rate_Form.fields.Rate_Periods.min (inferred property; description only states multiple rows can be added)"
-  ],
-  "fixes": [
-    "Create_Floating_Rate_Form.fields.Rate_Periods: add an explicit add-row action entry at 'Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action' with a structure such as {\"element_name\": \"Add Rate Period\", \"action\": \"add_row\"}. If row removal is supported, also add 'remove_row_action'.",
-    "Replace the inferred 'min' property with an explicit multiplicity flag: remove 'Create_Floating_Rate_Form.fields.Rate_Periods.min' and add 'Create_Floating_Rate_Form.fields.Rate_Periods.allow_multiple': true to reflect the description's 'Multiple rows can be added' without inventing a numeric minimum.",
-    "Remove the unspecified submit buttons that are not present in the description: delete entries at 'Create_Floating_Rate_Form.submit_actions[0]' and '[1]' and at 'Edit_Floating_Rate_Form.submit_actions[0]' and '[1]'. If the UI requires submit/cancel actions, replace them with generic placeholders only if the description is updated to name or require them (e.g., add a single generic 'submit' action entry without a specific label).",
-    "Optional: If you want explicit types for text fields, set 'Create_Floating_Rate_Form.fields.Floating_Rate_Name.type' and 'Edit_Floating_Rate_Form.fields.Floating_Rate_Name.type' to 'text' (currently 'unspecified'), but this is not required by the description."
-  ]
-}
-
-------------------------------------------------------------
-[16:07:56] Semantic Critic - PARSED JSON
-------------------------------------------------------------
-{
-  "verdict": "retry",
-  "summary": "AST is mostly aligned but missing an explicit Add Row action for Rate Periods and contains several phantom submit buttons and an inferred 'min' property that are not specified in the description.",
-  "missing": [
-    "Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action"
-  ],
-  "phantoms": [
-    "Create_Floating_Rate_Form.submit_actions[0] (Create button not named in description)",
-    "Create_Floating_Rate_Form.submit_actions[1] (Cancel button not named in description)",
-    "Edit_Floating_Rate_Form.submit_actions[0] (Save button not named in description)",
-    "Edit_Floating_Rate_Form.submit_actions[1] (Cancel button not named in description)",
-    "Create_Floating_Rate_Form.fields.Rate_Periods.min (inferred property; description only states multiple rows can be added)"
-  ],
-  "fixes": [
-    "Create_Floating_Rate_Form.fields.Rate_Periods: add an explicit add-row action entry at 'Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action' with a structure such as {\"element_name\": \"Add Rate Period\", \"action\": \"add_row\"}. If row removal is supported, also add 'remove_row_action'.",
-    "Replace the inferred 'min' property with an explicit multiplicity flag: remove 'Create_Floating_Rate_Form.fields.Rate_Periods.min' and add 'Create_Floating_Rate_Form.fields.Rate_Periods.allow_multiple': true to reflect the description's 'Multiple rows can be added' without inventing a numeric minimum.",
-    "Remove the unspecified submit buttons that are not present in the description: delete entries at 'Create_Floating_Rate_Form.submit_actions[0]' and '[1]' and at 'Edit_Floating_Rate_Form.submit_actions[0]' and '[1]'. If the UI requires submit/cancel actions, replace them with generic placeholders only if the description is updated to name or require them (e.g., add a single generic 'submit' action entry without a specific label).",
-    "Optional: If you want explicit types for text fields, set 'Create_Floating_Rate_Form.fields.Floating_Rate_Name.type' and 'Edit_Floating_Rate_Form.fields.Floating_Rate_Name.type' to 'text' (currently 'unspecified'), but this is not required by the description."
-  ]
-}
-
-------------------------------------------------------------
-[16:09:29] Semantic Critic - USER PROMPT
+[22:21:08] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -348,30 +131,28 @@ The Floating Rates page displays a data table with columns for Floating Rate Nam
       ],
       "row_actions": [
         {
-          "action_name": "Open Details",
-          "action": "navigate",
-          "navigates_to": "Floating_Rate_Detail_View"
+          "action_name": "View",
+          "description": "triggered by clicking the Floating Rate Name link, navigates to Floating_Rate_Detail"
         }
       ]
     },
     "Create_Floating_Rate_Button": {
       "type": "button",
       "element_name": "+ Create Floating Rate",
-      "action": "open_form",
       "opens": "Create_Floating_Rate_Form"
     },
     "Create_Floating_Rate_Form": {
       "type": "form",
       "fields": {
         "Floating_Rate_Name": {
-          "type": "text",
+          "type": "unspecified",
           "required": true
         },
         "Is_Base_Lending_Rate": {
           "type": "checkbox",
           "required": false,
           "constraints": [
-            "only one base rate can exist at a time"
+            "only one base lending rate may be true across all floating rates; creating or updating a floating rate with this checked will either unset the existing base rate or be rejected according to business rules"
           ]
         },
         "Is_Active": {
@@ -380,42 +161,58 @@ The Floating Rates page displays a data table with columns for Floating Rate Nam
         },
         "Rate_Periods": {
           "type": "repeating_group",
-          "allow_multiple": true,
           "item_fields": {
             "From_Date": {
-              "type": "date",
-              "required": false
+              "type": "date"
             },
             "Interest_Rate": {
               "type": "number",
-              "required": false,
               "constraints": [
-                "expressed as percentage"
+                "percentage value"
               ]
             },
             "Is_Differential_Rate": {
               "type": "checkbox",
-              "required": false,
               "constraints": [
-                "if checked, this rate is applied as a differential to the base lending rate (added or subtracted) rather than used as an absolute rate"
+                "when checked, this rate is applied as a differential (added to or subtracted from the base lending rate) rather than as an absolute rate"
               ]
             }
-          },
-          "add_row_action": {
-            "element_name": "Add Rate Period",
-            "action": "add_row"
           }
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates floating rate",
+          "post_effects": [
+            "if Is_Base_Lending_Rate was set true, enforce uniqueness of base lending rate (existing base rate will be demoted or creation will be rejected per business rules)",
+            "affects linked loan products: loans linked to this floating rate will have their interest rates adjusted automatically based on the applicable rate period"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes form without saving"
+        }
+      ]
     },
-    "Floating_Rate_Detail_View": {
+    "Floating_Rate_Detail": {
       "type": "detail_view",
+      "components": {
+        "Rate_History_Table": {
+          "type": "data_table",
+          "columns": [
+            "From Date",
+            "Interest Rate",
+            "Is Differential Rate"
+          ],
+          "row_actions": []
+        }
+      },
       "actions": [
         {
           "action_name": "Edit",
-          "action": "open_form",
           "opens": "Edit_Floating_Rate_Form",
-          "on_success": "updates rate periods; linked loan products adjust automatically based on the applicable rate period"
+          "on_trigger": "opens edit form for this floating rate"
         }
       ]
     },
@@ -423,14 +220,14 @@ The Floating Rates page displays a data table with columns for Floating Rate Nam
       "type": "form",
       "fields": {
         "Floating_Rate_Name": {
-          "type": "text",
+          "type": "unspecified",
           "required": true
         },
         "Is_Base_Lending_Rate": {
           "type": "checkbox",
           "required": false,
           "constraints": [
-            "only one base rate can exist at a time"
+            "only one base lending rate may be true across all floating rates; updating this to true will enforce uniqueness by demoting existing base rate or rejecting the update per business rules"
           ]
         },
         "Is_Active": {
@@ -439,33 +236,39 @@ The Floating Rates page displays a data table with columns for Floating Rate Nam
         },
         "Rate_Periods": {
           "type": "repeating_group",
-          "allow_multiple": true,
           "item_fields": {
             "From_Date": {
-              "type": "date",
-              "required": false
+              "type": "date"
             },
             "Interest_Rate": {
               "type": "number",
-              "required": false,
               "constraints": [
-                "expressed as percentage"
+                "percentage value"
               ]
             },
             "Is_Differential_Rate": {
               "type": "checkbox",
-              "required": false,
               "constraints": [
-                "if checked, this rate is applied as a differential to the base lending rate (added or subtracted) rather than used as an absolute rate"
+                "when checked, this rate is applied as a differential (added to or subtracted from the base lending rate) rather than as an absolute rate"
               ]
             }
-          },
-          "add_row_action": {
-            "element_name": "Add Rate Period",
-            "action": "add_row"
           }
         }
-      }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates floating rate and its rate periods",
+          "post_effects": [
+            "if Is_Base_Lending_Rate was set true, enforce uniqueness of base lending rate (existing base rate will be demoted or update will be rejected per business rules)",
+            "affects linked loan products: loans linked to this floating rate will have their interest rates adjusted automatically based on the updated applicable rate periods"
+          ]
+        },
+        {
+          "element_name": "Cancel",
+          "on_success": "closes edit form without saving"
+        }
+      ]
     }
   }
 }
@@ -474,33 +277,234 @@ The Floating Rates page displays a data table with columns for Floating Rate Nam
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:10:33] Semantic Critic - LLM RESPONSE
+[22:23:10] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST captures most elements but is missing explicit add-row controls for the Rate Periods repeating groups (required by the description) and includes two inferred Cancel submit actions that are not mentioned in the spec.",
+  "missing": [
+    "Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action",
+    "Edit_Floating_Rate_Form.fields.Rate_Periods.add_row_action"
+  ],
+  "phantoms": [
+    "Create_Floating_Rate_Form.submit_actions[1] (Cancel button not mentioned in description)",
+    "Edit_Floating_Rate_Form.submit_actions[1] (Cancel button not mentioned in description)"
+  ],
+  "fixes": [
+    "Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action — add an action object such as { \"element_name\": \"Add Rate Period\", \"action\": \"adds a new Rate_Period row to the repeating group\" } to explicitly model the ability to add multiple rate period rows as stated in the description.",
+    "Edit_Floating_Rate_Form.fields.Rate_Periods.add_row_action — add an action object such as { \"element_name\": \"Add Rate Period\", \"action\": \"adds a new Rate_Period row to the repeating group\" } to explicitly model the ability to add multiple rate period rows when editing.",
+    "Create_Floating_Rate_Form.submit_actions[1] — remove the Cancel submit action (or else update the description to explicitly mention a Cancel button); the description does not mention a Cancel button for the create form.",
+    "Edit_Floating_Rate_Form.submit_actions[1] — remove the Cancel submit action (or else update the description to explicitly mention a Cancel button); the description does not mention a Cancel button for the edit form."
+  ]
+}
+
+------------------------------------------------------------
+[22:23:10] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST captures most elements but is missing explicit add-row controls for the Rate Periods repeating groups (required by the description) and includes two inferred Cancel submit actions that are not mentioned in the spec.",
+  "missing": [
+    "Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action",
+    "Edit_Floating_Rate_Form.fields.Rate_Periods.add_row_action"
+  ],
+  "phantoms": [
+    "Create_Floating_Rate_Form.submit_actions[1] (Cancel button not mentioned in description)",
+    "Edit_Floating_Rate_Form.submit_actions[1] (Cancel button not mentioned in description)"
+  ],
+  "fixes": [
+    "Create_Floating_Rate_Form.fields.Rate_Periods.add_row_action \u2014 add an action object such as { \"element_name\": \"Add Rate Period\", \"action\": \"adds a new Rate_Period row to the repeating group\" } to explicitly model the ability to add multiple rate period rows as stated in the description.",
+    "Edit_Floating_Rate_Form.fields.Rate_Periods.add_row_action \u2014 add an action object such as { \"element_name\": \"Add Rate Period\", \"action\": \"adds a new Rate_Period row to the repeating group\" } to explicitly model the ability to add multiple rate period rows when editing.",
+    "Create_Floating_Rate_Form.submit_actions[1] \u2014 remove the Cancel submit action (or else update the description to explicitly mention a Cancel button); the description does not mention a Cancel button for the create form.",
+    "Edit_Floating_Rate_Form.submit_actions[1] \u2014 remove the Cancel submit action (or else update the description to explicitly mention a Cancel button); the description does not mention a Cancel button for the edit form."
+  ]
+}
+
+------------------------------------------------------------
+[22:24:57] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Floating Rates page displays a data table with columns for Floating Rate Name (clickable link), Is Base Lending Rate, Is Active, and Created By. A "+ Create Floating Rate" button opens the creation form containing Floating Rate Name (required), Is Base Lending Rate checkbox (only one base rate can exist at a time), Is Active checkbox, and a Rate Periods table where each row has a From Date, Interest Rate (percentage), and Is Differential Rate checkbox (if checked, the rate is added to or subtracted from the base lending rate rather than used as an absolute value). Multiple rows can be added to define rate changes over time. When a loan product is linked to a floating rate, the loan's interest rate adjusts automatically based on the applicable rate period. The detail view shows the full rate history with an Edit option.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Floating Rates",
+  "components": {
+    "Floating_Rates_Table": {
+      "type": "data_table",
+      "columns": [
+        "Floating Rate Name",
+        "Is Base Lending Rate",
+        "Is Active",
+        "Created By"
+      ],
+      "row_actions": [
+        {
+          "element_name": "Floating Rate Name",
+          "type": "link",
+          "action": "opens Floating_Rate_Detail"
+        }
+      ]
+    },
+    "Create_Floating_Rate_Button": {
+      "type": "button",
+      "element_name": "+ Create Floating Rate",
+      "action": "opens Create_Floating_Rate_Form"
+    },
+    "Create_Floating_Rate_Form": {
+      "type": "form",
+      "fields": {
+        "Floating_Rate_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Base_Lending_Rate": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "only one floating rate may have Is_Base_Lending_Rate == true at any time; submitting when another base rate exists must be rejected or must unset the existing base rate"
+          ]
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Rate_Periods": {
+          "type": "repeating_group",
+          "item_fields": {
+            "From_Date": {
+              "type": "date",
+              "required": false
+            },
+            "Interest_Rate": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                "expressed as a percentage value"
+              ]
+            },
+            "Is_Differential_Rate": {
+              "type": "checkbox",
+              "required": false,
+              "constraints": [
+                "when checked, this period's rate is applied as a differential (added to or subtracted from the base lending rate) rather than as an absolute rate"
+              ]
+            }
+          },
+          "add_row_action": {
+            "element_name": "Add Rate Period",
+            "action": "adds a new Rate_Period row to the repeating group"
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "action_name": "Create Floating Rate",
+          "on_success": "creates floating rate; linked loan products (if any) update their interest rates automatically based on the applicable rate period(s)"
+        }
+      ]
+    },
+    "Floating_Rate_Detail": {
+      "type": "detail_view",
+      "fields": {},
+      "actions": [
+        {
+          "action_name": "Edit",
+          "action": "opens Edit_Floating_Rate_Form"
+        }
+      ]
+    },
+    "Edit_Floating_Rate_Form": {
+      "type": "form",
+      "fields": {
+        "Floating_Rate_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Is_Base_Lending_Rate": {
+          "type": "checkbox",
+          "required": false,
+          "constraints": [
+            "only one floating rate may have Is_Base_Lending_Rate == true at any time; saving when another base rate exists must be rejected or must unset the existing base rate"
+          ]
+        },
+        "Is_Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "Rate_Periods": {
+          "type": "repeating_group",
+          "item_fields": {
+            "From_Date": {
+              "type": "date",
+              "required": false
+            },
+            "Interest_Rate": {
+              "type": "number",
+              "required": false,
+              "constraints": [
+                "expressed as a percentage value"
+              ]
+            },
+            "Is_Differential_Rate": {
+              "type": "checkbox",
+              "required": false,
+              "constraints": [
+                "when checked, this period's rate is applied as a differential (added to or subtracted from the base lending rate) rather than as an absolute rate"
+              ]
+            }
+          },
+          "add_row_action": {
+            "element_name": "Add Rate Period",
+            "action": "adds a new Rate_Period row to the repeating group"
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "action_name": "Save Floating Rate Changes",
+          "on_success": "updates floating rate; linked loan products (if any) update their interest rates automatically based on the applicable rate period(s)"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:26:05] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST captures all interactive elements described (table, create button, forms with repeating rate periods, and detail/edit flow); only minor naming details differ from the description.",
-  "missing": [
-    "Floating_Rates_Table.columns[0] (Floating Rate Name should be explicitly represented as a clickable link to the Floating_Rate_Detail_View)"
-  ],
+  "summary": "AST correctly captures the interactive elements, constraints, repeating rate periods, table/link actions, create/edit flows, and detail view; only minor inferred submit button labels were added.",
+  "missing": [],
   "phantoms": [
-    "Floating_Rates_Table.row_actions[0] (action_name 'Open Details' was not explicitly named in the description — the clickable link was described but the action name was not)",
-    "Create_Floating_Rate_Form.Rate_Periods.add_row_action.element_name (the 'Add Rate Period' button label was not specified in the description)"
+    "Create_Floating_Rate_Form.submit_actions[0] (element_name 'Create' — submit button label was not explicitly specified in the description)",
+    "Edit_Floating_Rate_Form.submit_actions[0] (element_name 'Save' — submit button label was not explicitly specified in the description)"
   ],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:10:33] Semantic Critic - PARSED JSON
+[22:26:05] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST captures all interactive elements described (table, create button, forms with repeating rate periods, and detail/edit flow); only minor naming details differ from the description.",
-  "missing": [
-    "Floating_Rates_Table.columns[0] (Floating Rate Name should be explicitly represented as a clickable link to the Floating_Rate_Detail_View)"
-  ],
+  "summary": "AST correctly captures the interactive elements, constraints, repeating rate periods, table/link actions, create/edit flows, and detail view; only minor inferred submit button labels were added.",
+  "missing": [],
   "phantoms": [
-    "Floating_Rates_Table.row_actions[0] (action_name 'Open Details' was not explicitly named in the description \u2014 the clickable link was described but the action name was not)",
-    "Create_Floating_Rate_Form.Rate_Periods.add_row_action.element_name (the 'Add Rate Period' button label was not specified in the description)"
+    "Create_Floating_Rate_Form.submit_actions[0] (element_name 'Create' \u2014 submit button label was not explicitly specified in the description)",
+    "Edit_Floating_Rate_Form.submit_actions[0] (element_name 'Save' \u2014 submit button label was not explicitly specified in the description)"
   ],
   "fixes": []
 }

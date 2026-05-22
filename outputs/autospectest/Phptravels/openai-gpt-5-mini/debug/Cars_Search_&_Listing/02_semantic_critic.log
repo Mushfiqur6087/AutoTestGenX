@@ -1,0 +1,651 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:50:10.013534
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:51:07] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[22:51:07] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The car rental search form collects pick-up and drop-off location, pick-up and drop-off date and time, and driver age. On success, users are redirected to the listing page, where vehicles are grouped by category (Economy, Compact, SUV, Luxury, Van). Each listing shows vehicle image, make and model, transmission type (Automatic/Manual), fuel policy, seating and luggage capacity, feature icons (AC, GPS, etc.), price per day, total rental cost for the selected period, and a Book Now button. Sidebar filters include car type, transmission, fuel policy, rental company, and price range. Filters update results dynamically.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Cars Search & Listing",
+  "components": {
+    "Car_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Pick_Up_Location": {
+          "type": "unspecified"
+        },
+        "Drop_Off_Location": {
+          "type": "unspecified"
+        },
+        "Pick_Up_DateTime": {
+          "type": "date",
+          "constraints": [
+            "includes time selection"
+          ]
+        },
+        "Drop_Off_DateTime": {
+          "type": "date",
+          "constraints": [
+            "includes time selection"
+          ]
+        },
+        "Driver_Age": {
+          "type": "number"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to Listing page"
+        }
+      ]
+    },
+    "Listing_Page": {
+      "type": "page",
+      "components": {
+        "Vehicle_Groups": {
+          "type": "grouped_list",
+          "group_by": "category",
+          "categories": [
+            "Economy",
+            "Compact",
+            "SUV",
+            "Luxury",
+            "Van"
+          ],
+          "group_items": {
+            "type": "repeating_group",
+            "item_fields": {
+              "Book_Now": {
+                "type": "button"
+              }
+            }
+          }
+        },
+        "Sidebar_Filters": {
+          "type": "panel",
+          "on_change": "updates results dynamically",
+          "fields": {
+            "Car_Type": {
+              "type": "dropdown",
+              "options": [
+                "Economy",
+                "Compact",
+                "SUV",
+                "Luxury",
+                "Van"
+              ]
+            },
+            "Transmission": {
+              "type": "dropdown",
+              "options": [
+                "Automatic",
+                "Manual"
+              ]
+            },
+            "Fuel_Policy": {
+              "type": "dropdown"
+            },
+            "Rental_Company": {
+              "type": "dropdown"
+            },
+            "Price_Range": {
+              "type": "unspecified",
+              "fields": {
+                "Min_Price": {
+                  "type": "number"
+                },
+                "Max_Price": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:51:48] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST introduces several inferred UI details that are not anchored in the description (notably a named 'Search' button and explicit Min/Max price fields); regenerate with those removed or made generic.",
+  "missing": [],
+  "phantoms": [
+    "Car_Search_Form.submit_actions[0] (Search button not named in description)",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range.fields.Min_Price (Min/Max inputs were inferred from 'price range')",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range.fields.Max_Price (Min/Max inputs were inferred from 'price range')"
+  ],
+  "fixes": [
+    "Car_Search_Form.submit_actions[0]: Do not invent a specific button label; either omit element_name or use a generic action identifier (e.g., \"submit\" or \"apply\") instead of introducing a named 'Search' button not present in the description. Keep the on_success redirect to the listing page.",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range: Remove the inferred nested Min_Price and Max_Price fields. Represent Price_Range as a single field whose type is either 'range'/'slider' or 'unspecified' (the implementation may choose min/max controls, but do not assert them in the AST unless specified).",
+    "Optional: If you want to keep control types for Fuel_Policy and Rental_Company, mark them explicitly as an assumed type (e.g., 'select' or 'checkbox_group') only if the description is updated to specify input types; otherwise leave their 'type' as 'unspecified'."
+  ]
+}
+
+------------------------------------------------------------
+[22:51:48] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST introduces several inferred UI details that are not anchored in the description (notably a named 'Search' button and explicit Min/Max price fields); regenerate with those removed or made generic.",
+  "missing": [],
+  "phantoms": [
+    "Car_Search_Form.submit_actions[0] (Search button not named in description)",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range.fields.Min_Price (Min/Max inputs were inferred from 'price range')",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range.fields.Max_Price (Min/Max inputs were inferred from 'price range')"
+  ],
+  "fixes": [
+    "Car_Search_Form.submit_actions[0]: Do not invent a specific button label; either omit element_name or use a generic action identifier (e.g., \"submit\" or \"apply\") instead of introducing a named 'Search' button not present in the description. Keep the on_success redirect to the listing page.",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range: Remove the inferred nested Min_Price and Max_Price fields. Represent Price_Range as a single field whose type is either 'range'/'slider' or 'unspecified' (the implementation may choose min/max controls, but do not assert them in the AST unless specified).",
+    "Optional: If you want to keep control types for Fuel_Policy and Rental_Company, mark them explicitly as an assumed type (e.g., 'select' or 'checkbox_group') only if the description is updated to specify input types; otherwise leave their 'type' as 'unspecified'."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:15] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The car rental search form collects pick-up and drop-off location, pick-up and drop-off date and time, and driver age. On success, users are redirected to the listing page, where vehicles are grouped by category (Economy, Compact, SUV, Luxury, Van). Each listing shows vehicle image, make and model, transmission type (Automatic/Manual), fuel policy, seating and luggage capacity, feature icons (AC, GPS, etc.), price per day, total rental cost for the selected period, and a Book Now button. Sidebar filters include car type, transmission, fuel policy, rental company, and price range. Filters update results dynamically.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Cars Search & Listing",
+  "components": {
+    "Car_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Pickup_Location": {
+          "type": "search",
+          "required": true
+        },
+        "Dropoff_Location": {
+          "type": "search",
+          "required": true
+        },
+        "Pickup_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Pickup_Time": {
+          "type": "time",
+          "required": true
+        },
+        "Dropoff_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Dropoff_Time": {
+          "type": "time",
+          "required": true
+        },
+        "Driver_Age": {
+          "type": "number",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "submit",
+          "on_success": "redirects to Listing_Page"
+        }
+      ]
+    },
+    "Listing_Page": {
+      "type": "page",
+      "components": {
+        "Sidebar_Filters": {
+          "type": "filters",
+          "on_change": "updates results dynamically",
+          "fields": {
+            "Car_Type": {
+              "type": "unspecified",
+              "options": [
+                "Economy",
+                "Compact",
+                "SUV",
+                "Luxury",
+                "Van"
+              ]
+            },
+            "Transmission": {
+              "type": "unspecified",
+              "options": [
+                "Automatic",
+                "Manual"
+              ]
+            },
+            "Fuel_Policy": {
+              "type": "unspecified"
+            },
+            "Rental_Company": {
+              "type": "unspecified"
+            },
+            "Price_Range": {
+              "type": "range"
+            }
+          }
+        },
+        "Vehicles_List": {
+          "type": "data_list",
+          "item_fields": {},
+          "item_actions": [
+            {
+              "action_name": "Book Now",
+              "type": "button"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:52:38] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST is missing the required grouping structure for listings and omits explicit item fields for each vehicle (image, make/model, transmission, fuel policy, seating, luggage, features, price per day, total cost); also filter field types are vague — regenerate with these included.",
+  "missing": [
+    "Listing_Page.components.Vehicles_List.grouped_by (vehicles should be grouped by category: Economy, Compact, SUV, Luxury, Van)",
+    "Listing_Page.components.Vehicles_List.groups.Economy",
+    "Listing_Page.components.Vehicles_List.groups.Compact",
+    "Listing_Page.components.Vehicles_List.groups.SUV",
+    "Listing_Page.components.Vehicles_List.groups.Luxury",
+    "Listing_Page.components.Vehicles_List.groups.Van",
+    "Listing_Page.components.Vehicles_List.item_fields.Vehicle_Image",
+    "Listing_Page.components.Vehicles_List.item_fields.Make_and_Model",
+    "Listing_Page.components.Vehicles_List.item_fields.Transmission_Type",
+    "Listing_Page.components.Vehicles_List.item_fields.Fuel_Policy",
+    "Listing_Page.components.Vehicles_List.item_fields.Seating_Capacity",
+    "Listing_Page.components.Vehicles_List.item_fields.Luggage_Capacity",
+    "Listing_Page.components.Vehicles_List.item_fields.Features",
+    "Listing_Page.components.Vehicles_List.item_fields.Price_Per_Day",
+    "Listing_Page.components.Vehicles_List.item_fields.Total_Rental_Cost"
+  ],
+  "phantoms": [],
+  "fixes": [
+    "Listing_Page.components.Vehicles_List: add a grouping structure. Set grouped_by to 'Car_Type' and add a groups object with keys for each category (Economy, Compact, SUV, Luxury, Van) that contain the list of vehicle items for that category (e.g., Listing_Page.components.Vehicles_List.groups.Economy: { items: [...] }).",
+    "Listing_Page.components.Vehicles_List.item_fields: populate with the displayed vehicle fields from the description (add Vehicle_Image {type: 'image'}, Make_and_Model {type: 'text'}, Transmission_Type {type: 'text', options: ['Automatic','Manual']}, Fuel_Policy {type: 'text'}, Seating_Capacity {type: 'number'}, Luggage_Capacity {type: 'number'}, Features {type: 'list', items: ['AC','GPS', 'etc.']}, Price_Per_Day {type: 'currency'}, Total_Rental_Cost {type: 'currency', computed: 'Price_Per_Day * rental_days'}).",
+    "Listing_Page.components.Sidebar_Filters.fields.Car_Type: change type from 'unspecified' to a selection type (e.g., 'multiselect' or 'checkbox_group') and ensure options include Economy, Compact, SUV, Luxury, Van.",
+    "Listing_Page.components.Sidebar_Filters.fields.Transmission: change type from 'unspecified' to 'multiselect' or 'checkbox_group' and include options ['Automatic','Manual'].",
+    "Listing_Page.components.Sidebar_Filters.fields.Fuel_Policy: change type from 'unspecified' to an explicit selection type (e.g., 'multiselect' or 'checkbox_group') so the filter is actionable.",
+    "Listing_Page.components.Sidebar_Filters.fields.Rental_Company: change type from 'unspecified' to an explicit selection type (e.g., 'multiselect' or 'checkbox_group') so the filter is actionable.",
+    "Car_Search_Form.submit_actions[0]: optionally set element_name to a user-facing label such as 'Search' (currently 'submit' is generic); keep on_success redirect to Listing_Page as-is."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:38] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST is missing the required grouping structure for listings and omits explicit item fields for each vehicle (image, make/model, transmission, fuel policy, seating, luggage, features, price per day, total cost); also filter field types are vague \u2014 regenerate with these included.",
+  "missing": [
+    "Listing_Page.components.Vehicles_List.grouped_by (vehicles should be grouped by category: Economy, Compact, SUV, Luxury, Van)",
+    "Listing_Page.components.Vehicles_List.groups.Economy",
+    "Listing_Page.components.Vehicles_List.groups.Compact",
+    "Listing_Page.components.Vehicles_List.groups.SUV",
+    "Listing_Page.components.Vehicles_List.groups.Luxury",
+    "Listing_Page.components.Vehicles_List.groups.Van",
+    "Listing_Page.components.Vehicles_List.item_fields.Vehicle_Image",
+    "Listing_Page.components.Vehicles_List.item_fields.Make_and_Model",
+    "Listing_Page.components.Vehicles_List.item_fields.Transmission_Type",
+    "Listing_Page.components.Vehicles_List.item_fields.Fuel_Policy",
+    "Listing_Page.components.Vehicles_List.item_fields.Seating_Capacity",
+    "Listing_Page.components.Vehicles_List.item_fields.Luggage_Capacity",
+    "Listing_Page.components.Vehicles_List.item_fields.Features",
+    "Listing_Page.components.Vehicles_List.item_fields.Price_Per_Day",
+    "Listing_Page.components.Vehicles_List.item_fields.Total_Rental_Cost"
+  ],
+  "phantoms": [],
+  "fixes": [
+    "Listing_Page.components.Vehicles_List: add a grouping structure. Set grouped_by to 'Car_Type' and add a groups object with keys for each category (Economy, Compact, SUV, Luxury, Van) that contain the list of vehicle items for that category (e.g., Listing_Page.components.Vehicles_List.groups.Economy: { items: [...] }).",
+    "Listing_Page.components.Vehicles_List.item_fields: populate with the displayed vehicle fields from the description (add Vehicle_Image {type: 'image'}, Make_and_Model {type: 'text'}, Transmission_Type {type: 'text', options: ['Automatic','Manual']}, Fuel_Policy {type: 'text'}, Seating_Capacity {type: 'number'}, Luggage_Capacity {type: 'number'}, Features {type: 'list', items: ['AC','GPS', 'etc.']}, Price_Per_Day {type: 'currency'}, Total_Rental_Cost {type: 'currency', computed: 'Price_Per_Day * rental_days'}).",
+    "Listing_Page.components.Sidebar_Filters.fields.Car_Type: change type from 'unspecified' to a selection type (e.g., 'multiselect' or 'checkbox_group') and ensure options include Economy, Compact, SUV, Luxury, Van.",
+    "Listing_Page.components.Sidebar_Filters.fields.Transmission: change type from 'unspecified' to 'multiselect' or 'checkbox_group' and include options ['Automatic','Manual'].",
+    "Listing_Page.components.Sidebar_Filters.fields.Fuel_Policy: change type from 'unspecified' to an explicit selection type (e.g., 'multiselect' or 'checkbox_group') so the filter is actionable.",
+    "Listing_Page.components.Sidebar_Filters.fields.Rental_Company: change type from 'unspecified' to an explicit selection type (e.g., 'multiselect' or 'checkbox_group') so the filter is actionable.",
+    "Car_Search_Form.submit_actions[0]: optionally set element_name to a user-facing label such as 'Search' (currently 'submit' is generic); keep on_success redirect to Listing_Page as-is."
+  ]
+}
+
+------------------------------------------------------------
+[22:53:07] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The car rental search form collects pick-up and drop-off location, pick-up and drop-off date and time, and driver age. On success, users are redirected to the listing page, where vehicles are grouped by category (Economy, Compact, SUV, Luxury, Van). Each listing shows vehicle image, make and model, transmission type (Automatic/Manual), fuel policy, seating and luggage capacity, feature icons (AC, GPS, etc.), price per day, total rental cost for the selected period, and a Book Now button. Sidebar filters include car type, transmission, fuel policy, rental company, and price range. Filters update results dynamically.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Cars Search & Listing",
+  "components": {
+    "Car_Search_Form": {
+      "type": "form",
+      "fields": {
+        "Pick_Up_Location": {
+          "type": "search"
+        },
+        "Drop_Off_Location": {
+          "type": "search"
+        },
+        "Pick_Up_Date": {
+          "type": "date"
+        },
+        "Pick_Up_Time": {
+          "type": "unspecified"
+        },
+        "Drop_Off_Date": {
+          "type": "date"
+        },
+        "Drop_Off_Time": {
+          "type": "unspecified"
+        },
+        "Driver_Age": {
+          "type": "number"
+        }
+      },
+      "constraints": [
+        "Drop_Off_Date >= Pick_Up_Date"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Search",
+          "on_success": "redirects to Listing_Page"
+        }
+      ]
+    },
+    "Listing_Page": {
+      "type": "page",
+      "components": {
+        "Sidebar_Filters": {
+          "type": "panel",
+          "on_change": "updates results dynamically",
+          "fields": {
+            "Car_Type": {
+              "type": "multiselect",
+              "options": [
+                "Economy",
+                "Compact",
+                "SUV",
+                "Luxury",
+                "Van"
+              ]
+            },
+            "Transmission": {
+              "type": "multiselect",
+              "options": [
+                "Automatic",
+                "Manual"
+              ]
+            },
+            "Fuel_Policy": {
+              "type": "multiselect"
+            },
+            "Rental_Company": {
+              "type": "multiselect"
+            },
+            "Price_Range": {
+              "type": "unspecified"
+            }
+          }
+        },
+        "Vehicles_List": {
+          "type": "grouped_list",
+          "grouped_by": "Car_Type",
+          "item_fields": {
+            "Vehicle_Image": {
+              "type": "image"
+            },
+            "Make_and_Model": {
+              "type": "text"
+            },
+            "Transmission_Type": {
+              "type": "text",
+              "options": [
+                "Automatic",
+                "Manual"
+              ]
+            },
+            "Fuel_Policy": {
+              "type": "text"
+            },
+            "Seating_Capacity": {
+              "type": "number"
+            },
+            "Luggage_Capacity": {
+              "type": "number"
+            },
+            "Features": {
+              "type": "list",
+              "items": [
+                "AC",
+                "GPS",
+                "etc."
+              ]
+            },
+            "Price_Per_Day": {
+              "type": "currency"
+            },
+            "Total_Rental_Cost": {
+              "type": "currency",
+              "computed": "Price_Per_Day * rental_days"
+            },
+            "Book_Now": {
+              "type": "button",
+              "element_name": "Book Now",
+              "on_success": "initiates booking flow"
+            }
+          },
+          "groups": {
+            "Economy": {
+              "items": []
+            },
+            "Compact": {
+              "items": []
+            },
+            "SUV": {
+              "items": []
+            },
+            "Luxury": {
+              "items": []
+            },
+            "Van": {
+              "items": []
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:53:28] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains several inferred/phantom properties (constraints, computed formula, button action) and a few unspecified field types that should be explicit (time, price range).",
+  "missing": [
+    "Car_Search_Form.fields.Pick_Up_Time.type (expected 'time' but is 'unspecified')",
+    "Car_Search_Form.fields.Drop_Off_Time.type (expected 'time' but is 'unspecified')",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range.type (expected 'range' or 'slider' but is 'unspecified')"
+  ],
+  "phantoms": [
+    "Car_Search_Form.constraints[0] (Drop_Off_Date >= Pick_Up_Date constraint is not stated in description)",
+    "Listing_Page.components.Vehicles_List.item_fields.Total_Rental_Cost.computed (explicit computation 'Price_Per_Day * rental_days' is an inference)",
+    "Listing_Page.components.Vehicles_List.item_fields.Book_Now.on_success (the 'initiates booking flow' action is not specified in the description)"
+  ],
+  "fixes": [
+    "Change Car_Search_Form.fields.Pick_Up_Time.type from 'unspecified' to 'time' at path: components.Car_Search_Form.fields.Pick_Up_Time.type",
+    "Change Car_Search_Form.fields.Drop_Off_Time.type from 'unspecified' to 'time' at path: components.Car_Search_Form.fields.Drop_Off_Time.type",
+    "Change Listing_Page.components.Sidebar_Filters.fields.Price_Range.type from 'unspecified' to 'range' (or 'slider') at path: components.Listing_Page.components.Sidebar_Filters.fields.Price_Range.type",
+    "Remove inferred constraint at path: components.Car_Search_Form.constraints[0] (Drop_Off_Date >= Pick_Up_Date) unless the requirement explicitly specifies date validation",
+    "Remove or make explicit the computed expression at path: components.Listing_Page.components.Vehicles_List.item_fields.Total_Rental_Cost.computed — either omit the computed implementation or replace with a neutral note 'shows total rental cost for selected period' to match the description",
+    "Remove inferred on_success action at path: components.Listing_Page.components.Vehicles_List.item_fields.Book_Now.on_success unless the description specifies what the button should do"
+  ]
+}
+
+------------------------------------------------------------
+[22:53:28] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains several inferred/phantom properties (constraints, computed formula, button action) and a few unspecified field types that should be explicit (time, price range).",
+  "missing": [
+    "Car_Search_Form.fields.Pick_Up_Time.type (expected 'time' but is 'unspecified')",
+    "Car_Search_Form.fields.Drop_Off_Time.type (expected 'time' but is 'unspecified')",
+    "Listing_Page.components.Sidebar_Filters.fields.Price_Range.type (expected 'range' or 'slider' but is 'unspecified')"
+  ],
+  "phantoms": [
+    "Car_Search_Form.constraints[0] (Drop_Off_Date >= Pick_Up_Date constraint is not stated in description)",
+    "Listing_Page.components.Vehicles_List.item_fields.Total_Rental_Cost.computed (explicit computation 'Price_Per_Day * rental_days' is an inference)",
+    "Listing_Page.components.Vehicles_List.item_fields.Book_Now.on_success (the 'initiates booking flow' action is not specified in the description)"
+  ],
+  "fixes": [
+    "Change Car_Search_Form.fields.Pick_Up_Time.type from 'unspecified' to 'time' at path: components.Car_Search_Form.fields.Pick_Up_Time.type",
+    "Change Car_Search_Form.fields.Drop_Off_Time.type from 'unspecified' to 'time' at path: components.Car_Search_Form.fields.Drop_Off_Time.type",
+    "Change Listing_Page.components.Sidebar_Filters.fields.Price_Range.type from 'unspecified' to 'range' (or 'slider') at path: components.Listing_Page.components.Sidebar_Filters.fields.Price_Range.type",
+    "Remove inferred constraint at path: components.Car_Search_Form.constraints[0] (Drop_Off_Date >= Pick_Up_Date) unless the requirement explicitly specifies date validation",
+    "Remove or make explicit the computed expression at path: components.Listing_Page.components.Vehicles_List.item_fields.Total_Rental_Cost.computed \u2014 either omit the computed implementation or replace with a neutral note 'shows total rental cost for selected period' to match the description",
+    "Remove inferred on_success action at path: components.Listing_Page.components.Vehicles_List.item_fields.Book_Now.on_success unless the description specifies what the button should do"
+  ]
+}

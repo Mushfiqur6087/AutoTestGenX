@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.751114
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.383168
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:05:49] Semantic Critic - SYSTEM PROMPT
+[22:21:10] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:05:49] Semantic Critic - USER PROMPT
+[22:21:10] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -123,27 +123,44 @@ The Group Detail page displays the group name, account number, status, office, a
 {
   "module_name": "Group Management",
   "components": {
-    "Groups_Page": {
+    "Groups_Page_Table": {
       "type": "data_table",
-      "description": "Main listing of groups",
+      "columns": [
+        "Group Name",
+        "Account Number",
+        "Office",
+        "Status",
+        "Staff"
+      ],
+      "interactive_columns": [
+        {
+          "column_name": "Group Name",
+          "type": "link",
+          "action": {
+            "action_name": "Open Group",
+            "trigger": "link",
+            "navigate_to": "Group_Detail_Page"
+          }
+        }
+      ],
       "row_actions": [
         {
-          "action_name": "Open Group Detail",
-          "action_type": "link",
-          "trigger_column": "Group Name",
-          "on_click": "navigates to Group Detail page"
+          "action_name": "Open Group",
+          "trigger": "link",
+          "element": "Group Name",
+          "navigate_to": "Group_Detail_Page"
         }
       ],
       "page_actions": [
         {
           "element_name": "Import Groups",
           "type": "button",
-          "on_click": "navigates to Bulk Import Groups page"
+          "navigate_to": "Bulk_Import_Groups_Page"
         },
         {
-          "element_name": "Create New Group",
+          "element_name": "Create Group",
           "type": "button",
-          "on_click": "opens Create Group form"
+          "opens": "Create_Group_Form"
         }
       ]
     },
@@ -174,18 +191,558 @@ The Group Detail page displays the group name, account number, status, office, a
           "type": "unspecified",
           "required": false
         },
-        "Client_Search": {
+        "Add_Clients_Search": {
           "type": "search",
-          "required": false,
-          "description": "Search existing clients to associate with the group"
+          "required": false
         },
-        "Selected_Clients": {
+        "Added_Clients": {
           "type": "repeating_group",
+          "min": 0,
           "item_fields": {
             "Client": {
               "type": "link",
               "required": true,
-              "description": "Selected client (links to client profile)"
+              "navigate_to": "Client_Profile"
+            },
+            "Remove": {
+              "type": "button",
+              "action_name": "Remove Client"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "type": "button",
+          "on_success": "creates group and associates selected clients"
+        }
+      ]
+    },
+    "Bulk_Import_Groups_Page": {
+      "type": "container",
+      "subcomponents": {
+        "Groups_Template_Panel": {
+          "type": "panel",
+          "fields": {
+            "Office": {
+              "type": "dropdown",
+              "required": false
+            },
+            "Staff": {
+              "type": "dropdown",
+              "required": false
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Download",
+              "type": "button",
+              "on_success": "downloads groups template file"
+            }
+          ]
+        },
+        "Groups_Upload_Panel": {
+          "type": "panel",
+          "fields": {
+            "File": {
+              "type": "file_upload",
+              "required": true
+            }
+          },
+          "actions": [
+            {
+              "element_name": "Upload",
+              "type": "button",
+              "on_success": "imports groups and records import history"
+            }
+          ]
+        },
+        "Import_History_Table": {
+          "type": "data_table",
+          "columns": [],
+          "row_actions": [
+            {
+              "action_name": "View Import",
+              "type": "button"
+            }
+          ]
+        }
+      }
+    },
+    "Group_Detail_Page": {
+      "type": "detail_page",
+      "components": {
+        "Action_Bar": {
+          "type": "state_bound_action_bar",
+          "states": {
+            "Pending": {
+              "available_actions": [
+                {
+                  "action_name": "Activate",
+                  "type": "button",
+                  "on_success": "changes status to Active"
+                },
+                {
+                  "action_name": "Edit",
+                  "type": "button",
+                  "opens": "Edit_Group_Form"
+                },
+                {
+                  "action_name": "Close",
+                  "type": "button",
+                  "on_success": "changes status to Closed"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "type": "button",
+                  "fields": {
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": true
+                    }
+                  }
+                },
+                {
+                  "action_name": "Transfer Clients",
+                  "type": "button",
+                  "fields": {
+                    "Target_Group": {
+                      "type": "dropdown",
+                      "required": true
+                    },
+                    "Clients_To_Transfer": {
+                      "type": "repeating_group",
+                      "item_fields": {
+                        "Client": {
+                          "type": "link",
+                          "navigate_to": "Client_Profile"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "Active": {
+              "available_actions": [
+                {
+                  "action_name": "Edit",
+                  "type": "button",
+                  "opens": "Edit_Group_Form"
+                },
+                {
+                  "action_name": "Close",
+                  "type": "button",
+                  "on_success": "changes status to Closed"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "type": "button",
+                  "fields": {
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": true
+                    }
+                  }
+                },
+                {
+                  "action_name": "Transfer Clients",
+                  "type": "button",
+                  "fields": {
+                    "Target_Group": {
+                      "type": "dropdown",
+                      "required": true
+                    },
+                    "Clients_To_Transfer": {
+                      "type": "repeating_group",
+                      "item_fields": {
+                        "Client": {
+                          "type": "link",
+                          "navigate_to": "Client_Profile"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "Closed": {
+              "available_actions": [
+                {
+                  "action_name": "Edit",
+                  "type": "button",
+                  "opens": "Edit_Group_Form"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "type": "button",
+                  "fields": {
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": true
+                    }
+                  }
+                },
+                {
+                  "action_name": "Transfer Clients",
+                  "type": "button",
+                  "fields": {
+                    "Target_Group": {
+                      "type": "dropdown",
+                      "required": true
+                    },
+                    "Clients_To_Transfer": {
+                      "type": "repeating_group",
+                      "item_fields": {
+                        "Client": {
+                          "type": "link",
+                          "navigate_to": "Client_Profile"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "Detail_Tabs": {
+          "type": "tab_container",
+          "tabs": [
+            {
+              "tab_name": "Members",
+              "fields": {},
+              "components": {
+                "Members_Table": {
+                  "type": "data_table",
+                  "columns": [
+                    "Member Name"
+                  ],
+                  "row_actions": [
+                    {
+                      "action_name": "Open Member Profile",
+                      "trigger": "link",
+                      "element": "Member Name",
+                      "navigate_to": "Client_Profile"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Loan Accounts",
+              "fields": {},
+              "components": {
+                "Loan_Accounts_Table": {
+                  "type": "data_table",
+                  "columns": [],
+                  "row_actions": [
+                    {
+                      "action_name": "View Loan",
+                      "type": "button"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Savings Accounts",
+              "fields": {},
+              "components": {
+                "Savings_Accounts_Table": {
+                  "type": "data_table",
+                  "columns": [],
+                  "row_actions": [
+                    {
+                      "action_name": "View Savings Account",
+                      "type": "button"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {}
+            },
+            {
+              "tab_name": "Calendar/Meeting",
+              "fields": {},
+              "components": {
+                "Meetings": {
+                  "type": "container",
+                  "actions": [
+                    {
+                      "element_name": "Schedule Meeting",
+                      "type": "button",
+                      "on_success": "opens meeting scheduling workflow"
+                    },
+                    {
+                      "element_name": "Record Meeting",
+                      "type": "button",
+                      "on_success": "opens meeting record entry"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Edit_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "dropdown",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Added_Clients": {
+          "type": "repeating_group",
+          "min": 0,
+          "item_fields": {
+            "Client": {
+              "type": "link",
+              "navigate_to": "Client_Profile"
+            },
+            "Remove": {
+              "type": "button",
+              "action_name": "Remove Client"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "type": "button",
+          "on_success": "saves group changes"
+        }
+      ]
+    },
+    "Collection_Sheet": {
+      "type": "feature",
+      "actions": [
+        {
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_success": "generates sheet listing group clients with due amounts"
+        }
+      ],
+      "components": {
+        "Collection_Sheet_Table": {
+          "type": "data_table",
+          "columns": [
+            "Client",
+            "Loan Repayment Amount",
+            "Savings Deposit Amount"
+          ],
+          "row_fields": {
+            "Loan_Repayment_Amount": {
+              "type": "number",
+              "required": false
+            },
+            "Savings_Deposit_Amount": {
+              "type": "number",
+              "required": false
+            },
+            "Client": {
+              "type": "link",
+              "navigate_to": "Client_Profile"
+            }
+          },
+          "submit_actions": [
+            {
+              "element_name": "Save Collection Sheet",
+              "type": "button",
+              "on_success": "saves batch repayment and deposit entries"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:23:29] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains multiple inferred action-field structures (state-bound action bar and per-action fields) that are not explicitly described and should be removed or simplified before use.",
+  "missing": [],
+  "phantoms": [
+    "components.Group_Detail_Page.components.Action_Bar (state_bound_action_bar structure not explicitly described in the text)",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[3].fields.Staff",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Target_Group",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Clients_To_Transfer",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[2].fields.Staff",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Target_Group",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Clients_To_Transfer",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[1].fields.Staff",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Target_Group",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Clients_To_Transfer",
+    "components.Bulk_Import_Groups_Page.subcomponents.Import_History_Table.row_actions[0] (View Import button not named in description)"
+  ],
+  "fixes": [
+    "components.Group_Detail_Page.components.Action_Bar: Remove the 'type':'state_bound_action_bar' structure unless the description explicitly requires actions to vary by status; instead provide a single action bar (e.g., type:'action_bar') with a flat 'available_actions' list containing the actions named (Activate, Edit, Close, Assign Staff, Transfer Clients).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[3].fields.Staff: Delete this inferred 'fields' block (and any nested field definitions) for the Assign Staff action under Pending; if the UI needs a Staff selection, mention it explicitly in the description so it can be added intentionally.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Target_Group: Delete this inferred 'Target_Group' field under Transfer Clients for Pending (and do the same for Clients_To_Transfer).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Clients_To_Transfer: Delete this inferred repeating 'Clients_To_Transfer' block under Transfer Clients for Pending.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[2].fields.Staff: Delete this inferred 'fields' block for Assign Staff under Active.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Target_Group: Delete this inferred 'Target_Group' field under Transfer Clients for Active (and the related Clients_To_Transfer block).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Clients_To_Transfer: Delete this inferred repeating 'Clients_To_Transfer' block under Transfer Clients for Active.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[1].fields.Staff: Delete this inferred 'fields' block for Assign Staff under Closed.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Target_Group: Delete this inferred 'Target_Group' field under Transfer Clients for Closed (and the related Clients_To_Transfer block).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Clients_To_Transfer: Delete this inferred repeating 'Clients_To_Transfer' block under Transfer Clients for Closed.",
+    "components.Bulk_Import_Groups_Page.subcomponents.Import_History_Table.row_actions[0]: Remove the 'View Import' row action or update the description to explicitly state that import history rows have a 'View Import' action (if intended)."
+  ]
+}
+
+------------------------------------------------------------
+[22:23:29] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains multiple inferred action-field structures (state-bound action bar and per-action fields) that are not explicitly described and should be removed or simplified before use.",
+  "missing": [],
+  "phantoms": [
+    "components.Group_Detail_Page.components.Action_Bar (state_bound_action_bar structure not explicitly described in the text)",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[3].fields.Staff",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Target_Group",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Clients_To_Transfer",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[2].fields.Staff",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Target_Group",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Clients_To_Transfer",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[1].fields.Staff",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Target_Group",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Clients_To_Transfer",
+    "components.Bulk_Import_Groups_Page.subcomponents.Import_History_Table.row_actions[0] (View Import button not named in description)"
+  ],
+  "fixes": [
+    "components.Group_Detail_Page.components.Action_Bar: Remove the 'type':'state_bound_action_bar' structure unless the description explicitly requires actions to vary by status; instead provide a single action bar (e.g., type:'action_bar') with a flat 'available_actions' list containing the actions named (Activate, Edit, Close, Assign Staff, Transfer Clients).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[3].fields.Staff: Delete this inferred 'fields' block (and any nested field definitions) for the Assign Staff action under Pending; if the UI needs a Staff selection, mention it explicitly in the description so it can be added intentionally.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Target_Group: Delete this inferred 'Target_Group' field under Transfer Clients for Pending (and do the same for Clients_To_Transfer).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Pending.available_actions[4].fields.Clients_To_Transfer: Delete this inferred repeating 'Clients_To_Transfer' block under Transfer Clients for Pending.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[2].fields.Staff: Delete this inferred 'fields' block for Assign Staff under Active.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Target_Group: Delete this inferred 'Target_Group' field under Transfer Clients for Active (and the related Clients_To_Transfer block).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Active.available_actions[3].fields.Clients_To_Transfer: Delete this inferred repeating 'Clients_To_Transfer' block under Transfer Clients for Active.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[1].fields.Staff: Delete this inferred 'fields' block for Assign Staff under Closed.",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Target_Group: Delete this inferred 'Target_Group' field under Transfer Clients for Closed (and the related Clients_To_Transfer block).",
+    "components.Group_Detail_Page.components.Action_Bar.states.Closed.available_actions[2].fields.Clients_To_Transfer: Delete this inferred repeating 'Clients_To_Transfer' block under Transfer Clients for Closed.",
+    "components.Bulk_Import_Groups_Page.subcomponents.Import_History_Table.row_actions[0]: Remove the 'View Import' row action or update the description to explicitly state that import history rows have a 'View Import' action (if intended)."
+  ]
+}
+
+------------------------------------------------------------
+[22:25:07] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Groups page displays a data table with columns for Group Name (clickable link), Account Number, Office, Status (Active, Pending, Closed as colored chips), and Staff. Buttons at the top-right allow importing groups or creating a new group. The Create Group form contains Name (required), Office (required), Staff, Submitted On (required), Active checkbox, External Id, and an Add Clients search-and-add interface to associate existing clients. Clicking "Submit" creates the group. The Bulk Import Groups page has a Groups Template panel (Office and Staff dropdowns with a Download button) and a Groups Upload panel (file picker and Upload button), with an import history table below.
+
+The Group Detail page displays the group name, account number, status, office, and staff with action buttons for Activate, Edit, Close, Assign Staff, and Transfer Clients. Tabs show Members (list of client members with links to their profiles), Loan Accounts (group loans and GLIM — Group Linked Individual Micro-loans), Savings Accounts (group savings and GSIM accounts), Notes, and a Calendar/Meeting section for scheduling and recording group meetings. The Collection Sheet feature generates a sheet showing all group clients with loan repayment amounts due and savings deposit amounts for batch data entry.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Group Management",
+  "components": {
+    "Groups_Page": {
+      "type": "data_table",
+      "description": "Main groups list with actions to import or create groups",
+      "columns": [
+        "Group Name",
+        "Account Number",
+        "Office",
+        "Status",
+        "Staff"
+      ],
+      "sortable_columns": [],
+      "row_actions": [
+        {
+          "action_name": "Open Group",
+          "on_success": "navigates to Group Detail"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "Import Groups",
+          "type": "button",
+          "on_success": "navigates to Bulk Import Groups page"
+        },
+        {
+          "element_name": "Create Group",
+          "type": "button",
+          "on_success": "opens Create Group form"
+        }
+      ]
+    },
+    "Create_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "dropdown",
+          "required": true
+        },
+        "Staff": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Add_Client_Search": {
+          "type": "search",
+          "required": false,
+          "description": "Search-and-add interface to associate existing clients"
+        },
+        "Clients": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "unspecified"
             }
           }
         }
@@ -198,7 +755,7 @@ The Group Detail page displays the group name, account number, status, office, a
       ]
     },
     "Bulk_Import_Groups_Page": {
-      "type": "page",
+      "type": "panel_collection",
       "panels": {
         "Groups_Template_Panel": {
           "type": "panel",
@@ -216,230 +773,194 @@ The Group Detail page displays the group name, account number, status, office, a
             {
               "element_name": "Download",
               "type": "button",
-              "on_click": "downloads groups template"
+              "on_success": "downloads groups template"
             }
           ]
         },
         "Groups_Upload_Panel": {
           "type": "panel",
           "fields": {
-            "Template_File": {
+            "File": {
               "type": "file_upload",
-              "required": true
+              "required": false
             }
           },
           "actions": [
             {
               "element_name": "Upload",
               "type": "button",
-              "on_click": "starts import",
-              "on_success": "imports groups and records import history"
+              "on_success": "imports groups"
             }
           ]
         }
       },
-      "import_history_table": {
+      "Import_History_Table": {
         "type": "data_table",
-        "description": "Import history entries for uploaded group files"
+        "description": "Table listing previous import attempts",
+        "columns": [],
+        "row_actions": []
       }
     },
-    "Group_Detail_Actions": {
-      "type": "state_bound_action_bar",
-      "states": {
-        "Active": {
+    "Group_Detail_Page": {
+      "type": "page",
+      "components": {
+        "Action_Bar": {
+          "type": "action_bar",
           "available_actions": [
             {
-              "action_name": "Edit",
-              "type": "button",
-              "on_click": "opens Create Group form prefilled",
-              "on_success": "updates group"
+              "action_name": "Activate"
             },
             {
-              "action_name": "Close",
-              "type": "button",
-              "on_click": "opens Close confirmation",
-              "on_success": "sets status to Closed"
+              "action_name": "Edit"
             },
             {
-              "action_name": "Assign Staff",
-              "type": "button",
-              "fields": {
-                "Staff": {
-                  "type": "dropdown",
-                  "required": true
-                }
-              },
-              "on_success": "assigns staff to group"
+              "action_name": "Close"
             },
             {
-              "action_name": "Transfer Clients",
-              "type": "button",
-              "on_click": "opens Transfer Clients dialog",
-              "on_success": "transfers clients"
+              "action_name": "Assign Staff"
+            },
+            {
+              "action_name": "Transfer Clients"
             }
           ]
         },
-        "Pending": {
-          "available_actions": [
+        "Detail_Tabs": {
+          "type": "tab_container",
+          "tabs": [
             {
-              "action_name": "Activate",
-              "type": "button",
-              "on_click": "activates group",
-              "on_success": "sets status to Active"
-            },
-            {
-              "action_name": "Edit",
-              "type": "button",
-              "on_click": "opens Create Group form prefilled",
-              "on_success": "updates group"
-            },
-            {
-              "action_name": "Assign Staff",
-              "type": "button",
+              "tab_name": "Members",
               "fields": {
-                "Staff": {
-                  "type": "dropdown",
-                  "required": true
+                "Members_Table": {
+                  "type": "data_table",
+                  "description": "List of client members with links to profiles",
+                  "columns": [
+                    "Member Name",
+                    "Client Id",
+                    "Role"
+                  ],
+                  "row_actions": [
+                    {
+                      "action_name": "View Member Profile",
+                      "on_success": "navigates to client profile"
+                    }
+                  ]
                 }
-              },
-              "on_success": "assigns staff to group"
+              }
             },
             {
-              "action_name": "Transfer Clients",
-              "type": "button",
-              "on_click": "opens Transfer Clients dialog",
-              "on_success": "transfers clients"
+              "tab_name": "Loan Accounts",
+              "fields": {
+                "Loan_Accounts_Table": {
+                  "type": "data_table",
+                  "description": "Group loans and GLIM accounts",
+                  "columns": [],
+                  "row_actions": []
+                }
+              }
+            },
+            {
+              "tab_name": "Savings Accounts",
+              "fields": {
+                "Savings_Accounts_Table": {
+                  "type": "data_table",
+                  "description": "Group savings and GSIM accounts",
+                  "columns": [],
+                  "row_actions": []
+                }
+              }
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {}
+            },
+            {
+              "tab_name": "Meetings",
+              "fields": {
+                "Schedule_Meeting_Form": {
+                  "type": "form",
+                  "fields": {
+                    "Date": {
+                      "type": "date",
+                      "required": true
+                    },
+                    "Time": {
+                      "type": "unspecified",
+                      "required": false
+                    },
+                    "Agenda": {
+                      "type": "unspecified",
+                      "required": false
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Schedule",
+                      "on_success": "schedules meeting"
+                    }
+                  ]
+                },
+                "Record_Meeting_Form": {
+                  "type": "form",
+                  "fields": {
+                    "Date": {
+                      "type": "date",
+                      "required": false
+                    },
+                    "Notes": {
+                      "type": "unspecified",
+                      "required": false
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Record",
+                      "on_success": "records meeting"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Calendar/Meeting",
+              "fields": {}
             }
           ]
         },
-        "Closed": {
-          "available_actions": [
+        "Collection_Sheet_Feature": {
+          "type": "component",
+          "description": "Generate a sheet for batch data entry of loan repayments and savings deposits",
+          "actions": [
             {
-              "action_name": "Activate",
+              "element_name": "Generate Collection Sheet",
               "type": "button",
-              "on_click": "re-activates group",
-              "on_success": "sets status to Active"
-            },
-            {
-              "action_name": "Edit",
-              "type": "button",
-              "on_click": "opens Create Group form prefilled",
-              "on_success": "updates group"
-            },
-            {
-              "action_name": "Assign Staff",
-              "type": "button",
-              "fields": {
-                "Staff": {
-                  "type": "dropdown",
-                  "required": false
-                }
+              "on_success": "opens collection sheet for batch entry"
+            }
+          ],
+          "Collection_Sheet_Table": {
+            "type": "data_table",
+            "description": "Editable table for batch entry of amounts per client",
+            "columns": [
+              "Client",
+              "Loan_Repayment_Amount",
+              "Savings_Deposit_Amount"
+            ],
+            "editable_columns": {
+              "Loan_Repayment_Amount": {
+                "type": "number"
               },
-              "on_success": "assigns staff to group"
+              "Savings_Deposit_Amount": {
+                "type": "number"
+              }
             },
-            {
-              "action_name": "Transfer Clients",
-              "type": "button",
-              "on_click": "opens Transfer Clients dialog",
-              "on_success": "transfers clients"
-            }
-          ]
-        }
-      }
-    },
-    "Group_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Members",
-          "fields": {
-            "Members_Table": {
-              "type": "data_table",
-              "description": "List of client members",
-              "row_actions": [
-                {
-                  "action_name": "View Member Profile",
-                  "action_type": "link",
-                  "on_click": "navigates to client profile"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "tab_name": "Loan Accounts",
-          "fields": {
-            "Loan_Accounts_Table": {
-              "type": "data_table",
-              "description": "Group loans and GLIM accounts"
-            }
-          }
-        },
-        {
-          "tab_name": "Savings Accounts",
-          "fields": {
-            "Savings_Accounts_Table": {
-              "type": "data_table",
-              "description": "Group savings and GSIM accounts"
-            }
-          }
-        },
-        {
-          "tab_name": "Notes",
-          "fields": {}
-        },
-        {
-          "tab_name": "Calendar/Meeting",
-          "fields": {
-            "Schedule_Meeting": {
-              "type": "button",
-              "element_name": "Schedule Meeting",
-              "on_click": "opens Schedule Meeting dialog",
-              "on_success": "schedules meeting"
-            },
-            "Record_Meeting": {
-              "type": "button",
-              "element_name": "Record Meeting",
-              "on_click": "opens Record Meeting dialog",
-              "on_success": "records meeting details"
-            }
+            "row_actions": [],
+            "submit_actions": [
+              {
+                "element_name": "Save Collection Sheet",
+                "on_success": "saves batch entries"
+              }
+            ]
           }
         }
-      ]
-    },
-    "Collection_Sheet_Feature": {
-      "type": "feature",
-      "description": "Generates a collection sheet for batch data entry of repayments and deposits",
-      "actions": [
-        {
-          "element_name": "Generate Collection Sheet",
-          "type": "button",
-          "on_click": "generates collection sheet for group clients"
-        }
-      ],
-      "generated_sheet": {
-        "type": "data_table",
-        "description": "Editable rows per group client for batch entry",
-        "row_fields": {
-          "Client": {
-            "type": "link",
-            "required": true
-          },
-          "Loan_Repayment_Amount": {
-            "type": "number",
-            "required": false
-          },
-          "Savings_Deposit_Amount": {
-            "type": "number",
-            "required": false
-          }
-        },
-        "submit_actions": [
-          {
-            "element_name": "Save Collection Sheet",
-            "on_success": "records repayments and deposits"
-          }
-        ]
       }
     }
   }
@@ -449,53 +970,51 @@ The Group Detail page displays the group name, account number, status, office, a
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:07:53] Semantic Critic - LLM RESPONSE
+[22:26:39] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST adds several inferred/unspecified behaviors (state-bound action bar, action-level fields, and inferred required/submit controls) that are not explicitly described; regenerate after aligning these to the description.",
+  "summary": "AST includes most required interactive elements but contains multiple phantom items (duplicate Meetings tab, extra Members table columns, and unspecified meeting form fields) that must be fixed before use.",
   "missing": [],
   "phantoms": [
-    "components.Group_Detail_Actions (state_bound_action_bar with per-state availability — description only lists action buttons, not state-bound behavior)",
-    "components.Group_Detail_Actions.states.Active.available_actions[2].fields.Staff (Assign Staff action includes an inline Staff dropdown — not specified in description)",
-    "components.Group_Detail_Actions.states.Pending.available_actions[2].fields.Staff (Assign Staff action includes an inline Staff dropdown — not specified in description)",
-    "components.Group_Detail_Actions.states.Closed.available_actions[2].fields.Staff (Assign Staff action includes an inline Staff dropdown — not specified in description)",
-    "components.Bulk_Import_Groups_Page.panels.Groups_Upload_Panel.fields.Template_File.required (required constraint inferred; description only says 'file picker')",
-    "components.Collection_Sheet_Feature.generated_sheet.submit_actions[0] (Save Collection Sheet submit action inferred; description describes generation and batch entry but does not name a save/submit control)"
+    "Group_Detail_Page.components.Detail_Tabs.tabs[4] (tab_name 'Meetings' — duplicate tab not mentioned; description only names a single 'Calendar/Meeting' section)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[0].fields.Members_Table.columns[1] (Client Id column — not specified in description)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[0].fields.Members_Table.columns[2] (Role column — not specified in description)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[4].fields.Schedule_Meeting_Form.fields.Time (Time field inferred but not described)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[4].fields.Schedule_Meeting_Form.fields.Agenda (Agenda field inferred but not described)"
   ],
   "fixes": [
-    "components.Group_Detail_Actions: Replace the state_bound_action_bar structure with a flat list of action buttons on the Group Detail page (Activate, Edit, Close, Assign Staff, Transfer Clients) unless the description explicitly states per-status availability; i.e., change components.Group_Detail_Actions.type to 'action_bar' and provide components.Group_Detail_Actions.available_actions: [Activate, Edit, Close, Assign Staff, Transfer Clients].",
-    "components.Group_Detail_Actions.states.*.available_actions[*].fields.Staff: Remove the inline 'fields' definition from action entries (Assign Staff) unless the description explicitly specifies that assigning staff opens an action dialog with a Staff dropdown; if an Assign Staff dialog should exist, add a separate component (e.g., components.Assign_Staff_Dialog.fields.Staff) and reference it from the Assign Staff action.",
-    "components.Bulk_Import_Groups_Page.panels.Groups_Upload_Panel.fields.Template_File.required: Remove the required flag or make it optional unless the description explicitly states the upload file is required; set required to false or omit the property.",
-    "components.Collection_Sheet_Feature.generated_sheet.submit_actions[0]: Remove the inferred 'Save Collection Sheet' submit action or make it optional unless the description explicitly requires a named submit control; if a submit is intended, update the description to mention the exact save/submit control for the collection sheet."
+    "Remove the duplicate Meetings tab: delete components.Group_Detail_Page.components.Detail_Tabs.tabs[4]. Then move/merge any meeting-related forms (Schedule_Meeting_Form, Record_Meeting_Form) into the existing 'Calendar/Meeting' tab at components.Group_Detail_Page.components.Detail_Tabs.tabs[5].fields so there is a single Calendar/Meeting area matching the description.",
+    "Edit the Members table to only include columns explicitly implied by the description. Replace components.Group_Detail_Page.components.Detail_Tabs.tabs[0].fields.Members_Table.columns with a single column array like [\"Member Name\"] (the member name cell should be a clickable link to the client profile). Remove the 'Client Id' and 'Role' columns from the members table.",
+    "Remove unspecified meeting form fields: in the (moved) Schedule_Meeting_Form at components.Group_Detail_Page.components.Detail_Tabs.tabs[5].fields.Schedule_Meeting_Form.fields remove 'Time' and 'Agenda', leaving only a 'Date' field (required) or otherwise only fields explicitly described. Ensure Record_Meeting_Form remains minimal (e.g., 'Date' and 'Notes') and is placed under components.Group_Detail_Page.components.Detail_Tabs.tabs[5].fields.",
+    "After making the above structural changes, ensure there are no additional form fields/columns or tabs that cannot be directly traced to the description; keep inferred items to a minimum and only if clearly supported by the text."
   ]
 }
 
 ------------------------------------------------------------
-[16:07:53] Semantic Critic - PARSED JSON
+[22:26:39] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "retry",
-  "summary": "AST adds several inferred/unspecified behaviors (state-bound action bar, action-level fields, and inferred required/submit controls) that are not explicitly described; regenerate after aligning these to the description.",
+  "summary": "AST includes most required interactive elements but contains multiple phantom items (duplicate Meetings tab, extra Members table columns, and unspecified meeting form fields) that must be fixed before use.",
   "missing": [],
   "phantoms": [
-    "components.Group_Detail_Actions (state_bound_action_bar with per-state availability \u2014 description only lists action buttons, not state-bound behavior)",
-    "components.Group_Detail_Actions.states.Active.available_actions[2].fields.Staff (Assign Staff action includes an inline Staff dropdown \u2014 not specified in description)",
-    "components.Group_Detail_Actions.states.Pending.available_actions[2].fields.Staff (Assign Staff action includes an inline Staff dropdown \u2014 not specified in description)",
-    "components.Group_Detail_Actions.states.Closed.available_actions[2].fields.Staff (Assign Staff action includes an inline Staff dropdown \u2014 not specified in description)",
-    "components.Bulk_Import_Groups_Page.panels.Groups_Upload_Panel.fields.Template_File.required (required constraint inferred; description only says 'file picker')",
-    "components.Collection_Sheet_Feature.generated_sheet.submit_actions[0] (Save Collection Sheet submit action inferred; description describes generation and batch entry but does not name a save/submit control)"
+    "Group_Detail_Page.components.Detail_Tabs.tabs[4] (tab_name 'Meetings' \u2014 duplicate tab not mentioned; description only names a single 'Calendar/Meeting' section)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[0].fields.Members_Table.columns[1] (Client Id column \u2014 not specified in description)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[0].fields.Members_Table.columns[2] (Role column \u2014 not specified in description)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[4].fields.Schedule_Meeting_Form.fields.Time (Time field inferred but not described)",
+    "Group_Detail_Page.components.Detail_Tabs.tabs[4].fields.Schedule_Meeting_Form.fields.Agenda (Agenda field inferred but not described)"
   ],
   "fixes": [
-    "components.Group_Detail_Actions: Replace the state_bound_action_bar structure with a flat list of action buttons on the Group Detail page (Activate, Edit, Close, Assign Staff, Transfer Clients) unless the description explicitly states per-status availability; i.e., change components.Group_Detail_Actions.type to 'action_bar' and provide components.Group_Detail_Actions.available_actions: [Activate, Edit, Close, Assign Staff, Transfer Clients].",
-    "components.Group_Detail_Actions.states.*.available_actions[*].fields.Staff: Remove the inline 'fields' definition from action entries (Assign Staff) unless the description explicitly specifies that assigning staff opens an action dialog with a Staff dropdown; if an Assign Staff dialog should exist, add a separate component (e.g., components.Assign_Staff_Dialog.fields.Staff) and reference it from the Assign Staff action.",
-    "components.Bulk_Import_Groups_Page.panels.Groups_Upload_Panel.fields.Template_File.required: Remove the required flag or make it optional unless the description explicitly states the upload file is required; set required to false or omit the property.",
-    "components.Collection_Sheet_Feature.generated_sheet.submit_actions[0]: Remove the inferred 'Save Collection Sheet' submit action or make it optional unless the description explicitly requires a named submit control; if a submit is intended, update the description to mention the exact save/submit control for the collection sheet."
+    "Remove the duplicate Meetings tab: delete components.Group_Detail_Page.components.Detail_Tabs.tabs[4]. Then move/merge any meeting-related forms (Schedule_Meeting_Form, Record_Meeting_Form) into the existing 'Calendar/Meeting' tab at components.Group_Detail_Page.components.Detail_Tabs.tabs[5].fields so there is a single Calendar/Meeting area matching the description.",
+    "Edit the Members table to only include columns explicitly implied by the description. Replace components.Group_Detail_Page.components.Detail_Tabs.tabs[0].fields.Members_Table.columns with a single column array like [\"Member Name\"] (the member name cell should be a clickable link to the client profile). Remove the 'Client Id' and 'Role' columns from the members table.",
+    "Remove unspecified meeting form fields: in the (moved) Schedule_Meeting_Form at components.Group_Detail_Page.components.Detail_Tabs.tabs[5].fields.Schedule_Meeting_Form.fields remove 'Time' and 'Agenda', leaving only a 'Date' field (required) or otherwise only fields explicitly described. Ensure Record_Meeting_Form remains minimal (e.g., 'Date' and 'Notes') and is placed under components.Group_Detail_Page.components.Detail_Tabs.tabs[5].fields.",
+    "After making the above structural changes, ensure there are no additional form fields/columns or tabs that cannot be directly traced to the description; keep inferred items to a minimum and only if clearly supported by the text."
   ]
 }
 
 ------------------------------------------------------------
-[16:09:41] Semantic Critic - USER PROMPT
+[22:27:51] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -521,23 +1040,24 @@ The Group Detail page displays the group name, account number, status, office, a
         "Status",
         "Staff"
       ],
-      "row_actions": [
-        {
-          "action_name": "Open Group",
-          "type": "link",
-          "on_click": "navigates to Group Detail page"
-        }
-      ],
-      "page_actions": [
+      "link_column": "Group Name",
+      "top_actions": [
         {
           "element_name": "Import Groups",
           "type": "button",
-          "on_click": "navigates to Bulk Import Groups page"
+          "on_click_navigates_to": "Bulk_Import_Groups_Page"
         },
         {
-          "element_name": "Create Group",
+          "element_name": "Create New Group",
           "type": "button",
-          "on_click": "opens Create_Group_Form"
+          "on_click_navigates_to": "Create_Group_Form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Group Detail",
+          "type": "link",
+          "target": "Group_Detail_Page"
         }
       ]
     },
@@ -553,26 +1073,27 @@ The Group Detail page displays the group name, account number, status, office, a
           "required": true
         },
         "Staff": {
-          "type": "unspecified"
+          "type": "dropdown",
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
           "required": true
         },
         "Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "External_Id": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
-        "Add_Clients_Search": {
-          "type": "search"
-        },
-        "Added_Clients": {
+        "Clients": {
           "type": "repeating_group",
           "item_fields": {
             "Client": {
-              "type": "unspecified"
+              "type": "search",
+              "required": true
             }
           }
         }
@@ -581,7 +1102,7 @@ The Group Detail page displays the group name, account number, status, office, a
         {
           "element_name": "Submit",
           "type": "button",
-          "on_success": "creates the group"
+          "on_success": "creates group"
         }
       ]
     },
@@ -592,153 +1113,193 @@ The Group Detail page displays the group name, account number, status, office, a
           "type": "panel",
           "fields": {
             "Office": {
-              "type": "dropdown"
+              "type": "dropdown",
+              "required": false
             },
             "Staff": {
-              "type": "dropdown"
+              "type": "dropdown",
+              "required": false
             }
           },
           "actions": [
             {
-              "element_name": "Download Template",
+              "element_name": "Download",
               "type": "button",
-              "on_click": "downloads groups template"
+              "on_success": "downloads groups template"
             }
           ]
         },
         "Groups_Upload_Panel": {
           "type": "panel",
           "fields": {
-            "Template_File": {
+            "File": {
               "type": "file_upload",
-              "required": false
+              "required": true
             }
           },
           "actions": [
             {
               "element_name": "Upload",
               "type": "button",
-              "on_success": "uploads file and starts import job"
+              "on_success": "imports groups from file"
             }
           ]
         }
       },
-      "import_history_table": {
-        "type": "data_table",
-        "columns": [],
-        "row_actions": []
+      "components": {
+        "Import_History_Table": {
+          "type": "data_table"
+        }
       }
     },
     "Group_Detail_Page": {
-      "type": "detail_page",
-      "actions_component": "Group_Detail_Actions",
-      "tabs": [
-        {
-          "tab_name": "Members",
-          "fields": {
-            "Members_Table": {
-              "type": "data_table",
-              "columns": [
-                "Member Name"
-              ],
-              "row_actions": [
-                {
-                  "action_name": "Open Member Profile",
-                  "type": "link",
-                  "on_click": "navigates to Member Profile"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "tab_name": "Loan Accounts",
-          "fields": {
-            "Loan_Accounts_Table": {
-              "type": "data_table",
-              "columns": [],
-              "row_actions": []
-            }
-          }
-        },
-        {
-          "tab_name": "Savings Accounts",
-          "fields": {
-            "Savings_Accounts_Table": {
-              "type": "data_table",
-              "columns": [],
-              "row_actions": []
-            }
-          }
-        },
-        {
-          "tab_name": "Notes",
-          "fields": {}
-        },
-        {
-          "tab_name": "Calendar/Meeting",
-          "fields": {
-            "Meeting_Scheduler": {
-              "type": "component",
+      "type": "page",
+      "components": {
+        "Detail_Action_Bar": {
+          "type": "state_bound_action_bar",
+          "states": {
+            "Pending": {
               "available_actions": [
                 {
-                  "element_name": "Schedule Meeting",
-                  "type": "button",
-                  "on_click": "opens scheduling workflow"
+                  "action_name": "Activate",
+                  "preconditions": [
+                    "status must be Pending"
+                  ],
+                  "on_success": "transitions to Active"
                 },
                 {
-                  "element_name": "Record Meeting",
-                  "type": "button",
-                  "on_click": "opens meeting record workflow"
+                  "action_name": "Edit",
+                  "preconditions": [],
+                  "opens_form": "Edit_Group_Form"
+                }
+              ]
+            },
+            "Active": {
+              "available_actions": [
+                {
+                  "action_name": "Close",
+                  "preconditions": [
+                    "status must be Active"
+                  ],
+                  "on_success": "transitions to Closed"
+                },
+                {
+                  "action_name": "Edit",
+                  "preconditions": [],
+                  "opens_form": "Edit_Group_Form"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "preconditions": []
+                },
+                {
+                  "action_name": "Transfer Clients",
+                  "preconditions": []
+                },
+                {
+                  "action_name": "Generate Collection Sheet",
+                  "preconditions": [],
+                  "on_success": "opens collection sheet"
+                }
+              ]
+            },
+            "Closed": {
+              "available_actions": [
+                {
+                  "action_name": "Edit",
+                  "preconditions": [
+                    "status must be Active or Pending"
+                  ]
                 }
               ]
             }
           }
-        }
-      ]
-    },
-    "Group_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Activate",
-          "type": "button"
         },
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_click": "opens Edit_Group_Form"
-        },
-        {
-          "action_name": "Close",
-          "type": "button"
-        },
-        {
-          "action_name": "Assign Staff",
-          "type": "button",
-          "on_click": "opens Assign_Staff_Dialog"
-        },
-        {
-          "action_name": "Transfer Clients",
-          "type": "button"
+        "Detail_Tabs": {
+          "type": "tab_container",
+          "tabs": [
+            {
+              "tab_name": "Members",
+              "fields": {
+                "Members_Table": {
+                  "type": "data_table",
+                  "columns": [
+                    "Member Name"
+                  ],
+                  "row_actions": [
+                    {
+                      "action_name": "View Member Profile",
+                      "type": "link",
+                      "target": "Client_Profile"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Loan Accounts",
+              "fields": {
+                "Loan_Accounts_Table": {
+                  "type": "data_table"
+                }
+              }
+            },
+            {
+              "tab_name": "Savings Accounts",
+              "fields": {
+                "Savings_Accounts_Table": {
+                  "type": "data_table"
+                }
+              }
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {}
+            },
+            {
+              "tab_name": "Calendar/Meeting",
+              "fields": {
+                "Schedule_Meeting_Form": {
+                  "type": "form",
+                  "fields": {
+                    "Date": {
+                      "type": "date",
+                      "required": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Schedule",
+                      "type": "button",
+                      "on_success": "schedules meeting"
+                    }
+                  ]
+                },
+                "Record_Meeting_Form": {
+                  "type": "form",
+                  "fields": {
+                    "Date": {
+                      "type": "date",
+                      "required": true
+                    },
+                    "Notes": {
+                      "type": "unspecified",
+                      "required": false
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Save Meeting Record",
+                      "type": "button",
+                      "on_success": "records meeting"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         }
-      ]
-    },
-    "Assign_Staff_Dialog": {
-      "type": "dialog",
-      "fields": {
-        "Staff": {
-          "type": "dropdown",
-          "required": true
-        }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Assign",
-          "type": "button",
-          "on_success": "assigns selected staff to group"
-        }
-      ]
+      }
     },
     "Edit_Group_Form": {
       "type": "form",
@@ -752,26 +1313,27 @@ The Group Detail page displays the group name, account number, status, office, a
           "required": true
         },
         "Staff": {
-          "type": "unspecified"
+          "type": "dropdown",
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
           "required": true
         },
         "Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "External_Id": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
-        "Add_Clients_Search": {
-          "type": "search"
-        },
-        "Added_Clients": {
+        "Clients": {
           "type": "repeating_group",
           "item_fields": {
             "Client": {
-              "type": "unspecified"
+              "type": "search",
+              "required": true
             }
           }
         }
@@ -784,37 +1346,35 @@ The Group Detail page displays the group name, account number, status, office, a
         }
       ]
     },
-    "Collection_Sheet_Feature": {
-      "type": "component",
-      "actions": [
-        {
-          "element_name": "Generate Collection Sheet",
-          "type": "button",
-          "on_success": "populates sheet for batch data entry with all group clients"
-        }
-      ],
-      "generated_sheet": {
-        "type": "data_table",
-        "columns": [
-          "Client",
-          "Loan Repayment Amount",
-          "Savings Deposit Amount"
-        ],
-        "row_fields": {
-          "Client": {
-            "type": "unspecified"
-          },
-          "Loan_Repayment_Amount": {
-            "type": "number",
-            "editable": true
-          },
-          "Savings_Deposit_Amount": {
-            "type": "number",
-            "editable": true
+    "Collection_Sheet": {
+      "type": "form",
+      "description": "Batch entry sheet listing group clients with loan repayment and savings deposit amounts",
+      "fields": {
+        "Rows": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Client": {
+              "type": "link",
+              "required": true
+            },
+            "Loan_Repayment_Amount": {
+              "type": "number",
+              "required": false
+            },
+            "Savings_Deposit_Amount": {
+              "type": "number",
+              "required": false
+            }
           }
-        },
-        "row_actions": []
-      }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Collection Sheet",
+          "type": "button",
+          "on_success": "saves collection sheet entries"
+        }
+      ]
     }
   }
 }
@@ -823,29 +1383,43 @@ The Group Detail page displays the group name, account number, status, office, a
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:10:59] Semantic Critic - LLM RESPONSE
+[22:28:27] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
-  "verdict": "yes",
-  "summary": "AST accurately covers the interactive elements from the description; only minor inferred items (Edit form fields and Assign Staff dialog field requirement) were added but are acceptable.",
+  "verdict": "retry",
+  "summary": "The AST adds inferred action preconditions and an extra 'Generate Collection Sheet' action that are not specified in the description; remove those inferred constraints/actions or make them explicit in the description before reuse.",
   "missing": [],
   "phantoms": [
-    "Edit_Group_Form.fields (detailed edit form fields were inferred from the Create form but not explicitly described)",
-    "Assign_Staff_Dialog.fields.Staff.required (the requirement on the Assign Staff field was inferred)"
+    "Group_Detail_Page.Detail_Action_Bar.states.Pending.available_actions[0].preconditions[0] (\"status must be Pending\" — not stated in description)",
+    "Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[0].preconditions[0] (\"status must be Active\" — not stated in description)",
+    "Group_Detail_Page.Detail_Action_Bar.states.Closed.available_actions[0].preconditions[0] (\"status must be Active or Pending\" — contradictory and not stated in description)",
+    "Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[4] (\"Generate Collection Sheet\" action — the description mentions a Collection Sheet feature but does not state there is an action button in the detail action bar)"
   ],
-  "fixes": []
+  "fixes": [
+    "Remove the inferred precondition at Group_Detail_Page.Detail_Action_Bar.states.Pending.available_actions[0].preconditions[0]; replace the 'preconditions' array with an empty array or remove the 'preconditions' property entirely.",
+    "Remove the inferred precondition at Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[0].preconditions[0]; replace the 'preconditions' array with an empty array or remove the 'preconditions' property entirely.",
+    "Remove or correct the contradictory inferred precondition at Group_Detail_Page.Detail_Action_Bar.states.Closed.available_actions[0].preconditions[0]; set 'preconditions' to an empty array or remove it (the description does not specify any preconditions for Edit in Closed state).",
+    "Remove the 'Generate Collection Sheet' action from Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[4] (or move it out of the state_bound_action_bar into the standalone Collection_Sheet component) because the description does not explicitly state there is an action button for generating the collection sheet in the detail action bar."
+  ]
 }
 
 ------------------------------------------------------------
-[16:10:59] Semantic Critic - PARSED JSON
+[22:28:27] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
-  "verdict": "yes",
-  "summary": "AST accurately covers the interactive elements from the description; only minor inferred items (Edit form fields and Assign Staff dialog field requirement) were added but are acceptable.",
+  "verdict": "retry",
+  "summary": "The AST adds inferred action preconditions and an extra 'Generate Collection Sheet' action that are not specified in the description; remove those inferred constraints/actions or make them explicit in the description before reuse.",
   "missing": [],
   "phantoms": [
-    "Edit_Group_Form.fields (detailed edit form fields were inferred from the Create form but not explicitly described)",
-    "Assign_Staff_Dialog.fields.Staff.required (the requirement on the Assign Staff field was inferred)"
+    "Group_Detail_Page.Detail_Action_Bar.states.Pending.available_actions[0].preconditions[0] (\"status must be Pending\" \u2014 not stated in description)",
+    "Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[0].preconditions[0] (\"status must be Active\" \u2014 not stated in description)",
+    "Group_Detail_Page.Detail_Action_Bar.states.Closed.available_actions[0].preconditions[0] (\"status must be Active or Pending\" \u2014 contradictory and not stated in description)",
+    "Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[4] (\"Generate Collection Sheet\" action \u2014 the description mentions a Collection Sheet feature but does not state there is an action button in the detail action bar)"
   ],
-  "fixes": []
+  "fixes": [
+    "Remove the inferred precondition at Group_Detail_Page.Detail_Action_Bar.states.Pending.available_actions[0].preconditions[0]; replace the 'preconditions' array with an empty array or remove the 'preconditions' property entirely.",
+    "Remove the inferred precondition at Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[0].preconditions[0]; replace the 'preconditions' array with an empty array or remove the 'preconditions' property entirely.",
+    "Remove or correct the contradictory inferred precondition at Group_Detail_Page.Detail_Action_Bar.states.Closed.available_actions[0].preconditions[0]; set 'preconditions' to an empty array or remove it (the description does not specify any preconditions for Edit in Closed state).",
+    "Remove the 'Generate Collection Sheet' action from Group_Detail_Page.Detail_Action_Bar.states.Active.available_actions[4] (or move it out of the state_bound_action_bar into the standalone Collection_Sheet component) because the description does not explicitly state there is an action button for generating the collection sheet in the detail action bar."
+  ]
 }

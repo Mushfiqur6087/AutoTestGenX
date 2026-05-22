@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.361686
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.525515
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Savings Products</module_name>
 
@@ -232,30 +232,43 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Savings Products",
   "components": {
-    "Filter_Bar": {
-      "type": "form",
-      "fields": {}
-    },
-    "Savings_Products_Table": {
-      "type": "data_table",
-      "columns": [
-        "Name",
-        "Short Name"
-      ],
-      "row_actions": [
-        {
-          "action_name": "Open Product",
-          "triggered_by_column": "Name",
-          "type": "link"
+    "Savings_Products_Page": {
+      "type": "page",
+      "components": {
+        "Filter_Bar": {
+          "type": "filter_bar",
+          "fields": {}
+        },
+        "Actions": {
+          "type": "action_bar",
+          "actions": [
+            {
+              "element_name": "+ Create Savings Product",
+              "type": "button",
+              "on_click": "opens Savings_Product_Wizard"
+            }
+          ]
+        },
+        "Products_Table": {
+          "type": "data_table",
+          "columns": [
+            {
+              "name": "Name",
+              "clickable": true
+            },
+            {
+              "name": "Short Name",
+              "clickable": false
+            }
+          ],
+          "row_actions": [
+            {
+              "action_name": "Open",
+              "description": "triggered by clicking the Name link"
+            }
+          ]
         }
-      ],
-      "top_actions": [
-        {
-          "action_name": "+ Create Savings Product",
-          "type": "button",
-          "triggers": "Savings_Product_Wizard"
-        }
-      ]
+      }
     },
     "Savings_Product_Wizard": {
       "type": "wizard",
@@ -264,11 +277,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 1,
           "step_name": "Details",
           "fields": {
-            "Product_Name": {
+            "Product Name": {
               "type": "unspecified",
               "required": true
             },
-            "Short_Name": {
+            "Short Name": {
               "type": "unspecified",
               "required": true
             },
@@ -276,7 +289,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
               "type": "unspecified",
               "required": false
             },
-            "External_Id": {
+            "External Id": {
               "type": "unspecified",
               "required": false
             }
@@ -287,14 +300,14 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_name": "Currency",
           "fields": {
             "Currency": {
-              "type": "dropdown",
+              "type": "unspecified",
               "required": false
             },
-            "Decimal_Places": {
+            "Decimal Places": {
               "type": "number",
               "required": false
             },
-            "Currency_In_Multiples_Of": {
+            "Currency In Multiples Of": {
               "type": "number",
               "required": false
             }
@@ -304,11 +317,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 3,
           "step_name": "Terms",
           "fields": {
-            "Nominal_Annual_Interest_Rate": {
+            "Nominal Annual Interest Rate": {
               "type": "number",
               "required": false
             },
-            "Interest_Compounding_Period": {
+            "Interest Compounding Period": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -319,7 +332,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Annually"
               ]
             },
-            "Interest_Posting_Period": {
+            "Interest Posting Period": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -329,7 +342,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Annually"
               ]
             },
-            "Interest_Calculated_Using": {
+            "Interest Calculated Using": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -337,7 +350,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Average Daily Balance"
               ]
             },
-            "Days_in_Year": {
+            "Days in Year": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -352,72 +365,72 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 4,
           "step_name": "Settings",
           "fields": {
-            "Minimum_Opening_Balance": {
+            "Minimum Opening Balance": {
               "type": "number",
               "required": false
             },
-            "Lock_in_Period": {
+            "Lock-in Period": {
               "type": "unspecified",
               "required": false
             },
-            "Apply_Withdrawal_Fee_for_Transfers": {
+            "Apply Withdrawal Fee for Transfers": {
               "type": "checkbox",
               "required": false
             },
-            "Minimum_Balance_for_Interest_Calculation": {
+            "Minimum Balance for Interest Calculation": {
               "type": "number",
               "required": false
             },
-            "Enforce_Minimum_Required_Balance": {
+            "Enforce Minimum Required Balance": {
               "type": "checkbox",
               "required": false
             },
-            "Minimum_Required_Balance": {
+            "Minimum Required Balance": {
               "type": "number",
-              "required_when": "Enforce_Minimum_Required_Balance == true",
-              "visible_when": "Enforce_Minimum_Required_Balance == true"
+              "required_when": "Enforce Minimum Required Balance == true",
+              "visible_when": "Enforce Minimum Required Balance == true"
             },
-            "Is_Overdraft_Allowed": {
+            "Is Overdraft Allowed": {
               "type": "checkbox",
               "required": false
             },
-            "Maximum_Overdraft_Amount": {
+            "Maximum Overdraft Amount": {
               "type": "number",
-              "required_when": "Is_Overdraft_Allowed == true",
-              "visible_when": "Is_Overdraft_Allowed == true"
+              "visible_when": "Is Overdraft Allowed == true",
+              "required_when": "Is Overdraft Allowed == true"
             },
-            "Overdraft_Interest_Rate": {
+            "Overdraft Interest Rate": {
               "type": "number",
-              "required_when": "Is_Overdraft_Allowed == true",
-              "visible_when": "Is_Overdraft_Allowed == true"
+              "visible_when": "Is Overdraft Allowed == true",
+              "required_when": "Is Overdraft Allowed == true"
             },
-            "Enable_Withhold_Tax": {
+            "Enable Withhold Tax": {
               "type": "checkbox",
               "required": false
             },
-            "Tax_Group": {
+            "Tax Group": {
               "type": "dropdown",
-              "required_when": "Enable_Withhold_Tax == true",
-              "visible_when": "Enable_Withhold_Tax == true"
+              "visible_when": "Enable Withhold Tax == true",
+              "required_when": "Enable Withhold Tax == true"
             },
-            "Enable_Dormancy_Tracking": {
+            "Enable Dormancy Tracking": {
               "type": "checkbox",
               "required": false
             },
-            "Days_to_Inactive": {
+            "Days to Inactive": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             },
-            "Days_to_Dormancy": {
+            "Days to Dormancy": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             },
-            "Days_to_Escheat": {
+            "Days to Escheat": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             }
           }
         },
@@ -425,19 +438,23 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 5,
           "step_name": "Charges",
           "fields": {
-            "Charges_Search": {
+            "Charge Search": {
               "type": "search",
-              "required": false,
-              "description": "search-and-add interface for predefined charges"
+              "required": false
             },
-            "Selected_Charges": {
+            "Add Charge": {
+              "type": "button",
+              "description": "adds selected predefined charge to the product"
+            },
+            "Selected Charges": {
               "type": "repeating_group",
               "item_fields": {
                 "Charge": {
                   "type": "unspecified",
                   "required": true
                 }
-              }
+              },
+              "min": 0
             }
           }
         },
@@ -445,7 +462,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 6,
           "step_name": "Accounting",
           "fields": {
-            "Accounting_Method": {
+            "Accounting Method": {
               "type": "radio",
               "required": false,
               "options": [
@@ -453,48 +470,40 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Cash-based"
               ]
             },
-            "GL_Mappings": {
-              "type": "repeating_group",
-              "visible_when": "Accounting_Method == Cash-based",
-              "item_fields": {
-                "Mapping_Name": {
-                  "type": "dropdown",
-                  "required": false,
-                  "description": "one of the required GL account mappings - visible when Cash-based is selected"
-                },
-                "GL_Account": {
-                  "type": "unspecified",
-                  "required": false
-                }
-              }
-            },
-            "GL_Savings_Reference": {
+            "Savings Reference (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Savings_Control": {
+            "Savings Control (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Transfers_in_Suspense": {
+            "Transfers in Suspense (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Interest_on_Savings": {
+            "Interest on Savings (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Income_from_Fees": {
+            "Income from Fees (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Income_from_Penalties": {
+            "Income from Penalties (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Escheat_Liability": {
+            "Escheat Liability (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             }
           }
         }
@@ -507,11 +516,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 1,
           "step_name": "Details",
           "fields": {
-            "Product_Name": {
+            "Product Name": {
               "type": "unspecified",
               "required": true
             },
-            "Short_Name": {
+            "Short Name": {
               "type": "unspecified",
               "required": true
             },
@@ -519,7 +528,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
               "type": "unspecified",
               "required": false
             },
-            "External_Id": {
+            "External Id": {
               "type": "unspecified",
               "required": false
             }
@@ -530,14 +539,14 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_name": "Currency",
           "fields": {
             "Currency": {
-              "type": "dropdown",
+              "type": "unspecified",
               "required": false
             },
-            "Decimal_Places": {
+            "Decimal Places": {
               "type": "number",
               "required": false
             },
-            "Currency_In_Multiples_Of": {
+            "Currency In Multiples Of": {
               "type": "number",
               "required": false
             }
@@ -547,11 +556,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 3,
           "step_name": "Terms",
           "fields": {
-            "Nominal_Annual_Interest_Rate": {
+            "Nominal Annual Interest Rate": {
               "type": "number",
               "required": false
             },
-            "Interest_Compounding_Period": {
+            "Interest Compounding Period": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -562,7 +571,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Annually"
               ]
             },
-            "Interest_Posting_Period": {
+            "Interest Posting Period": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -572,7 +581,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Annually"
               ]
             },
-            "Interest_Calculated_Using": {
+            "Interest Calculated Using": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -580,7 +589,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Average Daily Balance"
               ]
             },
-            "Days_in_Year": {
+            "Days in Year": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -595,72 +604,72 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 4,
           "step_name": "Settings",
           "fields": {
-            "Minimum_Opening_Balance": {
+            "Minimum Opening Balance": {
               "type": "number",
               "required": false
             },
-            "Lock_in_Period": {
+            "Lock-in Period": {
               "type": "unspecified",
               "required": false
             },
-            "Apply_Withdrawal_Fee_for_Transfers": {
+            "Apply Withdrawal Fee for Transfers": {
               "type": "checkbox",
               "required": false
             },
-            "Minimum_Balance_for_Interest_Calculation": {
+            "Minimum Balance for Interest Calculation": {
               "type": "number",
               "required": false
             },
-            "Enforce_Minimum_Required_Balance": {
+            "Enforce Minimum Required Balance": {
               "type": "checkbox",
               "required": false
             },
-            "Minimum_Required_Balance": {
+            "Minimum Required Balance": {
               "type": "number",
-              "required_when": "Enforce_Minimum_Required_Balance == true",
-              "visible_when": "Enforce_Minimum_Required_Balance == true"
+              "visible_when": "Enforce Minimum Required Balance == true",
+              "required_when": "Enforce Minimum Required Balance == true"
             },
-            "Is_Overdraft_Allowed": {
+            "Is Overdraft Allowed": {
               "type": "checkbox",
               "required": false
             },
-            "Maximum_Overdraft_Amount": {
+            "Maximum Overdraft Amount": {
               "type": "number",
-              "required_when": "Is_Overdraft_Allowed == true",
-              "visible_when": "Is_Overdraft_Allowed == true"
+              "visible_when": "Is Overdraft Allowed == true",
+              "required_when": "Is Overdraft Allowed == true"
             },
-            "Overdraft_Interest_Rate": {
+            "Overdraft Interest Rate": {
               "type": "number",
-              "required_when": "Is_Overdraft_Allowed == true",
-              "visible_when": "Is_Overdraft_Allowed == true"
+              "visible_when": "Is Overdraft Allowed == true",
+              "required_when": "Is Overdraft Allowed == true"
             },
-            "Enable_Withhold_Tax": {
+            "Enable Withhold Tax": {
               "type": "checkbox",
               "required": false
             },
-            "Tax_Group": {
+            "Tax Group": {
               "type": "dropdown",
-              "required_when": "Enable_Withhold_Tax == true",
-              "visible_when": "Enable_Withhold_Tax == true"
+              "visible_when": "Enable Withhold Tax == true",
+              "required_when": "Enable Withhold Tax == true"
             },
-            "Enable_Dormancy_Tracking": {
+            "Enable Dormancy Tracking": {
               "type": "checkbox",
               "required": false
             },
-            "Days_to_Inactive": {
+            "Days to Inactive": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             },
-            "Days_to_Dormancy": {
+            "Days to Dormancy": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             },
-            "Days_to_Escheat": {
+            "Days to Escheat": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             }
           }
         },
@@ -668,18 +677,23 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 5,
           "step_name": "Charges",
           "fields": {
-            "Charges_Search": {
+            "Charge Search": {
               "type": "search",
               "required": false
             },
-            "Selected_Charges": {
+            "Add Charge": {
+              "type": "button",
+              "description": "adds selected predefined charge to the product"
+            },
+            "Selected Charges": {
               "type": "repeating_group",
               "item_fields": {
                 "Charge": {
                   "type": "unspecified",
                   "required": true
                 }
-              }
+              },
+              "min": 0
             }
           }
         },
@@ -687,7 +701,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 6,
           "step_name": "Accounting",
           "fields": {
-            "Accounting_Method": {
+            "Accounting Method": {
               "type": "radio",
               "required": false,
               "options": [
@@ -695,33 +709,40 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Cash-based"
               ]
             },
-            "GL_Savings_Reference": {
+            "Savings Reference (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Savings_Control": {
+            "Savings Control (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Transfers_in_Suspense": {
+            "Transfers in Suspense (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Interest_on_Savings": {
+            "Interest on Savings (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Income_from_Fees": {
+            "Income from Fees (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Income_from_Penalties": {
+            "Income from Penalties (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Escheat_Liability": {
+            "Escheat Liability (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             }
           }
         },
@@ -729,19 +750,19 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 7,
           "step_name": "Pre-Closure",
           "fields": {
-            "Pre_Mature_Closure_Applicable": {
+            "Pre-Mature Closure Applicable": {
               "type": "checkbox",
               "required": false
             },
-            "Pre_Closure_Penal_Interest": {
+            "Pre-Closure Penal Interest": {
               "type": "number",
-              "required_when": "Pre_Mature_Closure_Applicable == true",
-              "visible_when": "Pre_Mature_Closure_Applicable == true"
+              "visible_when": "Pre-Mature Closure Applicable == true",
+              "required_when": "Pre-Mature Closure Applicable == true"
             },
-            "Pre_Closure_Penal_Interest_On": {
+            "Pre-Closure Penal Interest On": {
               "type": "dropdown",
-              "required_when": "Pre_Mature_Closure_Applicable == true",
-              "visible_when": "Pre_Mature_Closure_Applicable == true"
+              "visible_when": "Pre-Mature Closure Applicable == true",
+              "required_when": "Pre-Mature Closure Applicable == true"
             }
           }
         },
@@ -749,35 +770,35 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 8,
           "step_name": "Deposit Term",
           "fields": {
-            "Minimum_Deposit_Term": {
+            "Minimum Deposit Term": {
               "type": "number",
               "required": false
             },
-            "Minimum_Deposit_Term_Unit": {
+            "Minimum Deposit Term Unit": {
               "type": "dropdown",
               "required": false
             },
-            "Maximum_Deposit_Term": {
+            "Maximum Deposit Term": {
               "type": "number",
               "required": false
             },
-            "Maximum_Deposit_Term_Unit": {
+            "Maximum Deposit Term Unit": {
               "type": "dropdown",
               "required": false
             },
-            "In_Multiples_Of": {
+            "In Multiples Of": {
               "type": "number",
               "required": false
             },
-            "Minimum_Deposit_Amount": {
+            "Minimum Deposit Amount": {
               "type": "number",
               "required": false
             },
-            "Maximum_Deposit_Amount": {
+            "Maximum Deposit Amount": {
               "type": "number",
               "required": false
             },
-            "Default_Deposit_Amount": {
+            "Default Deposit Amount": {
               "type": "number",
               "required": false
             }
@@ -787,39 +808,45 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 9,
           "step_name": "Interest Rate Chart",
           "fields": {
-            "Interest_Rate_Chart": {
+            "Tiers": {
               "type": "repeating_group",
               "item_fields": {
-                "Period_From": {
+                "Period From": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "Period_To": {
+                "Period To": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "Period_Type": {
+                "Period Type": {
                   "type": "dropdown",
-                  "required": false
+                  "required": true
                 },
-                "Interest_Rate": {
+                "Interest Rate": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "Amount_Range_Slabs": {
+                "Amount Range Slabs": {
                   "type": "repeating_group",
+                  "min": 0,
                   "item_fields": {
-                    "Amount_From": {
+                    "Amount From": {
                       "type": "number",
-                      "required": false
+                      "required": true
                     },
-                    "Amount_To": {
+                    "Amount To": {
                       "type": "number",
-                      "required": false
+                      "required": true
+                    },
+                    "Interest Rate": {
+                      "type": "number",
+                      "required": true
                     }
                   }
                 }
-              }
+              },
+              "min": 0
             }
           }
         }
@@ -832,11 +859,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 1,
           "step_name": "Details",
           "fields": {
-            "Product_Name": {
+            "Product Name": {
               "type": "unspecified",
               "required": true
             },
-            "Short_Name": {
+            "Short Name": {
               "type": "unspecified",
               "required": true
             },
@@ -844,8 +871,16 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
               "type": "unspecified",
               "required": false
             },
-            "External_Id": {
+            "External Id": {
               "type": "unspecified",
+              "required": false
+            },
+            "Mandatory Recommended Deposit Amount": {
+              "type": "number",
+              "required": false
+            },
+            "Is Mandatory Deposit": {
+              "type": "checkbox",
               "required": false
             }
           }
@@ -855,14 +890,14 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_name": "Currency",
           "fields": {
             "Currency": {
-              "type": "dropdown",
+              "type": "unspecified",
               "required": false
             },
-            "Decimal_Places": {
+            "Decimal Places": {
               "type": "number",
               "required": false
             },
-            "Currency_In_Multiples_Of": {
+            "Currency In Multiples Of": {
               "type": "number",
               "required": false
             }
@@ -872,11 +907,11 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 3,
           "step_name": "Terms",
           "fields": {
-            "Nominal_Annual_Interest_Rate": {
+            "Nominal Annual Interest Rate": {
               "type": "number",
               "required": false
             },
-            "Interest_Compounding_Period": {
+            "Interest Compounding Period": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -887,7 +922,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Annually"
               ]
             },
-            "Interest_Posting_Period": {
+            "Interest Posting Period": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -897,7 +932,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Annually"
               ]
             },
-            "Interest_Calculated_Using": {
+            "Interest Calculated Using": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -905,7 +940,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Average Daily Balance"
               ]
             },
-            "Days_in_Year": {
+            "Days in Year": {
               "type": "dropdown",
               "required": false,
               "options": [
@@ -913,6 +948,22 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "365",
                 "Actual"
               ]
+            },
+            "Allow Withdrawal": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Adjust Advance Towards Future Payments": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Recurring Frequency": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Recurring Frequency Unit": {
+              "type": "dropdown",
+              "required": false
             }
           }
         },
@@ -920,97 +971,72 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 4,
           "step_name": "Settings",
           "fields": {
-            "Minimum_Opening_Balance": {
+            "Minimum Opening Balance": {
               "type": "number",
               "required": false
             },
-            "Lock_in_Period": {
+            "Lock-in Period": {
               "type": "unspecified",
               "required": false
             },
-            "Apply_Withdrawal_Fee_for_Transfers": {
+            "Apply Withdrawal Fee for Transfers": {
               "type": "checkbox",
               "required": false
             },
-            "Minimum_Balance_for_Interest_Calculation": {
+            "Minimum Balance for Interest Calculation": {
               "type": "number",
               "required": false
             },
-            "Enforce_Minimum_Required_Balance": {
+            "Enforce Minimum Required Balance": {
               "type": "checkbox",
               "required": false
             },
-            "Minimum_Required_Balance": {
+            "Minimum Required Balance": {
               "type": "number",
-              "required_when": "Enforce_Minimum_Required_Balance == true",
-              "visible_when": "Enforce_Minimum_Required_Balance == true"
+              "visible_when": "Enforce Minimum Required Balance == true",
+              "required_when": "Enforce Minimum Required Balance == true"
             },
-            "Is_Overdraft_Allowed": {
+            "Is Overdraft Allowed": {
               "type": "checkbox",
               "required": false
             },
-            "Maximum_Overdraft_Amount": {
+            "Maximum Overdraft Amount": {
               "type": "number",
-              "required_when": "Is_Overdraft_Allowed == true",
-              "visible_when": "Is_Overdraft_Allowed == true"
+              "visible_when": "Is Overdraft Allowed == true",
+              "required_when": "Is Overdraft Allowed == true"
             },
-            "Overdraft_Interest_Rate": {
+            "Overdraft Interest Rate": {
               "type": "number",
-              "required_when": "Is_Overdraft_Allowed == true",
-              "visible_when": "Is_Overdraft_Allowed == true"
+              "visible_when": "Is Overdraft Allowed == true",
+              "required_when": "Is Overdraft Allowed == true"
             },
-            "Enable_Withhold_Tax": {
+            "Enable Withhold Tax": {
               "type": "checkbox",
               "required": false
             },
-            "Tax_Group": {
+            "Tax Group": {
               "type": "dropdown",
-              "required_when": "Enable_Withhold_Tax == true",
-              "visible_when": "Enable_Withhold_Tax == true"
+              "visible_when": "Enable Withhold Tax == true",
+              "required_when": "Enable Withhold Tax == true"
             },
-            "Enable_Dormancy_Tracking": {
+            "Enable Dormancy Tracking": {
               "type": "checkbox",
               "required": false
             },
-            "Days_to_Inactive": {
+            "Days to Inactive": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             },
-            "Days_to_Dormancy": {
+            "Days to Dormancy": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             },
-            "Days_to_Escheat": {
+            "Days to Escheat": {
               "type": "number",
-              "required_when": "Enable_Dormancy_Tracking == true",
-              "visible_when": "Enable_Dormancy_Tracking == true"
-            },
-            "Mandatory_Recommended_Deposit_Amount": {
-              "type": "number",
-              "required": false
-            },
-            "Is_Mandatory_Deposit": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Allow_Withdrawal": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Adjust_Advance_Towards_Future_Payments": {
-              "type": "checkbox",
-              "required": false
-            },
-            "Recurring_Frequency": {
-              "type": "number",
-              "required": true,
-              "description": "numeric recurring frequency (required)"
-            },
-            "Recurring_Frequency_Unit": {
-              "type": "dropdown",
-              "required": false
+              "visible_when": "Enable Dormancy Tracking == true",
+              "required_when": "Enable Dormancy Tracking == true"
             }
           }
         },
@@ -1018,18 +1044,23 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 5,
           "step_name": "Charges",
           "fields": {
-            "Charges_Search": {
+            "Charge Search": {
               "type": "search",
               "required": false
             },
-            "Selected_Charges": {
+            "Add Charge": {
+              "type": "button",
+              "description": "adds selected predefined charge to the product"
+            },
+            "Selected Charges": {
               "type": "repeating_group",
               "item_fields": {
                 "Charge": {
                   "type": "unspecified",
                   "required": true
                 }
-              }
+              },
+              "min": 0
             }
           }
         },
@@ -1037,7 +1068,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 6,
           "step_name": "Accounting",
           "fields": {
-            "Accounting_Method": {
+            "Accounting Method": {
               "type": "radio",
               "required": false,
               "options": [
@@ -1045,33 +1076,40 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "Cash-based"
               ]
             },
-            "GL_Savings_Reference": {
+            "Savings Reference (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Savings_Control": {
+            "Savings Control (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Transfers_in_Suspense": {
+            "Transfers in Suspense (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Interest_on_Savings": {
+            "Interest on Savings (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Income_from_Fees": {
+            "Income from Fees (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Income_from_Penalties": {
+            "Income from Penalties (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             },
-            "GL_Escheat_Liability": {
+            "Escheat Liability (GL Account)": {
               "type": "unspecified",
-              "visible_when": "Accounting_Method == Cash-based"
+              "visible_when": "Accounting Method == Cash-based",
+              "required_when": "Accounting Method == Cash-based"
             }
           }
         },
@@ -1079,35 +1117,35 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 7,
           "step_name": "Deposit Term",
           "fields": {
-            "Minimum_Deposit_Term": {
+            "Minimum Deposit Term": {
               "type": "number",
               "required": false
             },
-            "Minimum_Deposit_Term_Unit": {
+            "Minimum Deposit Term Unit": {
               "type": "dropdown",
               "required": false
             },
-            "Maximum_Deposit_Term": {
+            "Maximum Deposit Term": {
               "type": "number",
               "required": false
             },
-            "Maximum_Deposit_Term_Unit": {
+            "Maximum Deposit Term Unit": {
               "type": "dropdown",
               "required": false
             },
-            "In_Multiples_Of": {
+            "In Multiples Of": {
               "type": "number",
               "required": false
             },
-            "Minimum_Deposit_Amount": {
+            "Minimum Deposit Amount": {
               "type": "number",
               "required": false
             },
-            "Maximum_Deposit_Amount": {
+            "Maximum Deposit Amount": {
               "type": "number",
               "required": false
             },
-            "Default_Deposit_Amount": {
+            "Default Deposit Amount": {
               "type": "number",
               "required": false
             }
@@ -1117,39 +1155,45 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
           "step_index": 8,
           "step_name": "Interest Rate Chart",
           "fields": {
-            "Interest_Rate_Chart": {
+            "Tiers": {
               "type": "repeating_group",
               "item_fields": {
-                "Period_From": {
+                "Period From": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "Period_To": {
+                "Period To": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "Period_Type": {
+                "Period Type": {
                   "type": "dropdown",
-                  "required": false
+                  "required": true
                 },
-                "Interest_Rate": {
+                "Interest Rate": {
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "Amount_Range_Slabs": {
+                "Amount Range Slabs": {
                   "type": "repeating_group",
+                  "min": 0,
                   "item_fields": {
-                    "Amount_From": {
+                    "Amount From": {
                       "type": "number",
-                      "required": false
+                      "required": true
                     },
-                    "Amount_To": {
+                    "Amount To": {
                       "type": "number",
-                      "required": false
+                      "required": true
+                    },
+                    "Interest Rate": {
+                      "type": "number",
+                      "required": true
                     }
                   }
                 }
-              }
+              },
+              "min": 0
             }
           }
         }
@@ -1173,7 +1217,7 @@ Fixed Deposit Products and Recurring Deposit Products follow the same stepper st
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:18:51] Test-Positive - LLM RESPONSE
+[22:31:41] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Savings Products",
@@ -1181,256 +1225,174 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Filter Savings Products by name",
+      "test_case": "Open Create Savings Product wizard from Actions bar",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Enter <filter term> into the filter/search bar and apply the filter"
+        "2. Click the '+ Create Savings Product' button in the Actions bar"
       ],
-      "expected_result": "Savings Products table displays only rows matching <filter term>; unrelated rows are no longer visible",
+      "expected_result": "Savings Product Wizard opens to the 'Details' step and displays the Product Name and Short Name fields",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Open a product from the table via Name link",
+      "test_case": "Create a basic Savings Product by completing the wizard happy path",
       "preconditions": [
-        "User logged in as <Admin>",
-        "At least one savings product exists: <existing product> with Short Name <existing short name>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click the <existing product> entry in the Name column"
+        "2. Click the '+ Create Savings Product' button",
+        "3. On Details step enter <valid product name> in Product Name and <valid short name> in Short Name, then click Next",
+        "4. On Currency step leave defaults and click Next",
+        "5. On Terms step leave defaults and click Next",
+        "6. On Settings step leave defaults and click Next",
+        "7. On Charges step leave no charges selected and click Next",
+        "8. On Accounting step select 'None' for Accounting Method and click Create (or Finish) to submit the wizard"
       ],
-      "expected_result": "Product detail view is displayed showing the product name '<existing product>' and Short Name '<existing short name>'",
+      "expected_result": "New row appears in the Products table with the entered <valid product name> and <valid short name>",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a Savings Product (happy path with required fields only)",
+      "test_case": "Settings: enabling 'Enforce Minimum Required Balance' reveals and accepts Minimum Required Balance",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name",
-        "4. Enter <short name> in Short Name",
-        "5. Click Next to proceed to the Currency step",
-        "6. Click Next to proceed to the Terms step",
-        "7. Click Next to proceed to the Settings step",
-        "8. Click Next to proceed to the Charges step",
-        "9. Click Next to proceed to the Accounting step",
-        "10. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Settings step",
+        "4. Check the 'Enforce Minimum Required Balance' checkbox",
+        "5. Enter <minimum required balance> in the Minimum Required Balance field"
       ],
-      "expected_result": "A success notification is displayed; Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
-      "priority": "high"
+      "expected_result": "Minimum Required Balance field becomes visible on the Settings step and displays the entered <minimum required balance>",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Create Savings Product with Enforce Minimum Required Balance enabled (conditional field visible)",
+      "test_case": "Settings: enabling 'Is Overdraft Allowed' reveals overdraft fields and accepts values",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Enforce Minimum Required Balance' checkbox",
-        "6. Enter <minimum required balance> in Minimum Required Balance",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Settings step",
+        "4. Check the 'Is Overdraft Allowed' checkbox",
+        "5. Enter <maximum overdraft amount> in Maximum Overdraft Amount and <overdraft interest rate> in Overdraft Interest Rate"
       ],
-      "expected_result": "On the Settings step the Minimum Required Balance field became visible when 'Enforce Minimum Required Balance' was checked and shows the entered value; after saving, Savings Products table shows a new row with Name '<product name>' and short name '<short name>'",
+      "expected_result": "Maximum Overdraft Amount and Overdraft Interest Rate fields become visible on the Settings step and show the entered <maximum overdraft amount> and <overdraft interest rate>",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Create Savings Product with Overdraft allowed (Max Overdraft & Overdraft Interest visible)",
+      "test_case": "Settings: enabling 'Enable Withhold Tax' reveals Tax Group dropdown and allows selection",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Is Overdraft Allowed' checkbox",
-        "6. Enter <maximum overdraft amount> in Maximum Overdraft Amount and <overdraft interest rate> in Overdraft Interest Rate",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Settings step",
+        "4. Check the 'Enable Withhold Tax' checkbox",
+        "5. Select <tax group> from the Tax Group dropdown"
       ],
-      "expected_result": "On the Settings step the Maximum Overdraft Amount and Overdraft Interest Rate fields became visible when 'Is Overdraft Allowed' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "Tax Group dropdown is visible on the Settings step and displays the selected <tax group>",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create Savings Product with Withhold Tax enabled (Tax Group visible)",
+      "test_case": "Accounting: selecting 'Cash-based' reveals all GL account mapping fields",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Enable Withhold Tax' checkbox",
-        "6. Select <tax group> from the Tax Group dropdown",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Accounting step",
+        "4. Select 'Cash-based' for Accounting Method"
       ],
-      "expected_result": "On the Settings step the Tax Group dropdown became visible when 'Enable Withhold Tax' was checked and displays the selected <tax group>; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
-      "priority": "medium"
+      "expected_result": "All GL account mapping fields (Savings Reference (GL Account), Savings Control (GL Account), Transfers in Suspense (GL Account), Interest on Savings (GL Account), Income from Fees (GL Account), Income from Penalties (GL Account), Escheat Liability (GL Account)) are visible on the Accounting step",
+      "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Create Savings Product with Dormancy Tracking enabled (dormancy fields visible)",
+      "test_case": "Charges: search for a predefined charge and add it to Selected Charges",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Enable Dormancy Tracking' checkbox",
-        "6. Enter <days to inactive> in Days to Inactive, <days to dormancy> in Days to Dormancy and <days to escheat> in Days to Escheat",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Charges step",
+        "4. Enter <charge search term> in the Charge Search field",
+        "5. Select the matching <selected charge> from the search results",
+        "6. Click 'Add Charge'"
       ],
-      "expected_result": "On the Settings step the Days to Inactive, Days to Dormancy and Days to Escheat fields became visible when 'Enable Dormancy Tracking' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "Selected Charges list displays a new row with the chosen <selected charge>",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Create Savings Product and enable Cash-based accounting to reveal GL mappings",
+      "test_case": "Open an existing product's detail by clicking the Name link in the Products table",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>",
+        "There is an existing savings product named <existing product> listed in the Products table"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Accounting step is displayed",
-        "5. Select 'Cash-based' for Accounting Method",
-        "6. Verify that GL_Savings_Reference, GL_Savings_Control, GL_Transfers_in_Suspense, GL_Interest_on_Savings, GL_Income_from_Fees, GL_Income_from_Penalties and GL_Escheat_Liability fields are visible",
-        "7. In the GL Mappings repeating group click 'Add Row' and select <mapping name> and <GL account> for the new mapping",
-        "8. Click Save to finish creating the product"
+        "2. Click the Name link for the row with <existing product>"
       ],
-      "expected_result": "On the Accounting step selecting 'Cash-based' reveals the GL account mapping fields and the GL Mappings repeating group shows the added mapping row; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "Product detail page opens displaying the product name <existing product>",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Add a predefined charge to a Savings Product using the Charges search-and-add",
+      "test_case": "Fixed Deposit: add an Interest Rate Chart tier in the wizard",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Charges step is displayed",
-        "5. Enter <charge search term> in the Charges Search field",
-        "6. Select <matching charge> from the search results to add it to Selected Charges",
-        "7. Verify the <matching charge> appears in the Selected Charges list",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Open the Fixed Deposit Product creation wizard (open Fixed Deposit Product Wizard)",
+        "3. Advance to the Interest Rate Chart step",
+        "4. Click 'Add Tier' to add a new tier row",
+        "5. Enter <period from> in Period From, <period to> in Period To, select <period type> for Period Type, and enter <interest rate> in Interest Rate",
+        "6. Save the tier"
       ],
-      "expected_result": "On the Charges step the selected charge '<matching charge>' appears in the Selected Charges list; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "A new tier row appears in the Interest Rate Chart with the entered Period From <period from>, Period To <period to> and Interest Rate <interest rate>",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Create a Fixed Deposit Product (happy path with required fields only)",
+      "test_case": "Recurring Deposit: set 'Is Mandatory Deposit' and verify a mandatory deposit amount can be entered",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
-        "4. Click Next through Currency, Terms and Settings steps",
-        "5. Click Next through Charges and Accounting steps",
-        "6. Click Next to reach Pre-Closure (if present) and then through Deposit Term and Interest Rate Chart steps as required",
-        "7. Click Save to finish creating the Fixed Deposit product"
+        "2. Open the Recurring Deposit Product creation wizard (open Recurring Deposit Product Wizard)",
+        "3. On Details step enter <valid product name> in Product Name and <valid short name> in Short Name, then click Next",
+        "4. Advance to the Details step fields and enter <mandatory recommended deposit amount> in Mandatory Recommended Deposit Amount",
+        "5. Check the 'Is Mandatory Deposit' checkbox"
       ],
-      "expected_result": "A success notification is displayed; Savings Products table shows a new row for the Fixed Deposit product with Name '<product name>' and Short Name '<short name>'",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-011",
-      "test_case": "Create Fixed Deposit Product with Pre-Mature Closure enabled (conditional pre-closure fields visible)",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Savings Products page",
-        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Pre-Closure step is displayed",
-        "5. Check the 'Pre-Mature Closure Applicable' checkbox",
-        "6. Enter <pre-closure penal interest> in Pre-Closure Penal Interest and select <pre-closure penal interest on> in Pre-Closure Penal Interest On dropdown",
-        "7. Click Next to proceed through remaining steps and Click Save to finish creating the product"
-      ],
-      "expected_result": "On the Pre-Closure step the Pre-Closure Penal Interest and Pre-Closure Penal Interest On fields became visible when 'Pre-Mature Closure Applicable' was checked and show the entered values; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-012",
-      "test_case": "Create a Recurring Deposit Product (required Recurring Frequency filled)",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Savings Products page",
-        "2. Click 'Create Recurring Deposit Product' to open the Recurring Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Enter <recurring frequency> in Recurring Frequency and select <recurring frequency unit> if applicable",
-        "6. Click Next through Charges and Accounting steps",
-        "7. Click Next through Deposit Term and Interest Rate Chart steps as required",
-        "8. Click Save to finish creating the Recurring Deposit product"
-      ],
-      "expected_result": "A success notification is displayed; Savings Products table shows a new Recurring Deposit product row with Name '<product name>' and Short Name '<short name>' and the Recurring Frequency value is part of the product's settings summary",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-013",
-      "test_case": "Add an Interest Rate Chart entry for a Fixed Deposit Product using repeating groups",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Savings Products page",
-        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Interest Rate Chart step is displayed",
-        "5. In the Interest Rate Chart repeating group click 'Add Row'",
-        "6. Enter <period from> in Period From, <period to> in Period To, select <period type> for Period Type and enter <interest rate> in Interest Rate",
-        "7. In Amount Range Slabs for that chart row click 'Add Row' and enter <amount from> and <amount to>",
-        "8. Click Save to finish creating the product"
-      ],
-      "expected_result": "On the Interest Rate Chart step the newly added chart row is visible with the entered Period From/To, Period Type and Interest Rate and the Amount Range slab appears under that chart row; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "The Details step shows the entered Mandatory Recommended Deposit Amount as <mandatory recommended deposit amount> and the 'Is Mandatory Deposit' checkbox is checked",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 13,
-    "high_priority": 6,
-    "medium_priority": 7,
+    "total": 10,
+    "high_priority": 4,
+    "medium_priority": 6,
     "low_priority": 0
   }
 }
 
 ------------------------------------------------------------
-[16:18:51] Test-Positive - PARSED JSON
+[22:31:41] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Savings Products",
@@ -1438,250 +1400,168 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Filter Savings Products by name",
+      "test_case": "Open Create Savings Product wizard from Actions bar",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Enter <filter term> into the filter/search bar and apply the filter"
+        "2. Click the '+ Create Savings Product' button in the Actions bar"
       ],
-      "expected_result": "Savings Products table displays only rows matching <filter term>; unrelated rows are no longer visible",
+      "expected_result": "Savings Product Wizard opens to the 'Details' step and displays the Product Name and Short Name fields",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Open a product from the table via Name link",
+      "test_case": "Create a basic Savings Product by completing the wizard happy path",
       "preconditions": [
-        "User logged in as <Admin>",
-        "At least one savings product exists: <existing product> with Short Name <existing short name>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click the <existing product> entry in the Name column"
+        "2. Click the '+ Create Savings Product' button",
+        "3. On Details step enter <valid product name> in Product Name and <valid short name> in Short Name, then click Next",
+        "4. On Currency step leave defaults and click Next",
+        "5. On Terms step leave defaults and click Next",
+        "6. On Settings step leave defaults and click Next",
+        "7. On Charges step leave no charges selected and click Next",
+        "8. On Accounting step select 'None' for Accounting Method and click Create (or Finish) to submit the wizard"
       ],
-      "expected_result": "Product detail view is displayed showing the product name '<existing product>' and Short Name '<existing short name>'",
+      "expected_result": "New row appears in the Products table with the entered <valid product name> and <valid short name>",
       "priority": "high"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a Savings Product (happy path with required fields only)",
+      "test_case": "Settings: enabling 'Enforce Minimum Required Balance' reveals and accepts Minimum Required Balance",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name",
-        "4. Enter <short name> in Short Name",
-        "5. Click Next to proceed to the Currency step",
-        "6. Click Next to proceed to the Terms step",
-        "7. Click Next to proceed to the Settings step",
-        "8. Click Next to proceed to the Charges step",
-        "9. Click Next to proceed to the Accounting step",
-        "10. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Settings step",
+        "4. Check the 'Enforce Minimum Required Balance' checkbox",
+        "5. Enter <minimum required balance> in the Minimum Required Balance field"
       ],
-      "expected_result": "A success notification is displayed; Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
-      "priority": "high"
+      "expected_result": "Minimum Required Balance field becomes visible on the Settings step and displays the entered <minimum required balance>",
+      "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Create Savings Product with Enforce Minimum Required Balance enabled (conditional field visible)",
+      "test_case": "Settings: enabling 'Is Overdraft Allowed' reveals overdraft fields and accepts values",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Enforce Minimum Required Balance' checkbox",
-        "6. Enter <minimum required balance> in Minimum Required Balance",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Settings step",
+        "4. Check the 'Is Overdraft Allowed' checkbox",
+        "5. Enter <maximum overdraft amount> in Maximum Overdraft Amount and <overdraft interest rate> in Overdraft Interest Rate"
       ],
-      "expected_result": "On the Settings step the Minimum Required Balance field became visible when 'Enforce Minimum Required Balance' was checked and shows the entered value; after saving, Savings Products table shows a new row with Name '<product name>' and short name '<short name>'",
+      "expected_result": "Maximum Overdraft Amount and Overdraft Interest Rate fields become visible on the Settings step and show the entered <maximum overdraft amount> and <overdraft interest rate>",
       "priority": "medium"
     },
     {
       "tc_id": "P-005",
-      "test_case": "Create Savings Product with Overdraft allowed (Max Overdraft & Overdraft Interest visible)",
+      "test_case": "Settings: enabling 'Enable Withhold Tax' reveals Tax Group dropdown and allows selection",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Is Overdraft Allowed' checkbox",
-        "6. Enter <maximum overdraft amount> in Maximum Overdraft Amount and <overdraft interest rate> in Overdraft Interest Rate",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Settings step",
+        "4. Check the 'Enable Withhold Tax' checkbox",
+        "5. Select <tax group> from the Tax Group dropdown"
       ],
-      "expected_result": "On the Settings step the Maximum Overdraft Amount and Overdraft Interest Rate fields became visible when 'Is Overdraft Allowed' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "Tax Group dropdown is visible on the Settings step and displays the selected <tax group>",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Create Savings Product with Withhold Tax enabled (Tax Group visible)",
+      "test_case": "Accounting: selecting 'Cash-based' reveals all GL account mapping fields",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Enable Withhold Tax' checkbox",
-        "6. Select <tax group> from the Tax Group dropdown",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Accounting step",
+        "4. Select 'Cash-based' for Accounting Method"
       ],
-      "expected_result": "On the Settings step the Tax Group dropdown became visible when 'Enable Withhold Tax' was checked and displays the selected <tax group>; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
-      "priority": "medium"
+      "expected_result": "All GL account mapping fields (Savings Reference (GL Account), Savings Control (GL Account), Transfers in Suspense (GL Account), Interest on Savings (GL Account), Income from Fees (GL Account), Income from Penalties (GL Account), Escheat Liability (GL Account)) are visible on the Accounting step",
+      "priority": "high"
     },
     {
       "tc_id": "P-007",
-      "test_case": "Create Savings Product with Dormancy Tracking enabled (dormancy fields visible)",
+      "test_case": "Charges: search for a predefined charge and add it to Selected Charges",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Check the 'Enable Dormancy Tracking' checkbox",
-        "6. Enter <days to inactive> in Days to Inactive, <days to dormancy> in Days to Dormancy and <days to escheat> in Days to Escheat",
-        "7. Click Next to proceed to the Charges step",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Click the '+ Create Savings Product' button",
+        "3. Advance to the Charges step",
+        "4. Enter <charge search term> in the Charge Search field",
+        "5. Select the matching <selected charge> from the search results",
+        "6. Click 'Add Charge'"
       ],
-      "expected_result": "On the Settings step the Days to Inactive, Days to Dormancy and Days to Escheat fields became visible when 'Enable Dormancy Tracking' was checked and show the entered values; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "Selected Charges list displays a new row with the chosen <selected charge>",
       "priority": "medium"
     },
     {
       "tc_id": "P-008",
-      "test_case": "Create Savings Product and enable Cash-based accounting to reveal GL mappings",
+      "test_case": "Open an existing product's detail by clicking the Name link in the Products table",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>",
+        "There is an existing savings product named <existing product> listed in the Products table"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Accounting step is displayed",
-        "5. Select 'Cash-based' for Accounting Method",
-        "6. Verify that GL_Savings_Reference, GL_Savings_Control, GL_Transfers_in_Suspense, GL_Interest_on_Savings, GL_Income_from_Fees, GL_Income_from_Penalties and GL_Escheat_Liability fields are visible",
-        "7. In the GL Mappings repeating group click 'Add Row' and select <mapping name> and <GL account> for the new mapping",
-        "8. Click Save to finish creating the product"
+        "2. Click the Name link for the row with <existing product>"
       ],
-      "expected_result": "On the Accounting step selecting 'Cash-based' reveals the GL account mapping fields and the GL Mappings repeating group shows the added mapping row; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "Product detail page opens displaying the product name <existing product>",
       "priority": "high"
     },
     {
       "tc_id": "P-009",
-      "test_case": "Add a predefined charge to a Savings Product using the Charges search-and-add",
+      "test_case": "Fixed Deposit: add an Interest Rate Chart tier in the wizard",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click '+ Create Savings Product' to open the product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Charges step is displayed",
-        "5. Enter <charge search term> in the Charges Search field",
-        "6. Select <matching charge> from the search results to add it to Selected Charges",
-        "7. Verify the <matching charge> appears in the Selected Charges list",
-        "8. Click Next to proceed to the Accounting step",
-        "9. Click Save to finish creating the product"
+        "2. Open the Fixed Deposit Product creation wizard (open Fixed Deposit Product Wizard)",
+        "3. Advance to the Interest Rate Chart step",
+        "4. Click 'Add Tier' to add a new tier row",
+        "5. Enter <period from> in Period From, <period to> in Period To, select <period type> for Period Type, and enter <interest rate> in Interest Rate",
+        "6. Save the tier"
       ],
-      "expected_result": "On the Charges step the selected charge '<matching charge>' appears in the Selected Charges list; after saving, Savings Products table shows a new row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "A new tier row appears in the Interest Rate Chart with the entered Period From <period from>, Period To <period to> and Interest Rate <interest rate>",
       "priority": "medium"
     },
     {
       "tc_id": "P-010",
-      "test_case": "Create a Fixed Deposit Product (happy path with required fields only)",
+      "test_case": "Recurring Deposit: set 'Is Mandatory Deposit' and verify a mandatory deposit amount can be entered",
       "preconditions": [
-        "User logged in as <Admin>"
+        "User logged in as <Product Manager>"
       ],
       "steps": [
         "1. Navigate to the Savings Products page",
-        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
-        "4. Click Next through Currency, Terms and Settings steps",
-        "5. Click Next through Charges and Accounting steps",
-        "6. Click Next to reach Pre-Closure (if present) and then through Deposit Term and Interest Rate Chart steps as required",
-        "7. Click Save to finish creating the Fixed Deposit product"
+        "2. Open the Recurring Deposit Product creation wizard (open Recurring Deposit Product Wizard)",
+        "3. On Details step enter <valid product name> in Product Name and <valid short name> in Short Name, then click Next",
+        "4. Advance to the Details step fields and enter <mandatory recommended deposit amount> in Mandatory Recommended Deposit Amount",
+        "5. Check the 'Is Mandatory Deposit' checkbox"
       ],
-      "expected_result": "A success notification is displayed; Savings Products table shows a new row for the Fixed Deposit product with Name '<product name>' and Short Name '<short name>'",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-011",
-      "test_case": "Create Fixed Deposit Product with Pre-Mature Closure enabled (conditional pre-closure fields visible)",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Savings Products page",
-        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Pre-Closure step is displayed",
-        "5. Check the 'Pre-Mature Closure Applicable' checkbox",
-        "6. Enter <pre-closure penal interest> in Pre-Closure Penal Interest and select <pre-closure penal interest on> in Pre-Closure Penal Interest On dropdown",
-        "7. Click Next to proceed through remaining steps and Click Save to finish creating the product"
-      ],
-      "expected_result": "On the Pre-Closure step the Pre-Closure Penal Interest and Pre-Closure Penal Interest On fields became visible when 'Pre-Mature Closure Applicable' was checked and show the entered values; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-012",
-      "test_case": "Create a Recurring Deposit Product (required Recurring Frequency filled)",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Savings Products page",
-        "2. Click 'Create Recurring Deposit Product' to open the Recurring Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name on the Details step",
-        "4. Click Next repeatedly until the Settings step is displayed",
-        "5. Enter <recurring frequency> in Recurring Frequency and select <recurring frequency unit> if applicable",
-        "6. Click Next through Charges and Accounting steps",
-        "7. Click Next through Deposit Term and Interest Rate Chart steps as required",
-        "8. Click Save to finish creating the Recurring Deposit product"
-      ],
-      "expected_result": "A success notification is displayed; Savings Products table shows a new Recurring Deposit product row with Name '<product name>' and Short Name '<short name>' and the Recurring Frequency value is part of the product's settings summary",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-013",
-      "test_case": "Add an Interest Rate Chart entry for a Fixed Deposit Product using repeating groups",
-      "preconditions": [
-        "User logged in as <Admin>"
-      ],
-      "steps": [
-        "1. Navigate to the Savings Products page",
-        "2. Click 'Create Fixed Deposit Product' to open the Fixed Deposit product wizard",
-        "3. Enter <product name> in Product Name and <short name> in Short Name",
-        "4. Click Next repeatedly until the Interest Rate Chart step is displayed",
-        "5. In the Interest Rate Chart repeating group click 'Add Row'",
-        "6. Enter <period from> in Period From, <period to> in Period To, select <period type> for Period Type and enter <interest rate> in Interest Rate",
-        "7. In Amount Range Slabs for that chart row click 'Add Row' and enter <amount from> and <amount to>",
-        "8. Click Save to finish creating the product"
-      ],
-      "expected_result": "On the Interest Rate Chart step the newly added chart row is visible with the entered Period From/To, Period Type and Interest Rate and the Amount Range slab appears under that chart row; after saving, Savings Products table shows a new Fixed Deposit product row with Name '<product name>' and Short Name '<short name>'",
+      "expected_result": "The Details step shows the entered Mandatory Recommended Deposit Amount as <mandatory recommended deposit amount> and the 'Is Mandatory Deposit' checkbox is checked",
       "priority": "medium"
     }
   ],
   "summary": {
-    "total": 13,
-    "high_priority": 6,
-    "medium_priority": 7,
+    "total": 10,
+    "high_priority": 4,
+    "medium_priority": 6,
     "low_priority": 0
   }
 }

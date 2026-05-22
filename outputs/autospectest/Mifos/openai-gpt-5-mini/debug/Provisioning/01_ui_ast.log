@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.759696
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.396611
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Provisioning
 
@@ -220,26 +220,27 @@ The Provisioning Entries page lists all generated provisioning journal entries w
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:06:28] UI-AST Agent - LLM RESPONSE
+[22:21:52] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Provisioning",
   "components": {
-    "Provisioning_Criteria_Page": {
+    "Provisioning_Criteria_Table": {
       "type": "data_table",
       "columns": ["Criteria Name", "Created Date"],
-      "row_actions": [
-        {
-          "action_name": "Open",
-          "element_type": "link",
-          "on_trigger": "navigate_to_Provisioning_Criteria_Form"
-        }
-      ],
-      "actions": [
+      "clickable_columns": ["Criteria Name"],
+      "top_actions": [
         {
           "element_name": "+ Create",
           "element_type": "button",
-          "on_trigger": "open_Provisioning_Criteria_Form"
+          "opens": "Provisioning_Criteria_Form",
+          "on_success": "opens provisioning criteria creation form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Criteria",
+          "on_success": "opens Provisioning_Criteria_Form for viewing/editing"
         }
       ]
     },
@@ -254,7 +255,273 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
           "type": "repeating_group",
           "item_fields": {
             "Loan_Product": {
-              "type": "dropdown"
+              "type": "unspecified",
+              "required": true
+            },
+            "Category": {
+              "type": "dropdown",
+              "required": true,
+              "options": ["STANDARD", "SUB-STANDARD", "DOUBTFUL", "LOSS"]
+            },
+            "Minimum_Age": {
+              "type": "number",
+              "required": true,
+              "description": "overdue days"
+            },
+            "Maximum_Age": {
+              "type": "number",
+              "required": true,
+              "description": "overdue days"
+            },
+            "Provisioning_Percentage": {
+              "type": "number",
+              "required": true,
+              "description": "percentage of outstanding principal",
+              "constraints": ["value between 0 and 100"]
+            },
+            "Liability_Account": {
+              "type": "dropdown",
+              "required": true,
+              "description": "GL account"
+            },
+            "Expense_Account": {
+              "type": "dropdown",
+              "required": true,
+              "description": "GL account"
+            }
+          },
+          "constraints": [
+            "Within each definition row, Minimum_Age must be <= Maximum_Age"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "element_type": "button",
+          "on_success": "saves provisioning criteria"
+        },
+        {
+          "element_name": "Cancel",
+          "element_type": "button",
+          "on_success": "closes form without saving"
+        }
+      ]
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": ["Entry Date", "Journal Entry Created", "Created By"],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "element_type": "button",
+          "on_success": "creates provisioning journal entries based on current loan portfolio and configured criteria"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "on_success": "opens detailed breakdown by loan product and category for the entry"
+        },
+        {
+          "action_name": "Recreate",
+          "on_success": "recreates the provisioning journal entry"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:21:52] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": [
+        "Criteria Name",
+        "Created Date"
+      ],
+      "clickable_columns": [
+        "Criteria Name"
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create",
+          "element_type": "button",
+          "opens": "Provisioning_Criteria_Form",
+          "on_success": "opens provisioning criteria creation form"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Open Criteria",
+          "on_success": "opens Provisioning_Criteria_Form for viewing/editing"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Loan_Product": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Category": {
+              "type": "dropdown",
+              "required": true,
+              "options": [
+                "STANDARD",
+                "SUB-STANDARD",
+                "DOUBTFUL",
+                "LOSS"
+              ]
+            },
+            "Minimum_Age": {
+              "type": "number",
+              "required": true,
+              "description": "overdue days"
+            },
+            "Maximum_Age": {
+              "type": "number",
+              "required": true,
+              "description": "overdue days"
+            },
+            "Provisioning_Percentage": {
+              "type": "number",
+              "required": true,
+              "description": "percentage of outstanding principal",
+              "constraints": [
+                "value between 0 and 100"
+              ]
+            },
+            "Liability_Account": {
+              "type": "dropdown",
+              "required": true,
+              "description": "GL account"
+            },
+            "Expense_Account": {
+              "type": "dropdown",
+              "required": true,
+              "description": "GL account"
+            }
+          },
+          "constraints": [
+            "Within each definition row, Minimum_Age must be <= Maximum_Age"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "element_type": "button",
+          "on_success": "saves provisioning criteria"
+        },
+        {
+          "element_name": "Cancel",
+          "element_type": "button",
+          "on_success": "closes form without saving"
+        }
+      ]
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry Date",
+        "Journal Entry Created",
+        "Created By"
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "element_type": "button",
+          "on_success": "creates provisioning journal entries based on current loan portfolio and configured criteria"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "on_success": "opens detailed breakdown by loan product and category for the entry"
+        },
+        {
+          "action_name": "Recreate",
+          "on_success": "recreates the provisioning journal entry"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:24:06] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Provisioning
+
+
+The Provisioning Criteria page displays a data table with columns for Criteria Name (clickable link) and Created Date. A "+ Create" button opens the creation form containing Criteria Name (required) and a Definitions table where each row specifies Loan Product, Category (STANDARD, SUB-STANDARD, DOUBTFUL, LOSS), Minimum Age (overdue days), Maximum Age (overdue days), Provisioning Percentage (percentage of outstanding principal), Liability Account (GL account dropdown), and Expense Account (GL account dropdown). Multiple rows can be added to cover different overdue ranges and product combinations.
+
+The Provisioning Entries page lists all generated provisioning journal entries with columns for Entry Date, Journal Entry Created, Created By, and action buttons. A "+ Create Provisioning Entry" button generates new provisioning entries based on the current loan portfolio status and configured criteria; the system calculates the required provision amount for each loan category and creates the corresponding journal entries. Each entry can be reviewed (showing a detailed breakdown by loan product and category) or recreated.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Provisioning_Criteria_Form.fields.Definitions.add_row_action — Add an explicit repeating-group control (e.g., 'Add Definition' button) or an 'add_row_action' entry so the AST clearly represents the ability to add multiple definition rows as stated in the description.
+2. components.Provisioning_Entry_Detail — Add a component for the provisioning entry detail view (path: components.Provisioning_Entry_Detail) that is opened by the Provisioning_Entries_Table row action 'Review' and includes the detailed breakdown by loan product and category.
+3. components.Provisioning_Criteria_Form.submit_actions — Remove or rename the Save/Cancel submit_actions unless those exact buttons are explicitly described; if the description intends form submission controls, use names exactly as provided by product requirements.
+4. components.Provisioning_Criteria_Form.fields.Definitions.constraints[0] — Remove the inferred constraint 'Minimum_Age must be <= Maximum_Age' unless the description explicitly requires it; if required, keep but ensure the description documents it.
+5. components.Provisioning_Criteria_Form.fields.Definitions.item_fields.Provisioning_Percentage.constraints[0] — Remove the inferred 'value between 0 and 100' constraint unless explicitly specified in the description; if percentage bounds are required, add explicit mention in the description so the AST can include them.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:25:26] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": ["Criteria Name", "Created Date"],
+      "row_actions": [
+        {
+          "action_name": "Open Criteria",
+          "description": "triggered by clicking the Criteria Name link",
+          "opens_component": "Provisioning_Criteria_Form"
+        }
+      ],
+      "actions": [
+        {
+          "element_name": "+ Create",
+          "action_name": "Open Provisioning Criteria Creation Form",
+          "opens_component": "Provisioning_Criteria_Form"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "add_row_action": "Add Definition",
+          "item_fields": {
+            "Loan_Product": {
+              "type": "unspecified"
             },
             "Category": {
               "type": "dropdown",
@@ -270,51 +537,52 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             },
             "Provisioning_Percentage": {
               "type": "number",
-              "description": "percentage of outstanding principal",
-              "constraints": ["must be between 0 and 100"]
+              "description": "percentage of outstanding principal"
             },
             "Liability_Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "description": "GL account dropdown"
             },
             "Expense_Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "description": "GL account dropdown"
             }
           }
         }
-      },
-      "submit_actions": [
-        {
-          "element_name": "Save",
-          "element_type": "button",
-          "on_success": "creates provisioning criteria"
-        }
-      ]
+      }
     },
-    "Provisioning_Entries_Page": {
+    "Provisioning_Entries_Table": {
       "type": "data_table",
       "columns": ["Entry Date", "Journal Entry Created", "Created By"],
-      "row_actions": [
-        {
-          "action_name": "Review",
-          "element_type": "button",
-          "on_trigger": "open_provisioning_entry_review",
-          "on_success": "opens detailed breakdown by loan product and category"
-        },
-        {
-          "action_name": "Recreate",
-          "element_type": "button",
-          "on_trigger": "recreate_provisioning_entry",
-          "on_success": "recreates provisioning journal entry based on current portfolio and criteria"
-        }
-      ],
       "actions": [
         {
           "element_name": "+ Create Provisioning Entry",
-          "element_type": "button",
-          "on_trigger": "generate_provisioning_entries",
-          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "creates provisioning journal entries based on current loan portfolio and configured criteria"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "opens_component": "Provisioning_Entry_Detail",
+          "description": "open detailed breakdown by loan product and category"
+        },
+        {
+          "action_name": "Recreate",
+          "on_success": "recreates provisioning entry and associated journal entries"
+        }
+      ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "Detailed breakdown for a single provisioning entry",
+      "columns": ["Loan Product", "Category", "Provision Amount"],
+      "row_actions": [],
+      "actions": [
+        {
+          "element_name": "Recreate",
+          "action_name": "Recreate Provisioning Entry from Detail",
+          "on_success": "recreates provisioning entry and associated journal entries"
         }
       ]
     }
@@ -322,12 +590,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:06:28] UI-AST Agent - PARSED JSON
+[22:25:26] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Provisioning",
   "components": {
-    "Provisioning_Criteria_Page": {
+    "Provisioning_Criteria_Table": {
       "type": "data_table",
       "columns": [
         "Criteria Name",
@@ -335,16 +603,16 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       ],
       "row_actions": [
         {
-          "action_name": "Open",
-          "element_type": "link",
-          "on_trigger": "navigate_to_Provisioning_Criteria_Form"
+          "action_name": "Open Criteria",
+          "description": "triggered by clicking the Criteria Name link",
+          "opens_component": "Provisioning_Criteria_Form"
         }
       ],
       "actions": [
         {
           "element_name": "+ Create",
-          "element_type": "button",
-          "on_trigger": "open_Provisioning_Criteria_Form"
+          "action_name": "Open Provisioning Criteria Creation Form",
+          "opens_component": "Provisioning_Criteria_Form"
         }
       ]
     },
@@ -357,9 +625,10 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         },
         "Definitions": {
           "type": "repeating_group",
+          "add_row_action": "Add Definition",
           "item_fields": {
             "Loan_Product": {
-              "type": "dropdown"
+              "type": "unspecified"
             },
             "Category": {
               "type": "dropdown",
@@ -380,18 +649,168 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
             },
             "Provisioning_Percentage": {
               "type": "number",
-              "description": "percentage of outstanding principal",
-              "constraints": [
-                "must be between 0 and 100"
-              ]
+              "description": "percentage of outstanding principal"
             },
             "Liability_Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "description": "GL account dropdown"
             },
             "Expense_Account": {
               "type": "dropdown",
-              "description": "GL account"
+              "description": "GL account dropdown"
+            }
+          }
+        }
+      }
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        "Entry Date",
+        "Journal Entry Created",
+        "Created By"
+      ],
+      "actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "creates provisioning journal entries based on current loan portfolio and configured criteria"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "opens_component": "Provisioning_Entry_Detail",
+          "description": "open detailed breakdown by loan product and category"
+        },
+        {
+          "action_name": "Recreate",
+          "on_success": "recreates provisioning entry and associated journal entries"
+        }
+      ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "Detailed breakdown for a single provisioning entry",
+      "columns": [
+        "Loan Product",
+        "Category",
+        "Provision Amount"
+      ],
+      "row_actions": [],
+      "actions": [
+        {
+          "element_name": "Recreate",
+          "action_name": "Recreate Provisioning Entry from Detail",
+          "on_success": "recreates provisioning entry and associated journal entries"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:26:37] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Provisioning
+
+
+The Provisioning Criteria page displays a data table with columns for Criteria Name (clickable link) and Created Date. A "+ Create" button opens the creation form containing Criteria Name (required) and a Definitions table where each row specifies Loan Product, Category (STANDARD, SUB-STANDARD, DOUBTFUL, LOSS), Minimum Age (overdue days), Maximum Age (overdue days), Provisioning Percentage (percentage of outstanding principal), Liability Account (GL account dropdown), and Expense Account (GL account dropdown). Multiple rows can be added to cover different overdue ranges and product combinations.
+
+The Provisioning Entries page lists all generated provisioning journal entries with columns for Entry Date, Journal Entry Created, Created By, and action buttons. A "+ Create Provisioning Entry" button generates new provisioning entries based on the current loan portfolio status and configured criteria; the system calculates the required provision amount for each loan category and creates the corresponding journal entries. Each entry can be reviewed (showing a detailed breakdown by loan product and category) or recreated.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Provisioning_Criteria_Form.submit_actions: Add a submit action entry — e.g., submit_actions: [{ "element_name": "Save", "action_name": "Create Provisioning Criteria", "on_success": "creates a new provisioning criteria and closes the form" }]. This makes form creation explicit and testable.
+2. components.Provisioning_Criteria_Form.fields.Definitions: Remove or neutralize the explicit add_row_action label; either omit add_row_action or rename it to a neutral key (e.g., add_row_action: true) so the generator doesn't assert a specific button text that wasn't provided in the description.
+3. components.Provisioning_Entry_Detail.columns: Remove the explicit 'Provision Amount' column unless the description is updated to explicitly state that amounts appear in the detailed breakdown; otherwise keep only the explicitly named breakdown axes (Loan Product and Category).
+4. components.Provisioning_Entry_Detail.actions[0]: Remove the 'Recreate' action from the detail component unless the description is updated to explicitly state that recreation is available from the detail view; keep 'Recreate' only on the Provisioning_Entries_Table row_actions.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:27:20] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Criteria Name",
+          "type": "link",
+          "clickable": true
+        },
+        {
+          "name": "Created Date",
+          "type": "date"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create",
+          "action_name": "Open Create Provisioning Criteria Form",
+          "opens": "Provisioning_Criteria_Form"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "add_row_action": true,
+          "item_fields": {
+            "Loan Product": {
+              "type": "unspecified"
+            },
+            "Category": {
+              "type": "dropdown",
+              "options": [
+                "STANDARD",
+                "SUB-STANDARD",
+                "DOUBTFUL",
+                "LOSS"
+              ]
+            },
+            "Minimum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (minimum of the overdue range)"
+              ]
+            },
+            "Maximum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (maximum of the overdue range)"
+              ]
+            },
+            "Provisioning Percentage": {
+              "type": "number",
+              "constraints": [
+                "percentage of outstanding principal"
+              ]
+            },
+            "Liability Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL liability account"
+              ]
+            },
+            "Expense Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL expense account"
+              ]
             }
           }
         }
@@ -399,40 +818,218 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "submit_actions": [
         {
           "element_name": "Save",
-          "element_type": "button",
-          "on_success": "creates provisioning criteria"
+          "action_name": "Create Provisioning Criteria",
+          "on_success": "creates a new provisioning criteria and closes the form"
         }
       ]
     },
-    "Provisioning_Entries_Page": {
+    "Provisioning_Entries_Table": {
       "type": "data_table",
       "columns": [
-        "Entry Date",
-        "Journal Entry Created",
-        "Created By"
+        {
+          "name": "Entry Date",
+          "type": "date"
+        },
+        {
+          "name": "Journal Entry Created",
+          "type": "date"
+        },
+        {
+          "name": "Created By",
+          "type": "unspecified"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+        }
       ],
       "row_actions": [
         {
           "action_name": "Review",
-          "element_type": "button",
-          "on_trigger": "open_provisioning_entry_review",
-          "on_success": "opens detailed breakdown by loan product and category"
+          "action_description": "opens Provisioning_Entry_Detail for the selected entry",
+          "opens": "Provisioning_Entry_Detail"
         },
         {
           "action_name": "Recreate",
-          "element_type": "button",
-          "on_trigger": "recreate_provisioning_entry",
-          "on_success": "recreates provisioning journal entry based on current portfolio and criteria"
-        }
-      ],
-      "actions": [
-        {
-          "element_name": "+ Create Provisioning Entry",
-          "element_type": "button",
-          "on_trigger": "generate_provisioning_entries",
-          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+          "action_description": "recreates provisioning journal entry based on current loan portfolio status and configured criteria",
+          "on_success": "recreates journal entry"
         }
       ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "detailed breakdown by loan product and category",
+      "columns": [
+        {
+          "name": "Loan Product",
+          "type": "unspecified"
+        },
+        {
+          "name": "Category",
+          "type": "dropdown",
+          "options": [
+            "STANDARD",
+            "SUB-STANDARD",
+            "DOUBTFUL",
+            "LOSS"
+          ]
+        }
+      ],
+      "row_actions": []
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:27:20] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Provisioning",
+  "components": {
+    "Provisioning_Criteria_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Criteria Name",
+          "type": "link",
+          "clickable": true
+        },
+        {
+          "name": "Created Date",
+          "type": "date"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create",
+          "action_name": "Open Create Provisioning Criteria Form",
+          "opens": "Provisioning_Criteria_Form"
+        }
+      ]
+    },
+    "Provisioning_Criteria_Form": {
+      "type": "form",
+      "fields": {
+        "Criteria Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Definitions": {
+          "type": "repeating_group",
+          "add_row_action": true,
+          "item_fields": {
+            "Loan Product": {
+              "type": "unspecified"
+            },
+            "Category": {
+              "type": "dropdown",
+              "options": [
+                "STANDARD",
+                "SUB-STANDARD",
+                "DOUBTFUL",
+                "LOSS"
+              ]
+            },
+            "Minimum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (minimum of the overdue range)"
+              ]
+            },
+            "Maximum Age (overdue days)": {
+              "type": "number",
+              "constraints": [
+                "represents overdue days (maximum of the overdue range)"
+              ]
+            },
+            "Provisioning Percentage": {
+              "type": "number",
+              "constraints": [
+                "percentage of outstanding principal"
+              ]
+            },
+            "Liability Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL liability account"
+              ]
+            },
+            "Expense Account": {
+              "type": "dropdown",
+              "constraints": [
+                "select GL expense account"
+              ]
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "action_name": "Create Provisioning Criteria",
+          "on_success": "creates a new provisioning criteria and closes the form"
+        }
+      ]
+    },
+    "Provisioning_Entries_Table": {
+      "type": "data_table",
+      "columns": [
+        {
+          "name": "Entry Date",
+          "type": "date"
+        },
+        {
+          "name": "Journal Entry Created",
+          "type": "date"
+        },
+        {
+          "name": "Created By",
+          "type": "unspecified"
+        }
+      ],
+      "top_actions": [
+        {
+          "element_name": "+ Create Provisioning Entry",
+          "action_name": "Generate Provisioning Entries",
+          "on_success": "calculates required provision amount for each loan category and creates corresponding journal entries"
+        }
+      ],
+      "row_actions": [
+        {
+          "action_name": "Review",
+          "action_description": "opens Provisioning_Entry_Detail for the selected entry",
+          "opens": "Provisioning_Entry_Detail"
+        },
+        {
+          "action_name": "Recreate",
+          "action_description": "recreates provisioning journal entry based on current loan portfolio status and configured criteria",
+          "on_success": "recreates journal entry"
+        }
+      ]
+    },
+    "Provisioning_Entry_Detail": {
+      "type": "data_table",
+      "description": "detailed breakdown by loan product and category",
+      "columns": [
+        {
+          "name": "Loan Product",
+          "type": "unspecified"
+        },
+        {
+          "name": "Category",
+          "type": "dropdown",
+          "options": [
+            "STANDARD",
+            "SUB-STANDARD",
+            "DOUBTFUL",
+            "LOSS"
+          ]
+        }
+      ],
+      "row_actions": []
     }
   }
 }

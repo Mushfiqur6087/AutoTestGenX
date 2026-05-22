@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.372956
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.555846
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Tax Management</module_name>
 
@@ -232,7 +232,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Tax Management",
   "components": {
-    "Tax_Components_Page": {
+    "Tax_Components_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -246,31 +246,34 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "row_actions": [
         {
           "action_name": "View",
-          "action_type": "link",
-          "description": "Name column is a clickable link that opens the Tax Component detail"
+          "type": "link",
+          "description": "navigates to Tax Component detail via clickable Name link"
         }
       ],
-      "page_actions": [
+      "toolbar_actions": [
         {
-          "element_name": "+ Create Tax Component",
-          "opens": "Create_Tax_Component_Form"
+          "element_name": "unspecified",
+          "opens": "Tax_Component_Form"
         }
       ]
     },
-    "Create_Tax_Component_Form": {
+    "Tax_Component_Form": {
       "type": "form",
       "fields": {
         "Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Percentage": {
           "type": "number",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Debit_Account_Type": {
           "type": "dropdown",
-          "required": false,
           "options": [
             "Asset",
             "Liability",
@@ -281,12 +284,10 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         },
         "Debit_Account": {
           "type": "unspecified",
-          "required": false,
-          "description": "Select GL account"
+          "description": "select GL account"
         },
         "Credit_Account_Type": {
           "type": "dropdown",
-          "required": false,
           "options": [
             "Asset",
             "Liability",
@@ -297,22 +298,23 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         },
         "Credit_Account": {
           "type": "unspecified",
-          "required": false,
-          "description": "Select GL account"
+          "description": "select GL account"
         },
         "Start_Date": {
           "type": "date",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         }
       },
       "submit_actions": [
         {
-          "element_name": "Create",
+          "element_name": "unspecified",
           "on_success": "creates tax component"
         }
       ]
     },
-    "Tax_Groups_Page": {
+    "Tax_Groups_Table": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -321,73 +323,70 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
       "row_actions": [
         {
           "action_name": "View",
-          "action_type": "link",
-          "description": "Name column is a clickable link that opens the Tax Group detail"
+          "type": "link",
+          "description": "navigates to Tax Group detail via clickable Name link"
         }
       ],
-      "page_actions": [
+      "toolbar_actions": [
         {
-          "element_name": "+ Create Tax Group",
-          "opens": "Create_Tax_Group_Form"
+          "element_name": "unspecified",
+          "opens": "Tax_Group_Form"
         }
       ]
     },
-    "Create_Tax_Group_Form": {
+    "Tax_Group_Form": {
       "type": "form",
       "fields": {
         "Name": {
           "type": "unspecified",
-          "required": true
+          "constraints": [
+            "required"
+          ]
         },
         "Tax_Components": {
           "type": "repeating_group",
           "item_fields": {
             "Tax_Component": {
               "type": "unspecified",
-              "required": true,
-              "description": "Reference to an existing Tax Component"
+              "description": "select existing Tax Component"
             },
             "Start_Date": {
-              "type": "date",
-              "required": false
+              "type": "date"
             },
             "End_Date": {
-              "type": "date",
-              "required": false
+              "type": "date"
             }
           }
         }
       },
       "submit_actions": [
         {
-          "element_name": "Create",
+          "element_name": "unspecified",
           "on_success": "creates tax group"
         }
       ]
     },
-    "Savings_Product_Tax_Settings": {
-      "type": "form_fragment",
+    "Savings_Product_Form": {
+      "type": "form",
       "fields": {
         "Enable_Withhold_Tax": {
           "type": "checkbox",
-          "required": false,
-          "on_change": "when enabled, system automatically applies the configured tax rate on interest income or fees and posts the corresponding journal entries to the mapped GL accounts"
+          "effects": [
+            "when enabled, system automatically applies the configured tax rate on interest income or fees and posts corresponding journal entries to the mapped GL accounts"
+          ]
         },
         "Tax_Group": {
           "type": "dropdown",
-          "required_when": "Enable_Withhold_Tax == true",
-          "visible_when": "Enable_Withhold_Tax == true",
-          "description": "Select Tax Group to apply when withholding is enabled"
+          "description": "select Tax Group to associate with this product"
         }
       }
     },
-    "Charge_Definition_Tax_Reference": {
-      "type": "form_fragment",
+    "Charge_Definition_Form": {
+      "type": "form",
       "fields": {
         "Tax_Group": {
           "type": "dropdown",
-          "required": false,
-          "description": "Optional reference to a Tax Group used for applying tax on this charge; when set, system applies configured tax rate on fees and posts journal entries to the mapped GL accounts"
+          "description": "select Tax Group to associate with this charge definition"
         }
       }
     }
@@ -409,7 +408,7 @@ The Tax Groups page displays a data table with columns for Name (clickable link)
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:20:22] Test-Positive - LLM RESPONSE
+[22:35:53] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Tax Management",
@@ -417,114 +416,156 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create a Tax Component (happy path)",
+      "test_case": "Create a new Tax Component (happy path)",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Tax Components page is accessible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Tax Components page",
-        "2. Click the '+ Create Tax Component' button",
-        "3. Enter <name> in the Name field",
-        "4. Enter <percentage> in the Percentage field",
-        "5. Select <debit account type> from the Debit Account Type dropdown",
-        "6. Select <debit account> from the Debit Account selector",
-        "7. Select <credit account type> from the Credit Account Type dropdown",
-        "8. Select <credit account> from the Credit Account selector",
-        "9. Select <start date> in the Start Date field",
-        "10. Click the Create button"
+        "1. Navigate to the Tax Components page",
+        "2. Click the + Create Tax Component toolbar button to open the Tax Component form",
+        "3. Enter <valid tax component name> in the Name field",
+        "4. Enter <valid percentage> in the Percentage field",
+        "5. Select <Debit Account Type> from the Debit Account Type dropdown",
+        "6. Select <Debit Account> in the Debit Account selector",
+        "7. Select <Credit Account Type> from the Credit Account Type dropdown",
+        "8. Select <Credit Account> in the Credit Account selector",
+        "9. Enter <start date> in the Start Date field",
+        "10. Click Save (submit) on the Tax Component form"
       ],
-      "expected_result": "A new row appears in the Tax Components table with the entered Name, Percentage, and Start Date visible in the corresponding columns",
+      "expected_result": "'creates tax component' success notification is displayed and the Tax Components table shows a new row with the entered <valid tax component name>, <valid percentage> and <start date>",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Open Tax Component detail from list",
+      "test_case": "Open Tax Component detail from the table",
       "preconditions": [
         "User logged in as <Admin>",
-        "A Tax Component exists in the Tax Components table"
+        "<Tax Component> exists in the Tax Components table"
       ],
       "steps": [
-        "1. Open the Tax Components page",
-        "2. Click the Name link for <existing tax component> in the Tax Components table"
+        "1. Navigate to the Tax Components page",
+        "2. Click the Name link for <Tax Component> in the Tax Components table"
       ],
-      "expected_result": "Tax Component detail view opens and displays the Name '<existing tax component>' and the fields Percentage, Debit Account Type, Debit Account, Credit Account Type, Credit Account, and Start Date",
+      "expected_result": "Tax Component detail page is displayed showing a header with <Tax Component> and visible fields/sections for Percentage, Debit Account Type/Account, Credit Account Type/Account and Start Date",
       "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a Tax Group with one Tax Component (repeating group)",
+      "test_case": "Filter Tax Components table by search term",
       "preconditions": [
         "User logged in as <Admin>",
-        "At least one Tax Component exists to reference"
+        "Multiple Tax Components exist in the Tax Components table including ones that match <filter term> and ones that do not"
       ],
       "steps": [
-        "1. Open the Tax Groups page",
-        "2. Click the '+ Create Tax Group' button",
-        "3. Enter <name> in the Name field",
-        "4. Click 'Add Row' in the Tax Components section to add a component row",
-        "5. In the new row, select <tax component> from the Tax Component selector",
-        "6. (Optional) Select <start date> in the Start Date field for the component row",
-        "7. (Optional) Leave End Date empty or select <end date> if needed",
-        "8. Click the Create button"
+        "1. Navigate to the Tax Components page",
+        "2. Enter <filter term> in the Tax Components search/filter input and apply the filter"
       ],
-      "expected_result": "A new row appears in the Tax Groups table with the entered Name and Associated Components listing <tax component>",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-004",
-      "test_case": "Open Tax Group detail from list",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "A Tax Group exists in the Tax Groups table"
-      ],
-      "steps": [
-        "1. Open the Tax Groups page",
-        "2. Click the Name link for <existing tax group> in the Tax Groups table"
-      ],
-      "expected_result": "Tax Group detail view opens and displays the Name '<existing tax group>' and a list of Associated Components with their Start/End Dates as applicable",
+      "expected_result": "Tax Components table displays only rows matching <filter term>; unrelated rows are no longer visible",
       "priority": "medium"
     },
     {
-      "tc_id": "P-005",
-      "test_case": "Enable Withhold Tax on a Savings Product and select a Tax Group",
+      "tc_id": "P-004",
+      "test_case": "Create a Tax Group with one Tax Component (repeating group)",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Savings Product Tax Settings panel is accessible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Savings Product Tax Settings panel",
-        "2. Check the Enable Withhold Tax checkbox",
-        "3. Select <tax group> from the Tax Group dropdown"
+        "1. Navigate to the Tax Groups page",
+        "2. Click the + Create Tax Group toolbar button to open the Tax Group form",
+        "3. Enter <valid tax group name> in the Name field",
+        "4. Click Add Component to add a Tax Components row",
+        "5. In the new row, select <Tax Component> from the Tax Component selector",
+        "6. Enter <start date> in the Start Date field for the row",
+        "7. Optionally enter <end date> in the End Date field for the row",
+        "8. Click Save (submit) on the Tax Group form"
       ],
-      "expected_result": "Enable Withhold Tax checkbox is checked; the Tax Group dropdown becomes visible, shows a required indicator, and displays '<tax group>' as the selected value",
+      "expected_result": "'creates tax group' success notification is displayed and the Tax Groups table shows a new row with the entered <valid tax group name> and the Associated Components column listing <Tax Component>",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "test_case": "Open Tax Group detail from the table",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "<Tax Group> exists in the Tax Groups table"
+      ],
+      "steps": [
+        "1. Navigate to the Tax Groups page",
+        "2. Click the Name link for <Tax Group> in the Tax Groups table"
+      ],
+      "expected_result": "Tax Group detail page is displayed showing a header with <Tax Group> and a list of associated components including <Tax Component>",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Select a Tax Group in the Charge Definition Tax Reference",
+      "test_case": "Filter Tax Groups table by search term",
       "preconditions": [
         "User logged in as <Admin>",
-        "Charge Definition Tax Reference fragment is accessible"
+        "Multiple Tax Groups exist in the Tax Groups table including ones that match <filter term> and ones that do not"
       ],
       "steps": [
-        "1. Open the Charge Definition Tax Reference fragment",
-        "2. Select <tax group> from the Tax Group dropdown"
+        "1. Navigate to the Tax Groups page",
+        "2. Enter <filter term> in the Tax Groups search/filter input and apply the filter"
       ],
-      "expected_result": "The Tax Group dropdown in the Charge Definition Tax Reference field shows '<tax group>' as the selected value",
+      "expected_result": "Tax Groups table displays only rows matching <filter term>; unrelated rows are no longer visible",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-007",
+      "test_case": "Enable Withhold Tax on a Savings Product and select a Tax Group",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "A Savings Product form is available for editing or creation"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Product form (create or edit) within the Tax Management module",
+        "2. Check the Enable Withhold Tax checkbox",
+        "3. Select <Tax Group> from the Tax Group dropdown",
+        "4. Click Save (if applicable) to persist the product settings"
+      ],
+      "expected_result": "Enable Withhold Tax checkbox is checked and the Tax Group field shows the selected <Tax Group>",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-008",
+      "test_case": "Enabling Withhold Tax shows informational effect note",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "A Savings Product form is available for editing or creation"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Product form (create or edit) within the Tax Management module",
+        "2. Check the Enable Withhold Tax checkbox"
+      ],
+      "expected_result": "An informational message is visible stating: \"when enabled, system automatically applies the configured tax rate on interest income or fees and posts corresponding journal entries to the mapped GL accounts\"",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Associate a Tax Group with a Charge Definition via the form",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "A Charge Definition form is available for creation or editing"
+      ],
+      "steps": [
+        "1. Navigate to the Charge Definition form within the Tax Management module",
+        "2. Select <Tax Group> from the Tax Group dropdown",
+        "3. Click Save (if applicable) to persist the charge definition"
+      ],
+      "expected_result": "The Tax Group field on the Charge Definition form shows the selected <Tax Group>",
       "priority": "low"
     }
   ],
   "summary": {
-    "total": 6,
+    "total": 9,
     "high_priority": 2,
-    "medium_priority": 3,
+    "medium_priority": 6,
     "low_priority": 1
   }
 }
 
 ------------------------------------------------------------
-[16:20:22] Test-Positive - PARSED JSON
+[22:35:53] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Tax Management",
@@ -532,108 +573,150 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Create a Tax Component (happy path)",
+      "test_case": "Create a new Tax Component (happy path)",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Tax Components page is accessible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Tax Components page",
-        "2. Click the '+ Create Tax Component' button",
-        "3. Enter <name> in the Name field",
-        "4. Enter <percentage> in the Percentage field",
-        "5. Select <debit account type> from the Debit Account Type dropdown",
-        "6. Select <debit account> from the Debit Account selector",
-        "7. Select <credit account type> from the Credit Account Type dropdown",
-        "8. Select <credit account> from the Credit Account selector",
-        "9. Select <start date> in the Start Date field",
-        "10. Click the Create button"
+        "1. Navigate to the Tax Components page",
+        "2. Click the + Create Tax Component toolbar button to open the Tax Component form",
+        "3. Enter <valid tax component name> in the Name field",
+        "4. Enter <valid percentage> in the Percentage field",
+        "5. Select <Debit Account Type> from the Debit Account Type dropdown",
+        "6. Select <Debit Account> in the Debit Account selector",
+        "7. Select <Credit Account Type> from the Credit Account Type dropdown",
+        "8. Select <Credit Account> in the Credit Account selector",
+        "9. Enter <start date> in the Start Date field",
+        "10. Click Save (submit) on the Tax Component form"
       ],
-      "expected_result": "A new row appears in the Tax Components table with the entered Name, Percentage, and Start Date visible in the corresponding columns",
+      "expected_result": "'creates tax component' success notification is displayed and the Tax Components table shows a new row with the entered <valid tax component name>, <valid percentage> and <start date>",
       "priority": "high"
     },
     {
       "tc_id": "P-002",
-      "test_case": "Open Tax Component detail from list",
+      "test_case": "Open Tax Component detail from the table",
       "preconditions": [
         "User logged in as <Admin>",
-        "A Tax Component exists in the Tax Components table"
+        "<Tax Component> exists in the Tax Components table"
       ],
       "steps": [
-        "1. Open the Tax Components page",
-        "2. Click the Name link for <existing tax component> in the Tax Components table"
+        "1. Navigate to the Tax Components page",
+        "2. Click the Name link for <Tax Component> in the Tax Components table"
       ],
-      "expected_result": "Tax Component detail view opens and displays the Name '<existing tax component>' and the fields Percentage, Debit Account Type, Debit Account, Credit Account Type, Credit Account, and Start Date",
+      "expected_result": "Tax Component detail page is displayed showing a header with <Tax Component> and visible fields/sections for Percentage, Debit Account Type/Account, Credit Account Type/Account and Start Date",
       "priority": "medium"
     },
     {
       "tc_id": "P-003",
-      "test_case": "Create a Tax Group with one Tax Component (repeating group)",
+      "test_case": "Filter Tax Components table by search term",
       "preconditions": [
         "User logged in as <Admin>",
-        "At least one Tax Component exists to reference"
+        "Multiple Tax Components exist in the Tax Components table including ones that match <filter term> and ones that do not"
       ],
       "steps": [
-        "1. Open the Tax Groups page",
-        "2. Click the '+ Create Tax Group' button",
-        "3. Enter <name> in the Name field",
-        "4. Click 'Add Row' in the Tax Components section to add a component row",
-        "5. In the new row, select <tax component> from the Tax Component selector",
-        "6. (Optional) Select <start date> in the Start Date field for the component row",
-        "7. (Optional) Leave End Date empty or select <end date> if needed",
-        "8. Click the Create button"
+        "1. Navigate to the Tax Components page",
+        "2. Enter <filter term> in the Tax Components search/filter input and apply the filter"
       ],
-      "expected_result": "A new row appears in the Tax Groups table with the entered Name and Associated Components listing <tax component>",
-      "priority": "high"
-    },
-    {
-      "tc_id": "P-004",
-      "test_case": "Open Tax Group detail from list",
-      "preconditions": [
-        "User logged in as <Admin>",
-        "A Tax Group exists in the Tax Groups table"
-      ],
-      "steps": [
-        "1. Open the Tax Groups page",
-        "2. Click the Name link for <existing tax group> in the Tax Groups table"
-      ],
-      "expected_result": "Tax Group detail view opens and displays the Name '<existing tax group>' and a list of Associated Components with their Start/End Dates as applicable",
+      "expected_result": "Tax Components table displays only rows matching <filter term>; unrelated rows are no longer visible",
       "priority": "medium"
     },
     {
-      "tc_id": "P-005",
-      "test_case": "Enable Withhold Tax on a Savings Product and select a Tax Group",
+      "tc_id": "P-004",
+      "test_case": "Create a Tax Group with one Tax Component (repeating group)",
       "preconditions": [
-        "User logged in as <Admin>",
-        "Savings Product Tax Settings panel is accessible"
+        "User logged in as <Admin>"
       ],
       "steps": [
-        "1. Open the Savings Product Tax Settings panel",
-        "2. Check the Enable Withhold Tax checkbox",
-        "3. Select <tax group> from the Tax Group dropdown"
+        "1. Navigate to the Tax Groups page",
+        "2. Click the + Create Tax Group toolbar button to open the Tax Group form",
+        "3. Enter <valid tax group name> in the Name field",
+        "4. Click Add Component to add a Tax Components row",
+        "5. In the new row, select <Tax Component> from the Tax Component selector",
+        "6. Enter <start date> in the Start Date field for the row",
+        "7. Optionally enter <end date> in the End Date field for the row",
+        "8. Click Save (submit) on the Tax Group form"
       ],
-      "expected_result": "Enable Withhold Tax checkbox is checked; the Tax Group dropdown becomes visible, shows a required indicator, and displays '<tax group>' as the selected value",
+      "expected_result": "'creates tax group' success notification is displayed and the Tax Groups table shows a new row with the entered <valid tax group name> and the Associated Components column listing <Tax Component>",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "test_case": "Open Tax Group detail from the table",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "<Tax Group> exists in the Tax Groups table"
+      ],
+      "steps": [
+        "1. Navigate to the Tax Groups page",
+        "2. Click the Name link for <Tax Group> in the Tax Groups table"
+      ],
+      "expected_result": "Tax Group detail page is displayed showing a header with <Tax Group> and a list of associated components including <Tax Component>",
       "priority": "medium"
     },
     {
       "tc_id": "P-006",
-      "test_case": "Select a Tax Group in the Charge Definition Tax Reference",
+      "test_case": "Filter Tax Groups table by search term",
       "preconditions": [
         "User logged in as <Admin>",
-        "Charge Definition Tax Reference fragment is accessible"
+        "Multiple Tax Groups exist in the Tax Groups table including ones that match <filter term> and ones that do not"
       ],
       "steps": [
-        "1. Open the Charge Definition Tax Reference fragment",
-        "2. Select <tax group> from the Tax Group dropdown"
+        "1. Navigate to the Tax Groups page",
+        "2. Enter <filter term> in the Tax Groups search/filter input and apply the filter"
       ],
-      "expected_result": "The Tax Group dropdown in the Charge Definition Tax Reference field shows '<tax group>' as the selected value",
+      "expected_result": "Tax Groups table displays only rows matching <filter term>; unrelated rows are no longer visible",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-007",
+      "test_case": "Enable Withhold Tax on a Savings Product and select a Tax Group",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "A Savings Product form is available for editing or creation"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Product form (create or edit) within the Tax Management module",
+        "2. Check the Enable Withhold Tax checkbox",
+        "3. Select <Tax Group> from the Tax Group dropdown",
+        "4. Click Save (if applicable) to persist the product settings"
+      ],
+      "expected_result": "Enable Withhold Tax checkbox is checked and the Tax Group field shows the selected <Tax Group>",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-008",
+      "test_case": "Enabling Withhold Tax shows informational effect note",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "A Savings Product form is available for editing or creation"
+      ],
+      "steps": [
+        "1. Navigate to the Savings Product form (create or edit) within the Tax Management module",
+        "2. Check the Enable Withhold Tax checkbox"
+      ],
+      "expected_result": "An informational message is visible stating: \"when enabled, system automatically applies the configured tax rate on interest income or fees and posts corresponding journal entries to the mapped GL accounts\"",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Associate a Tax Group with a Charge Definition via the form",
+      "preconditions": [
+        "User logged in as <Admin>",
+        "A Charge Definition form is available for creation or editing"
+      ],
+      "steps": [
+        "1. Navigate to the Charge Definition form within the Tax Management module",
+        "2. Select <Tax Group> from the Tax Group dropdown",
+        "3. Click Save (if applicable) to persist the charge definition"
+      ],
+      "expected_result": "The Tax Group field on the Charge Definition form shows the selected <Tax Group>",
       "priority": "low"
     }
   ],
   "summary": {
-    "total": 6,
+    "total": 9,
     "high_priority": 2,
-    "medium_priority": 3,
+    "medium_priority": 6,
     "low_priority": 1
   }
 }

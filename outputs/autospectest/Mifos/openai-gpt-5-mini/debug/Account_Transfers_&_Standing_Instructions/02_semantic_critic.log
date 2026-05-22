@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.760798
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.398724
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:07:21] Semantic Critic - SYSTEM PROMPT
+[22:22:16] Semantic Critic - SYSTEM PROMPT
 ------------------------------------------------------------
 You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
 
@@ -106,7 +106,7 @@ Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
 
 
 ------------------------------------------------------------
-[16:07:21] Semantic Critic - USER PROMPT
+[22:22:16] Semantic Critic - USER PROMPT
 ------------------------------------------------------------
 <description>
 
@@ -170,7 +170,8 @@ The Standing Instructions page displays a data table with columns for Name, From
           "type": "number",
           "required": true,
           "constraints": [
-            "must not exceed available balance"
+            "must be greater than 0",
+            "must not exceed available balance (error shown if exceeded)"
           ]
         },
         "Transfer_Date": {
@@ -185,13 +186,11 @@ The Standing Instructions page displays a data table with columns for Name, From
       "submit_actions": [
         {
           "element_name": "Submit",
-          "on_success": "processes the transfer, debiting the source and crediting the destination",
-          "constraints": [],
-          "preconditions": []
+          "on_success": "processes transfer, debiting the source and crediting the destination"
         }
       ]
     },
-    "Standing_Instructions_List": {
+    "Standing_Instructions_Page": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -200,35 +199,35 @@ The Standing Instructions page displays a data table with columns for Name, From
         "To Client",
         "To Account",
         "Amount",
-        "Validity From",
-        "Validity Till",
+        "Validity_From",
+        "Validity_Till",
         "Status"
       ],
-      "top_actions": [
+      "toolbar_actions": [
         {
-          "element_name": "+ Create Standing Instruction",
-          "action": "opens_form",
-          "opens": "Create_Standing_Instruction_Form"
+          "element_name": "Create Standing Instruction",
+          "element_label": "+ Create Standing Instruction",
+          "on_click": "opens Create_Standing_Instruction_Form"
         }
       ],
       "row_actions": [
         {
           "action_name": "Enable",
           "preconditions": [
-            "Status == Disabled"
+            "status must be Disabled"
           ],
-          "on_success": "sets status to Active"
+          "on_success": "changes status to Active"
         },
         {
           "action_name": "Disable",
           "preconditions": [
-            "Status == Active"
+            "status must be Active"
           ],
-          "on_success": "sets status to Disabled"
+          "on_success": "changes status to Disabled"
         },
         {
           "action_name": "Delete",
-          "on_success": "deletes standing instruction"
+          "on_success": "removes standing instruction from listing"
         }
       ]
     },
@@ -239,6 +238,131 @@ The Standing Instructions page displays a data table with columns for Name, From
           "type": "unspecified",
           "required": true
         },
+        "From_Account": {
+          "type": "unspecified",
+          "required": false
+        },
+        "To_Account": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Transfer_Type": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Priority": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Instruction_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Fixed",
+            "Dues"
+          ]
+        },
+        "Amount": {
+          "type": "number",
+          "required": false
+        },
+        "Validity_From": {
+          "type": "date",
+          "required": false
+        },
+        "Validity_Till": {
+          "type": "date",
+          "required": false
+        },
+        "Recurrence_Type": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Periodic",
+            "As Per Dues"
+          ]
+        },
+        "Recurrence_Frequency": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Recurrence_Interval": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Create",
+          "on_success": "creates standing instruction and adds it to the listing"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:24:18] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "Reject: the AST includes inferred/phantom constraints and preconditions not stated in the description (transfer >0 constraint and explicit row-action preconditions); please regenerate without those inferences.",
+  "missing": [],
+  "phantoms": [
+    "Account_Transfers_Form.fields.Transfer_Amount.constraints[0] (\"must be greater than 0\" constraint is not specified in the description)",
+    "Standing_Instructions_Page.row_actions[0].preconditions[0] (\"status must be Disabled\" precondition is an inference, not explicitly stated)",
+    "Standing_Instructions_Page.row_actions[1].preconditions[0] (\"status must be Active\" precondition is an inference, not explicitly stated)"
+  ],
+  "fixes": [
+    "Remove the inferred 'must be greater than 0' constraint from Account_Transfers_Form.fields.Transfer_Amount.constraints — path: Account_Transfers_Form.fields.Transfer_Amount.constraints[0] should be deleted (leave only the error condition explicitly described: exceed available balance).",
+    "Remove inferred preconditions from Standing_Instructions_Page.row_actions — delete Standing_Instructions_Page.row_actions[0].preconditions (Enable) and Standing_Instructions_Page.row_actions[1].preconditions (Disable), or replace them with only explicit behavior text if present in the description.",
+    "Ensure no other validation/conditional rules are added unless explicitly described; keep only: Transfer_Amount (required) and 'error shown if exceeds available balance', Transfer_Date (required), and the listed fields and actions for standing instructions."
+  ]
+}
+
+------------------------------------------------------------
+[22:24:18] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "Reject: the AST includes inferred/phantom constraints and preconditions not stated in the description (transfer >0 constraint and explicit row-action preconditions); please regenerate without those inferences.",
+  "missing": [],
+  "phantoms": [
+    "Account_Transfers_Form.fields.Transfer_Amount.constraints[0] (\"must be greater than 0\" constraint is not specified in the description)",
+    "Standing_Instructions_Page.row_actions[0].preconditions[0] (\"status must be Disabled\" precondition is an inference, not explicitly stated)",
+    "Standing_Instructions_Page.row_actions[1].preconditions[0] (\"status must be Active\" precondition is an inference, not explicitly stated)"
+  ],
+  "fixes": [
+    "Remove the inferred 'must be greater than 0' constraint from Account_Transfers_Form.fields.Transfer_Amount.constraints \u2014 path: Account_Transfers_Form.fields.Transfer_Amount.constraints[0] should be deleted (leave only the error condition explicitly described: exceed available balance).",
+    "Remove inferred preconditions from Standing_Instructions_Page.row_actions \u2014 delete Standing_Instructions_Page.row_actions[0].preconditions (Enable) and Standing_Instructions_Page.row_actions[1].preconditions (Disable), or replace them with only explicit behavior text if present in the description.",
+    "Ensure no other validation/conditional rules are added unless explicitly described; keep only: Transfer_Amount (required) and 'error shown if exceeds available balance', Transfer_Date (required), and the listed fields and actions for standing instructions."
+  ]
+}
+
+------------------------------------------------------------
+[22:25:41] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Account Transfers form contains From Office, From Client, From Account Type (Savings Account, Loan Account), From Account, To Office, To Client, To Account Type, To Account, Transfer Amount (required), Transfer Date (required), and Description. If the transfer amount exceeds the available balance, an error is shown. Clicking "Submit" processes the transfer, debiting the source and crediting the destination.
+
+The Standing Instructions page displays a data table with columns for Name, From Client, From Account, To Client, To Account, Amount, Validity (From/Till dates), and Status (Active, Disabled). A "+ Create Standing Instruction" button opens the creation form containing Name (required), From and To account fields, Transfer Type, Priority, Instruction Type (Fixed, Dues), Amount, Validity From and Till dates, Recurrence Type (Periodic, As Per Dues), Recurrence Frequency, and Recurrence Interval. Standing instructions can be enabled, disabled, or deleted from the listing.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Account Transfers & Standing Instructions",
+  "components": {
+    "Account_Transfers_Form": {
+      "type": "form",
+      "fields": {
         "From_Office": {
           "type": "unspecified",
           "required": false
@@ -274,6 +398,82 @@ The Standing Instructions page displays a data table with columns for Name, From
             "Savings Account",
             "Loan Account"
           ]
+        },
+        "To_Account": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Transfer_Amount": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "error shown if amount exceeds available balance"
+          ]
+        },
+        "Transfer_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Description": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "processes transfer; debits the source account and credits the destination account"
+        }
+      ]
+    },
+    "Standing_Instructions_Page": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "From Client",
+        "From Account",
+        "To Client",
+        "To Account",
+        "Amount",
+        "Validity From",
+        "Validity Till",
+        "Status"
+      ],
+      "status_values": [
+        "Active",
+        "Disabled"
+      ],
+      "create_button": {
+        "element_name": "+ Create Standing Instruction",
+        "action": "opens_form",
+        "opens_form": "Create_Standing_Instruction_Form"
+      },
+      "row_actions": [
+        {
+          "action_name": "Enable",
+          "on_success": "sets status to Active"
+        },
+        {
+          "action_name": "Disable",
+          "on_success": "sets status to Disabled"
+        },
+        {
+          "action_name": "Delete",
+          "on_success": "removes standing instruction from listing"
+        }
+      ],
+      "bulk_actions": []
+    },
+    "Create_Standing_Instruction_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "From_Account": {
+          "type": "unspecified",
+          "required": false
         },
         "To_Account": {
           "type": "unspecified",
@@ -338,29 +538,23 @@ The Standing Instructions page displays a data table with columns for Name, From
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:08:44] Semantic Critic - LLM RESPONSE
+[22:26:31] Semantic Critic - LLM RESPONSE
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the described interactive elements; only minor inferred preconditions for enable/disable row actions were added but are acceptable.",
+  "summary": "The AST accurately includes all interactive elements (forms, fields, validations, buttons, table columns, row actions) described for Account Transfers and Standing Instructions with no substantive extras or omissions.",
   "missing": [],
-  "phantoms": [
-    "Standing_Instructions_List.row_actions[0].preconditions (Status == Disabled) - not explicitly stated in description",
-    "Standing_Instructions_List.row_actions[1].preconditions (Status == Active) - not explicitly stated in description"
-  ],
+  "phantoms": [],
   "fixes": []
 }
 
 ------------------------------------------------------------
-[16:08:44] Semantic Critic - PARSED JSON
+[22:26:31] Semantic Critic - PARSED JSON
 ------------------------------------------------------------
 {
   "verdict": "yes",
-  "summary": "AST accurately captures the described interactive elements; only minor inferred preconditions for enable/disable row actions were added but are acceptable.",
+  "summary": "The AST accurately includes all interactive elements (forms, fields, validations, buttons, table columns, row actions) described for Account Transfers and Standing Instructions with no substantive extras or omissions.",
   "missing": [],
-  "phantoms": [
-    "Standing_Instructions_List.row_actions[0].preconditions (Status == Disabled) - not explicitly stated in description",
-    "Standing_Instructions_List.row_actions[1].preconditions (Status == Active) - not explicitly stated in description"
-  ],
+  "phantoms": [],
   "fixes": []
 }

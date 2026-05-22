@@ -1,0 +1,596 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:50:10.006289
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:50:41] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[22:50:41] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The hotel details page displays a photo gallery, full property description, location map, room types with pricing and maximum occupancy, guest reviews and aggregate rating, and hotel policies including cancellation policy and check-in/check-out times. After selecting a room, a booking form shows the selected hotel and room type, stay dates, guest count, and a price breakdown (room rate, taxes, fees, and total). The user provides First Name, Last Name, Email, Phone Number, and optional Special Requests. Clicking Book Now requires the user to be logged in and proceeds to the payment page.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Hotel Details & Booking",
+  "components": {
+    "Photo_Gallery": {
+      "type": "photo_gallery",
+      "actions": [
+        {
+          "element_name": "Next_Photo",
+          "action_name": "Next",
+          "on_success": "shows next photo"
+        },
+        {
+          "element_name": "Previous_Photo",
+          "action_name": "Previous",
+          "on_success": "shows previous photo"
+        },
+        {
+          "element_name": "Open_Fullscreen",
+          "action_name": "Open Fullscreen",
+          "on_success": "opens photo in fullscreen"
+        },
+        {
+          "element_name": "Select_Thumbnail",
+          "action_name": "Select Photo",
+          "on_success": "displays selected photo"
+        }
+      ]
+    },
+    "Room_Types_Table": {
+      "type": "data_table",
+      "row_actions": [
+        {
+          "action_name": "Select Room",
+          "on_success": "populates Booking_Form with selected room and selected_room_max_occupancy"
+        },
+        {
+          "action_name": "View Room Details",
+          "on_success": "opens room details panel"
+        }
+      ]
+    },
+    "Booking_Form": {
+      "type": "form",
+      "fields": {
+        "Check_In_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Check_Out_Date": {
+          "type": "date",
+          "required": true
+        },
+        "Guest_Count": {
+          "type": "number",
+          "required": true,
+          "constraints": [
+            "must be >= 1",
+            "must be <= selected_room_max_occupancy"
+          ]
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true,
+          "constraints": [
+            "must be a valid email address"
+          ]
+        },
+        "Phone_Number": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Special_Requests": {
+          "type": "unspecified",
+          "required": false
+        }
+      },
+      "constraints": [
+        "Check_Out_Date must be after Check_In_Date"
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Book Now",
+          "on_success": "redirects to Payment Page",
+          "preconditions": [
+            "user must be logged in"
+          ]
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:51:39] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains several inferred interactive elements and inferred constraints that are not present in the description (photo gallery actions, an extra room row action, and a few validation constraints); remove or align these phantoms with the description or augment the description to justify them.",
+  "missing": [],
+  "phantoms": [
+    "components.Photo_Gallery.actions[0] (Next_Photo action not specified in description)",
+    "components.Photo_Gallery.actions[1] (Previous_Photo action not specified in description)",
+    "components.Photo_Gallery.actions[2] (Open_Fullscreen action not specified in description)",
+    "components.Photo_Gallery.actions[3] (Select_Thumbnail action not specified in description)",
+    "components.Room_Types_Table.row_actions[1] (View Room Details action not in description)",
+    "components.Booking_Form.fields.Guest_Count.constraints[1] (must be <= selected_room_max_occupancy — constraint inferred but not explicitly stated)",
+    "components.Booking_Form.constraints[0] (Check_Out_Date must be after Check_In_Date — validation inferred but not in description)"
+  ],
+  "fixes": [
+    "components.Photo_Gallery: Remove the actions array (components.Photo_Gallery.actions) or only include actions explicitly mentioned in the description; if gallery navigation/fullscreen/thumbnail selection is intended, update the description to explicitly list those actions.",
+    "components.Room_Types_Table.row_actions[1]: Remove the 'View Room Details' row action unless the description is updated to explicitly mention a 'View Room Details' interaction.",
+    "components.Booking_Form.fields.Guest_Count.constraints[1]: Remove the 'must be <= selected_room_max_occupancy' constraint unless the description is updated to explicitly require enforcing max occupancy on the booking form.",
+    "components.Booking_Form.constraints[0]: Remove the 'Check_Out_Date must be after Check_In_Date' constraint unless the description explicitly states this validation requirement.",
+    "components.Room_Types_Table.row_actions[0].on_success: If referencing selected_room_max_occupancy is retained, ensure description explicitly links room type maximum occupancy to booking form validation; otherwise remove that variable reference from the on_success text."
+  ]
+}
+
+------------------------------------------------------------
+[22:51:39] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains several inferred interactive elements and inferred constraints that are not present in the description (photo gallery actions, an extra room row action, and a few validation constraints); remove or align these phantoms with the description or augment the description to justify them.",
+  "missing": [],
+  "phantoms": [
+    "components.Photo_Gallery.actions[0] (Next_Photo action not specified in description)",
+    "components.Photo_Gallery.actions[1] (Previous_Photo action not specified in description)",
+    "components.Photo_Gallery.actions[2] (Open_Fullscreen action not specified in description)",
+    "components.Photo_Gallery.actions[3] (Select_Thumbnail action not specified in description)",
+    "components.Room_Types_Table.row_actions[1] (View Room Details action not in description)",
+    "components.Booking_Form.fields.Guest_Count.constraints[1] (must be <= selected_room_max_occupancy \u2014 constraint inferred but not explicitly stated)",
+    "components.Booking_Form.constraints[0] (Check_Out_Date must be after Check_In_Date \u2014 validation inferred but not in description)"
+  ],
+  "fixes": [
+    "components.Photo_Gallery: Remove the actions array (components.Photo_Gallery.actions) or only include actions explicitly mentioned in the description; if gallery navigation/fullscreen/thumbnail selection is intended, update the description to explicitly list those actions.",
+    "components.Room_Types_Table.row_actions[1]: Remove the 'View Room Details' row action unless the description is updated to explicitly mention a 'View Room Details' interaction.",
+    "components.Booking_Form.fields.Guest_Count.constraints[1]: Remove the 'must be <= selected_room_max_occupancy' constraint unless the description is updated to explicitly require enforcing max occupancy on the booking form.",
+    "components.Booking_Form.constraints[0]: Remove the 'Check_Out_Date must be after Check_In_Date' constraint unless the description explicitly states this validation requirement.",
+    "components.Room_Types_Table.row_actions[0].on_success: If referencing selected_room_max_occupancy is retained, ensure description explicitly links room type maximum occupancy to booking form validation; otherwise remove that variable reference from the on_success text."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:00] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The hotel details page displays a photo gallery, full property description, location map, room types with pricing and maximum occupancy, guest reviews and aggregate rating, and hotel policies including cancellation policy and check-in/check-out times. After selecting a room, a booking form shows the selected hotel and room type, stay dates, guest count, and a price breakdown (room rate, taxes, fees, and total). The user provides First Name, Last Name, Email, Phone Number, and optional Special Requests. Clicking Book Now requires the user to be logged in and proceeds to the payment page.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Hotel Details & Booking",
+  "components": {
+    "Room_Types_Table": {
+      "type": "data_table",
+      "row_actions": [
+        {
+          "action_name": "Select Room",
+          "on_success": "opens booking form and populates it with selected room"
+        }
+      ],
+      "bulk_actions": []
+    },
+    "Booking_Form": {
+      "type": "form",
+      "fields": {
+        "Check_In_Date": {
+          "type": "date",
+          "required": true,
+          "constraints": []
+        },
+        "Check_Out_Date": {
+          "type": "date",
+          "required": true,
+          "constraints": []
+        },
+        "Guest_Count": {
+          "type": "number",
+          "required": true,
+          "constraints": []
+        },
+        "First_Name": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": []
+        },
+        "Last_Name": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": []
+        },
+        "Email": {
+          "type": "email",
+          "required": true,
+          "constraints": [
+            "must be a valid email"
+          ]
+        },
+        "Phone_Number": {
+          "type": "unspecified",
+          "required": true,
+          "constraints": []
+        },
+        "Special_Requests": {
+          "type": "unspecified",
+          "required": false,
+          "constraints": []
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Book Now",
+          "type": "button",
+          "preconditions": [
+            "user must be logged in"
+          ],
+          "on_success": "redirects to payment page"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:52:19] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing booking display fields (selected hotel/room and the price breakdown) and includes an inferred email-validation constraint that is not stated in the description.",
+  "missing": [
+    "Booking_Form.fields.Selected_Hotel",
+    "Booking_Form.fields.Selected_Room_Type",
+    "Booking_Form.fields.Room_Rate",
+    "Booking_Form.fields.Taxes",
+    "Booking_Form.fields.Fees",
+    "Booking_Form.fields.Total"
+  ],
+  "phantoms": [
+    "Booking_Form.fields.Email.constraints[0] (\"must be a valid email\" constraint not specified in description)"
+  ],
+  "fixes": [
+    "Add Booking_Form.fields.Selected_Hotel: a read-only/display field populated when a room is selected (path: Booking_Form.fields.Selected_Hotel).",
+    "Add Booking_Form.fields.Selected_Room_Type: a read-only/display field populated when a room is selected (path: Booking_Form.fields.Selected_Room_Type).",
+    "Add price breakdown read-only fields under Booking_Form.fields: Room_Rate, Taxes, Fees, Total (paths: Booking_Form.fields.Room_Rate, Booking_Form.fields.Taxes, Booking_Form.fields.Fees, Booking_Form.fields.Total). These should be display-only numeric/currency fields shown in the form.",
+    "Remove the inferred email validation constraint at Booking_Form.fields.Email.constraints[0] unless the description explicitly requires validation; otherwise leave constraints empty.",
+    "(Optional but recommended) Set explicit types for name/phone/special requests: Booking_Form.fields.First_Name.type -> \"text\", Booking_Form.fields.Last_Name.type -> \"text\", Booking_Form.fields.Phone_Number.type -> \"tel\", Booking_Form.fields.Special_Requests.type -> \"textarea\"."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:19] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST is missing booking display fields (selected hotel/room and the price breakdown) and includes an inferred email-validation constraint that is not stated in the description.",
+  "missing": [
+    "Booking_Form.fields.Selected_Hotel",
+    "Booking_Form.fields.Selected_Room_Type",
+    "Booking_Form.fields.Room_Rate",
+    "Booking_Form.fields.Taxes",
+    "Booking_Form.fields.Fees",
+    "Booking_Form.fields.Total"
+  ],
+  "phantoms": [
+    "Booking_Form.fields.Email.constraints[0] (\"must be a valid email\" constraint not specified in description)"
+  ],
+  "fixes": [
+    "Add Booking_Form.fields.Selected_Hotel: a read-only/display field populated when a room is selected (path: Booking_Form.fields.Selected_Hotel).",
+    "Add Booking_Form.fields.Selected_Room_Type: a read-only/display field populated when a room is selected (path: Booking_Form.fields.Selected_Room_Type).",
+    "Add price breakdown read-only fields under Booking_Form.fields: Room_Rate, Taxes, Fees, Total (paths: Booking_Form.fields.Room_Rate, Booking_Form.fields.Taxes, Booking_Form.fields.Fees, Booking_Form.fields.Total). These should be display-only numeric/currency fields shown in the form.",
+    "Remove the inferred email validation constraint at Booking_Form.fields.Email.constraints[0] unless the description explicitly requires validation; otherwise leave constraints empty.",
+    "(Optional but recommended) Set explicit types for name/phone/special requests: Booking_Form.fields.First_Name.type -> \"text\", Booking_Form.fields.Last_Name.type -> \"text\", Booking_Form.fields.Phone_Number.type -> \"tel\", Booking_Form.fields.Special_Requests.type -> \"textarea\"."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:42] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The hotel details page displays a photo gallery, full property description, location map, room types with pricing and maximum occupancy, guest reviews and aggregate rating, and hotel policies including cancellation policy and check-in/check-out times. After selecting a room, a booking form shows the selected hotel and room type, stay dates, guest count, and a price breakdown (room rate, taxes, fees, and total). The user provides First Name, Last Name, Email, Phone Number, and optional Special Requests. Clicking Book Now requires the user to be logged in and proceeds to the payment page.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Hotel Details & Booking",
+  "components": {
+    "Room_Types": {
+      "type": "repeating_group",
+      "description": "List of available room types for the hotel; each row offers a select action to begin booking that room",
+      "item_fields": {
+        "Room_Type_Name": {
+          "type": "text",
+          "required": false
+        },
+        "Price": {
+          "type": "number",
+          "required": false
+        },
+        "Max_Occupancy": {
+          "type": "number",
+          "required": false
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "Select Room",
+          "type": "button",
+          "on_success": "populates Booking_Form.fields.Selected_Hotel, Booking_Form.fields.Selected_Room_Type, Booking_Form.fields.Room_Rate, Booking_Form.fields.Taxes, Booking_Form.fields.Fees, Booking_Form.fields.Total and opens Booking_Form",
+          "preconditions": []
+        }
+      ]
+    },
+    "Booking_Form": {
+      "type": "form",
+      "fields": {
+        "Selected_Hotel": {
+          "type": "text",
+          "required": true,
+          "read_only": true,
+          "description": "Populated when a room is selected"
+        },
+        "Selected_Room_Type": {
+          "type": "text",
+          "required": true,
+          "read_only": true,
+          "description": "Populated when a room is selected"
+        },
+        "Check_In": {
+          "type": "date",
+          "required": true
+        },
+        "Check_Out": {
+          "type": "date",
+          "required": true
+        },
+        "Guest_Count": {
+          "type": "number",
+          "required": true,
+          "constraints": []
+        },
+        "Room_Rate": {
+          "type": "number",
+          "required": true,
+          "read_only": true,
+          "constraints": [
+            "currency"
+          ]
+        },
+        "Taxes": {
+          "type": "number",
+          "required": true,
+          "read_only": true,
+          "constraints": [
+            "currency"
+          ]
+        },
+        "Fees": {
+          "type": "number",
+          "required": true,
+          "read_only": true,
+          "constraints": [
+            "currency"
+          ]
+        },
+        "Total": {
+          "type": "number",
+          "required": true,
+          "read_only": true,
+          "constraints": [
+            "currency"
+          ]
+        },
+        "First_Name": {
+          "type": "text",
+          "required": true
+        },
+        "Last_Name": {
+          "type": "text",
+          "required": true
+        },
+        "Email": {
+          "type": "email",
+          "required": true,
+          "constraints": []
+        },
+        "Phone_Number": {
+          "type": "tel",
+          "required": true
+        },
+        "Special_Requests": {
+          "type": "textarea",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Book Now",
+          "type": "button",
+          "preconditions": [
+            "user must be logged in"
+          ],
+          "on_success": "redirects to Payment page"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:53:00] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST mostly matches the description but includes inferred 'currency' constraints on multiple price fields (phantoms); remove these inferred constraints or anchor them in the requirements before accepting.",
+  "missing": [],
+  "phantoms": [
+    "Booking_Form.fields.Room_Rate.constraints[0] (currency constraint not specified in description)",
+    "Booking_Form.fields.Taxes.constraints[0] (currency constraint not specified in description)",
+    "Booking_Form.fields.Fees.constraints[0] (currency constraint not specified in description)",
+    "Booking_Form.fields.Total.constraints[0] (currency constraint not specified in description)"
+  ],
+  "fixes": [
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Room_Rate.constraints to [] or remove the constraints property.",
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Taxes.constraints to [] or remove the constraints property.",
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Fees.constraints to [] or remove the constraints property.",
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Total.constraints to [] or remove the constraints property."
+  ]
+}
+
+------------------------------------------------------------
+[22:53:00] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST mostly matches the description but includes inferred 'currency' constraints on multiple price fields (phantoms); remove these inferred constraints or anchor them in the requirements before accepting.",
+  "missing": [],
+  "phantoms": [
+    "Booking_Form.fields.Room_Rate.constraints[0] (currency constraint not specified in description)",
+    "Booking_Form.fields.Taxes.constraints[0] (currency constraint not specified in description)",
+    "Booking_Form.fields.Fees.constraints[0] (currency constraint not specified in description)",
+    "Booking_Form.fields.Total.constraints[0] (currency constraint not specified in description)"
+  ],
+  "fixes": [
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Room_Rate.constraints to [] or remove the constraints property.",
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Taxes.constraints to [] or remove the constraints property.",
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Fees.constraints to [] or remove the constraints property.",
+    "Remove the inferred currency constraint(s) from the Booking_Form price fields or explicitly state them in the description; change Booking_Form.fields.Total.constraints to [] or remove the constraints property."
+  ]
+}

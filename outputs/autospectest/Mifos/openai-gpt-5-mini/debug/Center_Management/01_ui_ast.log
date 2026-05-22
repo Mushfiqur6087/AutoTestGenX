@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:04:30.752664
+DEBUG SESSION STARTED: 2026-05-21T22:19:56.385446
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - SYSTEM PROMPT
+[22:19:56] UI-AST Agent - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI/UX Architect and Systems Analyst. Parse natural language functional specifications into a strict, deterministic UI Abstract Syntax Tree (UI-AST) formatted as a JSON Component Schema.
 
@@ -204,7 +204,7 @@ Mentally enumerate every interactive element in the source. Every field, button,
 }
 
 ------------------------------------------------------------
-[16:04:30] UI-AST Agent - USER PROMPT
+[22:19:56] UI-AST Agent - USER PROMPT
 ------------------------------------------------------------
 Module: Center Management
 
@@ -220,31 +220,33 @@ The Center Detail page displays the center name, status, office, and staff with 
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:05:43] UI-AST Agent - LLM RESPONSE
+[22:21:03] UI-AST Agent - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module_name": "Center Management",
   "components": {
-    "Centers_Table": {
+    "Centers_Page": {
       "type": "data_table",
       "columns": ["Name", "Account #", "External Id", "Status", "Office Name"],
+      "sortable_columns": [],
       "row_actions": [
         {
-          "action_name": "View",
-          "element_name": "Name",
-          "on_trigger": "navigates to Center Detail"
+          "action_name": "Open",
+          "action_type": "link",
+          "on_trigger": "navigates to Center_Detail_Page",
+          "note": "Name column is clickable and triggers this action"
         }
       ],
       "page_actions": [
         {
-          "element_name": "Create Center",
-          "type": "button",
-          "on_trigger": "opens Create_Center_Form"
+          "element_name": "Import Center",
+          "action_type": "button",
+          "on_trigger": "opens Bulk_Import_Centers_Page"
         },
         {
-          "element_name": "Import Center",
-          "type": "button",
-          "on_trigger": "navigates to Bulk_Import_Centers"
+          "element_name": "Create Center",
+          "action_type": "button",
+          "on_trigger": "opens Create_Center_Form"
         }
       ]
     },
@@ -253,192 +255,248 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": ["required"]
+          "required": true
         },
         "Office": {
           "type": "dropdown",
-          "constraints": ["required"]
+          "required": true,
+          "searchable": true
         },
         "Staff": {
-          "type": "search"
+          "type": "dropdown",
+          "required": false,
+          "searchable": true
         },
         "Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "External_Id": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
-          "constraints": ["required"]
+          "required": true
         },
         "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group": {
-              "type": "search"
-            }
-          }
+          "type": "dropdown",
+          "required": false,
+          "searchable": true,
+          "allow_multiple": true,
+          "description": "Select and add groups via searchable multi-select"
         }
       },
       "submit_actions": [
         {
           "element_name": "Submit",
+          "action_type": "button",
           "on_success": "creates center"
         }
       ]
     },
-    "Bulk_Import_Centers": {
+    "Bulk_Import_Centers_Page": {
       "type": "form",
+      "page_actions": [
+        {
+          "element_name": "Download Template",
+          "action_type": "button",
+          "on_trigger": "downloads import template"
+        }
+      ],
       "fields": {
-        "Download_Template": {
-          "type": "link",
-          "element_name": "Download Template"
-        },
         "Import_File": {
           "type": "file_upload",
-          "constraints": ["required"]
+          "required": true
         }
       },
       "submit_actions": [
         {
           "element_name": "Upload",
+          "action_type": "button",
           "on_success": "imports centers from file"
         }
       ]
     },
-    "Center_Detail_Tabs": {
-      "type": "tab_container",
-      "tabs": [
-        {
-          "tab_name": "Groups",
-          "fields": {
-            "Member_Groups_Table": {
-              "type": "data_table",
-              "columns": ["Group Name"],
-              "row_actions": [
+    "Center_Detail_Page": {
+      "type": "page",
+      "components": {
+        "Action_Bar": {
+          "type": "state_bound_action_bar",
+          "states": {
+            "Active": {
+              "available_actions": [
                 {
-                  "action_name": "View Group",
-                  "element_name": "Group Name",
-                  "on_trigger": "navigates to Group Detail"
+                  "action_name": "Edit",
+                  "action_type": "button",
+                  "fields": {
+                    "Name": { "type": "unspecified", "required": true },
+                    "Office": { "type": "dropdown", "required": true, "searchable": true },
+                    "Staff": { "type": "dropdown", "required": false, "searchable": true },
+                    "Active": { "type": "checkbox", "required": false },
+                    "External_Id": { "type": "unspecified", "required": false },
+                    "Submitted_On": { "type": "date", "required": true },
+                    "Groups": {
+                      "type": "dropdown",
+                      "required": false,
+                      "searchable": true,
+                      "allow_multiple": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Save",
+                      "action_type": "button",
+                      "on_success": "updates center"
+                    }
+                  ]
+                },
+                {
+                  "action_name": "Close",
+                  "action_type": "button",
+                  "preconditions": ["status must be Active"],
+                  "on_success": "changes status to Closed"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "action_type": "button",
+                  "fields": {
+                    "Staff": { "type": "dropdown", "required": true, "searchable": true }
+                  },
+                  "on_success": "assigns staff to center"
+                }
+              ]
+            },
+            "Not Active": {
+              "available_actions": [
+                {
+                  "action_name": "Activate",
+                  "action_type": "button",
+                  "on_success": "changes status to Active"
+                },
+                {
+                  "action_name": "Edit",
+                  "action_type": "button",
+                  "fields": {
+                    "Name": { "type": "unspecified", "required": true },
+                    "Office": { "type": "dropdown", "required": true, "searchable": true },
+                    "Staff": { "type": "dropdown", "required": false, "searchable": true },
+                    "Active": { "type": "checkbox", "required": false },
+                    "External_Id": { "type": "unspecified", "required": false },
+                    "Submitted_On": { "type": "date", "required": true },
+                    "Groups": {
+                      "type": "dropdown",
+                      "required": false,
+                      "searchable": true,
+                      "allow_multiple": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Save",
+                      "action_type": "button",
+                      "on_success": "updates center"
+                    }
+                  ]
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "action_type": "button",
+                  "fields": {
+                    "Staff": { "type": "dropdown", "required": true, "searchable": true }
+                  },
+                  "on_success": "assigns staff to center"
                 }
               ]
             }
           }
         },
-        {
-          "tab_name": "Loan Accounts",
-          "fields": {}
-        },
-        {
-          "tab_name": "Savings Accounts",
-          "fields": {}
-        },
-        {
-          "tab_name": "Notes",
-          "fields": {}
-        },
-        {
-          "tab_name": "Calendar/Meeting",
-          "fields": {}
-        }
-      ]
-    },
-    "Center_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
-        {
-          "action_name": "Activate",
-          "type": "button",
-          "on_success": "sets center status to Active"
-        },
-        {
-          "action_name": "Edit",
-          "type": "button",
-          "on_trigger": "opens Edit_Center_Form"
-        },
-        {
-          "action_name": "Close",
-          "type": "button",
-          "on_success": "sets center status to Closed"
-        },
-        {
-          "action_name": "Assign Staff",
-          "type": "button",
-          "fields": {
-            "Staff": {
-              "type": "search"
+        "Tabs": {
+          "type": "tab_container",
+          "tabs": [
+            {
+              "tab_name": "Groups",
+              "fields": {},
+              "components": {
+                "Groups_List": {
+                  "type": "data_table",
+                  "columns": ["Group Name"],
+                  "row_actions": [
+                    {
+                      "action_name": "Open Group",
+                      "action_type": "link",
+                      "on_trigger": "navigates to Group_Detail_Page"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Loan Accounts",
+              "fields": {},
+              "components": {
+                "Loan_Accounts_List": {
+                  "type": "data_table",
+                  "columns": [],
+                  "row_actions": []
+                }
+              }
+            },
+            {
+              "tab_name": "Savings Accounts",
+              "fields": {},
+              "components": {
+                "Savings_Accounts_List": {
+                  "type": "data_table",
+                  "columns": [],
+                  "row_actions": []
+                }
+              }
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {},
+              "components": {}
+            },
+            {
+              "tab_name": "Calendar/Meeting",
+              "fields": {},
+              "components": {}
             }
-          }
+          ]
         }
-      ]
+      }
     },
-    "Edit_Center_Form": {
+    "Collection_Sheet": {
       "type": "form",
+      "description": "Generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry.",
       "fields": {
-        "Name": {
-          "type": "unspecified",
-          "constraints": ["required"]
-        },
-        "Office": {
-          "type": "dropdown",
-          "constraints": ["required"]
-        },
-        "Staff": {
-          "type": "search"
-        },
-        "Active": {
-          "type": "checkbox"
-        },
-        "External_Id": {
-          "type": "unspecified"
-        },
-        "Submitted_On": {
-          "type": "date",
-          "constraints": ["required"]
-        },
         "Groups": {
           "type": "repeating_group",
           "item_fields": {
-            "Group": {
-              "type": "search"
+            "Group_Name": { "type": "link", "required": true },
+            "Clients": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Client_Name": { "type": "link", "required": true },
+                "Loan_Repayment_Amount": {
+                  "type": "number",
+                  "required": false
+                },
+                "Savings_Deposit_Amount": {
+                  "type": "number",
+                  "required": false
+                }
+              }
             }
           }
         }
       },
       "submit_actions": [
         {
-          "element_name": "Save",
-          "on_success": "updates center"
-        }
-      ]
-    },
-    "Collection_Sheet_Generator": {
-      "type": "button",
-      "element_name": "Generate Collection Sheet",
-      "on_trigger": "opens Collection_Sheet for batch data entry"
-    },
-    "Collection_Sheet": {
-      "type": "data_table",
-      "row_fields": {
-        "Group_Name": {
-          "type": "unspecified"
-        },
-        "Client_Name": {
-          "type": "unspecified"
-        },
-        "Loan_Repayment": {
-          "type": "number"
-        },
-        "Savings_Deposit": {
-          "type": "number"
-        }
-      },
-      "editable_columns": ["Loan_Repayment", "Savings_Deposit"],
-      "submit_actions": [
-        {
-          "element_name": "Submit Collection Sheet",
-          "on_success": "records repayments and deposits"
+          "element_name": "Save Collection Sheet",
+          "action_type": "button",
+          "on_success": "saves batch data entries"
         }
       ]
     }
@@ -446,12 +504,12 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:05:43] UI-AST Agent - PARSED JSON
+[22:21:03] UI-AST Agent - PARSED JSON
 ------------------------------------------------------------
 {
   "module_name": "Center Management",
   "components": {
-    "Centers_Table": {
+    "Centers_Page": {
       "type": "data_table",
       "columns": [
         "Name",
@@ -460,23 +518,25 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         "Status",
         "Office Name"
       ],
+      "sortable_columns": [],
       "row_actions": [
         {
-          "action_name": "View",
-          "element_name": "Name",
-          "on_trigger": "navigates to Center Detail"
+          "action_name": "Open",
+          "action_type": "link",
+          "on_trigger": "navigates to Center_Detail_Page",
+          "note": "Name column is clickable and triggers this action"
         }
       ],
       "page_actions": [
         {
-          "element_name": "Create Center",
-          "type": "button",
-          "on_trigger": "opens Create_Center_Form"
+          "element_name": "Import Center",
+          "action_type": "button",
+          "on_trigger": "opens Bulk_Import_Centers_Page"
         },
         {
-          "element_name": "Import Center",
-          "type": "button",
-          "on_trigger": "navigates to Bulk_Import_Centers"
+          "element_name": "Create Center",
+          "action_type": "button",
+          "on_trigger": "opens Create_Center_Form"
         }
       ]
     },
@@ -485,38 +545,804 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Office": {
           "type": "dropdown",
-          "constraints": [
-            "required"
-          ]
+          "required": true,
+          "searchable": true
         },
         "Staff": {
-          "type": "search"
+          "type": "dropdown",
+          "required": false,
+          "searchable": true
         },
         "Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "External_Id": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
+        "Groups": {
+          "type": "dropdown",
+          "required": false,
+          "searchable": true,
+          "allow_multiple": true,
+          "description": "Select and add groups via searchable multi-select"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "action_type": "button",
+          "on_success": "creates center"
+        }
+      ]
+    },
+    "Bulk_Import_Centers_Page": {
+      "type": "form",
+      "page_actions": [
+        {
+          "element_name": "Download Template",
+          "action_type": "button",
+          "on_trigger": "downloads import template"
+        }
+      ],
+      "fields": {
+        "Import_File": {
+          "type": "file_upload",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Upload",
+          "action_type": "button",
+          "on_success": "imports centers from file"
+        }
+      ]
+    },
+    "Center_Detail_Page": {
+      "type": "page",
+      "components": {
+        "Action_Bar": {
+          "type": "state_bound_action_bar",
+          "states": {
+            "Active": {
+              "available_actions": [
+                {
+                  "action_name": "Edit",
+                  "action_type": "button",
+                  "fields": {
+                    "Name": {
+                      "type": "unspecified",
+                      "required": true
+                    },
+                    "Office": {
+                      "type": "dropdown",
+                      "required": true,
+                      "searchable": true
+                    },
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": false,
+                      "searchable": true
+                    },
+                    "Active": {
+                      "type": "checkbox",
+                      "required": false
+                    },
+                    "External_Id": {
+                      "type": "unspecified",
+                      "required": false
+                    },
+                    "Submitted_On": {
+                      "type": "date",
+                      "required": true
+                    },
+                    "Groups": {
+                      "type": "dropdown",
+                      "required": false,
+                      "searchable": true,
+                      "allow_multiple": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Save",
+                      "action_type": "button",
+                      "on_success": "updates center"
+                    }
+                  ]
+                },
+                {
+                  "action_name": "Close",
+                  "action_type": "button",
+                  "preconditions": [
+                    "status must be Active"
+                  ],
+                  "on_success": "changes status to Closed"
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "action_type": "button",
+                  "fields": {
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": true,
+                      "searchable": true
+                    }
+                  },
+                  "on_success": "assigns staff to center"
+                }
+              ]
+            },
+            "Not Active": {
+              "available_actions": [
+                {
+                  "action_name": "Activate",
+                  "action_type": "button",
+                  "on_success": "changes status to Active"
+                },
+                {
+                  "action_name": "Edit",
+                  "action_type": "button",
+                  "fields": {
+                    "Name": {
+                      "type": "unspecified",
+                      "required": true
+                    },
+                    "Office": {
+                      "type": "dropdown",
+                      "required": true,
+                      "searchable": true
+                    },
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": false,
+                      "searchable": true
+                    },
+                    "Active": {
+                      "type": "checkbox",
+                      "required": false
+                    },
+                    "External_Id": {
+                      "type": "unspecified",
+                      "required": false
+                    },
+                    "Submitted_On": {
+                      "type": "date",
+                      "required": true
+                    },
+                    "Groups": {
+                      "type": "dropdown",
+                      "required": false,
+                      "searchable": true,
+                      "allow_multiple": true
+                    }
+                  },
+                  "submit_actions": [
+                    {
+                      "element_name": "Save",
+                      "action_type": "button",
+                      "on_success": "updates center"
+                    }
+                  ]
+                },
+                {
+                  "action_name": "Assign Staff",
+                  "action_type": "button",
+                  "fields": {
+                    "Staff": {
+                      "type": "dropdown",
+                      "required": true,
+                      "searchable": true
+                    }
+                  },
+                  "on_success": "assigns staff to center"
+                }
+              ]
+            }
+          }
+        },
+        "Tabs": {
+          "type": "tab_container",
+          "tabs": [
+            {
+              "tab_name": "Groups",
+              "fields": {},
+              "components": {
+                "Groups_List": {
+                  "type": "data_table",
+                  "columns": [
+                    "Group Name"
+                  ],
+                  "row_actions": [
+                    {
+                      "action_name": "Open Group",
+                      "action_type": "link",
+                      "on_trigger": "navigates to Group_Detail_Page"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "tab_name": "Loan Accounts",
+              "fields": {},
+              "components": {
+                "Loan_Accounts_List": {
+                  "type": "data_table",
+                  "columns": [],
+                  "row_actions": []
+                }
+              }
+            },
+            {
+              "tab_name": "Savings Accounts",
+              "fields": {},
+              "components": {
+                "Savings_Accounts_List": {
+                  "type": "data_table",
+                  "columns": [],
+                  "row_actions": []
+                }
+              }
+            },
+            {
+              "tab_name": "Notes",
+              "fields": {},
+              "components": {}
+            },
+            {
+              "tab_name": "Calendar/Meeting",
+              "fields": {},
+              "components": {}
+            }
+          ]
+        }
+      }
+    },
+    "Collection_Sheet": {
+      "type": "form",
+      "description": "Generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry.",
+      "fields": {
         "Groups": {
           "type": "repeating_group",
           "item_fields": {
-            "Group": {
-              "type": "search"
+            "Group_Name": {
+              "type": "link",
+              "required": true
+            },
+            "Clients": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Client_Name": {
+                  "type": "link",
+                  "required": true
+                },
+                "Loan_Repayment_Amount": {
+                  "type": "number",
+                  "required": false
+                },
+                "Savings_Deposit_Amount": {
+                  "type": "number",
+                  "required": false
+                }
+              }
             }
           }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save Collection Sheet",
+          "action_type": "button",
+          "on_success": "saves batch data entries"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:23:23] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Center Management
+
+
+Centers are higher-level organizational units that contain groups. The Centers page displays a data table with columns for Name (clickable link), Account #, External Id, Status, and Office Name. Buttons at the top-right provide "Import Center" and "Create Center." The Create Center form contains Name (required), Office (required), Staff, Active checkbox, External Id, Submitted On (required), and a Select and Add groups dropdown search. Clicking "Submit" creates the center. The Bulk Import Centers page follows the same template-download and file-upload pattern as Groups.
+
+The Center Detail page displays the center name, status, office, and staff with action buttons for Activate, Edit, Close, and Assign Staff. Tabs show Groups (list of member groups with links), Loan Accounts, Savings Accounts, Notes, and a Calendar/Meeting section. The Collection Sheet feature generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. components.Center_Detail_Page.components.Action_Bar: remove the state_bound_action_bar and replace with a simple action bar/list of page_actions at Center_Detail_Page level containing the buttons named exactly in the description: 'Activate', 'Edit', 'Close', and 'Assign Staff'. Do not introduce state-specific action lists unless the description provides explicit trigger language.
+2. components.Center_Detail_Page.components.Action_Bar.states.Active.available_actions[0].fields: remove the embedded Edit.fields block (Name, Office, Staff, Active, External_Id, Submitted_On, Groups). If an Edit form is required, include it only if the description explicitly lists edit form fields; otherwise represent Edit as a button action without inventing nested fields.
+3. components.Center_Detail_Page.components.Action_Bar.states.Not Active.available_actions[1].fields: remove the duplicate embedded Edit.fields block under the Not Active state for the same reason.
+4. components.Center_Detail_Page.components.Action_Bar.states.Active.available_actions[1].preconditions: remove the 'preconditions' entry ('status must be Active') — do not invent conditional preconditions unless explicitly described.
+5. components.Center_Detail_Page.components.Action_Bar.states.Active.available_actions[2].fields: remove the Assign Staff.fields block. Represent Assign Staff as a button action; only include form fields if description explicitly specifies them.
+6. components.Center_Detail_Page.components.Action_Bar.states.Not Active.available_actions[2].fields: remove the Assign Staff.fields block under the Not Active state as well.
+7. components.Collection_Sheet.fields.Groups.item_fields.Group_Name: change type from 'link' to a passive 'text'/'label' (or leave unspecified) because the description does not state that group names are links in the generated collection sheet.
+8. components.Collection_Sheet.fields.Groups.item_fields.Clients.item_fields.Client_Name: change type from 'link' to a passive 'text'/'label' (or leave unspecified) because the description does not state that client names are links in the generated collection sheet.
+9. components.Center_Detail_Page.components.Action_Bar.states.Not Active: remove the explicit 'Not Active' state block entirely unless the description explicitly states different available actions for different status values.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:24:48] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Center Management",
+  "components": {
+    "Centers_Page": {
+      "type": "data_table",
+      "columns": ["Name", "Account #", "External Id", "Status", "Office Name"],
+      "interactive_columns": {
+        "Name": { "type": "link", "navigates_to": "Center_Detail_Page" }
+      },
+      "row_actions": [
+        {
+          "action_name": "View",
+          "on_trigger": "navigates to Center_Detail_Page"
+        }
+      ],
+      "page_actions": [
+        { "element_name": "Import Center", "type": "button" },
+        { "element_name": "Create Center", "type": "button", "on_trigger": "opens Create_Center_Form" }
+      ]
+    },
+    "Create_Center_Form": {
+      "type": "form",
+      "fields": {
+        "Name": { "type": "unspecified", "required": true },
+        "Office": { "type": "unspecified", "required": true },
+        "Staff": { "type": "unspecified", "required": false },
+        "Active": { "type": "checkbox", "required": false },
+        "External_Id": { "type": "unspecified", "required": false },
+        "Submitted_On": { "type": "date", "required": true },
+        "Groups_Search": {
+          "type": "search",
+          "description": "searchable dropdown to find groups to add to the center",
+          "required": false
+        },
+        "Groups": {
+          "type": "repeating_group",
+          "min": 0,
+          "item_fields": {
+            "Group_Name": { "type": "unspecified", "required": true }
+          }
+        }
+      },
+      "form_actions": [
+        {
+          "element_name": "Add Group",
+          "type": "button",
+          "preconditions": ["Groups_Search has a selection"],
+          "on_success": "adds selected group to Groups repeating list"
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "type": "button",
+          "on_success": "creates the center"
+        }
+      ]
+    },
+    "Bulk_Import_Centers": {
+      "type": "form",
+      "fields": {
+        "Template_Download": {
+          "type": "link",
+          "description": "downloads import template"
+        },
+        "Import_File": { "type": "file_upload", "required": true }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Import",
+          "type": "button",
+          "on_success": "imports centers from uploaded file"
+        }
+      ]
+    },
+    "Center_Detail_Page": {
+      "type": "page",
+      "page_actions": [
+        { "element_name": "Activate", "type": "button" },
+        { "element_name": "Edit", "type": "button" },
+        { "element_name": "Close", "type": "button" },
+        { "element_name": "Assign Staff", "type": "button" }
+      ],
+      "tabs": [
+        {
+          "tab_name": "Groups",
+          "type": "tab",
+          "components": {
+            "Member_Groups_Table": {
+              "type": "data_table",
+              "description": "list of member groups with links",
+              "columns": ["Group Name"],
+              "interactive_columns": {
+                "Group Name": { "type": "link", "navigates_to": "Group_Detail_Page" }
+              },
+              "row_actions": [
+                { "action_name": "View Group", "on_trigger": "navigates to Group_Detail_Page" }
+              ]
+            }
+          }
+        },
+        { "tab_name": "Loan Accounts", "type": "tab", "fields": {} },
+        { "tab_name": "Savings Accounts", "type": "tab", "fields": {} },
+        { "tab_name": "Notes", "type": "tab", "fields": {} },
+        { "tab_name": "Calendar/Meeting", "type": "tab", "fields": {} }
+      ]
+    },
+    "Collection_Sheet": {
+      "type": "feature",
+      "description": "generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry",
+      "actions": [
+        {
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_success": "displays groups and their clients for batch entry"
+        },
+        {
+          "element_name": "Submit Collection Sheet",
+          "type": "button",
+          "on_success": "submits batch loan repayments and savings deposits"
+        }
+      ],
+      "fields": {
+        "Groups": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Group_Name": { "type": "unspecified", "required": true },
+            "Clients": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Client_Name": { "type": "unspecified", "required": true },
+                "Loan_Repayment_Amount": { "type": "number", "required": false },
+                "Savings_Deposit_Amount": { "type": "number", "required": false }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:24:48] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Center Management",
+  "components": {
+    "Centers_Page": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Account #",
+        "External Id",
+        "Status",
+        "Office Name"
+      ],
+      "interactive_columns": {
+        "Name": {
+          "type": "link",
+          "navigates_to": "Center_Detail_Page"
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "View",
+          "on_trigger": "navigates to Center_Detail_Page"
+        }
+      ],
+      "page_actions": [
+        {
+          "element_name": "Import Center",
+          "type": "button"
+        },
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
+        }
+      ]
+    },
+    "Create_Center_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups_Search": {
+          "type": "search",
+          "description": "searchable dropdown to find groups to add to the center",
+          "required": false
+        },
+        "Groups": {
+          "type": "repeating_group",
+          "min": 0,
+          "item_fields": {
+            "Group_Name": {
+              "type": "unspecified",
+              "required": true
+            }
+          }
+        }
+      },
+      "form_actions": [
+        {
+          "element_name": "Add Group",
+          "type": "button",
+          "preconditions": [
+            "Groups_Search has a selection"
+          ],
+          "on_success": "adds selected group to Groups repeating list"
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "type": "button",
+          "on_success": "creates the center"
+        }
+      ]
+    },
+    "Bulk_Import_Centers": {
+      "type": "form",
+      "fields": {
+        "Template_Download": {
+          "type": "link",
+          "description": "downloads import template"
+        },
+        "Import_File": {
+          "type": "file_upload",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Import",
+          "type": "button",
+          "on_success": "imports centers from uploaded file"
+        }
+      ]
+    },
+    "Center_Detail_Page": {
+      "type": "page",
+      "page_actions": [
+        {
+          "element_name": "Activate",
+          "type": "button"
+        },
+        {
+          "element_name": "Edit",
+          "type": "button"
+        },
+        {
+          "element_name": "Close",
+          "type": "button"
+        },
+        {
+          "element_name": "Assign Staff",
+          "type": "button"
+        }
+      ],
+      "tabs": [
+        {
+          "tab_name": "Groups",
+          "type": "tab",
+          "components": {
+            "Member_Groups_Table": {
+              "type": "data_table",
+              "description": "list of member groups with links",
+              "columns": [
+                "Group Name"
+              ],
+              "interactive_columns": {
+                "Group Name": {
+                  "type": "link",
+                  "navigates_to": "Group_Detail_Page"
+                }
+              },
+              "row_actions": [
+                {
+                  "action_name": "View Group",
+                  "on_trigger": "navigates to Group_Detail_Page"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Loan Accounts",
+          "type": "tab",
+          "fields": {}
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "type": "tab",
+          "fields": {}
+        },
+        {
+          "tab_name": "Notes",
+          "type": "tab",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "type": "tab",
+          "fields": {}
+        }
+      ]
+    },
+    "Collection_Sheet": {
+      "type": "feature",
+      "description": "generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry",
+      "actions": [
+        {
+          "element_name": "Generate Collection Sheet",
+          "type": "button",
+          "on_success": "displays groups and their clients for batch entry"
+        },
+        {
+          "element_name": "Submit Collection Sheet",
+          "type": "button",
+          "on_success": "submits batch loan repayments and savings deposits"
+        }
+      ],
+      "fields": {
+        "Groups": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Group_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Clients": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Client_Name": {
+                  "type": "unspecified",
+                  "required": true
+                },
+                "Loan_Repayment_Amount": {
+                  "type": "number",
+                  "required": false
+                },
+                "Savings_Deposit_Amount": {
+                  "type": "number",
+                  "required": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:26:02] UI-AST Agent - USER PROMPT
+------------------------------------------------------------
+Module: Center Management
+
+
+Centers are higher-level organizational units that contain groups. The Centers page displays a data table with columns for Name (clickable link), Account #, External Id, Status, and Office Name. Buttons at the top-right provide "Import Center" and "Create Center." The Create Center form contains Name (required), Office (required), Staff, Active checkbox, External Id, Submitted On (required), and a Select and Add groups dropdown search. Clicking "Submit" creates the center. The Bulk Import Centers page follows the same template-download and file-upload pattern as Groups.
+
+The Center Detail page displays the center name, status, office, and staff with action buttons for Activate, Edit, Close, and Assign Staff. Tabs show Groups (list of member groups with links), Loan Accounts, Savings Accounts, Notes, and a Calendar/Meeting section. The Collection Sheet feature generates a sheet showing all groups and their clients with loan repayment and savings deposit amounts for batch data entry.
+
+---
+
+
+
+**CRITIC FEEDBACK FROM PREVIOUS ATTEMPT — address every point:**
+1. Remove or justify Centers_Page.row_actions[0]; if navigation is via the Name link only, delete Centers_Page.row_actions entirely (path: components.Centers_Page.row_actions).
+2. Remove the inferred precondition in Create_Center_Form.form_actions[0] or make it optional; delete components.Create_Center_Form.form_actions[0].preconditions[0].
+3. Remove Center_Detail_Page.tabs[0].components.Member_Groups_Table.row_actions[0] since the description only specifies group links (path: components.Center_Detail_Page.tabs[0].components.Member_Groups_Table.row_actions).
+4. Add an explicit on_trigger for the Import Center page action to navigate/open the Bulk Import Centers page: set components.Centers_Page.page_actions[0].on_trigger to 'opens Bulk_Import_Centers' or 'navigates to Bulk_Import_Centers'.
+
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:27:25] UI-AST Agent - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module_name": "Center Management",
+  "components": {
+    "Centers_Page": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Account #",
+        "External Id",
+        "Status",
+        "Office Name"
+      ],
+      "link_column": "Name",
+      "page_actions": [
+        {
+          "element_name": "Import Center",
+          "type": "button",
+          "on_trigger": "navigates to Bulk_Import_Centers"
+        },
+        {
+          "element_name": "Create Center",
+          "type": "button",
+          "on_trigger": "opens Create_Center_Form"
+        }
+      ]
+    },
+    "Create_Center_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "search",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups": {
+          "type": "search",
+          "multiple": true,
+          "required": false,
+          "description": "Select and add groups via searchable dropdown"
         }
       },
       "submit_actions": [
@@ -529,42 +1355,113 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
     "Bulk_Import_Centers": {
       "type": "form",
       "fields": {
-        "Download_Template": {
-          "type": "link",
-          "element_name": "Download Template"
+        "Template_Download": {
+          "type": "button",
+          "on_trigger": "downloads template"
         },
-        "Import_File": {
+        "File": {
           "type": "file_upload",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         }
       },
       "submit_actions": [
         {
-          "element_name": "Upload",
+          "element_name": "Import",
           "on_success": "imports centers from file"
         }
       ]
     },
-    "Center_Detail_Tabs": {
-      "type": "tab_container",
+    "Edit_Center_Form": {
+      "type": "form",
+      "description": "Edit form opened by Edit action on Center Detail (fields prefilled)",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Office": {
+          "type": "unspecified",
+          "required": true
+        },
+        "Staff": {
+          "type": "search",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups": {
+          "type": "search",
+          "multiple": true,
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Save",
+          "on_success": "updates center"
+        }
+      ]
+    },
+    "Center_Detail_Page": {
+      "type": "detail_page",
+      "action_bar": {
+        "type": "state_bound_action_bar",
+        "states": {
+          "Any": {
+            "available_actions": [
+              {
+                "action_name": "Activate",
+                "on_success": "status changes to Active"
+              },
+              {
+                "action_name": "Edit",
+                "on_trigger": "opens Edit_Center_Form"
+              },
+              {
+                "action_name": "Close",
+                "on_success": "status changes to Closed"
+              },
+              {
+                "action_name": "Assign Staff",
+                "fields": {
+                  "Staff": {
+                    "type": "search",
+                    "required": true
+                  }
+                },
+                "on_success": "assigns selected staff to center"
+              },
+              {
+                "action_name": "Generate Collection Sheet",
+                "on_trigger": "opens Collection_Sheet"
+              }
+            ]
+          }
+        }
+      },
       "tabs": [
         {
           "tab_name": "Groups",
-          "fields": {
+          "components": {
             "Member_Groups_Table": {
               "type": "data_table",
               "columns": [
-                "Group Name"
+                "Name",
+                "Group External Id",
+                "Status",
+                "Office Name"
               ],
-              "row_actions": [
-                {
-                  "action_name": "View Group",
-                  "element_name": "Group Name",
-                  "on_trigger": "navigates to Group Detail"
-                }
-              ]
+              "link_column": "Name"
             }
           }
         },
@@ -586,72 +1483,164 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         }
       ]
     },
-    "Center_Detail_Actions": {
-      "type": "action_bar",
-      "available_actions": [
+    "Collection_Sheet": {
+      "type": "data_table",
+      "description": "Sheet showing all groups and their clients with editable amounts for batch data entry",
+      "row_fields": {
+        "Group_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Client_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Loan_Repayment_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
+        },
+        "Savings_Deposit_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
+        }
+      },
+      "submit_actions": [
         {
-          "action_name": "Activate",
+          "element_name": "Submit Collection Sheet",
+          "on_success": "saves repayments and deposits in batch"
+        }
+      ]
+    }
+  }
+}
+
+------------------------------------------------------------
+[22:27:25] UI-AST Agent - PARSED JSON
+------------------------------------------------------------
+{
+  "module_name": "Center Management",
+  "components": {
+    "Centers_Page": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Account #",
+        "External Id",
+        "Status",
+        "Office Name"
+      ],
+      "link_column": "Name",
+      "page_actions": [
+        {
+          "element_name": "Import Center",
           "type": "button",
-          "on_success": "sets center status to Active"
+          "on_trigger": "navigates to Bulk_Import_Centers"
         },
         {
-          "action_name": "Edit",
+          "element_name": "Create Center",
           "type": "button",
-          "on_trigger": "opens Edit_Center_Form"
+          "on_trigger": "opens Create_Center_Form"
+        }
+      ]
+    },
+    "Create_Center_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "required": true
         },
-        {
-          "action_name": "Close",
-          "type": "button",
-          "on_success": "sets center status to Closed"
+        "Office": {
+          "type": "unspecified",
+          "required": true
         },
+        "Staff": {
+          "type": "search",
+          "required": false
+        },
+        "Active": {
+          "type": "checkbox",
+          "required": false
+        },
+        "External_Id": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Submitted_On": {
+          "type": "date",
+          "required": true
+        },
+        "Groups": {
+          "type": "search",
+          "multiple": true,
+          "required": false,
+          "description": "Select and add groups via searchable dropdown"
+        }
+      },
+      "submit_actions": [
         {
-          "action_name": "Assign Staff",
+          "element_name": "Submit",
+          "on_success": "creates center"
+        }
+      ]
+    },
+    "Bulk_Import_Centers": {
+      "type": "form",
+      "fields": {
+        "Template_Download": {
           "type": "button",
-          "fields": {
-            "Staff": {
-              "type": "search"
-            }
-          }
+          "on_trigger": "downloads template"
+        },
+        "File": {
+          "type": "file_upload",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Import",
+          "on_success": "imports centers from file"
         }
       ]
     },
     "Edit_Center_Form": {
       "type": "form",
+      "description": "Edit form opened by Edit action on Center Detail (fields prefilled)",
       "fields": {
         "Name": {
           "type": "unspecified",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Office": {
-          "type": "dropdown",
-          "constraints": [
-            "required"
-          ]
+          "type": "unspecified",
+          "required": true
         },
         "Staff": {
-          "type": "search"
+          "type": "search",
+          "required": false
         },
         "Active": {
-          "type": "checkbox"
+          "type": "checkbox",
+          "required": false
         },
         "External_Id": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Submitted_On": {
           "type": "date",
-          "constraints": [
-            "required"
-          ]
+          "required": true
         },
         "Groups": {
-          "type": "repeating_group",
-          "item_fields": {
-            "Group": {
-              "type": "search"
-            }
-          }
+          "type": "search",
+          "multiple": true,
+          "required": false
         }
       },
       "submit_actions": [
@@ -661,35 +1650,108 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
         }
       ]
     },
-    "Collection_Sheet_Generator": {
-      "type": "button",
-      "element_name": "Generate Collection Sheet",
-      "on_trigger": "opens Collection_Sheet for batch data entry"
+    "Center_Detail_Page": {
+      "type": "detail_page",
+      "action_bar": {
+        "type": "state_bound_action_bar",
+        "states": {
+          "Any": {
+            "available_actions": [
+              {
+                "action_name": "Activate",
+                "on_success": "status changes to Active"
+              },
+              {
+                "action_name": "Edit",
+                "on_trigger": "opens Edit_Center_Form"
+              },
+              {
+                "action_name": "Close",
+                "on_success": "status changes to Closed"
+              },
+              {
+                "action_name": "Assign Staff",
+                "fields": {
+                  "Staff": {
+                    "type": "search",
+                    "required": true
+                  }
+                },
+                "on_success": "assigns selected staff to center"
+              },
+              {
+                "action_name": "Generate Collection Sheet",
+                "on_trigger": "opens Collection_Sheet"
+              }
+            ]
+          }
+        }
+      },
+      "tabs": [
+        {
+          "tab_name": "Groups",
+          "components": {
+            "Member_Groups_Table": {
+              "type": "data_table",
+              "columns": [
+                "Name",
+                "Group External Id",
+                "Status",
+                "Office Name"
+              ],
+              "link_column": "Name"
+            }
+          }
+        },
+        {
+          "tab_name": "Loan Accounts",
+          "fields": {}
+        },
+        {
+          "tab_name": "Savings Accounts",
+          "fields": {}
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Calendar/Meeting",
+          "fields": {}
+        }
+      ]
     },
     "Collection_Sheet": {
       "type": "data_table",
+      "description": "Sheet showing all groups and their clients with editable amounts for batch data entry",
       "row_fields": {
         "Group_Name": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
         "Client_Name": {
-          "type": "unspecified"
+          "type": "unspecified",
+          "required": false
         },
-        "Loan_Repayment": {
-          "type": "number"
+        "Loan_Repayment_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
         },
-        "Savings_Deposit": {
-          "type": "number"
+        "Savings_Deposit_Amount": {
+          "type": "number",
+          "required": false,
+          "constraints": [
+            "must be a non-negative number"
+          ]
         }
       },
-      "editable_columns": [
-        "Loan_Repayment",
-        "Savings_Deposit"
-      ],
       "submit_actions": [
         {
           "element_name": "Submit Collection Sheet",
-          "on_success": "records repayments and deposits"
+          "on_success": "saves repayments and deposits in batch"
         }
       ]
     }

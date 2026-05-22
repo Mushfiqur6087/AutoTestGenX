@@ -1,11 +1,11 @@
 ================================================================================
-DEBUG SESSION STARTED: 2026-05-21T16:17:21.350872
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.513553
 Model: openai/gpt-5-mini
 ================================================================================
 
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - SYSTEM PROMPT
+[22:29:06] Test-Positive - SYSTEM PROMPT
 ------------------------------------------------------------
 You are an Expert UI Test Case Generator. You receive (1) a UI-AST JSON for one specific module and (2) the original functional description for that module.
 
@@ -224,7 +224,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 }
 
 ------------------------------------------------------------
-[16:17:21] Test-Positive - USER PROMPT
+[22:29:06] Test-Positive - USER PROMPT
 ------------------------------------------------------------
 <module_name>Global Search</module_name>
 
@@ -232,38 +232,33 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
 {
   "module_name": "Global Search",
   "components": {
-    "Topbar_Search_Icon": {
+    "Toolbar_Search_Button": {
       "type": "button",
       "element_name": "Search Icon",
       "preconditions": [
         "user must be logged in"
       ],
-      "on_click": "opens Global_Search_Input"
+      "on_click": "opens Global_Search"
     },
-    "Global_Search_Input": {
+    "Global_Search": {
       "type": "search",
-      "element_name": "Search Input",
-      "visible_when": "Topbar_Search_Icon == clicked",
       "preconditions": [
         "user must be logged in"
       ],
-      "constraints": [
-        "supports partial matching",
-        "case-insensitive"
-      ],
-      "triggers": [
-        "on_input"
-      ],
-      "search_scopes": [
-        "Clients",
-        "Groups",
-        "Loans",
-        "Savings accounts"
-      ],
+      "fields": {
+        "Query": {
+          "type": "search",
+          "required": false,
+          "constraints": [
+            "supports partial matching",
+            "case-insensitive"
+          ],
+          "live_search": true
+        }
+      },
       "results_dropdown": {
         "type": "dropdown",
-        "element_name": "Search Results Dropdown",
-        "visible_when": "Global_Search_Input != ''",
+        "visible_when": "Query != ''",
         "grouped_by": [
           "Clients",
           "Groups",
@@ -273,8 +268,7 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
         "groups": [
           {
             "group_name": "Clients",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -285,20 +279,14 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Client detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Client",
+              "on_select": "navigates to Client detail page"
+            }
           },
           {
             "group_name": "Groups",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -309,20 +297,14 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Group detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Group",
+              "on_select": "navigates to Group detail page"
+            }
           },
           {
             "group_name": "Loans",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -333,20 +315,14 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Loan detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Loan",
+              "on_select": "navigates to Loan detail page"
+            }
           },
           {
             "group_name": "Savings accounts",
-            "type": "repeating_group",
-            "item_fields": {
+            "result_item_fields": {
               "Entity_Name": {
                 "type": "unspecified"
               },
@@ -357,20 +333,15 @@ If a TC exceeds **15 steps**, split it at the first sub-feature boundary (e.g., 
                 "type": "unspecified"
               }
             },
-            "row_actions": [
-              {
-                "action_name": "Select Result",
-                "on_success": "navigates to Savings account detail page",
-                "params": [
-                  "Identifier"
-                ]
-              }
-            ]
+            "row_action": {
+              "action_name": "Select Savings",
+              "on_select": "navigates to Savings account detail page"
+            }
           }
         ],
-        "no_results_message": {
-          "text": "No results found",
-          "visible_when": "Results_Count == 0 and Global_Search_Input != ''"
+        "empty_state": {
+          "message": "No results found",
+          "visible_when": "no_matches"
         }
       }
     }
@@ -390,7 +361,7 @@ Global search is accessible from the search icon in the top toolbar from any pag
 IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
 
 ------------------------------------------------------------
-[16:18:00] Test-Positive - LLM RESPONSE
+[22:29:49] Test-Positive - LLM RESPONSE
 ------------------------------------------------------------
 {
   "module": "Global Search",
@@ -398,122 +369,128 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Global Search input from topbar",
+      "test_case": "Live search displays grouped results with name, identifier and status",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <partial query> in the Query field (live search)",
+        "3. Observe the results dropdown"
       ],
-      "expected_result": "Global Search Input is visible in the topbar and ready for input",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "Search displays grouped results with entity details",
-      "preconditions": [
-        "User logged in as <User>"
-      ],
-      "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <matching search term> in the Search Input"
-      ],
-      "expected_result": "Search Results Dropdown is visible and grouped by Clients, Groups, Loans, and Savings accounts; result rows display Entity Name, Identifier, and Status for the matching entries",
+      "expected_result": "Results dropdown is displayed and is grouped by 'Clients', 'Groups', 'Loans', and 'Savings accounts'; each visible result shows an Entity Name, Identifier and Status",
       "priority": "high"
     },
     {
-      "tc_id": "P-003",
-      "test_case": "Partial matching returns results",
+      "tc_id": "P-002",
+      "test_case": "Search supports partial matching (results contain the entered partial term)",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <partial term> in the Search Input (a substring of target entity names)"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <partial term> in the Query field",
+        "3. Observe the results dropdown"
       ],
-      "expected_result": "Search Results Dropdown displays results whose Entity Name contains <partial term>, demonstrating partial matching",
+      "expected_result": "Results dropdown displays items whose names contain <partial term> (partial matching is applied); unrelated items are not shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "test_case": "Search is case-insensitive (mixed-case query returns matches)",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <mixed-case term> in the Query field",
+        "3. Observe the results dropdown"
+      ],
+      "expected_result": "Results dropdown displays matches for <mixed-case term> regardless of letter case (case-insensitive matching)",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Search is case-insensitive",
+      "test_case": "Selecting a Client result opens the Client detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term with different case> in the Search Input"
-      ],
-      "expected_result": "Search Results Dropdown displays matching results despite differences in letter case between the entered term and the Entity Name",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-005",
-      "test_case": "Select a Client result navigates to Client detail page",
-      "preconditions": [
-        "User logged in as <User>"
-      ],
-      "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a client> in the Search Input",
-        "3. Click the matching result row under the Clients group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <client search term> in the Query field so Client results are shown",
+        "3. Click a result under the 'Clients' group"
       ],
       "expected_result": "navigates to Client detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-006",
-      "test_case": "Select a Group result navigates to Group detail page",
+      "tc_id": "P-005",
+      "test_case": "Selecting a Group result opens the Group detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a group> in the Search Input",
-        "3. Click the matching result row under the Groups group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <group search term> in the Query field so Group results are shown",
+        "3. Click a result under the 'Groups' group"
       ],
       "expected_result": "navigates to Group detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-007",
-      "test_case": "Select a Loan result navigates to Loan detail page",
+      "tc_id": "P-006",
+      "test_case": "Selecting a Loan result opens the Loan detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a loan> in the Search Input",
-        "3. Click the matching result row under the Loans group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <loan search term> in the Query field so Loan results are shown",
+        "3. Click a result under the 'Loans' group"
       ],
       "expected_result": "navigates to Loan detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-008",
-      "test_case": "Select a Savings account result navigates to Savings account detail page",
+      "tc_id": "P-007",
+      "test_case": "Selecting a Savings account result opens the Savings account detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a savings account> in the Search Input",
-        "3. Click the matching result row under the Savings accounts group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <savings search term> in the Query field so Savings accounts results are shown",
+        "3. Click a result under the 'Savings accounts' group"
       ],
       "expected_result": "navigates to Savings account detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-009",
-      "test_case": "No results message is shown when there are no matches",
+      "tc_id": "P-008",
+      "test_case": "Empty-state shows 'No results found' when there are no matches",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term with no matches> in the Search Input"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <non-matching term> in the Query field",
+        "3. Observe the results dropdown"
       ],
-      "expected_result": "\"No results found\" message is visible in the Search Results Dropdown",
+      "expected_result": "The results dropdown displays the message 'No results found'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Results dropdown visibility follows Query != '' condition",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <term> in the Query field and observe the results dropdown is visible",
+        "3. Clear the Query field and observe the results dropdown"
+      ],
+      "expected_result": "Results dropdown is displayed while Query is non-empty; after clearing Query the results dropdown is no longer visible",
       "priority": "medium"
     }
   ],
@@ -526,7 +503,7 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
 }
 
 ------------------------------------------------------------
-[16:18:00] Test-Positive - PARSED JSON
+[22:29:49] Test-Positive - PARSED JSON
 ------------------------------------------------------------
 {
   "module": "Global Search",
@@ -534,122 +511,128 @@ IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks,
   "test_cases": [
     {
       "tc_id": "P-001",
-      "test_case": "Open Global Search input from topbar",
+      "test_case": "Live search displays grouped results with name, identifier and status",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <partial query> in the Query field (live search)",
+        "3. Observe the results dropdown"
       ],
-      "expected_result": "Global Search Input is visible in the topbar and ready for input",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-002",
-      "test_case": "Search displays grouped results with entity details",
-      "preconditions": [
-        "User logged in as <User>"
-      ],
-      "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <matching search term> in the Search Input"
-      ],
-      "expected_result": "Search Results Dropdown is visible and grouped by Clients, Groups, Loans, and Savings accounts; result rows display Entity Name, Identifier, and Status for the matching entries",
+      "expected_result": "Results dropdown is displayed and is grouped by 'Clients', 'Groups', 'Loans', and 'Savings accounts'; each visible result shows an Entity Name, Identifier and Status",
       "priority": "high"
     },
     {
-      "tc_id": "P-003",
-      "test_case": "Partial matching returns results",
+      "tc_id": "P-002",
+      "test_case": "Search supports partial matching (results contain the entered partial term)",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <partial term> in the Search Input (a substring of target entity names)"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <partial term> in the Query field",
+        "3. Observe the results dropdown"
       ],
-      "expected_result": "Search Results Dropdown displays results whose Entity Name contains <partial term>, demonstrating partial matching",
+      "expected_result": "Results dropdown displays items whose names contain <partial term> (partial matching is applied); unrelated items are not shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "test_case": "Search is case-insensitive (mixed-case query returns matches)",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <mixed-case term> in the Query field",
+        "3. Observe the results dropdown"
+      ],
+      "expected_result": "Results dropdown displays matches for <mixed-case term> regardless of letter case (case-insensitive matching)",
       "priority": "medium"
     },
     {
       "tc_id": "P-004",
-      "test_case": "Search is case-insensitive",
+      "test_case": "Selecting a Client result opens the Client detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term with different case> in the Search Input"
-      ],
-      "expected_result": "Search Results Dropdown displays matching results despite differences in letter case between the entered term and the Entity Name",
-      "priority": "medium"
-    },
-    {
-      "tc_id": "P-005",
-      "test_case": "Select a Client result navigates to Client detail page",
-      "preconditions": [
-        "User logged in as <User>"
-      ],
-      "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a client> in the Search Input",
-        "3. Click the matching result row under the Clients group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <client search term> in the Query field so Client results are shown",
+        "3. Click a result under the 'Clients' group"
       ],
       "expected_result": "navigates to Client detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-006",
-      "test_case": "Select a Group result navigates to Group detail page",
+      "tc_id": "P-005",
+      "test_case": "Selecting a Group result opens the Group detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a group> in the Search Input",
-        "3. Click the matching result row under the Groups group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <group search term> in the Query field so Group results are shown",
+        "3. Click a result under the 'Groups' group"
       ],
       "expected_result": "navigates to Group detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-007",
-      "test_case": "Select a Loan result navigates to Loan detail page",
+      "tc_id": "P-006",
+      "test_case": "Selecting a Loan result opens the Loan detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a loan> in the Search Input",
-        "3. Click the matching result row under the Loans group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <loan search term> in the Query field so Loan results are shown",
+        "3. Click a result under the 'Loans' group"
       ],
       "expected_result": "navigates to Loan detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-008",
-      "test_case": "Select a Savings account result navigates to Savings account detail page",
+      "tc_id": "P-007",
+      "test_case": "Selecting a Savings account result opens the Savings account detail page",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term that matches a savings account> in the Search Input",
-        "3. Click the matching result row under the Savings accounts group in the Search Results Dropdown"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <savings search term> in the Query field so Savings accounts results are shown",
+        "3. Click a result under the 'Savings accounts' group"
       ],
       "expected_result": "navigates to Savings account detail page",
       "priority": "high"
     },
     {
-      "tc_id": "P-009",
-      "test_case": "No results message is shown when there are no matches",
+      "tc_id": "P-008",
+      "test_case": "Empty-state shows 'No results found' when there are no matches",
       "preconditions": [
         "User logged in as <User>"
       ],
       "steps": [
-        "1. Click the Search Icon in the top toolbar to open the Global Search Input",
-        "2. Enter <search term with no matches> in the Search Input"
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <non-matching term> in the Query field",
+        "3. Observe the results dropdown"
       ],
-      "expected_result": "\"No results found\" message is visible in the Search Results Dropdown",
+      "expected_result": "The results dropdown displays the message 'No results found'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "test_case": "Results dropdown visibility follows Query != '' condition",
+      "preconditions": [
+        "User logged in as <User>"
+      ],
+      "steps": [
+        "1. Click the Search Icon in the top toolbar to open Global Search",
+        "2. Enter <term> in the Query field and observe the results dropdown is visible",
+        "3. Clear the Query field and observe the results dropdown"
+      ],
+      "expected_result": "Results dropdown is displayed while Query is non-empty; after clearing Query the results dropdown is no longer visible",
       "priority": "medium"
     }
   ],

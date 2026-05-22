@@ -1,0 +1,533 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:50:10.014714
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:51:10] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[22:51:10] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The payment page displays a full booking summary with a price breakdown (base price, taxes, service fees, applicable discounts, and total). Supported payment methods include Credit/Debit Card (Visa, MasterCard, American Express), PayPal, Bank Transfer, and Wallet/Credits. The card form collects cardholder name, card number, expiration date, and CVV, with an option to save the card for future use. Security badges and SSL encryption indicators are displayed on the page. On success, the user is taken to a booking confirmation page with a reference number and options to download the invoice or voucher; a confirmation email is sent. If payment fails, an error message describes the issue (e.g., "Card declined," "Insufficient funds") and the user can retry without losing their booking details.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Payment Processing",
+  "components": {
+    "Payment_Form": {
+      "type": "form",
+      "fields": {
+        "Payment_Method": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Credit/Debit Card",
+            "PayPal",
+            "Bank Transfer",
+            "Wallet/Credits"
+          ]
+        },
+        "Card_Brand": {
+          "type": "dropdown",
+          "options": [
+            "Visa",
+            "MasterCard",
+            "American Express"
+          ],
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Cardholder_Name": {
+          "type": "unspecified",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Card_Number": {
+          "type": "number",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Expiration_Date": {
+          "type": "date",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "CVV": {
+          "type": "number",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Save_Card": {
+          "type": "checkbox",
+          "required": false,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Pay",
+          "on_success": "redirects to booking confirmation page with reference number; confirmation email sent",
+          "on_failure": [
+            "displays error message (e.g., 'Card declined', 'Insufficient funds')",
+            "allows user to retry without losing booking details"
+          ]
+        }
+      ]
+    },
+    "Booking_Confirmation_Page": {
+      "type": "page",
+      "actions": [
+        {
+          "element_name": "Download Invoice",
+          "type": "button",
+          "on_action": "downloads invoice PDF"
+        },
+        {
+          "element_name": "Download Voucher",
+          "type": "button",
+          "on_action": "downloads voucher PDF"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:51:52] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST invents several conditional visibility rules and a Card_Brand field (and a named 'Pay' button) that are not specified in the description; these phantoms are numerous and require regeneration.",
+  "missing": [],
+  "phantoms": [
+    "components.Payment_Form.fields.Card_Brand (Card brand selection is not specified as an interactive field in the description)",
+    "components.Payment_Form.fields.Card_Brand.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Cardholder_Name.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Card_Number.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Expiration_Date.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.CVV.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Save_Card.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.submit_actions[0].element_name (the button label 'Pay' is not present in the description and was invented)"
+  ],
+  "fixes": [
+    "Remove the Card_Brand interactive field: delete components.Payment_Form.fields.Card_Brand entirely, or convert it to a passive display (e.g., components.Payment_Form.display_fields.Accepted_Cards) because the description only lists supported card brands as display information.",
+    "Remove all inferred conditional visibility attributes since the description does not explicitly state conditional triggers: delete the 'visible_when' properties from components.Payment_Form.fields.Cardholder_Name, components.Payment_Form.fields.Card_Number, components.Payment_Form.fields.Expiration_Date, components.Payment_Form.fields.CVV, and components.Payment_Form.fields.Save_Card (i.e., remove components.Payment_Form.fields.<Field>.visible_when).",
+    "Do not invent button/element labels not present in the description: remove components.Payment_Form.submit_actions[0].element_name (the 'Pay' label). Instead include a submit action without an invented label or explicitly mark the label as unspecified (e.g., components.Payment_Form.submit_actions[0].element_name = null) so regeneration can choose a neutral/unspecified label or follow explicit text from the source."
+  ]
+}
+
+------------------------------------------------------------
+[22:51:52] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "The AST invents several conditional visibility rules and a Card_Brand field (and a named 'Pay' button) that are not specified in the description; these phantoms are numerous and require regeneration.",
+  "missing": [],
+  "phantoms": [
+    "components.Payment_Form.fields.Card_Brand (Card brand selection is not specified as an interactive field in the description)",
+    "components.Payment_Form.fields.Card_Brand.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Cardholder_Name.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Card_Number.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Expiration_Date.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.CVV.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.fields.Save_Card.visible_when (conditional visibility was inferred but not stated)",
+    "components.Payment_Form.submit_actions[0].element_name (the button label 'Pay' is not present in the description and was invented)"
+  ],
+  "fixes": [
+    "Remove the Card_Brand interactive field: delete components.Payment_Form.fields.Card_Brand entirely, or convert it to a passive display (e.g., components.Payment_Form.display_fields.Accepted_Cards) because the description only lists supported card brands as display information.",
+    "Remove all inferred conditional visibility attributes since the description does not explicitly state conditional triggers: delete the 'visible_when' properties from components.Payment_Form.fields.Cardholder_Name, components.Payment_Form.fields.Card_Number, components.Payment_Form.fields.Expiration_Date, components.Payment_Form.fields.CVV, and components.Payment_Form.fields.Save_Card (i.e., remove components.Payment_Form.fields.<Field>.visible_when).",
+    "Do not invent button/element labels not present in the description: remove components.Payment_Form.submit_actions[0].element_name (the 'Pay' label). Instead include a submit action without an invented label or explicitly mark the label as unspecified (e.g., components.Payment_Form.submit_actions[0].element_name = null) so regeneration can choose a neutral/unspecified label or follow explicit text from the source."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:11] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The payment page displays a full booking summary with a price breakdown (base price, taxes, service fees, applicable discounts, and total). Supported payment methods include Credit/Debit Card (Visa, MasterCard, American Express), PayPal, Bank Transfer, and Wallet/Credits. The card form collects cardholder name, card number, expiration date, and CVV, with an option to save the card for future use. Security badges and SSL encryption indicators are displayed on the page. On success, the user is taken to a booking confirmation page with a reference number and options to download the invoice or voucher; a confirmation email is sent. If payment fails, an error message describes the issue (e.g., "Card declined," "Insufficient funds") and the user can retry without losing their booking details.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Payment Processing",
+  "components": {
+    "Payment_Form": {
+      "type": "form",
+      "fields": {
+        "Payment_Method": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Credit/Debit Card",
+            "PayPal",
+            "Bank Transfer",
+            "Wallet/Credits"
+          ]
+        },
+        "Cardholder_Name": {
+          "type": "unspecified",
+          "required": false
+        },
+        "Card_Number": {
+          "type": "number",
+          "required": false
+        },
+        "Expiration_Date": {
+          "type": "date",
+          "required": false
+        },
+        "CVV": {
+          "type": "number",
+          "required": false
+        },
+        "Save_Card": {
+          "type": "checkbox",
+          "required": false
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": null,
+          "on_success": "redirects to booking confirmation page with reference number; confirmation email is sent",
+          "on_failure": "shows an error message (e.g., 'Card declined', 'Insufficient funds') and allows the user to retry without losing booking details"
+        }
+      ]
+    },
+    "Payment_Confirmation_Page": {
+      "type": "page",
+      "fields": {},
+      "actions": [
+        {
+          "action_name": "Download Invoice",
+          "action_type": "download",
+          "on_success": "initiates invoice file download"
+        },
+        {
+          "action_name": "Download Voucher",
+          "action_type": "download",
+          "on_success": "initiates voucher file download"
+        }
+      ]
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:52:29] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "Card fields are present but not marked required and the payment submit/button is not named; several field type improvements are also needed.",
+  "missing": [
+    "Payment_Form.submit_actions[0].element_name (submit button label is missing — e.g., 'Pay Now' or 'Submit Payment')",
+    "Payment_Form.fields.Cardholder_Name.required (should be true)",
+    "Payment_Form.fields.Card_Number.required (should be true)",
+    "Payment_Form.fields.Expiration_Date.required (should be true)",
+    "Payment_Form.fields.CVV.required (should be true)"
+  ],
+  "phantoms": [],
+  "fixes": [
+    "Set Payment_Form.submit_actions[0].element_name to a concrete button label (e.g., 'Pay Now' or 'Submit Payment'): Payment_Form.submit_actions[0].element_name = 'Pay Now'.",
+    "Mark card fields as required: set Payment_Form.fields.Cardholder_Name.required = true; Payment_Form.fields.Card_Number.required = true; Payment_Form.fields.Expiration_Date.required = true; Payment_Form.fields.CVV.required = true.",
+    "Specify a concrete input type for the cardholder name: change Payment_Form.fields.Cardholder_Name.type from 'unspecified' to 'text'.",
+    "Use a string/text type for card number rather than numeric to preserve leading zeros and formatting: change Payment_Form.fields.Card_Number.type from 'number' to 'text'.",
+    "Adjust expiration date type to better reflect card expiry input (month/year) if possible: change Payment_Form.fields.Expiration_Date.type from 'date' to 'month' or a 'month_year' string type (or keep 'date' only if system requires full date)."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:29] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "Card fields are present but not marked required and the payment submit/button is not named; several field type improvements are also needed.",
+  "missing": [
+    "Payment_Form.submit_actions[0].element_name (submit button label is missing \u2014 e.g., 'Pay Now' or 'Submit Payment')",
+    "Payment_Form.fields.Cardholder_Name.required (should be true)",
+    "Payment_Form.fields.Card_Number.required (should be true)",
+    "Payment_Form.fields.Expiration_Date.required (should be true)",
+    "Payment_Form.fields.CVV.required (should be true)"
+  ],
+  "phantoms": [],
+  "fixes": [
+    "Set Payment_Form.submit_actions[0].element_name to a concrete button label (e.g., 'Pay Now' or 'Submit Payment'): Payment_Form.submit_actions[0].element_name = 'Pay Now'.",
+    "Mark card fields as required: set Payment_Form.fields.Cardholder_Name.required = true; Payment_Form.fields.Card_Number.required = true; Payment_Form.fields.Expiration_Date.required = true; Payment_Form.fields.CVV.required = true.",
+    "Specify a concrete input type for the cardholder name: change Payment_Form.fields.Cardholder_Name.type from 'unspecified' to 'text'.",
+    "Use a string/text type for card number rather than numeric to preserve leading zeros and formatting: change Payment_Form.fields.Card_Number.type from 'number' to 'text'.",
+    "Adjust expiration date type to better reflect card expiry input (month/year) if possible: change Payment_Form.fields.Expiration_Date.type from 'date' to 'month' or a 'month_year' string type (or keep 'date' only if system requires full date)."
+  ]
+}
+
+------------------------------------------------------------
+[22:52:55] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The payment page displays a full booking summary with a price breakdown (base price, taxes, service fees, applicable discounts, and total). Supported payment methods include Credit/Debit Card (Visa, MasterCard, American Express), PayPal, Bank Transfer, and Wallet/Credits. The card form collects cardholder name, card number, expiration date, and CVV, with an option to save the card for future use. Security badges and SSL encryption indicators are displayed on the page. On success, the user is taken to a booking confirmation page with a reference number and options to download the invoice or voucher; a confirmation email is sent. If payment fails, an error message describes the issue (e.g., "Card declined," "Insufficient funds") and the user can retry without losing their booking details.
+
+---
+
+
+</description>
+
+<ast>
+{
+  "module_name": "Payment Processing",
+  "components": {
+    "Payment_Form": {
+      "type": "form",
+      "fields": {
+        "Payment_Method": {
+          "type": "dropdown",
+          "required": true,
+          "options": [
+            "Credit/Debit Card",
+            "PayPal",
+            "Bank Transfer",
+            "Wallet/Credits"
+          ]
+        },
+        "Cardholder_Name": {
+          "type": "text",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Card_Number": {
+          "type": "text",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Expiration_Date": {
+          "type": "month_year",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "CVV": {
+          "type": "number",
+          "required": true,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        },
+        "Save_Card_For_Future_Use": {
+          "type": "checkbox",
+          "required": false,
+          "visible_when": "Payment_Method == Credit/Debit Card"
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Pay Now",
+          "on_success": "redirects to booking confirmation page with reference number; confirmation email sent",
+          "on_failure": "shows error message and allows retry without losing booking details",
+          "error_messages": [
+            "Card declined",
+            "Insufficient funds",
+            "Payment gateway error"
+          ]
+        }
+      ]
+    },
+    "Confirmation_Page": {
+      "type": "page",
+      "components": {
+        "Download_Actions": {
+          "type": "action_group",
+          "actions": [
+            {
+              "element_name": "Download Invoice",
+              "action_type": "button",
+              "on_success": "downloads invoice PDF"
+            },
+            {
+              "element_name": "Download Voucher",
+              "action_type": "button",
+              "on_success": "downloads voucher PDF"
+            }
+          ]
+        }
+      }
+    },
+    "Payment_Error_Recovery": {
+      "type": "form_helper",
+      "fields": {
+        "Retry_Payment": {
+          "type": "button",
+          "element_name": "Retry",
+          "description": "Retries the payment using existing booking details",
+          "preconditions": [],
+          "on_success": "re-attempts payment using current form values; redirects to confirmation on success",
+          "on_failure": "shows error message and retains booking details"
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:53:20] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains multiple invented items (button labels, extra error message, conditional visibility flags, and a separate retry component) that are not explicitly present in the description; regenerate after removing or aligning these phantoms and clarifying conditional behavior.",
+  "missing": [],
+  "phantoms": [
+    "components.Payment_Form.submit_actions[0] (Pay Now button label not specified in description)",
+    "components.Payment_Form.submit_actions[0].error_messages[2] (\"Payment gateway error\" not in description)",
+    "components.Payment_Form.fields.Cardholder_Name.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.Card_Number.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.Expiration_Date.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.CVV.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.Save_Card_For_Future_Use.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Error_Recovery (separate form_helper component and Retry button naming/structure are not explicitly described)"
+  ],
+  "fixes": [
+    "components.Payment_Form.submit_actions[0]: Remove or leave unspecified the element_name property (do not invent a 'Pay Now' label). If a specific button label is required, ensure it is present in the source description before adding.",
+    "components.Payment_Form.submit_actions[0].error_messages: Remove the entry 'Payment gateway error' so only the error examples explicitly provided in the description remain (\"Card declined\", \"Insufficient funds\").",
+    "components.Payment_Form.fields.*.visible_when: Remove all visible_when properties from Cardholder_Name, Card_Number, Expiration_Date, CVV, and Save_Card_For_Future_Use unless the source description explicitly states a trigger (e.g., 'when Credit/Debit Card is selected'). If conditional display is intended, update the description to include explicit trigger language and then re-add visible_when conditions referencing that exact trigger.",
+    "components.Payment_Error_Recovery: Remove this separate form_helper component and instead represent retry behavior as part of the Payment_Form submit_actions.on_failure flow (or, if a separate retry control is required, ensure the description names it and describes its placement and label). Specifically remove components.Payment_Error_Recovery or rename/restructure it to match explicit description text (do not invent a 'Retry' element_name)."
+  ]
+}
+
+------------------------------------------------------------
+[22:53:20] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "retry",
+  "summary": "AST contains multiple invented items (button labels, extra error message, conditional visibility flags, and a separate retry component) that are not explicitly present in the description; regenerate after removing or aligning these phantoms and clarifying conditional behavior.",
+  "missing": [],
+  "phantoms": [
+    "components.Payment_Form.submit_actions[0] (Pay Now button label not specified in description)",
+    "components.Payment_Form.submit_actions[0].error_messages[2] (\"Payment gateway error\" not in description)",
+    "components.Payment_Form.fields.Cardholder_Name.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.Card_Number.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.Expiration_Date.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.CVV.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Form.fields.Save_Card_For_Future_Use.visible_when (conditional not explicitly stated in description)",
+    "components.Payment_Error_Recovery (separate form_helper component and Retry button naming/structure are not explicitly described)"
+  ],
+  "fixes": [
+    "components.Payment_Form.submit_actions[0]: Remove or leave unspecified the element_name property (do not invent a 'Pay Now' label). If a specific button label is required, ensure it is present in the source description before adding.",
+    "components.Payment_Form.submit_actions[0].error_messages: Remove the entry 'Payment gateway error' so only the error examples explicitly provided in the description remain (\"Card declined\", \"Insufficient funds\").",
+    "components.Payment_Form.fields.*.visible_when: Remove all visible_when properties from Cardholder_Name, Card_Number, Expiration_Date, CVV, and Save_Card_For_Future_Use unless the source description explicitly states a trigger (e.g., 'when Credit/Debit Card is selected'). If conditional display is intended, update the description to include explicit trigger language and then re-add visible_when conditions referencing that exact trigger.",
+    "components.Payment_Error_Recovery: Remove this separate form_helper component and instead represent retry behavior as part of the Payment_Form submit_actions.on_failure flow (or, if a separate retry control is required, ensure the description names it and describes its placement and label). Specifically remove components.Payment_Error_Recovery or rename/restructure it to match explicit description text (do not invent a 'Retry' element_name)."
+  ]
+}

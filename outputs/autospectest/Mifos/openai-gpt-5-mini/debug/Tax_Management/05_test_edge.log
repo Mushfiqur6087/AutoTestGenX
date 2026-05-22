@@ -1,0 +1,689 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-21T22:29:06.556518
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a UI-AST JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module UI-AST JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+---
+
+**UI-AST REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+| `submit_actions[]` with multiple buttons | Interaction edge: double-click a submit button rapidly |
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Double-click submit** (any form/wizard with a submit button): rapidly double-click the submit button → assert only one record is created; no duplicate row appears in the listing table
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (double-click, browser back, wizard skip)
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[22:29:06] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Tax Management</module_name>
+
+<ast>
+{
+  "module_name": "Tax Management",
+  "components": {
+    "Tax_Components_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Percentage",
+        "Debit Account Type",
+        "Debit Account",
+        "Credit Account Type",
+        "Credit Account",
+        "Start Date"
+      ],
+      "row_actions": [
+        {
+          "action_name": "View",
+          "type": "link",
+          "description": "navigates to Tax Component detail via clickable Name link"
+        }
+      ],
+      "toolbar_actions": [
+        {
+          "element_name": "unspecified",
+          "opens": "Tax_Component_Form"
+        }
+      ]
+    },
+    "Tax_Component_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Percentage": {
+          "type": "number",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Debit_Account_Type": {
+          "type": "dropdown",
+          "options": [
+            "Asset",
+            "Liability",
+            "Equity",
+            "Income",
+            "Expense"
+          ]
+        },
+        "Debit_Account": {
+          "type": "unspecified",
+          "description": "select GL account"
+        },
+        "Credit_Account_Type": {
+          "type": "dropdown",
+          "options": [
+            "Asset",
+            "Liability",
+            "Equity",
+            "Income",
+            "Expense"
+          ]
+        },
+        "Credit_Account": {
+          "type": "unspecified",
+          "description": "select GL account"
+        },
+        "Start_Date": {
+          "type": "date",
+          "constraints": [
+            "required"
+          ]
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "creates tax component"
+        }
+      ]
+    },
+    "Tax_Groups_Table": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Associated Components"
+      ],
+      "row_actions": [
+        {
+          "action_name": "View",
+          "type": "link",
+          "description": "navigates to Tax Group detail via clickable Name link"
+        }
+      ],
+      "toolbar_actions": [
+        {
+          "element_name": "unspecified",
+          "opens": "Tax_Group_Form"
+        }
+      ]
+    },
+    "Tax_Group_Form": {
+      "type": "form",
+      "fields": {
+        "Name": {
+          "type": "unspecified",
+          "constraints": [
+            "required"
+          ]
+        },
+        "Tax_Components": {
+          "type": "repeating_group",
+          "item_fields": {
+            "Tax_Component": {
+              "type": "unspecified",
+              "description": "select existing Tax Component"
+            },
+            "Start_Date": {
+              "type": "date"
+            },
+            "End_Date": {
+              "type": "date"
+            }
+          }
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "unspecified",
+          "on_success": "creates tax group"
+        }
+      ]
+    },
+    "Savings_Product_Form": {
+      "type": "form",
+      "fields": {
+        "Enable_Withhold_Tax": {
+          "type": "checkbox",
+          "effects": [
+            "when enabled, system automatically applies the configured tax rate on interest income or fees and posts corresponding journal entries to the mapped GL accounts"
+          ]
+        },
+        "Tax_Group": {
+          "type": "dropdown",
+          "description": "select Tax Group to associate with this product"
+        }
+      }
+    },
+    "Charge_Definition_Form": {
+      "type": "form",
+      "fields": {
+        "Tax_Group": {
+          "type": "dropdown",
+          "description": "select Tax Group to associate with this charge definition"
+        }
+      }
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Tax Components page displays a data table with columns for Name (clickable link), Percentage, Debit Account Type, Debit Account, Credit Account Type, Credit Account, and Start Date. A "+ Create Tax Component" button opens the creation form containing Name (required), Percentage (required), Debit Account Type (Asset, Liability, Equity, Income, Expense) and Debit Account (GL account), Credit Account Type and Credit Account (GL account), and Start Date (required).
+
+The Tax Groups page displays a data table with columns for Name (clickable link) and associated components. A "+ Create Tax Group" button opens the form with Name (required) and a Tax Components section allowing multiple components to be added, each with a Start Date and End Date. Tax groups are referenced by Savings Products (Enable Withhold Tax checkbox with Tax Group dropdown) and Charge definitions; when a product has tax enabled, the system automatically applies the configured tax rate on interest income or fees and posts the corresponding journal entries to the mapped GL accounts.
+
+---
+
+
+</description>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[22:35:51] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Tax Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "input_edge",
+      "test_case": "Very long Name entered in Tax Component form",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Name field",
+        "2. Enter a very long string (200+ characters) into the Name field",
+        "3. Enter valid value in Percentage field",
+        "4. Select a Debit Account Type",
+        "5. Select a Debit Account",
+        "6. Select a Credit Account Type",
+        "7. Select a Credit Account",
+        "8. Enter a valid Start Date",
+        "9. Click the submit button"
+      ],
+      "expected_result": "If the UI enforces a maximum length, the Name field displays an inline error or validation message and submission is blocked (error shown). Otherwise, the form submits successfully; entity is created and the Tax Component detail page/table shows the full entered Name (succeeds).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "input_edge",
+      "test_case": "Name with leading and trailing whitespace in Tax Group creation",
+      "preconditions": [
+        "User is on Tax Groups page",
+        "Create Tax Group form is opened"
+      ],
+      "steps": [
+        "1. Focus the Name field",
+        "2. Enter a Name value with leading and trailing spaces into the Name field",
+        "3. Add one Tax Component entry in the repeating group (select existing Tax Component)",
+        "4. Enter a valid Start Date for the repeating group item",
+        "5. Click the submit button"
+      ],
+      "expected_result": "Form submission succeeds and the saved Tax Group Name displayed in the list/detail is trimmed of leading/trailing whitespace (succeeds). If the UI enforces exact-match or whitespace rules, an inline validation error is displayed and submission is blocked (error shown).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "input_edge",
+      "test_case": "Name with special characters and emoji in Tax Component",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Name field",
+        "2. Enter a Name containing special characters and emoji into the Name field",
+        "3. Enter valid value in Percentage field",
+        "4. Select required account types and accounts",
+        "5. Enter a valid Start Date",
+        "6. Click the submit button"
+      ],
+      "expected_result": "If the system allows unicode/special characters, the form submits successfully and the Tax Component detail/list displays the exact entered characters (succeeds). If special characters are disallowed, an inline error is shown and submission is blocked (error shown).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "input_edge",
+      "test_case": "Percentage entered with excessive decimal precision",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Percentage field",
+        "2. Enter a numeric percentage with many decimal places into the Percentage field",
+        "3. Fill all other required fields with valid values",
+        "4. Click the submit button"
+      ],
+      "expected_result": "If the system limits decimal precision, an inline validation error is displayed or the value is rounded to the supported precision and the form succeeds; the Tax Component detail shows the rounded saved value (succeeds or error shown). If no precision limit, the form submits successfully and the exact value is displayed (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click submit on Create Tax Component form",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened and all required fields are filled validly"
+      ],
+      "steps": [
+        "1. Click the submit button twice rapidly (double-click)"
+      ],
+      "expected_result": "Only one Tax Component record is created; the UI shows a single new row in the Tax Components table or single detail page (no duplicate records appear) — the second click does not create an additional entity (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Add then remove all Tax Component entries in Tax Group repeating group before submit",
+      "preconditions": [
+        "User is on Tax Groups page",
+        "Create Tax Group form is opened"
+      ],
+      "steps": [
+        "1. Click to add a Tax Components repeating-group item",
+        "2. Select a Tax Component in the new repeating-group item",
+        "3. Enter a Start Date (and End Date if desired) for the item",
+        "4. Click to add a second repeating-group item",
+        "5. Select a Tax Component and enter dates for the second item",
+        "6. Remove the first repeating-group item",
+        "7. Remove the second repeating-group item (so no items remain)",
+        "8. Enter a valid Name in the form",
+        "9. Click the submit button"
+      ],
+      "expected_result": "Because the AST does not define a minimum required count for Tax Components, submission succeeds and a Tax Group is created with zero associated components; the Tax Groups table shows the new group with no associated components (succeeds). If the UI enforces at least one component, an inline error appears indicating at least one component is required and submission is blocked (error shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "data_edge",
+      "test_case": "Start Date entered far in the future for Tax Component",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Start Date field",
+        "2. Enter a date far in the future as the Start Date",
+        "3. Fill all other required fields with valid values",
+        "4. Click the submit button"
+      ],
+      "expected_result": "If the system enforces a not-in-future constraint for Start Date, an inline error is shown and submission is blocked (error shown). Otherwise, the form submits successfully and the Tax Component detail/list shows the entered future Start Date (succeeds).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "boundary": 0,
+    "input_edge": 4,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 1,
+    "medium_priority": 3,
+    "low_priority": 4
+  }
+}
+
+------------------------------------------------------------
+[22:35:51] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Tax Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "subcategory": "input_edge",
+      "test_case": "Very long Name entered in Tax Component form",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Name field",
+        "2. Enter a very long string (200+ characters) into the Name field",
+        "3. Enter valid value in Percentage field",
+        "4. Select a Debit Account Type",
+        "5. Select a Debit Account",
+        "6. Select a Credit Account Type",
+        "7. Select a Credit Account",
+        "8. Enter a valid Start Date",
+        "9. Click the submit button"
+      ],
+      "expected_result": "If the UI enforces a maximum length, the Name field displays an inline error or validation message and submission is blocked (error shown). Otherwise, the form submits successfully; entity is created and the Tax Component detail page/table shows the full entered Name (succeeds).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-002",
+      "subcategory": "input_edge",
+      "test_case": "Name with leading and trailing whitespace in Tax Group creation",
+      "preconditions": [
+        "User is on Tax Groups page",
+        "Create Tax Group form is opened"
+      ],
+      "steps": [
+        "1. Focus the Name field",
+        "2. Enter a Name value with leading and trailing spaces into the Name field",
+        "3. Add one Tax Component entry in the repeating group (select existing Tax Component)",
+        "4. Enter a valid Start Date for the repeating group item",
+        "5. Click the submit button"
+      ],
+      "expected_result": "Form submission succeeds and the saved Tax Group Name displayed in the list/detail is trimmed of leading/trailing whitespace (succeeds). If the UI enforces exact-match or whitespace rules, an inline validation error is displayed and submission is blocked (error shown).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "subcategory": "input_edge",
+      "test_case": "Name with special characters and emoji in Tax Component",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Name field",
+        "2. Enter a Name containing special characters and emoji into the Name field",
+        "3. Enter valid value in Percentage field",
+        "4. Select required account types and accounts",
+        "5. Enter a valid Start Date",
+        "6. Click the submit button"
+      ],
+      "expected_result": "If the system allows unicode/special characters, the form submits successfully and the Tax Component detail/list displays the exact entered characters (succeeds). If special characters are disallowed, an inline error is shown and submission is blocked (error shown).",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-004",
+      "subcategory": "input_edge",
+      "test_case": "Percentage entered with excessive decimal precision",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Percentage field",
+        "2. Enter a numeric percentage with many decimal places into the Percentage field",
+        "3. Fill all other required fields with valid values",
+        "4. Click the submit button"
+      ],
+      "expected_result": "If the system limits decimal precision, an inline validation error is displayed or the value is rounded to the supported precision and the form succeeds; the Tax Component detail shows the rounded saved value (succeeds or error shown). If no precision limit, the form submits successfully and the exact value is displayed (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "subcategory": "interaction_edge",
+      "test_case": "Double-click submit on Create Tax Component form",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened and all required fields are filled validly"
+      ],
+      "steps": [
+        "1. Click the submit button twice rapidly (double-click)"
+      ],
+      "expected_result": "Only one Tax Component record is created; the UI shows a single new row in the Tax Components table or single detail page (no duplicate records appear) \u2014 the second click does not create an additional entity (succeeds).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "subcategory": "interaction_edge",
+      "test_case": "Add then remove all Tax Component entries in Tax Group repeating group before submit",
+      "preconditions": [
+        "User is on Tax Groups page",
+        "Create Tax Group form is opened"
+      ],
+      "steps": [
+        "1. Click to add a Tax Components repeating-group item",
+        "2. Select a Tax Component in the new repeating-group item",
+        "3. Enter a Start Date (and End Date if desired) for the item",
+        "4. Click to add a second repeating-group item",
+        "5. Select a Tax Component and enter dates for the second item",
+        "6. Remove the first repeating-group item",
+        "7. Remove the second repeating-group item (so no items remain)",
+        "8. Enter a valid Name in the form",
+        "9. Click the submit button"
+      ],
+      "expected_result": "Because the AST does not define a minimum required count for Tax Components, submission succeeds and a Tax Group is created with zero associated components; the Tax Groups table shows the new group with no associated components (succeeds). If the UI enforces at least one component, an inline error appears indicating at least one component is required and submission is blocked (error shown).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "subcategory": "data_edge",
+      "test_case": "Start Date entered far in the future for Tax Component",
+      "preconditions": [
+        "User is on Tax Components page",
+        "Create Tax Component form is opened"
+      ],
+      "steps": [
+        "1. Focus the Start Date field",
+        "2. Enter a date far in the future as the Start Date",
+        "3. Fill all other required fields with valid values",
+        "4. Click the submit button"
+      ],
+      "expected_result": "If the system enforces a not-in-future constraint for Start Date, an inline error is shown and submission is blocked (error shown). Otherwise, the form submits successfully and the Tax Component detail/list shows the entered future Start Date (succeeds).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "boundary": 0,
+    "input_edge": 4,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 1,
+    "medium_priority": 3,
+    "low_priority": 4
+  }
+}
