@@ -1,0 +1,535 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-05-25T13:02:55.071588
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[13:04:15] Semantic Critic - SYSTEM PROMPT
+------------------------------------------------------------
+You are a UI-AST Semantic Critic. You receive (1) a raw functional description and (2) a generated UI-AST JSON.
+
+Your single job: decide whether this AST is good enough to use, or whether it should be regenerated. Be strict — when in doubt, retry.
+
+You DO NOT modify the JSON. You DO NOT generate a new JSON. You ONLY audit.
+
+---
+
+**INPUT:**
+
+<description>
+{Raw functional description text}
+</description>
+
+<ast>
+{Generated UI-AST JSON}
+</ast>
+
+---
+
+**WHAT COUNTS AS INTERACTIVE (in scope):**
+- Form fields, checkboxes, file uploads, search inputs (user inputs a value)
+- Buttons, links, row actions, bulk actions, submit actions (user triggers something)
+- Tabs, sub-tabs, wizard steps (user navigates)
+- Action consequences (`on_success`), preconditions, validation constraints
+- States in a state_bound_action_bar (Pending/Active/Closed are routing keys)
+
+**WHAT IS OUT OF SCOPE (do NOT expect these in the AST):**
+- Passive display labels — "the page displays the client name, account number, status badge, activation date, office" produces ZERO expected items. The AST is correct to omit them.
+- Chip colors, badge styles, decorative icons, visual styling
+
+---
+
+**METHOD:**
+
+**Step 1 — Walk the description and list every interactive element.**
+Apply the scope rules above. A passive display sentence produces zero expected items.
+If the description names a tab or step but gives zero fields for it, the correct AST has
+`fields: {}` for that tab/step — do NOT expect fields there.
+
+**Step 2 — Walk the AST and verify each expected element is present at the right path.**
+Note any expected items that are MISSING.
+
+**Step 3 — Walk the AST and check for PHANTOMS.**
+A phantom is anything in the AST that isn't traceable to explicit text in the description:
+- Buttons not named in the description (e.g., a "Start Import" button when description only says "uploading a file")
+- Fields invented inside generic-name tabs (e.g., an Add_Note field in a Notes tab, an Upload_Document field in a Documents tab) when the description only names the tab and gives no field details
+- Constraints inferred from UX intuition, not stated in the description text
+- Passive display fields (Client_Name, Status_Badge in a display_fields block)
+
+A reasonable inference with no textual anchor is still a phantom. Flag it.
+
+**Step 4 — Check conditional logic.**
+Count a conditional ONLY if the description has explicit trigger language:
+"when X is selected", "if X then", "required if", "Y is enabled when X", "selecting X reveals Y".
+Do NOT infer conditionals from field relationships. If no trigger phrase exists, expected = 0.
+
+**Step 5 — Decide the verdict.**
+
+```
+yes   →  Missing items: 0–2 minor (optional fields, non-critical)
+          AND Phantoms: 0–2 minor
+          AND no critical structural errors
+
+retry →  Missing items: 3+, OR
+          Phantoms: 3+, OR
+          Any required field missing, OR
+          Any state in state_bound_action_bar missing, OR
+          Recursive nesting (sub-tabs/sub-steps) missing when description names them, OR
+          Constraint placed at wrong level (floating instead of nested)
+```
+
+There is no third option. Don't agonize over edge cases — when in doubt, retry. A single regeneration is cheap.
+
+---
+
+**OUTPUT FORMAT — JSON only, no prose, no markdown fencing:**
+
+{
+  "verdict": "yes | retry",
+  "summary": "<one sentence explaining the decision>",
+  "missing": [
+    "<dotted path of expected element absent from AST — e.g., 'Create_Client_Wizard.steps[3].fields.Document_Type'>"
+  ],
+  "phantoms": [
+    "<dotted path of AST element not in description — e.g., 'Bulk_Import_Page.submit_actions[0] (Start_Import button not in description)'>"
+  ],
+  "fixes": [
+    "<actionable instruction for regeneration — only populated when verdict is retry>",
+    "<each fix references a JSON path and the exact change needed>"
+  ]
+}
+
+If verdict is "yes", `fixes` must be an empty array.
+
+Output ONLY the JSON object. No explanation, no markdown fencing, no preamble.
+
+
+------------------------------------------------------------
+[13:04:15] Semantic Critic - USER PROMPT
+------------------------------------------------------------
+<description>
+
+The Clients page displays a data table of all clients with columns for Name (clickable link), Account No., External ID, Status (Pending as yellow chip, Active as green chip, Closed as gray chip, Rejected as red chip, Withdrawn as orange chip), Office, and Staff. A search field allows searching by name, account number, external ID, or mobile number, and a filter bar supports filtering by status. Two buttons at the top-right provide "Import Client" (opens the Bulk Import page) and "Create Client." The Bulk Import page allows downloading a client Excel template, uploading a completed file, and displays an import history table with columns for Name, Import Time, End Time, Completed, Total Records, Success Count, Failure Count, and Download.
+
+The Create Client form is a multi-step wizard. Step 1 (General Details) contains Office (required), Legal Form, First Name (required), Middle Name, Last Name (required), Date of Birth, Gender, Staff, Mobile Number, Email Address, Client Type, Client Classification, External ID (must be unique), Submitted On (required), Is Staff checkbox, Active checkbox, and Open Savings Account option. Step 2 covers Address Details. Step 3 covers Family Members. Step 4 covers Identifiers (Document Type and Document Key). Clicking "Submit" creates the client in Pending status.
+
+The Client Detail page displays the client name, account number, status badge, activation date, and office. Action buttons change based on status: Pending offers Activate (requires Activation Date, which must not be before submission date), Edit, Reject (with reason), and Withdraw (with reason); Active offers Edit, Transfer Client (destination office required — same office is blocked), Close (closure reason required — cannot close with active accounts), Add Charge, New Loan, New Savings, and New Share Account; Closed offers Reactivate; Rejected and Withdrawn have no actions. Tabs on the detail page show General, Accounts (sub-tabs for Loans, Savings, Shares, Fixed Deposits, Recurring Deposits), Identifiers (Document Type and Key with add/remove — duplicates are prevented), Family Members, Notes, and Documents.
+
+---
+
+</description>
+
+<ast>
+{
+  "module_name": "Client Management",
+  "components": {
+    "Clients_Page": {
+      "type": "data_table",
+      "columns": [
+        "Name",
+        "Account No.",
+        "External ID",
+        "Status",
+        "Office",
+        "Staff"
+      ],
+      "search": {
+        "element_name": "Global_Search",
+        "type": "search",
+        "search_fields": [
+          "Name",
+          "Account No.",
+          "External ID",
+          "Mobile Number"
+        ]
+      },
+      "filters": {
+        "Status_Filter": {
+          "type": "dropdown",
+          "options": [
+            "Pending",
+            "Active",
+            "Closed",
+            "Rejected",
+            "Withdrawn"
+          ]
+        }
+      },
+      "row_actions": [
+        {
+          "action_name": "View",
+          "element_type": "link",
+          "on_click": "opens Client_Detail_Page"
+        }
+      ],
+      "top_bar_actions": [
+        {
+          "action_name": "Import Client",
+          "element_type": "button",
+          "on_click": "opens Bulk_Import_Page"
+        },
+        {
+          "action_name": "Create Client",
+          "element_type": "button",
+          "on_click": "opens Create_Client_Wizard"
+        }
+      ]
+    },
+    "Bulk_Import_Page": {
+      "type": "form",
+      "fields": {
+        "Download_Template": {
+          "type": "button",
+          "element_name": "Download Client Excel Template",
+          "on_click": "downloads client excel template"
+        },
+        "Upload_File": {
+          "type": "file_upload",
+          "element_name": "Upload Completed File",
+          "required": true
+        }
+      },
+      "submit_actions": [
+        {
+          "element_name": "Upload",
+          "on_success": "starts import and adds entry to import history"
+        }
+      ],
+      "components": {
+        "Import_History_Table": {
+          "type": "data_table",
+          "columns": [
+            "Name",
+            "Import Time",
+            "End Time",
+            "Completed",
+            "Total Records",
+            "Success Count",
+            "Failure Count",
+            "Download"
+          ],
+          "row_actions": [
+            {
+              "action_name": "Download",
+              "element_type": "link",
+              "on_click": "downloads import result file"
+            }
+          ]
+        }
+      }
+    },
+    "Create_Client_Wizard": {
+      "type": "wizard",
+      "steps": [
+        {
+          "step_index": 1,
+          "step_name": "General Details",
+          "fields": {
+            "Office": {
+              "type": "dropdown",
+              "required": true
+            },
+            "Legal_Form": {
+              "type": "unspecified"
+            },
+            "First_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Middle_Name": {
+              "type": "unspecified"
+            },
+            "Last_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Date_of_Birth": {
+              "type": "date"
+            },
+            "Gender": {
+              "type": "unspecified"
+            },
+            "Staff": {
+              "type": "dropdown"
+            },
+            "Mobile_Number": {
+              "type": "unspecified"
+            },
+            "Email_Address": {
+              "type": "email"
+            },
+            "Client_Type": {
+              "type": "unspecified"
+            },
+            "Client_Classification": {
+              "type": "unspecified"
+            },
+            "External_ID": {
+              "type": "unspecified",
+              "constraints": [
+                "must be unique"
+              ]
+            },
+            "Submitted_On": {
+              "type": "date",
+              "required": true
+            },
+            "Is_Staff": {
+              "type": "checkbox"
+            },
+            "Active": {
+              "type": "checkbox"
+            },
+            "Open_Savings_Account": {
+              "type": "checkbox"
+            }
+          }
+        },
+        {
+          "step_index": 2,
+          "step_name": "Address Details",
+          "fields": {}
+        },
+        {
+          "step_index": 3,
+          "step_name": "Family Members",
+          "fields": {}
+        },
+        {
+          "step_index": 4,
+          "step_name": "Identifiers",
+          "fields": {
+            "Identifiers": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Document_Type": {
+                  "type": "unspecified",
+                  "required": true
+                },
+                "Document_Key": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              },
+              "constraints": [
+                "duplicate Document_Type + Document_Key combinations are not allowed"
+              ]
+            }
+          }
+        }
+      ],
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates client in Pending status"
+        }
+      ]
+    },
+    "Client_Detail_Page": {
+      "type": "page",
+      "tabs": [
+        {
+          "tab_name": "General",
+          "fields": {}
+        },
+        {
+          "tab_name": "Accounts",
+          "tabs": [
+            {
+              "tab_name": "Loans",
+              "fields": {}
+            },
+            {
+              "tab_name": "Savings",
+              "fields": {}
+            },
+            {
+              "tab_name": "Shares",
+              "fields": {}
+            },
+            {
+              "tab_name": "Fixed Deposits",
+              "fields": {}
+            },
+            {
+              "tab_name": "Recurring Deposits",
+              "fields": {}
+            }
+          ]
+        },
+        {
+          "tab_name": "Identifiers",
+          "fields": {
+            "Identifiers": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Document_Type": {
+                  "type": "unspecified",
+                  "required": true
+                },
+                "Document_Key": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              },
+              "constraints": [
+                "duplicate Document_Type + Document_Key combinations are not allowed"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Family Members",
+          "fields": {
+            "Family_Members": {
+              "type": "repeating_group",
+              "item_fields": {}
+            }
+          }
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ],
+      "actions": {
+        "type": "state_bound_action_bar",
+        "states": {
+          "Pending": {
+            "available_actions": [
+              {
+                "action_name": "Activate",
+                "fields": {
+                  "Activation_Date": {
+                    "type": "date",
+                    "required": true,
+                    "constraints": [
+                      "must not be before Submitted_On"
+                    ]
+                  }
+                }
+              },
+              {
+                "action_name": "Edit"
+              },
+              {
+                "action_name": "Reject",
+                "fields": {
+                  "Reason": {
+                    "type": "unspecified",
+                    "required": true
+                  }
+                }
+              },
+              {
+                "action_name": "Withdraw",
+                "fields": {
+                  "Reason": {
+                    "type": "unspecified",
+                    "required": true
+                  }
+                }
+              }
+            ]
+          },
+          "Active": {
+            "available_actions": [
+              {
+                "action_name": "Edit"
+              },
+              {
+                "action_name": "Transfer Client",
+                "fields": {
+                  "Destination_Office": {
+                    "type": "dropdown",
+                    "required": true
+                  }
+                },
+                "constraints": [
+                  "destination office must differ from current office"
+                ]
+              },
+              {
+                "action_name": "Close",
+                "fields": {
+                  "Closure_Reason": {
+                    "type": "unspecified",
+                    "required": true
+                  }
+                },
+                "preconditions": [
+                  "cannot close with active accounts"
+                ]
+              },
+              {
+                "action_name": "Add Charge"
+              },
+              {
+                "action_name": "New Loan"
+              },
+              {
+                "action_name": "New Savings"
+              },
+              {
+                "action_name": "New Share Account"
+              }
+            ]
+          },
+          "Closed": {
+            "available_actions": [
+              {
+                "action_name": "Reactivate"
+              }
+            ]
+          },
+          "Rejected": {
+            "available_actions": []
+          },
+          "Withdrawn": {
+            "available_actions": []
+          }
+        }
+      }
+    }
+  }
+}
+</ast>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[13:04:59] Semantic Critic - LLM RESPONSE
+------------------------------------------------------------
+{
+  "verdict": "yes",
+  "summary": "The AST captures the interactive elements and conditional logic from the description; only minor inferred items are present and no critical elements are missing.",
+  "missing": [
+    "Create_Client_Wizard.steps[3].fields.Family_Members"
+  ],
+  "phantoms": [
+    "Client_Detail_Page.tabs[3].fields.Family_Members (repeating_group inferred though description only names the tab)",
+    "Clients_Page.row_actions[0] (View link inferred instead of marking the Name column itself as a clickable link)"
+  ],
+  "fixes": []
+}
+
+------------------------------------------------------------
+[13:04:59] Semantic Critic - PARSED JSON
+------------------------------------------------------------
+{
+  "verdict": "yes",
+  "summary": "The AST captures the interactive elements and conditional logic from the description; only minor inferred items are present and no critical elements are missing.",
+  "missing": [
+    "Create_Client_Wizard.steps[3].fields.Family_Members"
+  ],
+  "phantoms": [
+    "Client_Detail_Page.tabs[3].fields.Family_Members (repeating_group inferred though description only names the tab)",
+    "Clients_Page.row_actions[0] (View link inferred instead of marking the Name column itself as a clickable link)"
+  ],
+  "fixes": []
+}

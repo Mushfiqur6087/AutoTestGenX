@@ -1,0 +1,388 @@
+{
+  "project_name": "Testdataset",
+  "generated_at": "2026-05-25T13:08:05.444586Z",
+  "modules": [
+    {
+      "module_id": 1,
+      "module_title": "Client Management",
+      "ast": {
+        "module_name": "Client Management",
+        "components": {
+          "Clients_Page": {
+            "type": "data_table",
+            "columns": [
+              "Name",
+              "Account No.",
+              "External ID",
+              "Status",
+              "Office",
+              "Staff"
+            ],
+            "search": {
+              "element_name": "Global_Search",
+              "type": "search",
+              "search_fields": [
+                "Name",
+                "Account No.",
+                "External ID",
+                "Mobile Number"
+              ]
+            },
+            "filters": {
+              "Status_Filter": {
+                "type": "dropdown",
+                "options": [
+                  "Pending",
+                  "Active",
+                  "Closed",
+                  "Rejected",
+                  "Withdrawn"
+                ]
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "View",
+                "element_type": "link",
+                "on_click": "opens Client_Detail_Page"
+              }
+            ],
+            "top_bar_actions": [
+              {
+                "action_name": "Import Client",
+                "element_type": "button",
+                "on_click": "opens Bulk_Import_Page"
+              },
+              {
+                "action_name": "Create Client",
+                "element_type": "button",
+                "on_click": "opens Create_Client_Wizard"
+              }
+            ]
+          },
+          "Bulk_Import_Page": {
+            "type": "form",
+            "fields": {
+              "Download_Template": {
+                "type": "button",
+                "element_name": "Download Client Excel Template",
+                "on_click": "downloads client excel template"
+              },
+              "Upload_File": {
+                "type": "file_upload",
+                "element_name": "Upload Completed File",
+                "required": true
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Upload",
+                "on_success": "starts import and adds entry to import history"
+              }
+            ],
+            "components": {
+              "Import_History_Table": {
+                "type": "data_table",
+                "columns": [
+                  "Name",
+                  "Import Time",
+                  "End Time",
+                  "Completed",
+                  "Total Records",
+                  "Success Count",
+                  "Failure Count",
+                  "Download"
+                ],
+                "row_actions": [
+                  {
+                    "action_name": "Download",
+                    "element_type": "link",
+                    "on_click": "downloads import result file"
+                  }
+                ]
+              }
+            }
+          },
+          "Create_Client_Wizard": {
+            "type": "wizard",
+            "steps": [
+              {
+                "step_index": 1,
+                "step_name": "General Details",
+                "fields": {
+                  "Office": {
+                    "type": "dropdown",
+                    "required": true
+                  },
+                  "Legal_Form": {
+                    "type": "unspecified"
+                  },
+                  "First_Name": {
+                    "type": "unspecified",
+                    "required": true
+                  },
+                  "Middle_Name": {
+                    "type": "unspecified"
+                  },
+                  "Last_Name": {
+                    "type": "unspecified",
+                    "required": true
+                  },
+                  "Date_of_Birth": {
+                    "type": "date"
+                  },
+                  "Gender": {
+                    "type": "unspecified"
+                  },
+                  "Staff": {
+                    "type": "dropdown"
+                  },
+                  "Mobile_Number": {
+                    "type": "unspecified"
+                  },
+                  "Email_Address": {
+                    "type": "email"
+                  },
+                  "Client_Type": {
+                    "type": "unspecified"
+                  },
+                  "Client_Classification": {
+                    "type": "unspecified"
+                  },
+                  "External_ID": {
+                    "type": "unspecified",
+                    "constraints": [
+                      "must be unique"
+                    ]
+                  },
+                  "Submitted_On": {
+                    "type": "date",
+                    "required": true
+                  },
+                  "Is_Staff": {
+                    "type": "checkbox"
+                  },
+                  "Active": {
+                    "type": "checkbox"
+                  },
+                  "Open_Savings_Account": {
+                    "type": "checkbox"
+                  }
+                }
+              },
+              {
+                "step_index": 2,
+                "step_name": "Address Details",
+                "fields": {}
+              },
+              {
+                "step_index": 3,
+                "step_name": "Family Members",
+                "fields": {}
+              },
+              {
+                "step_index": 4,
+                "step_name": "Identifiers",
+                "fields": {
+                  "Identifiers": {
+                    "type": "repeating_group",
+                    "item_fields": {
+                      "Document_Type": {
+                        "type": "unspecified",
+                        "required": true
+                      },
+                      "Document_Key": {
+                        "type": "unspecified",
+                        "required": true
+                      }
+                    },
+                    "constraints": [
+                      "duplicate Document_Type + Document_Key combinations are not allowed"
+                    ]
+                  }
+                }
+              }
+            ],
+            "submit_actions": [
+              {
+                "element_name": "Submit",
+                "on_success": "creates client in Pending status"
+              }
+            ]
+          },
+          "Client_Detail_Page": {
+            "type": "page",
+            "tabs": [
+              {
+                "tab_name": "General",
+                "fields": {}
+              },
+              {
+                "tab_name": "Accounts",
+                "tabs": [
+                  {
+                    "tab_name": "Loans",
+                    "fields": {}
+                  },
+                  {
+                    "tab_name": "Savings",
+                    "fields": {}
+                  },
+                  {
+                    "tab_name": "Shares",
+                    "fields": {}
+                  },
+                  {
+                    "tab_name": "Fixed Deposits",
+                    "fields": {}
+                  },
+                  {
+                    "tab_name": "Recurring Deposits",
+                    "fields": {}
+                  }
+                ]
+              },
+              {
+                "tab_name": "Identifiers",
+                "fields": {
+                  "Identifiers": {
+                    "type": "repeating_group",
+                    "item_fields": {
+                      "Document_Type": {
+                        "type": "unspecified",
+                        "required": true
+                      },
+                      "Document_Key": {
+                        "type": "unspecified",
+                        "required": true
+                      }
+                    },
+                    "constraints": [
+                      "duplicate Document_Type + Document_Key combinations are not allowed"
+                    ]
+                  }
+                }
+              },
+              {
+                "tab_name": "Family Members",
+                "fields": {
+                  "Family_Members": {
+                    "type": "repeating_group",
+                    "item_fields": {}
+                  }
+                }
+              },
+              {
+                "tab_name": "Notes",
+                "fields": {}
+              },
+              {
+                "tab_name": "Documents",
+                "fields": {}
+              }
+            ],
+            "actions": {
+              "type": "state_bound_action_bar",
+              "states": {
+                "Pending": {
+                  "available_actions": [
+                    {
+                      "action_name": "Activate",
+                      "fields": {
+                        "Activation_Date": {
+                          "type": "date",
+                          "required": true,
+                          "constraints": [
+                            "must not be before Submitted_On"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "action_name": "Edit"
+                    },
+                    {
+                      "action_name": "Reject",
+                      "fields": {
+                        "Reason": {
+                          "type": "unspecified",
+                          "required": true
+                        }
+                      }
+                    },
+                    {
+                      "action_name": "Withdraw",
+                      "fields": {
+                        "Reason": {
+                          "type": "unspecified",
+                          "required": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "Active": {
+                  "available_actions": [
+                    {
+                      "action_name": "Edit"
+                    },
+                    {
+                      "action_name": "Transfer Client",
+                      "fields": {
+                        "Destination_Office": {
+                          "type": "dropdown",
+                          "required": true
+                        }
+                      },
+                      "constraints": [
+                        "destination office must differ from current office"
+                      ]
+                    },
+                    {
+                      "action_name": "Close",
+                      "fields": {
+                        "Closure_Reason": {
+                          "type": "unspecified",
+                          "required": true
+                        }
+                      },
+                      "preconditions": [
+                        "cannot close with active accounts"
+                      ]
+                    },
+                    {
+                      "action_name": "Add Charge"
+                    },
+                    {
+                      "action_name": "New Loan"
+                    },
+                    {
+                      "action_name": "New Savings"
+                    },
+                    {
+                      "action_name": "New Share Account"
+                    }
+                  ]
+                },
+                "Closed": {
+                  "available_actions": [
+                    {
+                      "action_name": "Reactivate"
+                    }
+                  ]
+                },
+                "Rejected": {
+                  "available_actions": []
+                },
+                "Withdrawn": {
+                  "available_actions": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "attempts": 1
+    }
+  ]
+}

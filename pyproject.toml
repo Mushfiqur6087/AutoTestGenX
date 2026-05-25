@@ -3,22 +3,15 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "autotestgenx"
+name = "autospectest"
 version = "3.0.0"
 description = "Automated test case generation from functional specifications using multi-agent orchestration."
-readme = "README.md"
 requires-python = ">=3.9"
-keywords = ["test-generation", "spec-to-tests", "ui-ast", "llm", "automation"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-]
 dependencies = [
+    "langgraph",
+    "langgraph-checkpoint-sqlite",
+    "aiosqlite",
+    "litellm>=1.50",
     "langgraph",
     "langgraph-checkpoint-sqlite",
     "aiosqlite",
@@ -26,16 +19,19 @@ dependencies = [
 ]
 
 [project.scripts]
-autotestgenx = "autotestgenx.cli:main"
+autospectest = "autospectest.cli:main"
 
 [tool.setuptools]
 packages = [
-    "autotestgenx",
-    "autotestgenx.prompts",
-    "autotestgenx.framework",
-    "autotestgenx.framework.orchestrator",
-    "autotestgenx.framework.agents",
+    "autospectest",
+    "autospectest.prompts",
+    "autospectest.framework",
+    "autospectest.framework.orchestrator",
+    "autospectest.framework.agents",
 ]
 
+[tool.setuptools.package-dir]
+autospectest = "."
+
 [tool.setuptools.package-data]
-"autotestgenx.prompts" = ["*.md"]
+"autospectest.prompts" = ["*.md"]
