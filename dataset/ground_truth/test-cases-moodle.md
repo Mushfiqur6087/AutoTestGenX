@@ -1,5 +1,7 @@
 # Moodle Test Cases
 
+**Legacy status:** this combined Moodle file is retained for historical reference only. Use `MoodleTeacher.md` and `MoodleStudent.md` as the authoritative role-separated ground truth files for scoring generated Moodle test cases.
+
 **Website URL:** http://localhost:8080
 **Test Suite Version:** 1.0
 
