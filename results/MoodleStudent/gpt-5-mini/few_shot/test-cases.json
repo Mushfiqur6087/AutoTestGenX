@@ -1,0 +1,436 @@
+{
+  "module": "MoodleStudent",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Log in with valid credentials",
+      "preconditions": [
+        "A registered student account exists",
+        "User is logged out"
+      ],
+      "steps": [
+        "1. Navigate to the Moodle login page",
+        "2. Enter <valid username> in the Username field",
+        "3. Enter <valid password> in the Password field",
+        "4. Click 'Log in'"
+      ],
+      "expected_result": "User is redirected to the Dashboard; personalized greeting is displayed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to log in with an incorrect password",
+      "preconditions": [
+        "A registered student account exists",
+        "User is logged out"
+      ],
+      "steps": [
+        "1. Navigate to the Moodle login page",
+        "2. Enter <valid username> in the Username field",
+        "3. Enter <wrong password> in the Password field",
+        "4. Click 'Log in'"
+      ],
+      "expected_result": "An inline error message is displayed; the Password field is cleared; the Username field retains the entered value",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Access as guest from the login page",
+      "preconditions": [
+        "User is logged out"
+      ],
+      "steps": [
+        "1. Navigate to the Moodle login page",
+        "2. Click 'Access as a guest'"
+      ],
+      "expected_result": "User is allowed to browse public content as guest; protected pages require login",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Open user menu and navigate to Profile",
+      "preconditions": [
+        "User logged in as Student"
+      ],
+      "steps": [
+        "1. Click the circular user initials icon in the top-right",
+        "2. In the user menu, click 'Profile'"
+      ],
+      "expected_result": "Profile page opens showing the student's initials icon, full name, and Profile information cards",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Log out from the user menu",
+      "preconditions": [
+        "User logged in as Student"
+      ],
+      "steps": [
+        "1. Click the circular user initials icon in the top-right",
+        "2. Click 'Log out'"
+      ],
+      "expected_result": "Session ends and user is redirected to the login page; protected pages require re-authentication",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Notifications bell shows no alerts when there are none",
+      "preconditions": [
+        "User logged in as Student",
+        "No unread notifications exist"
+      ],
+      "steps": [
+        "1. Click the notifications bell icon in the top-right"
+      ],
+      "expected_result": "Notifications drawer opens and displays an empty state message indicating no alerts",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Open messaging drawer from top navigation",
+      "preconditions": [
+        "User logged in as Student",
+        "At least one prior conversation exists"
+      ],
+      "steps": [
+        "1. Click the messaging icon in the top-right"
+      ],
+      "expected_result": "Messaging drawer opens showing recent conversations and messages",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-005",
+      "category": "positive",
+      "test_case": "Navigate to a course from My Courses",
+      "preconditions": [
+        "User logged in as Student",
+        "User is enrolled in at least one course"
+      ],
+      "steps": [
+        "1. From the top navigation, click 'My Courses'",
+        "2. Click the course name link on a course card"
+      ],
+      "expected_result": "User is taken to the course main page; course name appears as page heading and tab bar is visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Use My Courses search with no matching results",
+      "preconditions": [
+        "User logged in as Student",
+        "User is enrolled in courses"
+      ],
+      "steps": [
+        "1. Navigate to My Courses page",
+        "2. Enter a random string into the search field that matches no course",
+        "3. Press Enter or click Search"
+      ],
+      "expected_result": "The course grid shows an empty state indicating no courses match the search; controls remain visible",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-006",
+      "category": "positive",
+      "test_case": "Star a course to pin it to the top",
+      "preconditions": [
+        "User logged in as Student",
+        "User is enrolled in at least two courses"
+      ],
+      "steps": [
+        "1. Navigate to My Courses page",
+        "2. On a course card, click the three-dot menu",
+        "3. Click 'Star this course'"
+      ],
+      "expected_result": "Course becomes starred and appears pinned to the top of the list or grid",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to access Course Settings tab as a student",
+      "preconditions": [
+        "User logged in as Student",
+        "User is viewing a course page"
+      ],
+      "steps": [
+        "1. Look for the Settings tab in the course horizontal tab bar"
+      ],
+      "expected_result": "No Settings tab is displayed to the student",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-007",
+      "category": "positive",
+      "test_case": "Use Course Index sidebar to navigate to an activity",
+      "preconditions": [
+        "User logged in as Student",
+        "User is viewing a course page with Course Index sidebar visible"
+      ],
+      "steps": [
+        "1. In the Course Index sidebar, expand a section using the expand arrow",
+        "2. Click an activity listed in that section"
+      ],
+      "expected_result": "User navigates to the selected activity page; the clicked item is highlighted in the sidebar",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Close the Course Index sidebar and reopen course content",
+      "preconditions": [
+        "User logged in as Student",
+        "User is viewing a course page with Course Index sidebar visible"
+      ],
+      "steps": [
+        "1. Click the close button (X) on the Course Index sidebar",
+        "2. Verify the sidebar is hidden",
+        "3. Reload the page or open the sidebar again if a toggle exists"
+      ],
+      "expected_result": "Sidebar hides after clicking X; page content reflows to full width; sidebar can be reopened and functions normally",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-008",
+      "category": "positive",
+      "test_case": "Collapse and expand course sections and use 'Collapse all'",
+      "preconditions": [
+        "User logged in as Student",
+        "Course page contains multiple expanded sections"
+      ],
+      "steps": [
+        "1. Click the chevron on a single section to collapse it",
+        "2. Click 'Collapse all' at the top right"
+      ],
+      "expected_result": "Individual section collapses on chevron click; 'Collapse all' collapses every section on the page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "category": "positive",
+      "test_case": "Open an Assignment and add an online text submission",
+      "preconditions": [
+        "User logged in as Student",
+        "An assignment that accepts online text submissions is open and within due date"
+      ],
+      "steps": [
+        "1. Navigate to the assignment page from the course",
+        "2. Click 'Add submission'",
+        "3. Enter <submission text> into the online text editor",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "Submission status updates to 'Submitted for grading' (or appropriate status); Last modified timestamp is updated; online text is saved",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to submit assignment with required text left empty",
+      "preconditions": [
+        "User logged in as Student",
+        "An assignment requires an online text submission",
+        "Assignment is within due date"
+      ],
+      "steps": [
+        "1. Navigate to the assignment page",
+        "2. Click 'Add submission'",
+        "3. Leave the online text editor empty",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "System shows validation error or prevents submission if text is required; status remains 'No submissions have been made yet'; focus on required editor field",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-005",
+      "category": "edge",
+      "test_case": "Upload a very large but allowed file to assignment (boundary size)",
+      "preconditions": [
+        "User logged in as Student",
+        "An assignment accepts file uploads",
+        "A file exists that is at the maximum permissible size configured on the site"
+      ],
+      "steps": [
+        "1. Navigate to the assignment page",
+        "2. Click 'Add submission'",
+        "3. Upload the maximum-size allowed file",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "File uploads successfully and submission is accepted; Submission status updates accordingly; no upload size error appears",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-010",
+      "category": "positive",
+      "test_case": "View Grades page and see course total aggregation",
+      "preconditions": [
+        "User logged in as Student",
+        "User is enrolled in a course with graded items"
+      ],
+      "steps": [
+        "1. From the course page, click the 'Grades' tab",
+        "2. Review the grade table and scroll to the bottom"
+      ],
+      "expected_result": "User report shows graded items and an 'AGGREGATION Course total' row displaying cumulative grade",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt to view another student's grades from Grades page",
+      "preconditions": [
+        "User logged in as Student",
+        "Course contains multiple students"
+      ],
+      "steps": [
+        "1. Open the Grades page",
+        "2. Attempt to switch to another user's report or view other students' grades"
+      ],
+      "expected_result": "System prevents access; only the current student's grades are visible; no controls to view other students' grades are present",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-011",
+      "category": "positive",
+      "test_case": "Use Dashboard Timeline filter and search to find an activity",
+      "preconditions": [
+        "User logged in as Student",
+        "At least one upcoming activity exists within selected range"
+      ],
+      "steps": [
+        "1. Navigate to the Dashboard",
+        "2. In the Timeline block, select 'Next 7 days' from the time range dropdown",
+        "3. Enter a keyword in the Timeline search field and press Enter"
+      ],
+      "expected_result": "Timeline shows activities matching the selected range and search term; matching items are listed with correct dates",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "category": "edge",
+      "test_case": "Filter Timeline to a range with no activities",
+      "preconditions": [
+        "User logged in as Student",
+        "No activities are due within the next 7 days for the user"
+      ],
+      "steps": [
+        "1. Navigate to the Dashboard",
+        "2. In the Timeline block, select 'Next 7 days' from the time range dropdown"
+      ],
+      "expected_result": "The Timeline block displays an empty state message indicating no upcoming activities within the selected range",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-012",
+      "category": "positive",
+      "test_case": "Create a new personal calendar event",
+      "preconditions": [
+        "User logged in as Student",
+        "On Dashboard with Calendar block visible"
+      ],
+      "steps": [
+        "1. In the Calendar block, click 'New event'",
+        "2. Fill required fields for a personal event and save"
+      ],
+      "expected_result": "New personal calendar event appears on the calendar on the specified date; event name displays inline on that date",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Attempt to create a calendar event with missing required fields",
+      "preconditions": [
+        "User logged in as Student",
+        "On Dashboard with Calendar block visible"
+      ],
+      "steps": [
+        "1. In the Calendar block, click 'New event'",
+        "2. Leave required fields blank and click Save"
+      ],
+      "expected_result": "Validation errors are shown for required fields; event is not created until required information is provided",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-007",
+      "category": "edge",
+      "test_case": "Navigate calendar months and verify current date highlight persists",
+      "preconditions": [
+        "User logged in as Student",
+        "On Dashboard with Calendar block visible"
+      ],
+      "steps": [
+        "1. In the Calendar block, click the right arrow to move to the next month",
+        "2. Click the left arrow to return to the current month"
+      ],
+      "expected_result": "Calendar navigates months; when back to the current month, today's date is highlighted; events render correctly on their dates",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-013",
+      "category": "positive",
+      "test_case": "Open Participants and view a participant's profile",
+      "preconditions": [
+        "User logged in as Student",
+        "Course contains participants"
+      ],
+      "steps": [
+        "1. From the course page, click the 'Participants' tab",
+        "2. Click a participant's First or Last name link"
+      ],
+      "expected_result": "The selected participant's profile opens; user can view profile details but cannot manage enrolments or roles",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Attempt to enrol or unenrol users from Participants page as a student",
+      "preconditions": [
+        "User logged in as Student",
+        "User is on the Participants page"
+      ],
+      "steps": [
+        "1. Inspect the Participants page for enrol/unenrol controls or role edit options"
+      ],
+      "expected_result": "No enrol/unenrol or role management controls are visible to the student",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-008",
+      "category": "edge",
+      "test_case": "Edit profile with maximum allowed values and cancel without saving",
+      "preconditions": [
+        "User logged in as Student",
+        "Profile page is accessible"
+      ],
+      "steps": [
+        "1. Click 'Edit profile' on the Profile page",
+        "2. Enter maximum-length text in Description and other text fields",
+        "3. Click 'Cancel'"
+      ],
+      "expected_result": "Form closes without saving changes; profile remains unchanged; no validation errors displayed on Cancel",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 27,
+    "positive": 13,
+    "negative": 6,
+    "edge": 8,
+    "high_priority": 10,
+    "medium_priority": 12,
+    "low_priority": 5
+  },
+  "_meta": {
+    "website": "MoodleStudent",
+    "model": "gpt-5-mini",
+    "approach": "few_shot",
+    "generated_at": "2026-06-04T15:12:52.534166Z"
+  }
+}

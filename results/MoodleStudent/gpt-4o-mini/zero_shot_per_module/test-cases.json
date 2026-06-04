@@ -1,0 +1,1161 @@
+{
+  "project_name": "MoodleStudent",
+  "generated_at": "2026-06-04T15:12:00.170898Z",
+  "model": "gpt-4o-mini",
+  "approach": "zero_shot_per_module",
+  "modules": [
+    {
+      "module": "Login",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "category": "positive",
+          "test_case": "Successful login with valid credentials",
+          "preconditions": [
+            "User has a valid username and password."
+          ],
+          "steps": [
+            "1. Navigate to the login page.",
+            "2. Enter valid username.",
+            "3. Enter valid password.",
+            "4. Click on the 'Log in' button."
+          ],
+          "expected_result": "User is redirected to the Dashboard.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-002",
+          "category": "negative",
+          "test_case": "Login attempt with invalid username",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter an invalid username.",
+            "2. Enter a valid password.",
+            "3. Click on the 'Log in' button."
+          ],
+          "expected_result": "An inline error message is displayed, password field is cleared, and username is retained.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-003",
+          "category": "negative",
+          "test_case": "Login attempt with invalid password",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter a valid username.",
+            "2. Enter an invalid password.",
+            "3. Click on the 'Log in' button."
+          ],
+          "expected_result": "An inline error message is displayed, password field is cleared, and username is retained.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-004",
+          "category": "negative",
+          "test_case": "Login attempt with empty fields",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Leave the username field empty.",
+            "2. Leave the password field empty.",
+            "3. Click on the 'Log in' button."
+          ],
+          "expected_result": "An inline error message is displayed for both fields.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-005",
+          "category": "edge",
+          "test_case": "Login attempt with maximum length username and password",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter a username with maximum allowed length.",
+            "2. Enter a password with maximum allowed length.",
+            "3. Click on the 'Log in' button."
+          ],
+          "expected_result": "User is redirected to the Dashboard if credentials are valid.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-006",
+          "category": "edge",
+          "test_case": "Login attempt with special characters in username and password",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter a username with special characters.",
+            "2. Enter a password with special characters.",
+            "3. Click on the 'Log in' button."
+          ],
+          "expected_result": "An inline error message is displayed if credentials are invalid.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-007",
+          "category": "edge",
+          "test_case": "Login attempt with whitespace in username and password",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter a username with leading and trailing whitespace.",
+            "2. Enter a password with leading and trailing whitespace.",
+            "3. Click on the 'Log in' button."
+          ],
+          "expected_result": "An inline error message is displayed if credentials are invalid.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 1,
+        "negative": 3,
+        "edge": 3,
+        "high_priority": 4,
+        "medium_priority": 3,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Dashboard",
+      "test_cases": [
+        {
+          "tc_id": "TC-008",
+          "category": "positive",
+          "test_case": "Display personalized greeting",
+          "preconditions": [
+            "User is logged in"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard."
+          ],
+          "expected_result": "The personalized greeting is displayed at the top of the Dashboard.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-009",
+          "category": "positive",
+          "test_case": "View upcoming activities in Timeline block",
+          "preconditions": [
+            "User is logged in",
+            "User has upcoming activities"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Check the Timeline block."
+          ],
+          "expected_result": "Upcoming activities are listed in the Timeline block.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-010",
+          "category": "negative",
+          "test_case": "No activities in selected time range",
+          "preconditions": [
+            "User is logged in",
+            "User has no activities in the selected range"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Set the time range to 'Next 7 days'."
+          ],
+          "expected_result": "An empty state message is displayed in the Timeline block.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-011",
+          "category": "negative",
+          "test_case": "Search for non-existent activity",
+          "preconditions": [
+            "User is logged in",
+            "User has activities"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Enter a non-existent activity name in the search field.",
+            "3. Click on the search button."
+          ],
+          "expected_result": "No results found message is displayed.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-012",
+          "category": "edge",
+          "test_case": "Select maximum time range",
+          "preconditions": [
+            "User is logged in"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Select the maximum time range available from the dropdown."
+          ],
+          "expected_result": "The Timeline block updates to show activities for the selected maximum time range.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-013",
+          "category": "edge",
+          "test_case": "Navigate to previous month in Calendar block",
+          "preconditions": [
+            "User is logged in"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Click the left arrow to navigate to the previous month."
+          ],
+          "expected_result": "The Calendar block updates to display the previous month.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-014",
+          "category": "positive",
+          "test_case": "Create a new calendar event",
+          "preconditions": [
+            "User is logged in",
+            "User is in Calendar block"
+          ],
+          "steps": [
+            "1. Click on the 'New event' button.",
+            "2. Fill in the event details.",
+            "3. Save the event."
+          ],
+          "expected_result": "The new event is displayed in the Calendar block.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-015",
+          "category": "negative",
+          "test_case": "Attempt to create a calendar event with missing details",
+          "preconditions": [
+            "User is logged in",
+            "User is in Calendar block"
+          ],
+          "steps": [
+            "1. Click on the 'New event' button.",
+            "2. Leave required fields empty.",
+            "3. Attempt to save the event."
+          ],
+          "expected_result": "An error message is displayed indicating required fields are missing.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-016",
+          "category": "edge",
+          "test_case": "Toggle Edit mode and check for additional buttons",
+          "preconditions": [
+            "User is logged in"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Toggle Edit mode on."
+          ],
+          "expected_result": "The 'Reset page to default' and '+ Add a block' buttons are displayed.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-017",
+          "category": "positive",
+          "test_case": "Access full calendar and import/export options",
+          "preconditions": [
+            "User is logged in"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard.",
+            "2. Click on 'Full calendar' link.",
+            "3. Click on 'Import or export calendars' link."
+          ],
+          "expected_result": "The respective pages for full calendar view and calendar data management are opened.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 10,
+        "positive": 4,
+        "negative": 3,
+        "edge": 3,
+        "high_priority": 3,
+        "medium_priority": 4,
+        "low_priority": 3
+      }
+    },
+    {
+      "module": "My Courses",
+      "test_cases": [
+        {
+          "tc_id": "TC-018",
+          "category": "positive",
+          "test_case": "View all enrolled courses",
+          "preconditions": [
+            "User is logged in",
+            "User has enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Observe the displayed course cards."
+          ],
+          "expected_result": "All enrolled courses are displayed as visual cards with course banner images, names, and categories.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-019",
+          "category": "positive",
+          "test_case": "Click on course name to navigate",
+          "preconditions": [
+            "User is logged in",
+            "User has enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Click on a course name."
+          ],
+          "expected_result": "User is navigated to the main page of the selected course.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-020",
+          "category": "negative",
+          "test_case": "No courses displayed when not enrolled",
+          "preconditions": [
+            "User is logged in",
+            "User has no enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page."
+          ],
+          "expected_result": "A message indicating that the user is not enrolled in any courses is displayed.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-021",
+          "category": "negative",
+          "test_case": "Search with empty input",
+          "preconditions": [
+            "User is logged in",
+            "User has enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Leave the search field empty and click search."
+          ],
+          "expected_result": "All courses are displayed as no specific search term was provided.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-022",
+          "category": "edge",
+          "test_case": "Status dropdown with all options",
+          "preconditions": [
+            "User is logged in",
+            "User has enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Select each status option from the dropdown (All, In progress, Future, Past, Starred, Hidden)."
+          ],
+          "expected_result": "The course cards displayed correspond to the selected status option.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-023",
+          "category": "edge",
+          "test_case": "Sort dropdown with maximum length course names",
+          "preconditions": [
+            "User is logged in",
+            "User has courses with maximum length names"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Select a sort option from the dropdown."
+          ],
+          "expected_result": "Courses are sorted correctly regardless of the length of their names.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-024",
+          "category": "positive",
+          "test_case": "Star a course",
+          "preconditions": [
+            "User is logged in",
+            "User has enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Click on the three-dot menu of a course card.",
+            "3. Select 'Star this course'."
+          ],
+          "expected_result": "The course is pinned to the top of the list of courses.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-025",
+          "category": "positive",
+          "test_case": "Remove a course from view",
+          "preconditions": [
+            "User is logged in",
+            "User has enrolled courses"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page.",
+            "2. Click on the three-dot menu of a course card.",
+            "3. Select 'Remove from view'."
+          ],
+          "expected_result": "The course is hidden from the list without unenrolling the user.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 4,
+        "negative": 2,
+        "edge": 2,
+        "high_priority": 2,
+        "medium_priority": 4,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Course Page",
+      "test_cases": [
+        {
+          "tc_id": "TC-026",
+          "category": "positive",
+          "test_case": "View course content",
+          "preconditions": [
+            "User is logged in",
+            "User has access to the course"
+          ],
+          "steps": [
+            "1. Navigate to the Course page.",
+            "2. Observe the course name and sections."
+          ],
+          "expected_result": "The course name is displayed as the page heading, and all sections are visible.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-027",
+          "category": "positive",
+          "test_case": "Collapse a section",
+          "preconditions": [
+            "User is on the Course page",
+            "At least one section is expanded"
+          ],
+          "steps": [
+            "1. Click on the chevron icon of a section.",
+            "2. Observe the section content."
+          ],
+          "expected_result": "The section collapses, hiding its content.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-028",
+          "category": "positive",
+          "test_case": "Collapse all sections",
+          "preconditions": [
+            "User is on the Course page",
+            "At least one section is expanded"
+          ],
+          "steps": [
+            "1. Click on the 'Collapse all' link.",
+            "2. Observe the sections."
+          ],
+          "expected_result": "All sections collapse, hiding their content.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-029",
+          "category": "negative",
+          "test_case": "Attempt to enable Edit mode",
+          "preconditions": [
+            "User is on the Course page"
+          ],
+          "steps": [
+            "1. Look for an option to enable Edit mode.",
+            "2. Attempt to click on it."
+          ],
+          "expected_result": "The option to enable Edit mode is not available or clickable.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-030",
+          "category": "edge",
+          "test_case": "View course with maximum sections",
+          "preconditions": [
+            "User is logged in",
+            "Course has the maximum allowed sections"
+          ],
+          "steps": [
+            "1. Navigate to the Course page.",
+            "2. Observe the sections listed."
+          ],
+          "expected_result": "All sections are displayed correctly without layout issues.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-031",
+          "category": "edge",
+          "test_case": "View course with empty sections",
+          "preconditions": [
+            "User is logged in",
+            "Course has sections with no activities or resources"
+          ],
+          "steps": [
+            "1. Navigate to the Course page.",
+            "2. Observe the sections with no content."
+          ],
+          "expected_result": "Sections are displayed with appropriate messages indicating no content available.",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "positive": 3,
+        "negative": 1,
+        "edge": 2,
+        "high_priority": 2,
+        "medium_priority": 2,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Participants",
+      "test_cases": [
+        {
+          "tc_id": "TC-032",
+          "category": "positive",
+          "test_case": "Filter participants by First name using 'A–Z' button",
+          "preconditions": [
+            "User is logged in and on the Participants page."
+          ],
+          "steps": [
+            "1. Click on the 'A–Z' button for First name.",
+            "2. Observe the filtered list of participants."
+          ],
+          "expected_result": "The participants list displays only those whose first names start with the selected letter.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-033",
+          "category": "positive",
+          "test_case": "Apply multiple filters successfully",
+          "preconditions": [
+            "User is logged in and on the Participants page."
+          ],
+          "steps": [
+            "1. Select an attribute from the Select attribute dropdown.",
+            "2. Toggle 'Any' to true.",
+            "3. Click on '+ Add condition' and select another attribute.",
+            "4. Click on 'Apply filters'."
+          ],
+          "expected_result": "The participants list updates to show only those matching the applied filters.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-034",
+          "category": "negative",
+          "test_case": "Attempt to apply filters without selecting any attributes",
+          "preconditions": [
+            "User is logged in and on the Participants page."
+          ],
+          "steps": [
+            "1. Click on 'Apply filters' without selecting any attributes."
+          ],
+          "expected_result": "An error message is displayed indicating that at least one filter must be selected.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-035",
+          "category": "negative",
+          "test_case": "Click on a participant's name without permission to edit roles",
+          "preconditions": [
+            "User is logged in and on the Participants page."
+          ],
+          "steps": [
+            "1. Click on a participant's name."
+          ],
+          "expected_result": "The participant's profile is displayed, but no options to edit roles or manage enrollment are available.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-036",
+          "category": "edge",
+          "test_case": "Apply filters with maximum length of input",
+          "preconditions": [
+            "User is logged in and on the Participants page."
+          ],
+          "steps": [
+            "1. Enter a string of maximum allowed length in the filter input.",
+            "2. Click on 'Apply filters'."
+          ],
+          "expected_result": "The participants list updates correctly without any errors, showing participants matching the maximum length input.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-037",
+          "category": "edge",
+          "test_case": "Clear filters after applying them",
+          "preconditions": [
+            "User is logged in and has applied filters."
+          ],
+          "steps": [
+            "1. Click on 'Clear filters'."
+          ],
+          "expected_result": "The participants list resets to show all participants without any filters applied.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-038",
+          "category": "edge",
+          "test_case": "Check participants list with no participants enrolled",
+          "preconditions": [
+            "User is logged in and there are no participants in the course."
+          ],
+          "steps": [
+            "1. Navigate to the Participants page."
+          ],
+          "expected_result": "A message indicating that there are no participants enrolled is displayed.",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 2,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 3,
+        "medium_priority": 2,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Grades",
+      "test_cases": [
+        {
+          "tc_id": "TC-039",
+          "category": "positive",
+          "test_case": "View own grades successfully",
+          "preconditions": [
+            "User is logged in",
+            "User has grades recorded"
+          ],
+          "steps": [
+            "1. Navigate to the Grades page.",
+            "2. Observe the grades displayed."
+          ],
+          "expected_result": "The user sees their own grades with all columns populated correctly.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-040",
+          "category": "negative",
+          "test_case": "Access another student's grades",
+          "preconditions": [
+            "User is logged in",
+            "User has no grades for the course"
+          ],
+          "steps": [
+            "1. Attempt to access the grades of another student."
+          ],
+          "expected_result": "The system displays an error message indicating access is denied.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-041",
+          "category": "edge",
+          "test_case": "View grades with no recorded grades",
+          "preconditions": [
+            "User is logged in",
+            "User has no grades recorded"
+          ],
+          "steps": [
+            "1. Navigate to the Grades page."
+          ],
+          "expected_result": "The user sees a message indicating there are no grades available.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-042",
+          "category": "edge",
+          "test_case": "View grades with maximum length feedback",
+          "preconditions": [
+            "User is logged in",
+            "User has grades with maximum length feedback"
+          ],
+          "steps": [
+            "1. Navigate to the Grades page.",
+            "2. Observe the feedback column."
+          ],
+          "expected_result": "The feedback is displayed correctly without truncation or errors.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-043",
+          "category": "negative",
+          "test_case": "Access Grades page without being logged in",
+          "preconditions": [
+            "User is not logged in"
+          ],
+          "steps": [
+            "1. Attempt to navigate to the Grades page."
+          ],
+          "expected_result": "The system redirects the user to the login page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-044",
+          "category": "edge",
+          "test_case": "View grades with empty fields",
+          "preconditions": [
+            "User is logged in",
+            "User has grades with some empty fields"
+          ],
+          "steps": [
+            "1. Navigate to the Grades page."
+          ],
+          "expected_result": "The user sees the grades with empty fields represented as '–'.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "positive": 1,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 3,
+        "medium_priority": 3,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Assignment",
+      "test_cases": [
+        {
+          "tc_id": "TC-045",
+          "category": "positive",
+          "test_case": "Successful submission with text editor",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is open for submission"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Enter text in the online text editor",
+            "4. Click on 'Submit'"
+          ],
+          "expected_result": "Submission is successful, and a confirmation message is displayed.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-046",
+          "category": "positive",
+          "test_case": "Successful submission with file upload",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is open for submission"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Upload a valid file",
+            "4. Click on 'Submit'"
+          ],
+          "expected_result": "Submission is successful, and a confirmation message is displayed.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-047",
+          "category": "negative",
+          "test_case": "Submission after due date",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is past due date"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Enter text in the online text editor",
+            "4. Click on 'Submit'"
+          ],
+          "expected_result": "Error message is displayed indicating that submission is not allowed after the due date.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-048",
+          "category": "negative",
+          "test_case": "Submission without any input",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is open for submission"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Click on 'Submit' without entering any data"
+          ],
+          "expected_result": "Error message is displayed indicating that submission cannot be empty.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-049",
+          "category": "edge",
+          "test_case": "Submission with maximum file size",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is open for submission",
+            "File size limit is known"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Upload a file that is exactly at the maximum size limit",
+            "4. Click on 'Submit'"
+          ],
+          "expected_result": "Submission is successful, and a confirmation message is displayed.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-050",
+          "category": "edge",
+          "test_case": "Submission with maximum character limit in text editor",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is open for submission"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Enter text that reaches the maximum character limit",
+            "4. Click on 'Submit'"
+          ],
+          "expected_result": "Submission is successful, and a confirmation message is displayed.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-051",
+          "category": "edge",
+          "test_case": "Submission with special characters",
+          "preconditions": [
+            "User is logged in",
+            "Assignment is open for submission"
+          ],
+          "steps": [
+            "1. Navigate to the Assignment page",
+            "2. Click on 'Add submission'",
+            "3. Enter text with special characters (e.g., @, #, $, %) in the text editor",
+            "4. Click on 'Submit'"
+          ],
+          "expected_result": "Submission is successful, and a confirmation message is displayed.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 2,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 4,
+        "medium_priority": 3,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Activities",
+      "test_cases": [
+        {
+          "tc_id": "TC-052",
+          "category": "positive",
+          "test_case": "View expanded Assignments section",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Activities page"
+          ],
+          "steps": [
+            "1. Observe the Assignments section",
+            "2. Verify that it is expanded by default"
+          ],
+          "expected_result": "The Assignments section is visible with a table showing Name, Due date, and Submission status.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-053",
+          "category": "positive",
+          "test_case": "Click on an activity name",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Activities page",
+            "Assignments section is expanded"
+          ],
+          "steps": [
+            "1. Click on an activity name in the Assignments section"
+          ],
+          "expected_result": "User is navigated to the corresponding activity's page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-054",
+          "category": "negative",
+          "test_case": "Attempt to access Activities page without logging in",
+          "preconditions": [
+            "User is not logged in"
+          ],
+          "steps": [
+            "1. Navigate to the Activities page"
+          ],
+          "expected_result": "User is redirected to the login page with an error message.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-055",
+          "category": "negative",
+          "test_case": "Click on a non-existent activity name",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Activities page",
+            "Assignments section is expanded"
+          ],
+          "steps": [
+            "1. Click on a non-existent activity name"
+          ],
+          "expected_result": "An error message is displayed indicating the activity does not exist.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-056",
+          "category": "edge",
+          "test_case": "Check behavior with maximum length activity name",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Activities page"
+          ],
+          "steps": [
+            "1. Add an activity with the maximum allowed length for the name",
+            "2. Verify the display in the Assignments section"
+          ],
+          "expected_result": "The activity name is displayed correctly without truncation.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-057",
+          "category": "edge",
+          "test_case": "Check behavior with empty sections",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Activities page"
+          ],
+          "steps": [
+            "1. Verify the Forums and Resources sections are collapsed by default"
+          ],
+          "expected_result": "The Forums and Resources sections are collapsed and not visible until expanded.",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "positive": 2,
+        "negative": 2,
+        "edge": 2,
+        "high_priority": 3,
+        "medium_priority": 2,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Profile",
+      "test_cases": [
+        {
+          "tc_id": "TC-058",
+          "category": "positive",
+          "test_case": "Update profile with valid data",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Fill in all required fields with valid data",
+            "3. Click on 'Update profile'"
+          ],
+          "expected_result": "Profile is updated successfully and a confirmation message is displayed.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-059",
+          "category": "negative",
+          "test_case": "Attempt to update profile with missing required fields",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Leave required fields empty",
+            "3. Click on 'Update profile'"
+          ],
+          "expected_result": "Error messages are displayed for the missing required fields.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-060",
+          "category": "negative",
+          "test_case": "Attempt to update profile with invalid email format",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Enter an invalid email format in the email field",
+            "3. Click on 'Update profile'"
+          ],
+          "expected_result": "An error message is displayed indicating the email format is invalid.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-061",
+          "category": "edge",
+          "test_case": "Update profile with maximum length fields",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Fill in all fields with maximum allowed characters",
+            "3. Click on 'Update profile'"
+          ],
+          "expected_result": "Profile is updated successfully without any errors.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-062",
+          "category": "edge",
+          "test_case": "Update profile with special characters in name fields",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Enter special characters in the First name and Last name fields",
+            "3. Click on 'Update profile'"
+          ],
+          "expected_result": "Profile is updated successfully without any errors.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-063",
+          "category": "negative",
+          "test_case": "Cancel profile update",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Make changes to the profile",
+            "3. Click on 'Cancel'"
+          ],
+          "expected_result": "User is returned to the Profile page without any changes being saved.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-064",
+          "category": "edge",
+          "test_case": "Update profile with empty description",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Profile page"
+          ],
+          "steps": [
+            "1. Click on 'Edit profile'",
+            "2. Leave the Description field empty",
+            "3. Click on 'Update profile'"
+          ],
+          "expected_result": "Profile is updated successfully, as the description is optional.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 1,
+        "negative": 3,
+        "edge": 3,
+        "high_priority": 3,
+        "medium_priority": 3,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Logout",
+      "test_cases": [
+        {
+          "tc_id": "TC-065",
+          "category": "positive",
+          "test_case": "Successful logout",
+          "preconditions": [
+            "User is logged into the application."
+          ],
+          "steps": [
+            "1. Click on the 'Log out' button.",
+            "2. Wait for the redirection."
+          ],
+          "expected_result": "User is redirected to the login page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-066",
+          "category": "negative",
+          "test_case": "Logout without being logged in",
+          "preconditions": [
+            "User is not logged into the application."
+          ],
+          "steps": [
+            "1. Attempt to click on the 'Log out' button."
+          ],
+          "expected_result": "No action is taken, and the user remains on the current page.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-067",
+          "category": "edge",
+          "test_case": "Logout after session timeout",
+          "preconditions": [
+            "User is logged in and session has timed out."
+          ],
+          "steps": [
+            "1. Click on the 'Log out' button after session timeout."
+          ],
+          "expected_result": "User is redirected to the login page with a session timeout message.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "positive": 1,
+        "negative": 1,
+        "edge": 1,
+        "high_priority": 1,
+        "medium_priority": 2,
+        "low_priority": 0
+      }
+    }
+  ],
+  "total_summary": {
+    "total_modules": 10,
+    "total_tests": 67,
+    "positive": 21,
+    "negative": 21,
+    "edge": 25,
+    "high_priority": 28,
+    "medium_priority": 28,
+    "low_priority": 11
+  }
+}

@@ -1,0 +1,2845 @@
+=== MODULE: Login ===
+{
+  "module": "Login",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Successful login with valid credentials",
+      "preconditions": ["User is on the login page", "User has valid credentials"],
+      "steps": ["1. Select a tenant from the Tenant dropdown", "2. Enter a valid username", "3. Enter a valid password", "4. Click the Login button"],
+      "expected_result": "User is redirected to the Dashboard",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Login attempt with invalid credentials",
+      "preconditions": ["User is on the login page", "User has invalid credentials"],
+      "steps": ["1. Select a tenant from the Tenant dropdown", "2. Enter an invalid username", "3. Enter an invalid password", "4. Click the Login button"],
+      "expected_result": "An error message is displayed indicating invalid credentials",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "negative",
+      "test_case": "Login attempt with empty required fields",
+      "preconditions": ["User is on the login page"],
+      "steps": ["1. Leave the Tenant dropdown as default", "2. Leave the Username field empty", "3. Leave the Password field empty", "4. Click the Login button"],
+      "expected_result": "Inline validation messages are shown for empty required fields",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "edge",
+      "test_case": "Login attempt with maximum length username and password",
+      "preconditions": ["User is on the login page"],
+      "steps": ["1. Select a tenant from the Tenant dropdown", "2. Enter a username with maximum allowed length", "3. Enter a password with maximum allowed length", "4. Click the Login button"],
+      "expected_result": "User is redirected to the Dashboard if credentials are valid, or an error message is shown if invalid",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Login attempt with special characters in username and password",
+      "preconditions": ["User is on the login page"],
+      "steps": ["1. Select a tenant from the Tenant dropdown", "2. Enter a username with special characters", "3. Enter a password with special characters", "4. Click the Login button"],
+      "expected_result": "User is redirected to the Dashboard if credentials are valid, or an error message is shown if invalid",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "edge",
+      "test_case": "Login attempt with whitespace in username and password",
+      "preconditions": ["User is on the login page"],
+      "steps": ["1. Select a tenant from the Tenant dropdown", "2. Enter a username with leading and trailing spaces", "3. Enter a password with leading and trailing spaces", "4. Click the Login button"],
+      "expected_result": "User is redirected to the Dashboard if credentials are valid after trimming spaces, or an error message is shown if invalid",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 2,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Home Page ===
+{
+  "module": "Home Page",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "HP_TC_001",
+      "category": "positive",
+      "test_case": "Display welcome message",
+      "preconditions": ["User is logged in successfully."],
+      "steps": ["1. Navigate to the Home page."],
+      "expected_result": "The welcome card displays the message 'Welcome, mifos!'",
+      "priority": "high"
+    },
+    {
+      "tc_id": "HP_TC_002",
+      "category": "positive",
+      "test_case": "Search activity with valid input",
+      "preconditions": ["User is logged in successfully.", "Recent activities exist."],
+      "steps": ["1. Enter a valid search term in the 'Search Activity' input field.", "2. Press Enter or click the search button."],
+      "expected_result": "The system displays the relevant recent activities based on the search term.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "HP_TC_003",
+      "category": "negative",
+      "test_case": "Search activity with empty input",
+      "preconditions": ["User is logged in successfully."],
+      "steps": ["1. Leave the 'Search Activity' input field empty.", "2. Press Enter or click the search button."],
+      "expected_result": "The system shows an error message indicating that the search term cannot be empty.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "HP_TC_004",
+      "category": "negative",
+      "test_case": "Search activity with invalid input",
+      "preconditions": ["User is logged in successfully."],
+      "steps": ["1. Enter an invalid search term that does not match any activities.", "2. Press Enter or click the search button."],
+      "expected_result": "The system shows a message indicating no activities found.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "HP_TC_005",
+      "category": "edge",
+      "test_case": "Search activity with maximum length input",
+      "preconditions": ["User is logged in successfully."],
+      "steps": ["1. Enter a search term that is at the maximum character limit for the input field.", "2. Press Enter or click the search button."],
+      "expected_result": "The system processes the search and displays relevant activities or a message indicating no activities found.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "HP_TC_006",
+      "category": "edge",
+      "test_case": "Check system version information display",
+      "preconditions": ["User is logged in successfully."],
+      "steps": ["1. Navigate to the Home page."],
+      "expected_result": "The system displays the version information for Mifos and Fineract at the bottom of the page.",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Dashboard ===
+{
+  "module": "Dashboard",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Access Dashboard Successfully",
+      "preconditions": ["User is on the Home page", "User is logged in"],
+      "steps": ["1. Click on the 'Dashboard' button", "2. Observe the Dashboard page"],
+      "expected_result": "The Dashboard page is displayed with 'Search Activity' field and 'Client Trends' chart.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Search Activity with Invalid Input",
+      "preconditions": ["User is on the Dashboard page"],
+      "steps": ["1. Enter invalid input in the 'Search Activity' field", "2. Click on the search button"],
+      "expected_result": "An error message is displayed indicating invalid input.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Search Activity with Empty Input",
+      "preconditions": ["User is on the Dashboard page"],
+      "steps": ["1. Leave the 'Search Activity' field empty", "2. Click on the search button"],
+      "expected_result": "An error message is displayed indicating that the field cannot be empty.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "positive",
+      "test_case": "View Client Trends Chart",
+      "preconditions": ["User is on the Dashboard page", "Data is available for the selected office"],
+      "steps": ["1. Observe the 'Client Trends' chart", "2. Check the legends for 'New Clients' and 'Closed Clients'"],
+      "expected_result": "The 'Client Trends' chart is displayed with correct data and legends.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "View Summary Cards with No Data",
+      "preconditions": ["User is on the Dashboard page", "No data is available for the selected office"],
+      "steps": ["1. Observe the summary cards below the chart"],
+      "expected_result": "The summary cards display 'No Data'.",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 2,
+    "medium_priority": 2,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Global Search ===
+{
+  "module": "Global Search",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "GS-001",
+      "category": "positive",
+      "test_case": "Successful search with valid input",
+      "preconditions": ["User is logged in", "User is on any page with the search icon"],
+      "steps": ["1. Click on the search icon in the top toolbar", "2. Type a valid search term that matches an entity (e.g., 'Client A')"],
+      "expected_result": "Matching results appear in a dropdown grouped by entity type, showing entity name, identifier, and status.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "GS-002",
+      "category": "negative",
+      "test_case": "Search with no input",
+      "preconditions": ["User is logged in", "User is on any page with the search icon"],
+      "steps": ["1. Click on the search icon in the top toolbar", "2. Leave the search input field empty and press Enter"],
+      "expected_result": "No results found message is displayed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "GS-003",
+      "category": "negative",
+      "test_case": "Search with invalid input",
+      "preconditions": ["User is logged in", "User is on any page with the search icon"],
+      "steps": ["1. Click on the search icon in the top toolbar", "2. Type a random string that does not match any entity (e.g., 'xyz123')"],
+      "expected_result": "No results found message is displayed.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "GS-004",
+      "category": "edge",
+      "test_case": "Search with maximum length input",
+      "preconditions": ["User is logged in", "User is on any page with the search icon"],
+      "steps": ["1. Click on the search icon in the top toolbar", "2. Type a string that reaches the maximum input length allowed (e.g., 255 characters)"],
+      "expected_result": "Matching results appear in a dropdown or a 'No results found' message if no matches exist.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "GS-005",
+      "category": "edge",
+      "test_case": "Search with case-insensitive input",
+      "preconditions": ["User is logged in", "User is on any page with the search icon"],
+      "steps": ["1. Click on the search icon in the top toolbar", "2. Type a valid search term in different cases (e.g., 'client a', 'CLIENT A', 'Client A')"],
+      "expected_result": "Matching results appear in a dropdown grouped by entity type, showing entity name, identifier, and status.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "GS-006",
+      "category": "edge",
+      "test_case": "Search with partial input",
+      "preconditions": ["User is logged in", "User is on any page with the search icon"],
+      "steps": ["1. Click on the search icon in the top toolbar", "2. Type a partial name that matches an entity (e.g., 'Client')"],
+      "expected_result": "Matching results appear in a dropdown grouped by entity type, showing entity name, identifier, and status.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 2,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Client Management ===
+{
+  "module": "Client Management",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Successfully create a new client with valid details",
+      "preconditions": ["User is logged in", "User is on the Create Client form"],
+      "steps": [
+        "1. Fill in all required fields with valid data.",
+        "2. Click on the 'Submit' button."
+      ],
+      "expected_result": "The client is created successfully and is displayed in Pending status on the Clients page.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Fail to create a new client with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Create Client form"],
+      "steps": [
+        "1. Leave the First Name and Last Name fields empty.",
+        "2. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "negative",
+      "test_case": "Fail to create a new client with a non-unique External ID",
+      "preconditions": ["User is logged in", "User is on the Create Client form", "An existing client has the same External ID"],
+      "steps": [
+        "1. Fill in all required fields with valid data including the existing External ID.",
+        "2. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the External ID must be unique.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "edge",
+      "test_case": "Create a client with maximum length fields",
+      "preconditions": ["User is logged in", "User is on the Create Client form"],
+      "steps": [
+        "1. Fill in all fields with maximum allowed character lengths.",
+        "2. Click on the 'Submit' button."
+      ],
+      "expected_result": "The client is created successfully without any errors.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Search for a client with an empty search field",
+      "preconditions": ["User is logged in", "User is on the Clients page"],
+      "steps": [
+        "1. Leave the search field empty.",
+        "2. Click on the search button."
+      ],
+      "expected_result": "All clients are displayed in the data table.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "positive",
+      "test_case": "Filter clients by status",
+      "preconditions": ["User is logged in", "User is on the Clients page"],
+      "steps": [
+        "1. Select 'Active' from the status filter.",
+        "2. Click on the filter button."
+      ],
+      "expected_result": "Only clients with Active status are displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC007",
+      "category": "negative",
+      "test_case": "Attempt to activate a client without an Activation Date",
+      "preconditions": ["User is logged in", "User is on the Client Detail page of a Pending client"],
+      "steps": [
+        "1. Click on the 'Activate' button without entering an Activation Date."
+      ],
+      "expected_result": "An error message is displayed indicating that Activation Date is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC008",
+      "category": "edge",
+      "test_case": "Attempt to close a client with active accounts",
+      "preconditions": ["User is logged in", "User is on the Client Detail page of an Active client"],
+      "steps": [
+        "1. Click on the 'Close' button.",
+        "2. Enter a closure reason.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the client cannot be closed with active accounts.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 5,
+    "medium_priority": 2,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Group Management ===
+{
+  "module": "Group Management",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "GM_TC_001",
+      "category": "positive",
+      "test_case": "Create a new group with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Groups page"],
+      "steps": ["1. Click on 'Create Group' button", "2. Fill in the 'Name' field with a valid group name", "3. Select an 'Office' from the dropdown", "4. Fill in the 'Submitted On' field with a valid date", "5. Check the 'Active' checkbox", "6. Click 'Submit'"],
+      "expected_result": "A new group is created successfully, and the user is redirected to the Groups page with the new group listed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "GM_TC_002",
+      "category": "negative",
+      "test_case": "Attempt to create a new group without required fields",
+      "preconditions": ["User is logged in", "User is on the Groups page"],
+      "steps": ["1. Click on 'Create Group' button", "2. Leave the 'Name' field empty", "3. Leave the 'Office' field empty", "4. Click 'Submit'"],
+      "expected_result": "An error message is displayed indicating that 'Name' and 'Office' are required fields.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "GM_TC_003",
+      "category": "edge",
+      "test_case": "Create a new group with maximum length name",
+      "preconditions": ["User is logged in", "User is on the Groups page"],
+      "steps": ["1. Click on 'Create Group' button", "2. Fill in the 'Name' field with a string of maximum allowed length", "3. Select an 'Office' from the dropdown", "4. Fill in the 'Submitted On' field with a valid date", "5. Click 'Submit'"],
+      "expected_result": "A new group is created successfully, and the user is redirected to the Groups page with the new group listed.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "GM_TC_004",
+      "category": "negative",
+      "test_case": "Attempt to upload an invalid file format in Bulk Import",
+      "preconditions": ["User is logged in", "User is on the Bulk Import Groups page"],
+      "steps": ["1. Click on the file picker in the Groups Upload panel", "2. Select a file with an unsupported format (e.g., .txt)", "3. Click 'Upload'"],
+      "expected_result": "An error message is displayed indicating that the file format is not supported.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "GM_TC_005",
+      "category": "edge",
+      "test_case": "Upload a file with maximum allowed size",
+      "preconditions": ["User is logged in", "User is on the Bulk Import Groups page"],
+      "steps": ["1. Click on the file picker in the Groups Upload panel", "2. Select a file that is at the maximum allowed size", "3. Click 'Upload'"],
+      "expected_result": "The file is uploaded successfully, and the import history table is updated.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "GM_TC_006",
+      "category": "positive",
+      "test_case": "View group details and tabs",
+      "preconditions": ["User is logged in", "User is on the Groups page", "At least one group exists"],
+      "steps": ["1. Click on a group name link in the Groups table", "2. Observe the Group Detail page and its tabs"],
+      "expected_result": "The Group Detail page displays the correct group information and all tabs are visible.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "GM_TC_007",
+      "category": "negative",
+      "test_case": "Attempt to create a group with a duplicate name",
+      "preconditions": ["User is logged in", "User is on the Groups page", "A group with the same name already exists"],
+      "steps": ["1. Click on 'Create Group' button", "2. Fill in the 'Name' field with the name of the existing group", "3. Select an 'Office' from the dropdown", "4. Fill in the 'Submitted On' field with a valid date", "5. Click 'Submit'"],
+      "expected_result": "An error message is displayed indicating that the group name must be unique.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "high_priority": 4,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Center Management ===
+{
+  "module": "Center Management",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create Center with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Centers page"],
+      "steps": [
+        "1. Click on 'Create Center' button.",
+        "2. Fill in the 'Name' field with a valid name.",
+        "3. Select an 'Office' from the dropdown.",
+        "4. Fill in the 'External Id' field with a valid ID.",
+        "5. Check the 'Active' checkbox.",
+        "6. Fill in the 'Submitted On' field with a valid date.",
+        "7. Select groups from the 'Select and Add groups' dropdown.",
+        "8. Click on 'Submit' button."
+      ],
+      "expected_result": "A new center is created successfully, and the user is redirected to the Centers page with a success message.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create Center with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Centers page"],
+      "steps": [
+        "1. Click on 'Create Center' button.",
+        "2. Leave the 'Name' field empty.",
+        "3. Leave the 'Office' field empty.",
+        "4. Click on 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that 'Name' and 'Office' are required fields.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create Center with maximum length name",
+      "preconditions": ["User is logged in", "User is on the Centers page"],
+      "steps": [
+        "1. Click on 'Create Center' button.",
+        "2. Fill in the 'Name' field with a string of maximum allowed length.",
+        "3. Select an 'Office' from the dropdown.",
+        "4. Fill in the 'External Id' field with a valid ID.",
+        "5. Check the 'Active' checkbox.",
+        "6. Fill in the 'Submitted On' field with a valid date.",
+        "7. Select groups from the 'Select and Add groups' dropdown.",
+        "8. Click on 'Submit' button."
+      ],
+      "expected_result": "A new center is created successfully, and the user is redirected to the Centers page with a success message.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create Center with invalid date format",
+      "preconditions": ["User is logged in", "User is on the Centers page"],
+      "steps": [
+        "1. Click on 'Create Center' button.",
+        "2. Fill in the 'Name' field with a valid name.",
+        "3. Select an 'Office' from the dropdown.",
+        "4. Fill in the 'External Id' field with a valid ID.",
+        "5. Check the 'Active' checkbox.",
+        "6. Fill in the 'Submitted On' field with an invalid date format.",
+        "7. Select groups from the 'Select and Add groups' dropdown.",
+        "8. Click on 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the date format is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create Center with empty fields in optional fields",
+      "preconditions": ["User is logged in", "User is on the Centers page"],
+      "steps": [
+        "1. Click on 'Create Center' button.",
+        "2. Fill in the 'Name' field with a valid name.",
+        "3. Select an 'Office' from the dropdown.",
+        "4. Leave 'Staff' and 'External Id' fields empty.",
+        "5. Check the 'Active' checkbox.",
+        "6. Fill in the 'Submitted On' field with a valid date.",
+        "7. Select groups from the 'Select and Add groups' dropdown.",
+        "8. Click on 'Submit' button."
+      ],
+      "expected_result": "A new center is created successfully, and the user is redirected to the Centers page with a success message.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Loan Products ===
+{
+  "module": "Loan Products",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a new loan product with valid details",
+      "preconditions": ["User is logged in", "User is on the Loan Products page"],
+      "steps": [
+        "1. Click on '+ Create Loan Product' button.",
+        "2. Fill in all required fields in Step 1 with valid data.",
+        "3. Proceed through all steps with valid data.",
+        "4. Click 'Finish' to create the loan product."
+      ],
+      "expected_result": "The loan product is created successfully and appears in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to create a loan product without required fields",
+      "preconditions": ["User is logged in", "User is on the Loan Products page"],
+      "steps": [
+        "1. Click on '+ Create Loan Product' button.",
+        "2. Leave the Product Name and Short Name fields empty.",
+        "3. Click 'Finish' to create the loan product."
+      ],
+      "expected_result": "Inline validation errors are displayed for Product Name and Short Name fields.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create a loan product with maximum length fields",
+      "preconditions": ["User is logged in", "User is on the Loan Products page"],
+      "steps": [
+        "1. Click on '+ Create Loan Product' button.",
+        "2. Fill in the Product Name and Short Name with maximum allowed characters.",
+        "3. Fill in other fields with valid data.",
+        "4. Click 'Finish' to create the loan product."
+      ],
+      "expected_result": "The loan product is created successfully with maximum length fields.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create a loan product with invalid currency selection",
+      "preconditions": ["User is logged in", "User is on the Loan Products page"],
+      "steps": [
+        "1. Click on '+ Create Loan Product' button.",
+        "2. Fill in all required fields in Step 1 with valid data.",
+        "3. In Step 2, select an invalid currency.",
+        "4. Click 'Next' to proceed."
+      ],
+      "expected_result": "An error message is displayed indicating the currency selection is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create a loan product with minimum values for numeric fields",
+      "preconditions": ["User is logged in", "User is on the Loan Products page"],
+      "steps": [
+        "1. Click on '+ Create Loan Product' button.",
+        "2. Fill in all required fields in Step 1 with valid data.",
+        "3. In Step 2, set Principal Amount to minimum value.",
+        "4. In Step 4, set Number of Repayments to minimum value.",
+        "5. Click 'Finish' to create the loan product."
+      ],
+      "expected_result": "The loan product is created successfully with minimum values for numeric fields.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "positive",
+      "test_case": "Edit an existing loan product",
+      "preconditions": ["User is logged in", "User is on the Loan Products page", "At least one loan product exists"],
+      "steps": [
+        "1. Click on an existing loan product name.",
+        "2. Click on 'Edit' option.",
+        "3. Modify the required fields.",
+        "4. Click 'Save' to update the loan product."
+      ],
+      "expected_result": "The loan product is updated successfully and changes are reflected in the data table.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Savings Products ===
+{
+  "module": "Savings Products",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "SP_TC_001",
+      "category": "positive",
+      "test_case": "Create Savings Product with all valid inputs",
+      "preconditions": ["User is logged in", "User is on the Savings Products page"],
+      "steps": [
+        "1. Click on '+ Create Savings Product' button.",
+        "2. Fill in all required fields in Step 1 (Details) with valid data.",
+        "3. Proceed to Step 2 (Currency) and select valid currency and decimal places.",
+        "4. Proceed to Step 3 (Terms) and fill in all fields with valid data.",
+        "5. Proceed to Step 4 (Settings) and fill in all fields with valid data.",
+        "6. Proceed to Step 5 (Charges) and add predefined charges.",
+        "7. Proceed to Step 6 (Accounting) and select Cash-based with valid GL account mappings.",
+        "8. Submit the form."
+      ],
+      "expected_result": "Savings Product is created successfully and user is redirected to the Savings Products page with a success message.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "SP_TC_002",
+      "category": "negative",
+      "test_case": "Create Savings Product with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Savings Products page"],
+      "steps": [
+        "1. Click on '+ Create Savings Product' button.",
+        "2. Leave Product Name and Short Name fields empty in Step 1 (Details).",
+        "3. Attempt to proceed to Step 2 (Currency)."
+      ],
+      "expected_result": "Error message is displayed indicating that Product Name and Short Name are required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "SP_TC_003",
+      "category": "edge",
+      "test_case": "Create Savings Product with maximum length inputs",
+      "preconditions": ["User is logged in", "User is on the Savings Products page"],
+      "steps": [
+        "1. Click on '+ Create Savings Product' button.",
+        "2. Fill in Product Name and Short Name with maximum allowed characters.",
+        "3. Fill in Description with maximum allowed characters.",
+        "4. Fill in External Id with maximum allowed characters.",
+        "5. Proceed through all steps with valid maximum length inputs.",
+        "6. Submit the form."
+      ],
+      "expected_result": "Savings Product is created successfully with maximum length inputs without any errors.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "SP_TC_004",
+      "category": "negative",
+      "test_case": "Create Savings Product with invalid currency",
+      "preconditions": ["User is logged in", "User is on the Savings Products page"],
+      "steps": [
+        "1. Click on '+ Create Savings Product' button.",
+        "2. Fill in all required fields in Step 1 (Details) with valid data.",
+        "3. In Step 2 (Currency), select an invalid currency.",
+        "4. Attempt to proceed to Step 3 (Terms)."
+      ],
+      "expected_result": "Error message is displayed indicating that the selected currency is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "SP_TC_005",
+      "category": "edge",
+      "test_case": "Create Savings Product with boundary values for interest rate",
+      "preconditions": ["User is logged in", "User is on the Savings Products page"],
+      "steps": [
+        "1. Click on '+ Create Savings Product' button.",
+        "2. Fill in all required fields in Step 1 (Details) with valid data.",
+        "3. In Step 3 (Terms), set Nominal Annual Interest Rate to 0% and 100%.",
+        "4. Proceed through all steps with valid inputs.",
+        "5. Submit the form."
+      ],
+      "expected_result": "Savings Product is created successfully with boundary values for interest rate without any errors.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Share Products ===
+{
+  "module": "Share Products",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a new share product with valid details",
+      "preconditions": ["User is logged in", "User is on the Share Products page"],
+      "steps": [
+        "1. Click on the '+ Create Share Product' button.",
+        "2. Fill in the Product Name, Short Name, and Description in Step 1.",
+        "3. Proceed to Step 2 and fill in Currency, Decimal Places, and Currency In Multiples Of.",
+        "4. In Step 3, fill in Total Number of Shares, Shares to be Issued, and Nominal/Unit Price.",
+        "5. Complete Steps 4, 5, 6, and 7 with valid data.",
+        "6. Click 'Finish' to create the share product."
+      ],
+      "expected_result": "The new share product is created successfully and displayed in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to create a share product with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Share Products page"],
+      "steps": [
+        "1. Click on the '+ Create Share Product' button.",
+        "2. Leave the Product Name, Short Name, and Description fields empty in Step 1.",
+        "3. Attempt to proceed to Step 2."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create a share product with maximum length fields",
+      "preconditions": ["User is logged in", "User is on the Share Products page"],
+      "steps": [
+        "1. Click on the '+ Create Share Product' button.",
+        "2. Fill in the Product Name, Short Name, and Description with maximum allowed characters.",
+        "3. Proceed through all steps with valid data.",
+        "4. Click 'Finish' to create the share product."
+      ],
+      "expected_result": "The new share product is created successfully with maximum length fields and displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create a share product with invalid currency format",
+      "preconditions": ["User is logged in", "User is on the Share Products page"],
+      "steps": [
+        "1. Click on the '+ Create Share Product' button.",
+        "2. Fill in valid Product Name, Short Name, and Description.",
+        "3. In Step 2, enter an invalid format for Currency.",
+        "4. Attempt to proceed to Step 3."
+      ],
+      "expected_result": "An error message is displayed indicating that the currency format is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create a share product with zero shares",
+      "preconditions": ["User is logged in", "User is on the Share Products page"],
+      "steps": [
+        "1. Click on the '+ Create Share Product' button.",
+        "2. Fill in valid Product Name, Short Name, and Description.",
+        "3. In Step 3, enter '0' for Total Number of Shares.",
+        "4. Fill in other required fields with valid data.",
+        "5. Click 'Finish' to create the share product."
+      ],
+      "expected_result": "The share product is created successfully with zero shares and displayed in the data table.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Charges ===
+{
+  "module": "Charges",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a valid charge",
+      "preconditions": ["User is logged in", "User is on the Charges page"],
+      "steps": [
+        "1. Click on the '+ Create Charge' button.",
+        "2. Fill in the Charge Name with 'Service Fee'.",
+        "3. Select 'Loan' for Charge Applies To.",
+        "4. Select 'USD' for Currency.",
+        "5. Select 'Specified Due Date' for Charge Time Type.",
+        "6. Select 'Flat' for Charge Calculation Type.",
+        "7. Enter '100' for Amount.",
+        "8. Check the 'Is Penalty' checkbox.",
+        "9. Check the 'Is Active' checkbox.",
+        "10. Select a Tax Group from the dropdown.",
+        "11. Select 'Regular' for Payment Mode.",
+        "12. Click on 'Submit'."
+      ],
+      "expected_result": "The charge is created successfully, and the user is redirected to the Charges page with a success message.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create charge without required fields",
+      "preconditions": ["User is logged in", "User is on the Charges page"],
+      "steps": [
+        "1. Click on the '+ Create Charge' button.",
+        "2. Leave all fields empty.",
+        "3. Click on 'Submit'."
+      ],
+      "expected_result": "The system displays error messages indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "negative",
+      "test_case": "Create charge with invalid amount",
+      "preconditions": ["User is logged in", "User is on the Charges page"],
+      "steps": [
+        "1. Click on the '+ Create Charge' button.",
+        "2. Fill in the Charge Name with 'Service Fee'.",
+        "3. Select 'Loan' for Charge Applies To.",
+        "4. Select 'USD' for Currency.",
+        "5. Select 'Specified Due Date' for Charge Time Type.",
+        "6. Select 'Flat' for Charge Calculation Type.",
+        "7. Enter '-50' for Amount.",
+        "8. Click on 'Submit'."
+      ],
+      "expected_result": "The system displays an error message indicating that the amount must be a positive value.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "edge",
+      "test_case": "Create charge with maximum length name",
+      "preconditions": ["User is logged in", "User is on the Charges page"],
+      "steps": [
+        "1. Click on the '+ Create Charge' button.",
+        "2. Fill in the Charge Name with a string of 255 characters.",
+        "3. Select 'Loan' for Charge Applies To.",
+        "4. Select 'USD' for Currency.",
+        "5. Select 'Specified Due Date' for Charge Time Type.",
+        "6. Select 'Flat' for Charge Calculation Type.",
+        "7. Enter '100' for Amount.",
+        "8. Click on 'Submit'."
+      ],
+      "expected_result": "The charge is created successfully, and the user is redirected to the Charges page.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create charge with empty Charge Applies To",
+      "preconditions": ["User is logged in", "User is on the Charges page"],
+      "steps": [
+        "1. Click on the '+ Create Charge' button.",
+        "2. Fill in the Charge Name with 'Service Fee'.",
+        "3. Leave Charge Applies To empty.",
+        "4. Select 'USD' for Currency.",
+        "5. Select 'Specified Due Date' for Charge Time Type.",
+        "6. Select 'Flat' for Charge Calculation Type.",
+        "7. Enter '100' for Amount.",
+        "8. Click on 'Submit'."
+      ],
+      "expected_result": "The system displays an error message indicating that Charge Applies To is required.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Floating Rates ===
+{
+  "module": "Floating Rates",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "FR_TC_001",
+      "category": "positive",
+      "test_case": "Create a new floating rate with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Floating Rates page"],
+      "steps": ["1. Click on the '+ Create Floating Rate' button", "2. Enter a valid Floating Rate Name", "3. Check the 'Is Base Lending Rate' checkbox", "4. Check the 'Is Active' checkbox", "5. Add a row in the Rate Periods table with valid From Date and Interest Rate", "6. Click 'Save'"],
+      "expected_result": "The new floating rate is created successfully and displayed in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FR_TC_002",
+      "category": "negative",
+      "test_case": "Attempt to create a floating rate without a name",
+      "preconditions": ["User is logged in", "User is on the Floating Rates page"],
+      "steps": ["1. Click on the '+ Create Floating Rate' button", "2. Leave the Floating Rate Name field empty", "3. Click 'Save'"],
+      "expected_result": "An error message is displayed indicating that the Floating Rate Name is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FR_TC_003",
+      "category": "negative",
+      "test_case": "Attempt to create a second base lending rate",
+      "preconditions": ["User is logged in", "User is on the Floating Rates page", "A base lending rate already exists"],
+      "steps": ["1. Click on the '+ Create Floating Rate' button", "2. Enter a valid Floating Rate Name", "3. Check the 'Is Base Lending Rate' checkbox", "4. Click 'Save'"],
+      "expected_result": "An error message is displayed indicating that only one base lending rate can exist at a time.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FR_TC_004",
+      "category": "edge",
+      "test_case": "Create a floating rate with maximum length name",
+      "preconditions": ["User is logged in", "User is on the Floating Rates page"],
+      "steps": ["1. Click on the '+ Create Floating Rate' button", "2. Enter a Floating Rate Name with maximum allowed characters", "3. Check the 'Is Active' checkbox", "4. Add a row in the Rate Periods table with valid From Date and Interest Rate", "5. Click 'Save'"],
+      "expected_result": "The new floating rate is created successfully and displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "FR_TC_005",
+      "category": "edge",
+      "test_case": "Create a floating rate with an empty Rate Periods table",
+      "preconditions": ["User is logged in", "User is on the Floating Rates page"],
+      "steps": ["1. Click on the '+ Create Floating Rate' button", "2. Enter a valid Floating Rate Name", "3. Check the 'Is Base Lending Rate' checkbox", "4. Check the 'Is Active' checkbox", "5. Click 'Save'"],
+      "expected_result": "The floating rate is created successfully without any rate periods, and it is displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "FR_TC_006",
+      "category": "edge",
+      "test_case": "Create a floating rate with a differential rate",
+      "preconditions": ["User is logged in", "User is on the Floating Rates page"],
+      "steps": ["1. Click on the '+ Create Floating Rate' button", "2. Enter a valid Floating Rate Name", "3. Check the 'Is Base Lending Rate' checkbox", "4. Check the 'Is Active' checkbox", "5. Add a row in the Rate Periods table with valid From Date, Interest Rate, and check 'Is Differential Rate'", "6. Click 'Save'"],
+      "expected_result": "The new floating rate with a differential rate is created successfully and displayed in the data table.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 3,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Delinquency Management ===
+{
+  "module": "Delinquency Management",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create Delinquency Range with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Delinquency Ranges page"],
+      "steps": ["1. Click on 'Create Delinquency Range'", "2. Enter 'Classification' as 'Late Payment'", "3. Enter 'Minimum Age Days' as '30'", "4. Leave 'Maximum Age Days' blank", "5. Click 'Submit'"],
+      "expected_result": "Delinquency Range is created successfully and displayed in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create Delinquency Range with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Delinquency Ranges page"],
+      "steps": ["1. Click on 'Create Delinquency Range'", "2. Leave 'Classification' blank", "3. Enter 'Minimum Age Days' as '30'", "4. Click 'Submit'"],
+      "expected_result": "Error message is displayed indicating that 'Classification' is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create Delinquency Range with maximum length classification",
+      "preconditions": ["User is logged in", "User is on the Delinquency Ranges page"],
+      "steps": ["1. Click on 'Create Delinquency Range'", "2. Enter 'Classification' as a string of 255 characters", "3. Enter 'Minimum Age Days' as '1'", "4. Leave 'Maximum Age Days' blank", "5. Click 'Submit'"],
+      "expected_result": "Delinquency Range is created successfully and displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "positive",
+      "test_case": "Create Delinquency Bucket with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Delinquency Buckets page"],
+      "steps": ["1. Click on 'Create Delinquency Bucket'", "2. Enter 'Bucket Name' as 'High Risk'", "3. Add delinquency ranges: '1-29 days', '30-59 days', '60+ days'", "4. Click 'Submit'"],
+      "expected_result": "Delinquency Bucket is created successfully and displayed in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "negative",
+      "test_case": "Create Delinquency Bucket with missing Bucket Name",
+      "preconditions": ["User is logged in", "User is on the Delinquency Buckets page"],
+      "steps": ["1. Click on 'Create Delinquency Bucket'", "2. Leave 'Bucket Name' blank", "3. Click 'Submit'"],
+      "expected_result": "Error message is displayed indicating that 'Bucket Name' is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "edge",
+      "test_case": "Create Delinquency Bucket with maximum length bucket name",
+      "preconditions": ["User is logged in", "User is on the Delinquency Buckets page"],
+      "steps": ["1. Click on 'Create Delinquency Bucket'", "2. Enter 'Bucket Name' as a string of 255 characters", "3. Add delinquency ranges: '1-29 days', '30-59 days', '60+ days'", "4. Click 'Submit'"],
+      "expected_result": "Delinquency Bucket is created successfully and displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC007",
+      "category": "edge",
+      "test_case": "Create Delinquency Range with Minimum Age Days as 0",
+      "preconditions": ["User is logged in", "User is on the Delinquency Ranges page"],
+      "steps": ["1. Click on 'Create Delinquency Range'", "2. Enter 'Classification' as 'No Payment'", "3. Enter 'Minimum Age Days' as '0'", "4. Leave 'Maximum Age Days' blank", "5. Click 'Submit'"],
+      "expected_result": "Delinquency Range is created successfully and displayed in the data table.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "high_priority": 5,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Loan Account ===
+{
+  "module": "Loan Account",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Submit a valid loan application",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Navigate to the Loan Application form.",
+        "2. Fill in all required fields with valid data.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "Loan application is created with status 'Submitted and Pending Approval'.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Submit loan application with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Navigate to the Loan Application form.",
+        "2. Leave required fields empty.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "Error messages are displayed for the missing required fields.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Submit loan application with maximum principal amount",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Navigate to the Loan Application form.",
+        "2. Enter the maximum principal amount allowed for the selected product.",
+        "3. Fill in all other required fields with valid data.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "Loan application is created with status 'Submitted and Pending Approval'.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Submit loan application with invalid interest rate",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Navigate to the Loan Application form.",
+        "2. Enter an interest rate below the minimum allowed for the selected product.",
+        "3. Fill in all other required fields with valid data.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "Error message is displayed indicating the interest rate is below the minimum allowed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Submit loan application with empty external ID",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Navigate to the Loan Application form.",
+        "2. Fill in all required fields with valid data except for External ID.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "Loan application is created with status 'Submitted and Pending Approval' despite External ID being empty.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "positive",
+      "test_case": "Approve a loan application",
+      "preconditions": ["User is logged in as a loan officer", "Loan application is in 'Submitted and Pending Approval' status"],
+      "steps": [
+        "1. Navigate to the Loan Detail page of the loan application.",
+        "2. Click on the 'Approve' button.",
+        "3. Fill in the approval details.",
+        "4. Click on the 'Confirm' button."
+      ],
+      "expected_result": "Loan application status changes to 'Approved'.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Savings Account ===
+{
+  "module": "Savings Account",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a new savings account with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a product from the Product Name dropdown.",
+        "2. Fill in the Field Officer field.",
+        "3. Select a date in the Submitted On field.",
+        "4. Enter a valid Nominal Annual Interest Rate.",
+        "5. Select the Interest Compounding Period.",
+        "6. Select the Interest Posting Period.",
+        "7. Select the Interest Calculated Using option.",
+        "8. Enter a valid Days in Year value.",
+        "9. Enter a valid Minimum Opening Balance.",
+        "10. Enter a valid Lock-in Period.",
+        "11. Check the Allow Overdraft checkbox.",
+        "12. Click on Submit."
+      ],
+      "expected_result": "The account is created with status 'Submitted and Pending Approval'.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to create a savings account with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Leave the Product Name dropdown unselected.",
+        "2. Click on Submit."
+      ],
+      "expected_result": "An error message is displayed indicating that the Product Name is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create a savings account with maximum length inputs",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a product from the Product Name dropdown.",
+        "2. Fill in the Field Officer field with maximum allowed characters.",
+        "3. Select the maximum date in the Submitted On field.",
+        "4. Enter the maximum valid Nominal Annual Interest Rate.",
+        "5. Select the maximum length Interest Compounding Period.",
+        "6. Select the maximum length Interest Posting Period.",
+        "7. Select the maximum length Interest Calculated Using option.",
+        "8. Enter the maximum valid Days in Year value.",
+        "9. Enter the maximum valid Minimum Opening Balance.",
+        "10. Enter the maximum valid Lock-in Period.",
+        "11. Check the Allow Overdraft checkbox.",
+        "12. Click on Submit."
+      ],
+      "expected_result": "The account is created successfully with status 'Submitted and Pending Approval'.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Attempt to withdraw more than available balance without overdraft",
+      "preconditions": ["User is logged in", "User has an active savings account with a balance of $100", "User is on the Savings Account Detail page"],
+      "steps": [
+        "1. Click on Withdraw.",
+        "2. Enter a Transaction Date.",
+        "3. Enter a Transaction Amount of $150.",
+        "4. Select Payment Type as Cash.",
+        "5. Click on Submit."
+      ],
+      "expected_result": "An error message is displayed indicating that the withdrawal exceeds the available balance.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create a savings account with zero as Minimum Opening Balance",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a product from the Product Name dropdown.",
+        "2. Fill in the Field Officer field.",
+        "3. Select a date in the Submitted On field.",
+        "4. Enter a valid Nominal Annual Interest Rate.",
+        "5. Select the Interest Compounding Period.",
+        "6. Select the Interest Posting Period.",
+        "7. Select the Interest Calculated Using option.",
+        "8. Enter 0 as Minimum Opening Balance.",
+        "9. Enter a valid Lock-in Period.",
+        "10. Check the Allow Overdraft checkbox.",
+        "11. Click on Submit."
+      ],
+      "expected_result": "The account is created successfully with status 'Submitted and Pending Approval'.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Share Account ===
+{
+  "module": "Share Account",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create Share Account with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a valid Share Product from the dropdown.",
+        "2. Enter a valid Submitted On date.",
+        "3. Enter a number of Requested Shares within the product's min/max limits.",
+        "4. Enter a valid Application Date.",
+        "5. Select a valid Savings Account for Charges from the dropdown.",
+        "6. Enter a valid External ID.",
+        "7. Click on the Submit button."
+      ],
+      "expected_result": "The share account is created with status 'Submitted and Pending Approval'.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create Share Account with invalid Requested Shares",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a valid Share Product from the dropdown.",
+        "2. Enter a valid Submitted On date.",
+        "3. Enter a number of Requested Shares below the product's minimum limit.",
+        "4. Enter a valid Application Date.",
+        "5. Select a valid Savings Account for Charges from the dropdown.",
+        "6. Enter a valid External ID.",
+        "7. Click on the Submit button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Requested Shares are below the minimum limit.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "negative",
+      "test_case": "Create Share Account with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Leave the Share Product dropdown unselected.",
+        "2. Leave the Submitted On date empty.",
+        "3. Leave the Requested Shares field empty.",
+        "4. Leave the Application Date empty.",
+        "5. Leave the Savings Account for Charges dropdown unselected.",
+        "6. Leave the External ID empty.",
+        "7. Click on the Submit button."
+      ],
+      "expected_result": "Error messages are displayed for each missing required field.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "edge",
+      "test_case": "Create Share Account with maximum length External ID",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a valid Share Product from the dropdown.",
+        "2. Enter a valid Submitted On date.",
+        "3. Enter a number of Requested Shares within the product's min/max limits.",
+        "4. Enter a valid Application Date.",
+        "5. Select a valid Savings Account for Charges from the dropdown.",
+        "6. Enter an External ID with maximum allowed length.",
+        "7. Click on the Submit button."
+      ],
+      "expected_result": "The share account is created successfully with the maximum length External ID.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create Share Account with boundary values for Requested Shares",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a valid Share Product from the dropdown.",
+        "2. Enter a valid Submitted On date.",
+        "3. Enter the minimum number of Requested Shares.",
+        "4. Enter a valid Application Date.",
+        "5. Select a valid Savings Account for Charges from the dropdown.",
+        "6. Enter a valid External ID.",
+        "7. Click on the Submit button."
+      ],
+      "expected_result": "The share account is created successfully with the minimum number of Requested Shares.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "edge",
+      "test_case": "Create Share Account with maximum number of Requested Shares",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": [
+        "1. Select a valid Share Product from the dropdown.",
+        "2. Enter a valid Submitted On date.",
+        "3. Enter the maximum number of Requested Shares.",
+        "4. Enter a valid Application Date.",
+        "5. Select a valid Savings Account for Charges from the dropdown.",
+        "6. Enter a valid External ID.",
+        "7. Click on the Submit button."
+      ],
+      "expected_result": "The share account is created successfully with the maximum number of Requested Shares.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Fixed & Recurring Deposit Accounts ===
+{
+  "module": "Fixed & Recurring Deposit Accounts",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "FD_TC_001",
+      "category": "positive",
+      "test_case": "Create Fixed Deposit with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": ["1. Select a Fixed Deposit Product from the dropdown", "2. Enter a valid Deposit Amount", "3. Enter a valid Deposit Period", "4. Select Maturity Instructions", "5. Click on 'Submit'"],
+      "expected_result": "FD Account is created successfully and user is redirected to the FD Account Detail page showing the correct details.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FD_TC_002",
+      "category": "negative",
+      "test_case": "Create Fixed Deposit with invalid Deposit Amount",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": ["1. Select a Fixed Deposit Product from the dropdown", "2. Enter an invalid Deposit Amount (e.g., negative value)", "3. Enter a valid Deposit Period", "4. Select Maturity Instructions", "5. Click on 'Submit'"],
+      "expected_result": "An error message is displayed indicating that the Deposit Amount is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FD_TC_003",
+      "category": "edge",
+      "test_case": "Create Fixed Deposit with maximum length Deposit Amount",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": ["1. Select a Fixed Deposit Product from the dropdown", "2. Enter a maximum length Deposit Amount (e.g., 999999999)", "3. Enter a valid Deposit Period", "4. Select Maturity Instructions", "5. Click on 'Submit'"],
+      "expected_result": "FD Account is created successfully and user is redirected to the FD Account Detail page showing the correct details.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "RD_TC_001",
+      "category": "positive",
+      "test_case": "Create Recurring Deposit with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": ["1. Select a Recurring Deposit Product from the dropdown", "2. Enter a valid Mandatory Deposit Amount per installment", "3. Enter a valid Deposit Period", "4. Select Deposit Frequency", "5. Enter a valid Expected First Deposit On date", "6. Click on 'Submit'"],
+      "expected_result": "RD Account is created successfully and user is redirected to the RD Account Detail page showing the correct details.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "RD_TC_002",
+      "category": "negative",
+      "test_case": "Create Recurring Deposit with missing Expected First Deposit On date",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": ["1. Select a Recurring Deposit Product from the dropdown", "2. Enter a valid Mandatory Deposit Amount per installment", "3. Enter a valid Deposit Period", "4. Select Deposit Frequency", "5. Leave Expected First Deposit On date empty", "6. Click on 'Submit'"],
+      "expected_result": "An error message is displayed indicating that the Expected First Deposit On date is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "RD_TC_003",
+      "category": "edge",
+      "test_case": "Create Recurring Deposit with maximum length Mandatory Deposit Amount",
+      "preconditions": ["User is logged in", "User is on the Client Detail page"],
+      "steps": ["1. Select a Recurring Deposit Product from the dropdown", "2. Enter a maximum length Mandatory Deposit Amount (e.g., 999999999)", "3. Enter a valid Deposit Period", "4. Select Deposit Frequency", "5. Enter a valid Expected First Deposit On date", "6. Click on 'Submit'"],
+      "expected_result": "RD Account is created successfully and user is redirected to the RD Account Detail page showing the correct details.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Accounting — Chart of Accounts ===
+{
+  "module": "Accounting — Chart of Accounts",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a new GL Account with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Chart of Accounts page"],
+      "steps": [
+        "1. Click on the '+ Create GL Account' button.",
+        "2. Fill in the Account Type with 'Assets'.",
+        "3. Select a Parent Account from the dropdown.",
+        "4. Enter a unique GL Code.",
+        "5. Enter a valid Account Name.",
+        "6. Select 'Detail' for Account Usage.",
+        "7. Check the 'Manual Entries Allowed' checkbox.",
+        "8. Enter a Description.",
+        "9. Select a Tag from the dropdown.",
+        "10. Click on the 'Save' button."
+      ],
+      "expected_result": "The new GL Account is created successfully and appears in the Chart of Accounts tree.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to create a GL Account with a duplicate GL Code",
+      "preconditions": ["User is logged in", "User is on the Chart of Accounts page", "A GL Account with the same GL Code already exists"],
+      "steps": [
+        "1. Click on the '+ Create GL Account' button.",
+        "2. Fill in the Account Type with 'Liabilities'.",
+        "3. Select a Parent Account from the dropdown.",
+        "4. Enter the duplicate GL Code.",
+        "5. Enter a valid Account Name.",
+        "6. Select 'Header' for Account Usage.",
+        "7. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the GL Code must be unique.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "negative",
+      "test_case": "Attempt to create a GL Account without required fields",
+      "preconditions": ["User is logged in", "User is on the Chart of Accounts page"],
+      "steps": [
+        "1. Click on the '+ Create GL Account' button.",
+        "2. Leave the Account Type field empty.",
+        "3. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Account Type is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "edge",
+      "test_case": "Create a GL Account with maximum length fields",
+      "preconditions": ["User is logged in", "User is on the Chart of Accounts page"],
+      "steps": [
+        "1. Click on the '+ Create GL Account' button.",
+        "2. Fill in the Account Type with 'Expenses'.",
+        "3. Select a Parent Account from the dropdown.",
+        "4. Enter a GL Code with maximum allowed characters.",
+        "5. Enter an Account Name with maximum allowed characters.",
+        "6. Select 'Detail' for Account Usage.",
+        "7. Check the 'Manual Entries Allowed' checkbox.",
+        "8. Enter a Description with maximum allowed characters.",
+        "9. Select a Tag from the dropdown.",
+        "10. Click on the 'Save' button."
+      ],
+      "expected_result": "The new GL Account is created successfully with maximum length fields and appears in the Chart of Accounts tree.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create a GL Account with empty fields for optional inputs",
+      "preconditions": ["User is logged in", "User is on the Chart of Accounts page"],
+      "steps": [
+        "1. Click on the '+ Create GL Account' button.",
+        "2. Fill in the Account Type with 'Assets'.",
+        "3. Select a Parent Account from the dropdown.",
+        "4. Enter a unique GL Code.",
+        "5. Enter a valid Account Name.",
+        "6. Select 'Header' for Account Usage.",
+        "7. Leave the Description field empty.",
+        "8. Leave the Tag dropdown unselected.",
+        "9. Click on the 'Save' button."
+      ],
+      "expected_result": "The new GL Account is created successfully with optional fields left empty and appears in the Chart of Accounts tree.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Accounting — Journal Entries & Closures ===
+{
+  "module": "Accounting — Journal Entries & Closures",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Successfully add a journal entry with valid data",
+      "preconditions": ["User is logged in", "User is on the Journal Entries page"],
+      "steps": [
+        "1. Click on the '+ Add Journal Entry' button.",
+        "2. Fill in the required fields: Office, Currency, Transaction Date.",
+        "3. Add at least one entry line with GL Account and Amount.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "The journal entry is successfully added, and the user is redirected to the Journal Entries page with a success message.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Fail to add a journal entry with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Journal Entries page"],
+      "steps": [
+        "1. Click on the '+ Add Journal Entry' button.",
+        "2. Leave the required fields (Office, Currency, Transaction Date) empty.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Add a journal entry with maximum allowed characters in comments",
+      "preconditions": ["User is logged in", "User is on the Journal Entries page"],
+      "steps": [
+        "1. Click on the '+ Add Journal Entry' button.",
+        "2. Fill in the required fields: Office, Currency, Transaction Date.",
+        "3. Add at least one entry line with GL Account and Amount.",
+        "4. Fill the Comments field with the maximum allowed characters.",
+        "5. Click on the 'Submit' button."
+      ],
+      "expected_result": "The journal entry is successfully added, and the user is redirected to the Journal Entries page.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "positive",
+      "test_case": "Successfully create a closure with valid data",
+      "preconditions": ["User is logged in", "User is on the Closing Entries page"],
+      "steps": [
+        "1. Click on the '+ Create Closure' button.",
+        "2. Fill in the required fields: Office, Closing Date.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "The closure is successfully created, and the user is redirected to the Closing Entries page with a success message.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "negative",
+      "test_case": "Fail to create a closure with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Closing Entries page"],
+      "steps": [
+        "1. Click on the '+ Create Closure' button.",
+        "2. Leave the required fields (Office, Closing Date) empty.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "edge",
+      "test_case": "Create a closure with a closing date set to today",
+      "preconditions": ["User is logged in", "User is on the Closing Entries page"],
+      "steps": [
+        "1. Click on the '+ Create Closure' button.",
+        "2. Fill in the required fields: Office, Closing Date (set to today's date).",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "The closure is successfully created, and the user is redirected to the Closing Entries page.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Accounting Rules & Financial Activity Mappings ===
+{
+  "module": "Accounting Rules & Financial Activity Mappings",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "AR-001",
+      "category": "positive",
+      "test_case": "Create a new accounting rule successfully",
+      "preconditions": ["User is logged in", "User is on the Accounting Rules page"],
+      "steps": ["1. Click on the '+ Create Rule' button", "2. Select an Office from the dropdown", "3. Enter a valid Rule Name", "4. Select one or more Debit Accounts", "5. Select one or more Credit Accounts", "6. Click on the 'Save' button"],
+      "expected_result": "The new accounting rule is created and displayed in the data table",
+      "priority": "high"
+    },
+    {
+      "tc_id": "AR-002",
+      "category": "negative",
+      "test_case": "Attempt to create a rule without a Rule Name",
+      "preconditions": ["User is logged in", "User is on the Accounting Rules page"],
+      "steps": ["1. Click on the '+ Create Rule' button", "2. Select an Office from the dropdown", "3. Leave the Rule Name field empty", "4. Select one or more Debit Accounts", "5. Select one or more Credit Accounts", "6. Click on the 'Save' button"],
+      "expected_result": "An error message is displayed indicating that the Rule Name is required",
+      "priority": "high"
+    },
+    {
+      "tc_id": "AR-003",
+      "category": "edge",
+      "test_case": "Create a rule with maximum length Rule Name",
+      "preconditions": ["User is logged in", "User is on the Accounting Rules page"],
+      "steps": ["1. Click on the '+ Create Rule' button", "2. Select an Office from the dropdown", "3. Enter a Rule Name with maximum allowed characters", "4. Select one or more Debit Accounts", "5. Select one or more Credit Accounts", "6. Click on the 'Save' button"],
+      "expected_result": "The new accounting rule is created successfully and displayed in the data table",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "FM-001",
+      "category": "positive",
+      "test_case": "Create a new financial activity mapping successfully",
+      "preconditions": ["User is logged in", "User is on the Financial Activity Mappings page"],
+      "steps": ["1. Click on the '+ Create Mapping' button", "2. Select a Financial Activity from the dropdown", "3. Select a GL Account from the dropdown", "4. Click on the 'Save' button"],
+      "expected_result": "The new financial activity mapping is created and displayed in the data table",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FM-002",
+      "category": "negative",
+      "test_case": "Attempt to create a mapping for an already mapped financial activity",
+      "preconditions": ["User is logged in", "User is on the Financial Activity Mappings page", "A mapping already exists for the selected financial activity"],
+      "steps": ["1. Click on the '+ Create Mapping' button", "2. Select the already mapped Financial Activity from the dropdown", "3. Select a GL Account from the dropdown", "4. Click on the 'Save' button"],
+      "expected_result": "An error message is displayed indicating that the financial activity is already mapped",
+      "priority": "high"
+    },
+    {
+      "tc_id": "FM-003",
+      "category": "edge",
+      "test_case": "Create a mapping with maximum length GL Account",
+      "preconditions": ["User is logged in", "User is on the Financial Activity Mappings page"],
+      "steps": ["1. Click on the '+ Create Mapping' button", "2. Select a Financial Activity from the dropdown", "3. Select a GL Account with maximum allowed characters", "4. Click on the 'Save' button"],
+      "expected_result": "The new financial activity mapping is created successfully and displayed in the data table",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 5,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Provisioning ===
+{
+  "module": "Provisioning",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create Provisioning Criteria with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Provisioning Criteria page"],
+      "steps": ["1. Click on the '+ Create' button", "2. Enter a valid Criteria Name", "3. Add a row in the Definitions table with valid Loan Product, Category, Minimum Age, Maximum Age, Provisioning Percentage, Liability Account, and Expense Account", "4. Click on the 'Save' button"],
+      "expected_result": "The new provisioning criteria is saved successfully and displayed in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to create Provisioning Criteria without Criteria Name",
+      "preconditions": ["User is logged in", "User is on the Provisioning Criteria page"],
+      "steps": ["1. Click on the '+ Create' button", "2. Leave the Criteria Name field empty", "3. Add a row in the Definitions table with valid inputs", "4. Click on the 'Save' button"],
+      "expected_result": "An error message is displayed indicating that the Criteria Name is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create Provisioning Criteria with maximum length Criteria Name",
+      "preconditions": ["User is logged in", "User is on the Provisioning Criteria page"],
+      "steps": ["1. Click on the '+ Create' button", "2. Enter a Criteria Name with maximum allowed characters", "3. Add a row in the Definitions table with valid inputs", "4. Click on the 'Save' button"],
+      "expected_result": "The new provisioning criteria is saved successfully and displayed in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create Provisioning Entry with no criteria defined",
+      "preconditions": ["User is logged in", "User is on the Provisioning Entries page"],
+      "steps": ["1. Click on the '+ Create Provisioning Entry' button"],
+      "expected_result": "An error message is displayed indicating that no provisioning criteria are defined.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create Provisioning Entry with maximum number of criteria",
+      "preconditions": ["User is logged in", "User has defined the maximum number of provisioning criteria"],
+      "steps": ["1. Click on the '+ Create Provisioning Entry' button"],
+      "expected_result": "The system processes the entries and displays the journal entries correctly.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "positive",
+      "test_case": "Review a Provisioning Entry",
+      "preconditions": ["User is logged in", "User is on the Provisioning Entries page", "At least one provisioning entry exists"],
+      "steps": ["1. Click on the review button for an existing provisioning entry"],
+      "expected_result": "The detailed breakdown of the selected provisioning entry is displayed.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Offices ===
+{
+  "module": "Offices",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create Office with valid inputs",
+      "preconditions": ["User is logged in", "User is on the Offices page"],
+      "steps": [
+        "1. Click on the '+ Create Office' button.",
+        "2. Fill in the Office Name with a valid name.",
+        "3. Select a Parent Office from the dropdown.",
+        "4. Enter a valid Opening Date.",
+        "5. Optionally, enter a valid External ID.",
+        "6. Click on the 'Save' button."
+      ],
+      "expected_result": "A new office is created, and the user is redirected to the Offices page with the new office listed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create Office with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Offices page"],
+      "steps": [
+        "1. Click on the '+ Create Office' button.",
+        "2. Leave the Office Name field empty.",
+        "3. Leave the Parent Office field empty.",
+        "4. Leave the Opening Date field empty.",
+        "5. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that all required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create Office with maximum length Office Name",
+      "preconditions": ["User is logged in", "User is on the Offices page"],
+      "steps": [
+        "1. Click on the '+ Create Office' button.",
+        "2. Fill in the Office Name with a string of maximum allowed length.",
+        "3. Select a Parent Office from the dropdown.",
+        "4. Enter a valid Opening Date.",
+        "5. Optionally, enter a valid External ID.",
+        "6. Click on the 'Save' button."
+      ],
+      "expected_result": "A new office is created successfully, and the user is redirected to the Offices page with the new office listed.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create Office with invalid Opening Date",
+      "preconditions": ["User is logged in", "User is on the Offices page"],
+      "steps": [
+        "1. Click on the '+ Create Office' button.",
+        "2. Fill in the Office Name with a valid name.",
+        "3. Select a Parent Office from the dropdown.",
+        "4. Enter an invalid Opening Date (e.g., future date).",
+        "5. Optionally, enter a valid External ID.",
+        "6. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Opening Date is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create Office with special characters in Office Name",
+      "preconditions": ["User is logged in", "User is on the Offices page"],
+      "steps": [
+        "1. Click on the '+ Create Office' button.",
+        "2. Fill in the Office Name with special characters (e.g., @#$%^&*).",
+        "3. Select a Parent Office from the dropdown.",
+        "4. Enter a valid Opening Date.",
+        "5. Optionally, enter a valid External ID.",
+        "6. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Office Name contains invalid characters.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Employees ===
+{
+  "module": "Employees",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create Employee with valid data",
+      "preconditions": ["User is logged in", "User is on the Employees page"],
+      "steps": ["1. Click on '+ Create Employee' button", "2. Fill in all required fields with valid data", "3. Click 'Save' button"],
+      "expected_result": "Employee is created successfully and appears in the Employees data table",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create Employee without required fields",
+      "preconditions": ["User is logged in", "User is on the Employees page"],
+      "steps": ["1. Click on '+ Create Employee' button", "2. Leave required fields (Office, First Name, Last Name) empty", "3. Click 'Save' button"],
+      "expected_result": "Error messages are displayed for the empty required fields",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create Employee with maximum length fields",
+      "preconditions": ["User is logged in", "User is on the Employees page"],
+      "steps": ["1. Click on '+ Create Employee' button", "2. Fill in all fields with maximum allowed characters", "3. Click 'Save' button"],
+      "expected_result": "Employee is created successfully and appears in the Employees data table",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create Employee with invalid mobile number",
+      "preconditions": ["User is logged in", "User is on the Employees page"],
+      "steps": ["1. Click on '+ Create Employee' button", "2. Fill in all required fields with valid data", "3. Enter an invalid mobile number format", "4. Click 'Save' button"],
+      "expected_result": "Error message is displayed for the invalid mobile number",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Create Employee with empty optional fields",
+      "preconditions": ["User is logged in", "User is on the Employees page"],
+      "steps": ["1. Click on '+ Create Employee' button", "2. Fill in required fields only", "3. Click 'Save' button"],
+      "expected_result": "Employee is created successfully with optional fields left empty",
+      "priority": "low"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "positive",
+      "test_case": "Edit Employee details",
+      "preconditions": ["User is logged in", "User is on the Employees page", "At least one employee exists"],
+      "steps": ["1. Click on the Name link of an existing employee", "2. Click on 'Edit' option", "3. Modify some details", "4. Click 'Save' button"],
+      "expected_result": "Employee details are updated successfully and reflected in the Employees data table",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 3,
+    "medium_priority": 2,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Teller & Cashier Management ===
+{
+  "module": "Teller & Cashier Management",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a new teller with valid inputs",
+      "preconditions": ["User is logged in as a manager or admin"],
+      "steps": [
+        "1. Navigate to the Tellers page.",
+        "2. Click on the '+ Create Teller' button.",
+        "3. Fill in the required fields: Office, Teller Name, Start Date.",
+        "4. Click on the 'Save' button."
+      ],
+      "expected_result": "A new teller is created, and the user is redirected to the Tellers page where the new teller is listed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to create a teller without required fields",
+      "preconditions": ["User is logged in as a manager or admin"],
+      "steps": [
+        "1. Navigate to the Tellers page.",
+        "2. Click on the '+ Create Teller' button.",
+        "3. Leave the required fields (Office, Teller Name, Start Date) empty.",
+        "4. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create a teller with maximum length name",
+      "preconditions": ["User is logged in as a manager or admin"],
+      "steps": [
+        "1. Navigate to the Tellers page.",
+        "2. Click on the '+ Create Teller' button.",
+        "3. Fill in the Office with a valid entry.",
+        "4. Enter a Teller Name with the maximum allowed characters.",
+        "5. Fill in a valid Start Date.",
+        "6. Click on the 'Save' button."
+      ],
+      "expected_result": "A new teller is created successfully, and the user is redirected to the Tellers page.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "positive",
+      "test_case": "Allocate a cashier with valid inputs",
+      "preconditions": ["User is logged in as a manager or admin", "At least one teller exists"],
+      "steps": [
+        "1. Navigate to the Tellers page.",
+        "2. Click on a Teller Name to view details.",
+        "3. Click on the '+ Allocate Cashier' button.",
+        "4. Fill in the required fields: Staff, Start Date.",
+        "5. Click on the 'Allocate' button."
+      ],
+      "expected_result": "A new cashier is allocated, and the user is redirected to the Teller Detail page where the new cashier is listed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "negative",
+      "test_case": "Attempt to allocate a cashier without required fields",
+      "preconditions": ["User is logged in as a manager or admin", "At least one teller exists"],
+      "steps": [
+        "1. Navigate to the Tellers page.",
+        "2. Click on a Teller Name to view details.",
+        "3. Click on the '+ Allocate Cashier' button.",
+        "4. Leave the required fields (Staff, Start Date) empty.",
+        "5. Click on the 'Allocate' button."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "edge",
+      "test_case": "Allocate a cashier with maximum length staff name",
+      "preconditions": ["User is logged in as a manager or admin", "At least one teller exists"],
+      "steps": [
+        "1. Navigate to the Tellers page.",
+        "2. Click on a Teller Name to view details.",
+        "3. Click on the '+ Allocate Cashier' button.",
+        "4. Enter a Staff name with the maximum allowed characters.",
+        "5. Fill in a valid Start Date.",
+        "6. Click on the 'Allocate' button."
+      ],
+      "expected_result": "A new cashier is allocated successfully, and the user is redirected to the Teller Detail page.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC007",
+      "category": "positive",
+      "test_case": "Settle cash with valid inputs",
+      "preconditions": ["User is logged in as a manager or admin", "At least one cashier exists"],
+      "steps": [
+        "1. Navigate to the Cashier Detail page.",
+        "2. Click on the 'Settle Cash' button.",
+        "3. Fill in the Amount, Currency, and Transaction Date fields.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "The cash is settled successfully, and the Cashier Transactions list is updated.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC008",
+      "category": "negative",
+      "test_case": "Attempt to settle cash without required fields",
+      "preconditions": ["User is logged in as a manager or admin", "At least one cashier exists"],
+      "steps": [
+        "1. Navigate to the Cashier Detail page.",
+        "2. Click on the 'Settle Cash' button.",
+        "3. Leave the required fields (Amount, Currency, Transaction Date) empty.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC009",
+      "category": "edge",
+      "test_case": "Settle cash with maximum amount",
+      "preconditions": ["User is logged in as a manager or admin", "At least one cashier exists"],
+      "steps": [
+        "1. Navigate to the Cashier Detail page.",
+        "2. Click on the 'Settle Cash' button.",
+        "3. Fill in the Amount with the maximum allowed value.",
+        "4. Fill in a valid Currency and Transaction Date.",
+        "5. Click on the 'Submit' button."
+      ],
+      "expected_result": "The cash is settled successfully, and the Cashier Transactions list is updated.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "high_priority": 6,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Users & Roles ===
+{
+  "module": "Users & Roles",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "UC-001",
+      "category": "positive",
+      "test_case": "Create a new user with valid details",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Fill in the Username, First Name, Last Name, Email, Office, Password, and Repeat Password fields with valid data.",
+        "3. Select roles from the Roles multi-select checkboxes.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "The user is created successfully, and a confirmation message is displayed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-002",
+      "category": "negative",
+      "test_case": "Attempt to create a user with a duplicate username",
+      "preconditions": ["User is logged in with appropriate permissions", "A user with the same username already exists"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Fill in the Username field with the existing username.",
+        "3. Fill in the other required fields with valid data.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the username must be unique.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-003",
+      "category": "negative",
+      "test_case": "Create a user without filling required fields",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Leave all required fields empty.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "Error messages are displayed for all required fields indicating they must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-004",
+      "category": "edge",
+      "test_case": "Create a user with maximum length username",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Fill in the Username field with a maximum length valid username.",
+        "3. Fill in the other required fields with valid data.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "The user is created successfully, and a confirmation message is displayed.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "UC-005",
+      "category": "edge",
+      "test_case": "Create a user with an invalid email format",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Fill in the Email field with an invalid email format.",
+        "3. Fill in the other required fields with valid data.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the email format is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-006",
+      "category": "negative",
+      "test_case": "Create a user with mismatched passwords",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Fill in all required fields with valid data.",
+        "3. Enter a different value in the Repeat Password field.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the passwords do not match.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-007",
+      "category": "edge",
+      "test_case": "Create a user with a very long password",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create User' button.",
+        "2. Fill in all required fields with valid data.",
+        "3. Enter a very long password that meets the password policy.",
+        "4. Enter the same value in the Repeat Password field.",
+        "5. Click on the 'Submit' button."
+      ],
+      "expected_result": "The user is created successfully, and a confirmation message is displayed.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "UC-008",
+      "category": "positive",
+      "test_case": "Create a role with valid details",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create Role' button.",
+        "2. Fill in the Role Name and Description fields with valid data.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "The role is created successfully, and a confirmation message is displayed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-009",
+      "category": "negative",
+      "test_case": "Create a role without filling required fields",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create Role' button.",
+        "2. Leave all required fields empty.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "Error messages are displayed for all required fields indicating they must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "UC-010",
+      "category": "edge",
+      "test_case": "Create a role with maximum length name",
+      "preconditions": ["User is logged in with appropriate permissions"],
+      "steps": [
+        "1. Click on the '+ Create Role' button.",
+        "2. Fill in the Role Name field with a maximum length valid name.",
+        "3. Fill in the Description field with valid data.",
+        "4. Click on the 'Submit' button."
+      ],
+      "expected_result": "The role is created successfully, and a confirmation message is displayed.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "high_priority": 7,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Reports ===
+{
+  "module": "Reports",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Generate report with valid parameters",
+      "preconditions": ["User is logged in", "User is on the Reports page"],
+      "steps": ["1. Click on a report name (e.g., Loans Awaiting Disbursal)", "2. Fill in all required fields with valid data", "3. Click on 'Run Report' button"],
+      "expected_result": "The report is generated and displayed as a data table with sorting and pagination options.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Attempt to generate report with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Reports page"],
+      "steps": ["1. Click on a report name (e.g., Active Loans Summary)", "2. Leave required fields empty", "3. Click on 'Run Report' button"],
+      "expected_result": "An error message is displayed indicating that required fields must be filled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Generate report with maximum length input",
+      "preconditions": ["User is logged in", "User is on the Reports page"],
+      "steps": ["1. Click on a report name (e.g., Portfolio at Risk)", "2. Fill in fields with maximum allowed character length", "3. Click on 'Run Report' button"],
+      "expected_result": "The report is generated successfully without any errors.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Generate report with invalid date range",
+      "preconditions": ["User is logged in", "User is on the Reports page"],
+      "steps": ["1. Click on a report name (e.g., Loans Pending Approval)", "2. Set the start date to a later date than the end date", "3. Click on 'Run Report' button"],
+      "expected_result": "An error message is displayed indicating that the date range is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "edge",
+      "test_case": "Generate report with empty fields",
+      "preconditions": ["User is logged in", "User is on the Reports page"],
+      "steps": ["1. Click on a report name (e.g., Active Loans Details)", "2. Leave all fields empty", "3. Click on 'Run Report' button"],
+      "expected_result": "An error message is displayed indicating that at least one field must be filled.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "positive",
+      "test_case": "Export report to PDF",
+      "preconditions": ["User is logged in", "User has generated a report"],
+      "steps": ["1. Click on the 'Export' button", "2. Select 'PDF' from the output options", "3. Confirm the export"],
+      "expected_result": "The report is successfully exported as a PDF file.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "high_priority": 4,
+    "medium_priority": 2,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Account Transfers & Standing Instructions ===
+{
+  "module": "Account Transfers & Standing Instructions",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "AT-001",
+      "category": "positive",
+      "test_case": "Successful account transfer",
+      "preconditions": ["User is logged in", "User has sufficient balance"],
+      "steps": ["1. Navigate to Account Transfers form", "2. Fill in all required fields with valid data", "3. Click on 'Submit'"],
+      "expected_result": "Transfer is processed successfully, and a confirmation message is displayed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "AT-002",
+      "category": "negative",
+      "test_case": "Transfer amount exceeds available balance",
+      "preconditions": ["User is logged in", "User has insufficient balance"],
+      "steps": ["1. Navigate to Account Transfers form", "2. Fill in all required fields with valid data but set Transfer Amount greater than available balance", "3. Click on 'Submit'"],
+      "expected_result": "An error message is displayed indicating insufficient funds.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "AT-003",
+      "category": "negative",
+      "test_case": "Missing required transfer amount",
+      "preconditions": ["User is logged in"],
+      "steps": ["1. Navigate to Account Transfers form", "2. Fill in all fields except Transfer Amount", "3. Click on 'Submit'"],
+      "expected_result": "An error message is displayed indicating that Transfer Amount is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "AT-004",
+      "category": "edge",
+      "test_case": "Transfer amount is zero",
+      "preconditions": ["User is logged in", "User has sufficient balance"],
+      "steps": ["1. Navigate to Account Transfers form", "2. Fill in all required fields with valid data and set Transfer Amount to 0", "3. Click on 'Submit'"],
+      "expected_result": "An error message is displayed indicating that Transfer Amount must be greater than zero.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "AT-005",
+      "category": "edge",
+      "test_case": "Maximum length of description",
+      "preconditions": ["User is logged in"],
+      "steps": ["1. Navigate to Account Transfers form", "2. Fill in all required fields with valid data and set Description to maximum allowed length", "3. Click on 'Submit'"],
+      "expected_result": "Transfer is processed successfully, and a confirmation message is displayed.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "SI-001",
+      "category": "positive",
+      "test_case": "Create standing instruction successfully",
+      "preconditions": ["User is logged in"],
+      "steps": ["1. Navigate to Standing Instructions page", "2. Click on '+ Create Standing Instruction'", "3. Fill in all required fields with valid data", "4. Click on 'Submit'"],
+      "expected_result": "Standing instruction is created successfully, and it appears in the listing.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "SI-002",
+      "category": "negative",
+      "test_case": "Missing required fields in standing instruction",
+      "preconditions": ["User is logged in"],
+      "steps": ["1. Navigate to Standing Instructions page", "2. Click on '+ Create Standing Instruction'", "3. Fill in all fields except Name", "4. Click on 'Submit'"],
+      "expected_result": "An error message is displayed indicating that Name is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "SI-003",
+      "category": "edge",
+      "test_case": "Create standing instruction with maximum length name",
+      "preconditions": ["User is logged in"],
+      "steps": ["1. Navigate to Standing Instructions page", "2. Click on '+ Create Standing Instruction'", "3. Fill in all required fields with Name at maximum allowed length", "4. Click on 'Submit'"],
+      "expected_result": "Standing instruction is created successfully, and it appears in the listing.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "SI-004",
+      "category": "negative",
+      "test_case": "Delete standing instruction",
+      "preconditions": ["User is logged in", "At least one standing instruction exists"],
+      "steps": ["1. Navigate to Standing Instructions page", "2. Locate an existing standing instruction", "3. Click on 'Delete' for that instruction", "4. Confirm deletion"],
+      "expected_result": "Standing instruction is deleted successfully, and it no longer appears in the listing.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "high_priority": 5,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Tax Management ===
+{
+  "module": "Tax Management",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Create a valid Tax Component",
+      "preconditions": ["User is logged in", "User is on the Tax Components page"],
+      "steps": [
+        "1. Click on the '+ Create Tax Component' button.",
+        "2. Fill in the Name field with 'Sales Tax'.",
+        "3. Fill in the Percentage field with '10'.",
+        "4. Select 'Asset' for Debit Account Type.",
+        "5. Enter a valid GL account for Debit Account.",
+        "6. Select 'Liability' for Credit Account Type.",
+        "7. Enter a valid GL account for Credit Account.",
+        "8. Fill in the Start Date with today's date.",
+        "9. Click on the 'Save' button."
+      ],
+      "expected_result": "The Tax Component is created successfully and appears in the data table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Create a Tax Component with missing required fields",
+      "preconditions": ["User is logged in", "User is on the Tax Components page"],
+      "steps": [
+        "1. Click on the '+ Create Tax Component' button.",
+        "2. Leave the Name field empty.",
+        "3. Leave the Percentage field empty.",
+        "4. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that Name and Percentage are required fields.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Create a Tax Component with maximum length Name",
+      "preconditions": ["User is logged in", "User is on the Tax Components page"],
+      "steps": [
+        "1. Click on the '+ Create Tax Component' button.",
+        "2. Fill in the Name field with a string of 255 characters.",
+        "3. Fill in the Percentage field with '5'.",
+        "4. Select 'Expense' for Debit Account Type.",
+        "5. Enter a valid GL account for Debit Account.",
+        "6. Select 'Income' for Credit Account Type.",
+        "7. Enter a valid GL account for Credit Account.",
+        "8. Fill in the Start Date with today's date.",
+        "9. Click on the 'Save' button."
+      ],
+      "expected_result": "The Tax Component is created successfully and appears in the data table.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "negative",
+      "test_case": "Create a Tax Component with invalid Percentage",
+      "preconditions": ["User is logged in", "User is on the Tax Components page"],
+      "steps": [
+        "1. Click on the '+ Create Tax Component' button.",
+        "2. Fill in the Name field with 'Service Tax'.",
+        "3. Fill in the Percentage field with '110'.",
+        "4. Select 'Asset' for Debit Account Type.",
+        "5. Enter a valid GL account for Debit Account.",
+        "6. Select 'Liability' for Credit Account Type.",
+        "7. Enter a valid GL account for Credit Account.",
+        "8. Fill in the Start Date with today's date.",
+        "9. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Percentage must be between 0 and 100.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "positive",
+      "test_case": "Create a valid Tax Group",
+      "preconditions": ["User is logged in", "User is on the Tax Groups page"],
+      "steps": [
+        "1. Click on the '+ Create Tax Group' button.",
+        "2. Fill in the Name field with 'Income Tax Group'.",
+        "3. Add a Tax Component with a valid Start Date and End Date.",
+        "4. Click on the 'Save' button."
+      ],
+      "expected_result": "The Tax Group is created successfully and appears in the data table.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "high_priority": 3,
+    "medium_priority": 1,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Organization Settings ===
+{
+  "module": "Organization Settings",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "OS-001",
+      "category": "positive",
+      "test_case": "Create Holiday with valid inputs",
+      "preconditions": ["User is logged in as Admin", "User is on the Holidays page"],
+      "steps": [
+        "1. Click on the '+ Create Holiday' button.",
+        "2. Fill in the Name field with 'New Year'.",
+        "3. Select From Date as '2024-01-01'.",
+        "4. Select To Date as '2024-01-01'.",
+        "5. Select Rescheduling Type from the dropdown.",
+        "6. Fill in the Description field with 'New Year Holiday'.",
+        "7. Select applicable Offices.",
+        "8. Click on the 'Save' button."
+      ],
+      "expected_result": "A new holiday 'New Year' is created and displayed in the Holidays table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-002",
+      "category": "negative",
+      "test_case": "Create Holiday with missing required fields",
+      "preconditions": ["User is logged in as Admin", "User is on the Holidays page"],
+      "steps": [
+        "1. Click on the '+ Create Holiday' button.",
+        "2. Leave the Name field empty.",
+        "3. Select From Date as '2024-01-01'.",
+        "4. Select To Date as '2024-01-01'.",
+        "5. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Name field is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-003",
+      "category": "edge",
+      "test_case": "Create Holiday with maximum length Name",
+      "preconditions": ["User is logged in as Admin", "User is on the Holidays page"],
+      "steps": [
+        "1. Click on the '+ Create Holiday' button.",
+        "2. Fill in the Name field with a string of 255 characters.",
+        "3. Select From Date as '2024-01-01'.",
+        "4. Select To Date as '2024-01-01'.",
+        "5. Select Rescheduling Type from the dropdown.",
+        "6. Fill in the Description field with 'Holiday Description'.",
+        "7. Select applicable Offices.",
+        "8. Click on the 'Save' button."
+      ],
+      "expected_result": "A new holiday with the maximum length Name is created successfully.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "OS-004",
+      "category": "positive",
+      "test_case": "Configure Working Days successfully",
+      "preconditions": ["User is logged in as Admin", "User is on the Working Days page"],
+      "steps": [
+        "1. Check the checkboxes for Monday, Tuesday, and Wednesday.",
+        "2. Select a Repayment Rescheduling option from the dropdown.",
+        "3. Click on the 'Save' button."
+      ],
+      "expected_result": "The selected working days are saved successfully.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "OS-005",
+      "category": "negative",
+      "test_case": "Configure Working Days with no days selected",
+      "preconditions": ["User is logged in as Admin", "User is on the Working Days page"],
+      "steps": [
+        "1. Leave all checkboxes unchecked.",
+        "2. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that at least one working day must be selected.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-006",
+      "category": "edge",
+      "test_case": "Select all currencies in Currencies page",
+      "preconditions": ["User is logged in as Admin", "User is on the Currencies page"],
+      "steps": [
+        "1. Select all available currencies from the list.",
+        "2. Click on the 'Save' button."
+      ],
+      "expected_result": "All selected currencies are saved successfully.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "OS-007",
+      "category": "positive",
+      "test_case": "Create Fund with valid inputs",
+      "preconditions": ["User is logged in as Admin", "User is on the Funds page"],
+      "steps": [
+        "1. Click on the 'Create Fund' button.",
+        "2. Fill in the Fund Name field with 'Emergency Fund'.",
+        "3. Fill in the External ID field with 'EF123'.",
+        "4. Click on the 'Save' button."
+      ],
+      "expected_result": "A new fund 'Emergency Fund' is created and displayed in the Funds table.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-008",
+      "category": "negative",
+      "test_case": "Create Fund with missing Fund Name",
+      "preconditions": ["User is logged in as Admin", "User is on the Funds page"],
+      "steps": [
+        "1. Click on the 'Create Fund' button.",
+        "2. Leave the Fund Name field empty.",
+        "3. Fill in the External ID field with 'EF123'.",
+        "4. Click on the 'Save' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the Fund Name is required.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-009",
+      "category": "edge",
+      "test_case": "Create Payment Type with maximum length Name",
+      "preconditions": ["User is logged in as Admin", "User is on the Payment Types page"],
+      "steps": [
+        "1. Click on the '+ Create' button.",
+        "2. Fill in the Name field with a string of 255 characters.",
+        "3. Fill in the Description field with 'Payment Type Description'.",
+        "4. Set Is Cash Payment to true.",
+        "5. Click on the 'Save' button."
+      ],
+      "expected_result": "A new payment type with the maximum length Name is created successfully.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "OS-010",
+      "category": "positive",
+      "test_case": "Bulk import data successfully",
+      "preconditions": ["User is logged in as Admin", "User is on the Bulk Import page"],
+      "steps": [
+        "1. Click on the 'Download template' button.",
+        "2. Fill the template with valid data for Clients.",
+        "3. Click on the 'Upload' button.",
+        "4. Select the filled template file.",
+        "5. Click on the 'Submit' button."
+      ],
+      "expected_result": "The data is imported successfully, and a success message is displayed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-011",
+      "category": "negative",
+      "test_case": "Bulk import with invalid data",
+      "preconditions": ["User is logged in as Admin", "User is on the Bulk Import page"],
+      "steps": [
+        "1. Click on the 'Download template' button.",
+        "2. Fill the template with invalid data.",
+        "3. Click on the 'Upload' button.",
+        "4. Select the filled template file.",
+        "5. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the data is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "OS-012",
+      "category": "edge",
+      "test_case": "Bulk import with empty file",
+      "preconditions": ["User is logged in as Admin", "User is on the Bulk Import page"],
+      "steps": [
+        "1. Click on the 'Upload' button.",
+        "2. Select an empty file.",
+        "3. Click on the 'Submit' button."
+      ],
+      "expected_result": "An error message is displayed indicating that the file is empty.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "high_priority": 8,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: System Administration ===
+{
+  "module": "System Administration",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Activate a scheduled job",
+      "preconditions": ["User is logged in as an admin", "Manage Scheduler Jobs page is open"],
+      "steps": ["1. Locate the job 'Apply Annual Fee' in the table.", "2. Toggle the 'Is Active' switch to 'On'."],
+      "expected_result": "The job 'Apply Annual Fee' is now active and the toggle reflects the change.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Edit CRON expression with invalid format",
+      "preconditions": ["User is logged in as an admin", "Manage Scheduler Jobs page is open"],
+      "steps": ["1. Locate the job 'Add Accrual Transactions' in the table.", "2. Click on the edit button for CRON expression.", "3. Enter an invalid CRON expression 'invalid_cron' and save."],
+      "expected_result": "An error message is displayed indicating the CRON expression is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Toggle all jobs with global Start/Stop toggle",
+      "preconditions": ["User is logged in as an admin", "Manage Scheduler Jobs page is open"],
+      "steps": ["1. Locate the global Start/Stop toggle.", "2. Toggle it to 'Stop'."],
+      "expected_result": "All scheduled jobs are now inactive, and their 'Is Active' toggles reflect the change.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "positive",
+      "test_case": "Enable a global configuration feature",
+      "preconditions": ["User is logged in as an admin", "Global Configuration page is open"],
+      "steps": ["1. Locate the configuration 'maker-checker'.", "2. Toggle the 'Enabled' switch to 'On'."],
+      "expected_result": "The configuration 'maker-checker' is now enabled.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC005",
+      "category": "negative",
+      "test_case": "Attempt to add a code with missing mandatory fields",
+      "preconditions": ["User is logged in as an admin", "Manage Codes page is open"],
+      "steps": ["1. Click on 'Add Code'.", "2. Leave mandatory fields empty and click 'Save'."],
+      "expected_result": "An error message is displayed indicating that mandatory fields cannot be empty.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC006",
+      "category": "edge",
+      "test_case": "Create a data table with maximum length field",
+      "preconditions": ["User is logged in as an admin", "Manage Data Tables page is open"],
+      "steps": ["1. Click on 'Create Data Table'.", "2. Enter a Data Table Name and set a column with maximum length (e.g., 255 characters).", "3. Save the data table."],
+      "expected_result": "The data table is created successfully with the column having maximum length.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC007",
+      "category": "positive",
+      "test_case": "View audit trails with filters",
+      "preconditions": ["User is logged in as an admin", "Audit Trails page is open"],
+      "steps": ["1. Enter a valid Action Name in the filter.", "2. Click on 'Apply Filters'."],
+      "expected_result": "The audit trails are filtered and display only the relevant actions.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC008",
+      "category": "negative",
+      "test_case": "Search audit trails with invalid date range",
+      "preconditions": ["User is logged in as an admin", "Audit Trails page is open"],
+      "steps": ["1. Enter an invalid date range (e.g., end date before start date).", "2. Click on 'Apply Filters'."],
+      "expected_result": "An error message is displayed indicating the date range is invalid.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC009",
+      "category": "edge",
+      "test_case": "Toggle a job while it is currently running",
+      "preconditions": ["User is logged in as an admin", "Manage Scheduler Jobs page is open", "Job 'Post Interest for Savings' is currently running"],
+      "steps": ["1. Locate the job 'Post Interest for Savings' in the table.", "2. Attempt to toggle the 'Is Active' switch."],
+      "expected_result": "A warning message is displayed indicating that the job cannot be toggled while it is currently running.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "high_priority": 5,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Logout ===
+{
+  "module": "Logout",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "TC001",
+      "category": "positive",
+      "test_case": "Successful logout",
+      "preconditions": ["User is logged in", "User is on any authenticated page"],
+      "steps": ["1. Click on the user profile icon in the top-right corner.", "2. Select 'Log Out' from the dropdown."],
+      "expected_result": "User is redirected to the login page and sees a confirmation message indicating successful logout.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "TC002",
+      "category": "negative",
+      "test_case": "Logout without being logged in",
+      "preconditions": ["User is not logged in"],
+      "steps": ["1. Attempt to click on the user profile icon in the top-right corner.", "2. Select 'Log Out' from the dropdown."],
+      "expected_result": "User remains on the login page and sees an error message indicating that they are not logged in.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "TC003",
+      "category": "edge",
+      "test_case": "Logout from the login page",
+      "preconditions": ["User is on the login page"],
+      "steps": ["1. Click on the user profile icon in the top-right corner.", "2. Select 'Log Out' from the dropdown."],
+      "expected_result": "User remains on the login page without any error, as they are already logged out.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "TC004",
+      "category": "edge",
+      "test_case": "Attempt to access authenticated page after logout",
+      "preconditions": ["User is logged in", "User has successfully logged out"],
+      "steps": ["1. Click on the user profile icon in the top-right corner.", "2. Select 'Log Out' from the dropdown.", "3. Attempt to navigate to an authenticated page."],
+      "expected_result": "User is redirected to the login page and cannot access the authenticated page.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "high_priority": 2,
+    "medium_priority": 1,
+    "low_priority": 1
+  }
+}

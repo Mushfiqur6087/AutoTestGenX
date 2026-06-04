@@ -1,0 +1,923 @@
+{
+  "project_name": "SwagLab",
+  "generated_at": "2026-06-04T14:52:44.780205Z",
+  "model": "gpt-4o-mini",
+  "approach": "zero_shot_per_module",
+  "modules": [
+    {
+      "module": "Login",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "category": "positive",
+          "test_case": "Successful login with valid credentials",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter 'standard_user' in the Username field.",
+            "2. Enter 'secret_sauce' in the Password field.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "User is redirected to the Product Inventory page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-002",
+          "category": "negative",
+          "test_case": "Login attempt with empty username",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Leave the Username field empty.",
+            "2. Enter 'secret_sauce' in the Password field.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "Error banner shows 'Epic sadface: Username is required.'",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-003",
+          "category": "negative",
+          "test_case": "Login attempt with empty password",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter 'standard_user' in the Username field.",
+            "2. Leave the Password field empty.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "Error banner shows 'Epic sadface: Password is required.'",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-004",
+          "category": "negative",
+          "test_case": "Login attempt with invalid credentials",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter 'invalid_user' in the Username field.",
+            "2. Enter 'wrong_password' in the Password field.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "Error banner shows 'Epic sadface: Username and password do not match any user in this service.'",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-005",
+          "category": "negative",
+          "test_case": "Login attempt with locked out user",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter 'locked_out_user' in the Username field.",
+            "2. Enter 'secret_sauce' in the Password field.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "Error banner shows 'Epic sadface: Sorry, this user has been locked out.'",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-006",
+          "category": "edge",
+          "test_case": "Login attempt with maximum length username",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter a username with maximum allowed length (e.g., 20 characters).",
+            "2. Enter 'secret_sauce' in the Password field.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "User is redirected to the Product Inventory page or an appropriate error message is shown if the username is invalid.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-007",
+          "category": "edge",
+          "test_case": "Login attempt with special characters in username",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Enter '@user!' in the Username field.",
+            "2. Enter 'secret_sauce' in the Password field.",
+            "3. Click the Login button."
+          ],
+          "expected_result": "Error banner shows 'Epic sadface: Username and password do not match any user in this service.'",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-008",
+          "category": "edge",
+          "test_case": "Login attempt with empty fields",
+          "preconditions": [
+            "User is on the login page."
+          ],
+          "steps": [
+            "1. Leave both Username and Password fields empty.",
+            "2. Click the Login button."
+          ],
+          "expected_result": "Error banner shows 'Epic sadface: Username is required.' and 'Epic sadface: Password is required.'",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 1,
+        "negative": 4,
+        "edge": 3,
+        "high_priority": 5,
+        "medium_priority": 3,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Product Inventory",
+      "test_cases": [
+        {
+          "tc_id": "TC-009",
+          "category": "positive",
+          "test_case": "Add product to cart",
+          "preconditions": [
+            "User is logged in",
+            "Product Inventory page is open"
+          ],
+          "steps": [
+            "1. Locate a product in the list",
+            "2. Click on the 'Add to cart' button"
+          ],
+          "expected_result": "The product is added to the cart, the button changes to 'Remove', and the cart badge count updates accordingly.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-010",
+          "category": "positive",
+          "test_case": "Remove product from cart",
+          "preconditions": [
+            "User is logged in",
+            "Product is already added to the cart"
+          ],
+          "steps": [
+            "1. Locate the product in the cart",
+            "2. Click on the 'Remove' button"
+          ],
+          "expected_result": "The product is removed from the cart, the button changes back to 'Add to cart', and the cart badge count updates accordingly.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-011",
+          "category": "negative",
+          "test_case": "Attempt to add a product without being logged in",
+          "preconditions": [
+            "User is not logged in",
+            "Product Inventory page is open"
+          ],
+          "steps": [
+            "1. Locate a product in the list",
+            "2. Click on the 'Add to cart' button"
+          ],
+          "expected_result": "An error message is displayed indicating that the user must log in to add products to the cart.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-012",
+          "category": "negative",
+          "test_case": "Attempt to remove a product not in the cart",
+          "preconditions": [
+            "User is logged in",
+            "No products are in the cart"
+          ],
+          "steps": [
+            "1. Locate a product in the cart",
+            "2. Click on the 'Remove' button"
+          ],
+          "expected_result": "An error message is displayed indicating that there are no products to remove.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-013",
+          "category": "edge",
+          "test_case": "Sort products by name A-Z",
+          "preconditions": [
+            "User is logged in",
+            "Product Inventory page is open with multiple products"
+          ],
+          "steps": [
+            "1. Open the sort dropdown",
+            "2. Select 'Name A-Z'"
+          ],
+          "expected_result": "The product list is sorted alphabetically from A to Z.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-014",
+          "category": "edge",
+          "test_case": "Sort products by price low-high",
+          "preconditions": [
+            "User is logged in",
+            "Product Inventory page is open with multiple products"
+          ],
+          "steps": [
+            "1. Open the sort dropdown",
+            "2. Select 'Price low-high'"
+          ],
+          "expected_result": "The product list is sorted by price from lowest to highest.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-015",
+          "category": "edge",
+          "test_case": "Add maximum number of products to cart",
+          "preconditions": [
+            "User is logged in",
+            "Product Inventory page is open",
+            "Maximum cart limit is known"
+          ],
+          "steps": [
+            "1. Add products to the cart until the maximum limit is reached"
+          ],
+          "expected_result": "The cart allows adding products up to the maximum limit, and an error message is displayed if the limit is exceeded.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-016",
+          "category": "edge",
+          "test_case": "Check product detail page navigation",
+          "preconditions": [
+            "User is logged in",
+            "Product Inventory page is open"
+          ],
+          "steps": [
+            "1. Click on a product name or image"
+          ],
+          "expected_result": "The Product Detail page for the selected product opens successfully.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 2,
+        "negative": 2,
+        "edge": 4,
+        "high_priority": 3,
+        "medium_priority": 4,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Product Detail",
+      "test_cases": [
+        {
+          "tc_id": "TC-017",
+          "category": "positive",
+          "test_case": "Add product to cart successfully",
+          "preconditions": [
+            "User is on the Product Detail page",
+            "Product is available in stock"
+          ],
+          "steps": [
+            "1. Click on the 'Add to cart' button"
+          ],
+          "expected_result": "Product is added to the cart, and the button changes to 'Remove'",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-018",
+          "category": "negative",
+          "test_case": "Attempt to add out-of-stock product to cart",
+          "preconditions": [
+            "User is on the Product Detail page",
+            "Product is out of stock"
+          ],
+          "steps": [
+            "1. Click on the 'Add to cart' button"
+          ],
+          "expected_result": "An error message is displayed indicating the product is out of stock",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-019",
+          "category": "positive",
+          "test_case": "Navigate back to product inventory",
+          "preconditions": [
+            "User is on the Product Detail page"
+          ],
+          "steps": [
+            "1. Click on the 'Back to products' button"
+          ],
+          "expected_result": "User is redirected to the Product Inventory page",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-020",
+          "category": "negative",
+          "test_case": "Check cart icon functionality when cart is empty",
+          "preconditions": [
+            "User is on the Product Detail page",
+            "Cart is empty"
+          ],
+          "steps": [
+            "1. Click on the cart icon"
+          ],
+          "expected_result": "User is taken to the Shopping Cart page with a message indicating the cart is empty",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-021",
+          "category": "edge",
+          "test_case": "Check product detail with maximum length description",
+          "preconditions": [
+            "User is on the Product Detail page",
+            "Product has a description at maximum character limit"
+          ],
+          "steps": [
+            "1. View the product description"
+          ],
+          "expected_result": "Product description is displayed correctly without truncation or errors",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-022",
+          "category": "edge",
+          "test_case": "Check product detail with empty fields",
+          "preconditions": [
+            "User is on the Product Detail page",
+            "Product has no image or name"
+          ],
+          "steps": [
+            "1. View the product detail"
+          ],
+          "expected_result": "Placeholder text or default image is displayed for empty fields",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "positive": 2,
+        "negative": 2,
+        "edge": 2,
+        "high_priority": 2,
+        "medium_priority": 2,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Shopping Cart",
+      "test_cases": [
+        {
+          "tc_id": "TC-023",
+          "category": "positive",
+          "test_case": "User successfully views items in the cart",
+          "preconditions": [
+            "User has added items to the shopping cart"
+          ],
+          "steps": [
+            "1. Navigate to the Shopping Cart page."
+          ],
+          "expected_result": "The Shopping Cart page displays the items added to the cart with their quantity and description.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-024",
+          "category": "positive",
+          "test_case": "User clicks 'Continue Shopping' button",
+          "preconditions": [
+            "User is on the Shopping Cart page"
+          ],
+          "steps": [
+            "1. Click on the 'Continue Shopping' button."
+          ],
+          "expected_result": "User is redirected to the Product Inventory page.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-025",
+          "category": "positive",
+          "test_case": "User clicks 'Checkout' button",
+          "preconditions": [
+            "User is on the Shopping Cart page"
+          ],
+          "steps": [
+            "1. Click on the 'Checkout' button."
+          ],
+          "expected_result": "User is redirected to the Checkout page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-026",
+          "category": "negative",
+          "test_case": "User tries to remove an item that is not in the cart",
+          "preconditions": [
+            "User is on the Shopping Cart page with no items"
+          ],
+          "steps": [
+            "1. Attempt to click the 'Remove' button for a non-existent item."
+          ],
+          "expected_result": "An error message is displayed indicating that there are no items to remove.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-027",
+          "category": "edge",
+          "test_case": "User views cart with maximum number of items",
+          "preconditions": [
+            "User has added the maximum allowed number of items to the cart"
+          ],
+          "steps": [
+            "1. Navigate to the Shopping Cart page."
+          ],
+          "expected_result": "The Shopping Cart page displays all items correctly without any layout issues.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-028",
+          "category": "edge",
+          "test_case": "User views cart with one item",
+          "preconditions": [
+            "User has added one item to the cart"
+          ],
+          "steps": [
+            "1. Navigate to the Shopping Cart page."
+          ],
+          "expected_result": "The Shopping Cart page displays the single item correctly with its quantity and description.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-029",
+          "category": "edge",
+          "test_case": "User views cart with empty state",
+          "preconditions": [
+            "User has not added any items to the cart"
+          ],
+          "steps": [
+            "1. Navigate to the Shopping Cart page."
+          ],
+          "expected_result": "The Shopping Cart page displays a message indicating that the cart is empty.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 3,
+        "negative": 1,
+        "edge": 3,
+        "high_priority": 2,
+        "medium_priority": 3,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Checkout - Information",
+      "test_cases": [
+        {
+          "tc_id": "TC-030",
+          "category": "positive",
+          "test_case": "Successful checkout with valid inputs",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Enter 'John' in the First Name field",
+            "2. Enter 'Doe' in the Last Name field",
+            "3. Enter '12345' in the Zip/Postal Code field",
+            "4. Click on 'Continue'"
+          ],
+          "expected_result": "User is taken to the overview step without any error messages.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-031",
+          "category": "negative",
+          "test_case": "Error when First Name is missing",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Leave the First Name field empty",
+            "2. Enter 'Doe' in the Last Name field",
+            "3. Enter '12345' in the Zip/Postal Code field",
+            "4. Click on 'Continue'"
+          ],
+          "expected_result": "An error banner displays 'Error: First Name is required'.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-032",
+          "category": "negative",
+          "test_case": "Error when Last Name is missing",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Enter 'John' in the First Name field",
+            "2. Leave the Last Name field empty",
+            "3. Enter '12345' in the Zip/Postal Code field",
+            "4. Click on 'Continue'"
+          ],
+          "expected_result": "An error banner displays 'Error: Last Name is required'.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-033",
+          "category": "negative",
+          "test_case": "Error when Postal Code is missing",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Enter 'John' in the First Name field",
+            "2. Enter 'Doe' in the Last Name field",
+            "3. Leave the Zip/Postal Code field empty",
+            "4. Click on 'Continue'"
+          ],
+          "expected_result": "An error banner displays 'Error: Postal Code is required'.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-034",
+          "category": "edge",
+          "test_case": "Check behavior with maximum length inputs",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Enter 'JohnJohnJohnJohn' (16 characters) in the First Name field",
+            "2. Enter 'DoeDoeDoeDoe' (15 characters) in the Last Name field",
+            "3. Enter '123456789012345' (15 characters) in the Zip/Postal Code field",
+            "4. Click on 'Continue'"
+          ],
+          "expected_result": "User is taken to the overview step without any error messages.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-035",
+          "category": "edge",
+          "test_case": "Check behavior with empty fields",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Leave all fields empty",
+            "2. Click on 'Continue'"
+          ],
+          "expected_result": "An error banner displays 'Error: First Name is required', 'Error: Last Name is required', and 'Error: Postal Code is required'.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-036",
+          "category": "edge",
+          "test_case": "Check behavior with special characters in inputs",
+          "preconditions": [
+            "User is on the Checkout Information page"
+          ],
+          "steps": [
+            "1. Enter 'John@123' in the First Name field",
+            "2. Enter 'Doe#456' in the Last Name field",
+            "3. Enter '12345-6789' in the Zip/Postal Code field",
+            "4. Click on 'Continue'"
+          ],
+          "expected_result": "User is taken to the overview step without any error messages.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 1,
+        "negative": 3,
+        "edge": 3,
+        "high_priority": 5,
+        "medium_priority": 2,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Checkout - Overview",
+      "test_cases": [
+        {
+          "tc_id": "TC-037",
+          "category": "positive",
+          "test_case": "Complete order successfully",
+          "preconditions": [
+            "User has items in the cart",
+            "User is on the checkout overview page"
+          ],
+          "steps": [
+            "1. Review the order summary",
+            "2. Click on 'Finish' button"
+          ],
+          "expected_result": "User is navigated to the confirmation page with a success message.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-038",
+          "category": "negative",
+          "test_case": "Cancel checkout process",
+          "preconditions": [
+            "User is on the checkout overview page"
+          ],
+          "steps": [
+            "1. Click on 'Cancel' button"
+          ],
+          "expected_result": "User is exited from the checkout process and returned to the previous page.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-039",
+          "category": "edge",
+          "test_case": "Order summary with maximum items",
+          "preconditions": [
+            "User has the maximum allowed items in the cart"
+          ],
+          "steps": [
+            "1. Review the order summary with maximum items",
+            "2. Click on 'Finish' button"
+          ],
+          "expected_result": "User is navigated to the confirmation page with a success message.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-040",
+          "category": "negative",
+          "test_case": "Attempt to finish order with empty cart",
+          "preconditions": [
+            "User has an empty cart",
+            "User is on the checkout overview page"
+          ],
+          "steps": [
+            "1. Click on 'Finish' button"
+          ],
+          "expected_result": "Error message is displayed indicating that the cart is empty.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-041",
+          "category": "edge",
+          "test_case": "Order summary with zero total",
+          "preconditions": [
+            "User has items with zero price in the cart",
+            "User is on the checkout overview page"
+          ],
+          "steps": [
+            "1. Review the order summary showing zero total",
+            "2. Click on 'Finish' button"
+          ],
+          "expected_result": "User is navigated to the confirmation page with a success message indicating a zero total.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "positive": 1,
+        "negative": 2,
+        "edge": 2,
+        "high_priority": 2,
+        "medium_priority": 2,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Checkout - Confirmation",
+      "test_cases": [
+        {
+          "tc_id": "TC-042",
+          "category": "positive",
+          "test_case": "Successful order confirmation",
+          "preconditions": [
+            "User has completed the checkout process successfully."
+          ],
+          "steps": [
+            "1. Navigate to the confirmation page.",
+            "2. Observe the success message."
+          ],
+          "expected_result": "The message 'Thank you for your order!' is displayed.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-043",
+          "category": "negative",
+          "test_case": "Order confirmation without completing checkout",
+          "preconditions": [
+            "User has not completed the checkout process."
+          ],
+          "steps": [
+            "1. Attempt to navigate to the confirmation page directly."
+          ],
+          "expected_result": "An error message is displayed indicating that the checkout process must be completed first.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-044",
+          "category": "edge",
+          "test_case": "Confirmation page with empty cart",
+          "preconditions": [
+            "User has an empty cart."
+          ],
+          "steps": [
+            "1. Navigate to the confirmation page.",
+            "2. Observe the success message."
+          ],
+          "expected_result": "The message 'Thank you for your order!' is displayed, indicating that the system handles empty cart scenarios gracefully.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-045",
+          "category": "edge",
+          "test_case": "Confirmation page with maximum length message",
+          "preconditions": [
+            "User has completed the checkout process successfully."
+          ],
+          "steps": [
+            "1. Navigate to the confirmation page.",
+            "2. Observe the success message with maximum length."
+          ],
+          "expected_result": "The message 'Thank you for your order!' is displayed without truncation.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-046",
+          "category": "positive",
+          "test_case": "Back Home button functionality",
+          "preconditions": [
+            "User is on the confirmation page."
+          ],
+          "steps": [
+            "1. Click on the 'Back Home' button."
+          ],
+          "expected_result": "User is redirected to the Product Inventory page and the cart is cleared.",
+          "priority": "high"
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "positive": 2,
+        "negative": 1,
+        "edge": 2,
+        "high_priority": 3,
+        "medium_priority": 2,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Logout",
+      "test_cases": [
+        {
+          "tc_id": "TC-047",
+          "category": "positive",
+          "test_case": "Successful logout",
+          "preconditions": [
+            "User is logged in and on a protected page."
+          ],
+          "steps": [
+            "1. Click on the logout button.",
+            "2. Wait for the page to redirect."
+          ],
+          "expected_result": "User is redirected to the login page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-048",
+          "category": "negative",
+          "test_case": "Logout without being logged in",
+          "preconditions": [
+            "User is not logged in."
+          ],
+          "steps": [
+            "1. Attempt to click on the logout button."
+          ],
+          "expected_result": "Logout button is disabled or an error message is displayed.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-049",
+          "category": "edge",
+          "test_case": "Logout while session is about to expire",
+          "preconditions": [
+            "User is logged in and session is near expiration."
+          ],
+          "steps": [
+            "1. Click on the logout button just before session expiration.",
+            "2. Wait for the page to redirect."
+          ],
+          "expected_result": "User is redirected to the login page without session expiration error.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-050",
+          "category": "edge",
+          "test_case": "Logout from multiple tabs",
+          "preconditions": [
+            "User is logged in on multiple tabs."
+          ],
+          "steps": [
+            "1. Click on the logout button in one tab.",
+            "2. Switch to another tab and try to access a protected page."
+          ],
+          "expected_result": "User is redirected to the login page when accessing the protected page in the second tab.",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 4,
+        "positive": 1,
+        "negative": 1,
+        "edge": 2,
+        "high_priority": 1,
+        "medium_priority": 2,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Reset App State",
+      "test_cases": [
+        {
+          "tc_id": "TC-051",
+          "category": "positive",
+          "test_case": "Reset app state successfully",
+          "preconditions": [
+            "User is logged in",
+            "User has items in the cart"
+          ],
+          "steps": [
+            "1. Navigate to the app settings.",
+            "2. Click on 'Reset App State' button.",
+            "3. Confirm the action."
+          ],
+          "expected_result": "The cart is cleared, and the in-app state is reset without logging the user out.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-052",
+          "category": "negative",
+          "test_case": "Attempt to reset app state while logged out",
+          "preconditions": [
+            "User is logged out"
+          ],
+          "steps": [
+            "1. Navigate to the app settings.",
+            "2. Click on 'Reset App State' button."
+          ],
+          "expected_result": "An error message is displayed indicating that the user must be logged in to reset the app state.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-053",
+          "category": "edge",
+          "test_case": "Reset app state with an empty cart",
+          "preconditions": [
+            "User is logged in",
+            "User has an empty cart"
+          ],
+          "steps": [
+            "1. Navigate to the app settings.",
+            "2. Click on 'Reset App State' button.",
+            "3. Confirm the action."
+          ],
+          "expected_result": "The app state is reset successfully, and the user remains logged in.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-054",
+          "category": "edge",
+          "test_case": "Reset app state multiple times in quick succession",
+          "preconditions": [
+            "User is logged in",
+            "User has items in the cart"
+          ],
+          "steps": [
+            "1. Navigate to the app settings.",
+            "2. Click on 'Reset App State' button.",
+            "3. Confirm the action.",
+            "4. Immediately click 'Reset App State' again."
+          ],
+          "expected_result": "The app state is reset successfully without any errors, and the user remains logged in.",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 4,
+        "positive": 1,
+        "negative": 1,
+        "edge": 2,
+        "high_priority": 2,
+        "medium_priority": 2,
+        "low_priority": 0
+      }
+    }
+  ],
+  "total_summary": {
+    "total_modules": 9,
+    "total_tests": 54,
+    "positive": 14,
+    "negative": 17,
+    "edge": 23,
+    "high_priority": 25,
+    "medium_priority": 22,
+    "low_priority": 7
+  }
+}

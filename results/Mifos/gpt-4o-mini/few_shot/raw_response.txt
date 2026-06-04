@@ -1,0 +1,135 @@
+{
+  "module": "Mifos",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Login with valid credentials",
+      "preconditions": ["User is on the login page", "User has valid username and password"],
+      "steps": [
+        "1. Select 'default' from the Tenant dropdown",
+        "2. Enter valid <username> in the Username field",
+        "3. Enter valid <password> in the Password field",
+        "4. Click the Login button"
+      ],
+      "expected_result": "User is redirected to the Home page with a welcome message",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Login with invalid credentials",
+      "preconditions": ["User is on the login page"],
+      "steps": [
+        "1. Select 'default' from the Tenant dropdown",
+        "2. Enter invalid <username> in the Username field",
+        "3. Enter invalid <password> in the Password field",
+        "4. Click the Login button"
+      ],
+      "expected_result": "An error message is displayed indicating invalid credentials",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Login with empty fields",
+      "preconditions": ["User is on the login page"],
+      "steps": [
+        "1. Select 'default' from the Tenant dropdown",
+        "2. Leave the Username field empty",
+        "3. Leave the Password field empty",
+        "4. Click the Login button"
+      ],
+      "expected_result": "Inline validation messages appear indicating required fields are empty",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Create a new client with valid details",
+      "preconditions": ["User logged in as Admin", "User is on the Clients page"],
+      "steps": [
+        "1. Click the Create Client button",
+        "2. Fill in all required fields in the Create Client form",
+        "3. Click Submit"
+      ],
+      "expected_result": "A new client is created and appears in the Clients list with Pending status",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Create a new client with missing required fields",
+      "preconditions": ["User logged in as Admin", "User is on the Clients page"],
+      "steps": [
+        "1. Click the Create Client button",
+        "2. Leave the First Name and Last Name fields empty",
+        "3. Click Submit"
+      ],
+      "expected_result": "Inline validation messages appear indicating required fields are missing",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Create a new client with maximum length fields",
+      "preconditions": ["User logged in as Admin", "User is on the Clients page"],
+      "steps": [
+        "1. Click the Create Client button",
+        "2. Fill in the First Name and Last Name fields with maximum allowed characters",
+        "3. Click Submit"
+      ],
+      "expected_result": "A new client is created successfully with maximum length names",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Activate a Pending client with a valid activation date",
+      "preconditions": ["User logged in as Admin", "A client exists in Pending status"],
+      "steps": [
+        "1. Navigate to the Client Detail page of a Pending client",
+        "2. Click the Activate button",
+        "3. Enter <valid activation date> in the Activation Date field",
+        "4. Click Submit"
+      ],
+      "expected_result": "Client status badge updates to 'Active' (green chip) on the Client Detail page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to activate a Pending client with an invalid activation date",
+      "preconditions": ["User logged in as Admin", "A client exists in Pending status"],
+      "steps": [
+        "1. Navigate to the Client Detail page of a Pending client",
+        "2. Click the Activate button",
+        "3. Enter <invalid activation date> in the Activation Date field",
+        "4. Click Submit"
+      ],
+      "expected_result": "An error message is displayed indicating the activation date is invalid",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Activate a Pending client with an activation date before submission date",
+      "preconditions": ["User logged in as Admin", "A client exists in Pending status"],
+      "steps": [
+        "1. Navigate to the Client Detail page of a Pending client",
+        "2. Click the Activate button",
+        "3. Enter a date that is before the submission date in the Activation Date field",
+        "4. Click Submit"
+      ],
+      "expected_result": "An error message is displayed indicating the activation date cannot be before the submission date",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "high_priority": 8,
+    "medium_priority": 1,
+    "low_priority": 0
+  }
+}

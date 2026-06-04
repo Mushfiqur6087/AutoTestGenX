@@ -1,0 +1,1270 @@
+{
+  "project_name": "Moodleteacher",
+  "generated_at": "2026-06-04T14:33:52.563921Z",
+  "modules": [
+    {
+      "module_id": 1,
+      "module_title": "Login",
+      "ast": {
+        "module_name": "Login",
+        "components": {
+          "Login_Form": {
+            "type": "form",
+            "fields": {
+              "Username": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Password": {
+                "type": "password",
+                "required": true,
+                "on_failure": {
+                  "action": "clear",
+                  "fields": [
+                    "Password"
+                  ],
+                  "retain": [
+                    "Username"
+                  ],
+                  "error_message": "Invalid or empty credentials"
+                }
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Log in",
+                "on_success": "redirects to Dashboard"
+              }
+            ]
+          },
+          "Lost_Password_Link": {
+            "type": "link",
+            "enabled": false
+          },
+          "Access_as_Guest_Button": {
+            "type": "button",
+            "action": "unauthenticated browsing"
+          },
+          "Cookies_Notice_Button": {
+            "type": "button",
+            "action": "provides cookie usage information"
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 2,
+      "module_title": "Dashboard",
+      "ast": {
+        "module_name": "Dashboard",
+        "components": {
+          "Timeline_Block": {
+            "type": "block",
+            "fields": {
+              "Time_Range": {
+                "type": "dropdown",
+                "options": [
+                  "Next 7 days"
+                ]
+              },
+              "Sort_Order": {
+                "type": "dropdown",
+                "required": false
+              },
+              "Search_Activities": {
+                "type": "search",
+                "required": false
+              }
+            }
+          },
+          "Calendar_Block": {
+            "type": "block",
+            "fields": {
+              "All_Courses": {
+                "type": "dropdown",
+                "required": false
+              },
+              "New_Event": {
+                "type": "button",
+                "on_success": "creates calendar entry"
+              },
+              "Navigate_Months": {
+                "type": "button",
+                "actions": [
+                  {
+                    "action_name": "Previous Month"
+                  },
+                  {
+                    "action_name": "Next Month"
+                  }
+                ]
+              }
+            }
+          },
+          "Links": {
+            "type": "link_container",
+            "links": [
+              {
+                "link_name": "Full calendar",
+                "action": "opens dedicated calendar view"
+              },
+              {
+                "link_name": "Import or export calendars",
+                "action": "opens calendar data management"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 3,
+      "module_title": "Dashboard \u2014 Edit Mode",
+      "ast": {
+        "module_name": "Dashboard",
+        "components": {
+          "Edit_Mode": {
+            "type": "form",
+            "fields": {
+              "Reset_Page": {
+                "type": "button",
+                "on_success": "resets page to default"
+              },
+              "Add_a_block": {
+                "type": "button",
+                "on_success": "opens Add a block page"
+              }
+            }
+          },
+          "Add_a_block_Page": {
+            "type": "form",
+            "submit_actions": [
+              {
+                "element_name": "Cancel",
+                "on_success": "returns to Dashboard without adding a block"
+              }
+            ]
+          },
+          "Existing_Blocks": {
+            "type": "repeating_group",
+            "item_fields": {
+              "Options_Menu": {
+                "type": "button",
+                "options": [
+                  "configure",
+                  "move",
+                  "delete"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 4,
+      "module_title": "My Courses",
+      "ast": {
+        "module_name": "My Courses",
+        "components": {
+          "Courses_Page": {
+            "type": "data_table",
+            "fields": {
+              "Status": {
+                "type": "dropdown",
+                "options": [
+                  "All",
+                  "In progress",
+                  "Future",
+                  "Past",
+                  "Starred",
+                  "Hidden"
+                ]
+              },
+              "Search": {
+                "type": "search"
+              },
+              "Sort": {
+                "type": "dropdown",
+                "options": [
+                  "Name",
+                  "Card"
+                ]
+              },
+              "Layout": {
+                "type": "dropdown",
+                "options": [
+                  "List",
+                  "Summary"
+                ]
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Star this course"
+              },
+              {
+                "action_name": "Remove from view"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 5,
+      "module_title": "Course Page",
+      "ast": {
+        "module_name": "Course Page",
+        "components": {
+          "Course_Sections": {
+            "type": "collapsible_section",
+            "sections": [
+              {
+                "section_name": "Section 1",
+                "activities_and_resources": [
+                  {
+                    "name": "Activity 1",
+                    "type": "link"
+                  },
+                  {
+                    "name": "Resource 1",
+                    "type": "link"
+                  }
+                ]
+              },
+              {
+                "section_name": "Section 2",
+                "activities_and_resources": [
+                  {
+                    "name": "Activity 2",
+                    "type": "link"
+                  },
+                  {
+                    "name": "Resource 2",
+                    "type": "link"
+                  }
+                ]
+              }
+            ]
+          },
+          "Collapse_All_Link": {
+            "type": "link",
+            "action": "collapses all sections"
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 6,
+      "module_title": "Course Edit Mode and Activity Chooser",
+      "ast": {
+        "module_name": "Course Edit Mode and Activity Chooser",
+        "components": {
+          "Course_Page": {
+            "type": "form",
+            "fields": {
+              "Sections": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Activities": {
+                    "type": "repeating_group",
+                    "item_fields": {
+                      "Activity_Title": {
+                        "type": "unspecified",
+                        "actions": {
+                          "Activity_Actions_Menu": {
+                            "type": "data_table",
+                            "row_actions": [
+                              {
+                                "action_name": "Edit Settings"
+                              },
+                              {
+                                "action_name": "Move"
+                              },
+                              {
+                                "action_name": "Duplicate"
+                              },
+                              {
+                                "action_name": "Hide"
+                              },
+                              {
+                                "action_name": "Set Access Restrictions"
+                              },
+                              {
+                                "action_name": "Delete"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Subsection_Control": {
+                    "type": "button",
+                    "label": "+ Add a subsection"
+                  }
+                }
+              }
+            }
+          },
+          "Activity_Chooser_Modal": {
+            "type": "modal",
+            "fields": {
+              "Category_Filter_Bar": {
+                "type": "dropdown",
+                "options": [
+                  "All",
+                  "Activities",
+                  "Resources",
+                  "Recommended"
+                ]
+              },
+              "Search_Field": {
+                "type": "search"
+              },
+              "Activity_Resource_Tiles": {
+                "type": "grid",
+                "tiles": [
+                  {
+                    "tile_name": "Assignment",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "Forum",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "Quiz",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "File",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "Page",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "Lesson",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "SCORM",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "URL",
+                    "favorite_toggle": true
+                  },
+                  {
+                    "tile_name": "Workshop",
+                    "favorite_toggle": true
+                  }
+                ]
+              },
+              "Add_Button": {
+                "type": "button",
+                "label": "Add"
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 7,
+      "module_title": "Assignment Creation",
+      "ast": {
+        "module_name": "Assignment Creation",
+        "components": {
+          "Assignment_Creation_Form": {
+            "type": "form",
+            "fields": {
+              "Assignment_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Description": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Additional_Files": {
+                "type": "file_upload",
+                "required": false
+              },
+              "Availability": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Allow_Submissions_From": {
+                    "type": "date",
+                    "required": false,
+                    "enable_toggle": {
+                      "type": "checkbox",
+                      "enabled_when": "Allow_Submissions_From is set"
+                    }
+                  },
+                  "Due_Date": {
+                    "type": "date",
+                    "required": false,
+                    "enable_toggle": {
+                      "type": "checkbox",
+                      "enabled_when": "Due_Date is set"
+                    }
+                  },
+                  "Cut_Off_Date": {
+                    "type": "date",
+                    "required": false,
+                    "enable_toggle": {
+                      "type": "checkbox",
+                      "enabled_when": "Cut_Off_Date is set"
+                    }
+                  }
+                }
+              },
+              "Submission_Types": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Online_Text": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "File_Submissions": {
+                    "type": "checkbox",
+                    "required": false,
+                    "on_change": {
+                      "visible_when": "File_Submissions is checked",
+                      "fields": {
+                        "Maximum_Uploaded_Files": {
+                          "type": "number",
+                          "required": false
+                        },
+                        "Maximum_Submission_Size": {
+                          "type": "unspecified",
+                          "required": false
+                        },
+                        "Accepted_File_Types": {
+                          "type": "unspecified",
+                          "required": false
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "Feedback_Types": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Feedback_Comments": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Feedback_Files": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Offline_Grading_Worksheet": {
+                    "type": "checkbox",
+                    "required": false
+                  }
+                }
+              },
+              "Submission_Settings": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Require_Submit_Button_Click": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Require_Submission_Statements": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Attempts_Reopened_Settings": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Maximum_Attempts": {
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              },
+              "Group_Submission_Settings": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Group_Submissions": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Require_All_Group_Members_To_Submit": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Grouping_Selection": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              "Notifications": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Notify_Graders_Of_New_Submissions": {
+                    "type": "checkbox",
+                    "required": false
+                  },
+                  "Notify_Graders_Of_Late_Submissions": {
+                    "type": "checkbox",
+                    "required": false
+                  }
+                }
+              },
+              "Grade": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Grade_Type": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Maximum_Points": {
+                    "type": "number",
+                    "required": false
+                  },
+                  "Grading_Method": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Grade_Category": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Grade_To_Pass": {
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              },
+              "Activity_Completion": {
+                "type": "collapsible_panel",
+                "fields": {
+                  "Completion_Tracking_Options": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Required_Conditions": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              "Tags": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Competencies": {
+                "type": "unspecified",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Save and return to course",
+                "on_success": "creates assignment and redirects to course page"
+              },
+              {
+                "element_name": "Save and display",
+                "on_success": "creates assignment and opens new assignment's page"
+              },
+              {
+                "element_name": "Cancel",
+                "on_success": "discards all changes"
+              }
+            ],
+            "validation": {
+              "inline": true
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 8,
+      "module_title": "Course Settings",
+      "ast": {
+        "module_name": "Course Settings",
+        "components": {
+          "Course_Settings_Form": {
+            "type": "form",
+            "fields": {
+              "Course_Full_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Course_Short_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Course_Category": {
+                "type": "dropdown",
+                "required": true
+              },
+              "Course_Visibility": {
+                "type": "dropdown",
+                "options": [
+                  "Show",
+                  "Hide"
+                ],
+                "required": false
+              },
+              "Course_Start_Date": {
+                "type": "date",
+                "required": false
+              },
+              "Course_End_Date": {
+                "type": "date",
+                "enabled_when": "Course_End_Date toggle is enabled",
+                "required": false
+              },
+              "Course_ID_Number": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Course_Summary": {
+                "type": "rich_text_editor",
+                "required": false
+              },
+              "Course_Image_Upload": {
+                "type": "file_upload",
+                "required": false
+              },
+              "Course_Format": {
+                "type": "dropdown",
+                "options": [
+                  "Topics format",
+                  "Weekly format",
+                  "etc."
+                ],
+                "required": false
+              },
+              "Layout_Controls": {
+                "type": "unspecified",
+                "visible_when": "Course_Format is selected",
+                "required": false
+              },
+              "Appearance_Settings": {
+                "type": "unspecified",
+                "required": false,
+                "fields": {
+                  "Language": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "News_Items": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Activity_Dates": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Completion_Conditions_Display": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              "Maximum_Upload_Size": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Completion_Tracking": {
+                "type": "checkbox",
+                "required": false
+              },
+              "Groups": {
+                "type": "unspecified",
+                "required": false,
+                "fields": {
+                  "Group_Mode": {
+                    "type": "dropdown",
+                    "required": false
+                  },
+                  "Grouping": {
+                    "type": "dropdown",
+                    "required": false
+                  }
+                }
+              },
+              "Tags": {
+                "type": "unspecified",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Save and display",
+                "on_success": "persists the configuration and returns to the course page"
+              },
+              {
+                "element_name": "Cancel",
+                "on_success": "leaves existing settings unchanged"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 9,
+      "module_title": "Participants Management",
+      "ast": {
+        "module_name": "Participants Management",
+        "components": {
+          "Participants_Page": {
+            "type": "page",
+            "fields": {
+              "Enrolled_Users_Scope": {
+                "type": "dropdown",
+                "options": [
+                  "All",
+                  "Current",
+                  "Past"
+                ]
+              },
+              "Filter_System": {
+                "type": "form",
+                "fields": {
+                  "Any_Toggle": {
+                    "type": "checkbox"
+                  },
+                  "Select_Attribute": {
+                    "type": "dropdown",
+                    "options": [
+                      "Role",
+                      "Group",
+                      "Status"
+                    ]
+                  },
+                  "Add_Condition": {
+                    "type": "link"
+                  },
+                  "Clear_Filters": {
+                    "type": "button",
+                    "on_success": "clears all filters"
+                  },
+                  "Apply_Filters": {
+                    "type": "button",
+                    "on_success": "applies selected filters"
+                  }
+                }
+              },
+              "Alphabetical_Filter": {
+                "type": "button_group",
+                "buttons": [
+                  {
+                    "label": "All",
+                    "on_success": "shows all participants"
+                  },
+                  {
+                    "label": "A\u2013Z",
+                    "on_success": "filters participants alphabetically"
+                  }
+                ]
+              }
+            },
+            "actions": {
+              "Enrol_Users": {
+                "type": "button",
+                "on_success": "opens enrollment dialog"
+              }
+            }
+          },
+          "Participants_Table": {
+            "type": "data_table",
+            "sortable_columns": [
+              "First Name",
+              "Last Name"
+            ],
+            "row_actions": [
+              {
+                "action_name": "View Profile"
+              },
+              {
+                "action_name": "Edit Role"
+              },
+              {
+                "action_name": "Send Message"
+              }
+            ],
+            "bulk_actions": [
+              {
+                "action_name": "With selected users\u2026",
+                "options": [
+                  "Enroll",
+                  "Remove",
+                  "Message"
+                ]
+              }
+            ],
+            "columns": {
+              "Checkbox": {
+                "type": "checkbox"
+              },
+              "First_Name": {
+                "type": "link",
+                "sortable": true
+              },
+              "Last_Name": {
+                "type": "link",
+                "sortable": true
+              },
+              "Email_Address": {
+                "type": "unspecified"
+              },
+              "Roles": {
+                "type": "unspecified"
+              },
+              "Groups": {
+                "type": "unspecified"
+              },
+              "Last_Access": {
+                "type": "unspecified"
+              },
+              "Status": {
+                "type": "unspecified"
+              }
+            }
+          },
+          "Enrol_Users_Dialog": {
+            "type": "dialog",
+            "fields": {
+              "User_Search": {
+                "type": "search"
+              },
+              "Role": {
+                "type": "dropdown",
+                "options": [
+                  "Student",
+                  "Instructor",
+                  "TA"
+                ]
+              },
+              "Enrollment_Duration": {
+                "type": "unspecified",
+                "required": false
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Confirm Enrollment",
+                "on_success": "adds user to course at specified role"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 10,
+      "module_title": "Assignment \u2014 Teacher View",
+      "ast": {
+        "module_name": "Assignment",
+        "components": {
+          "Assignment_Page": {
+            "type": "tab_container",
+            "tabs": [
+              {
+                "tab_name": "Assignment",
+                "fields": {
+                  "Grade_Button": {
+                    "type": "button",
+                    "on_success": "opens grading interface for individual students"
+                  }
+                }
+              },
+              {
+                "tab_name": "Settings",
+                "fields": {}
+              },
+              {
+                "tab_name": "Submissions",
+                "fields": {}
+              },
+              {
+                "tab_name": "Advanced Grading",
+                "fields": {}
+              },
+              {
+                "tab_name": "More",
+                "fields": {}
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 11,
+      "module_title": "Assignment Submissions",
+      "ast": {
+        "module_name": "Assignment Submissions",
+        "components": {
+          "Submissions_Table": {
+            "type": "data_table",
+            "sortable_columns": [
+              "Student identity",
+              "Submission status",
+              "Grading status",
+              "Submission date/time",
+              "Time since submission",
+              "Final grade"
+            ],
+            "search_controls": {
+              "Student_Name": {
+                "type": "search",
+                "required": false
+              },
+              "Submission_Status": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Submitted for grading",
+                  "No submission",
+                  "Draft \u2014 not submitted"
+                ]
+              },
+              "Grading_Status": {
+                "type": "dropdown",
+                "required": false,
+                "options": [
+                  "Graded",
+                  "Not graded"
+                ]
+              }
+            },
+            "row_actions": [
+              {
+                "action_name": "Open Grading Workflow"
+              }
+            ],
+            "inline_grading": {
+              "enabled": true,
+              "fields": {
+                "Grade": {
+                  "type": "number",
+                  "required": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 12,
+      "module_title": "Gradebook \u2014 Grader Report",
+      "ast": {
+        "module_name": "Gradebook",
+        "components": {
+          "Grader_Report": {
+            "type": "form",
+            "fields": {
+              "Report_Type_Selector": {
+                "type": "dropdown",
+                "options": [
+                  "Grader report",
+                  "User report",
+                  "Overview report"
+                ]
+              },
+              "User_Search": {
+                "type": "search",
+                "required": false
+              },
+              "User_Filter": {
+                "type": "dropdown",
+                "options": [
+                  "All Students",
+                  "Group 1",
+                  "Group 2"
+                ]
+              }
+            }
+          },
+          "Grade_Table": {
+            "type": "data_table",
+            "row_actions": [
+              {
+                "action_name": "Edit_Grade",
+                "fields": {
+                  "Grade_Value": {
+                    "type": "number",
+                    "constraints": [
+                      "must be within configured grade range"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "Edit_Mode": {
+            "type": "state_bound_action_bar",
+            "states": {
+              "Enabled": {
+                "available_actions": [
+                  {
+                    "action_name": "Save Changes",
+                    "on_success": "applies edits"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 13,
+      "module_title": "Profile",
+      "ast": {
+        "module_name": "Profile",
+        "components": {
+          "User_Details_Card": {
+            "type": "card",
+            "fields": {
+              "email_address": {
+                "type": "email",
+                "required": false
+              },
+              "visibility_note": {
+                "type": "unspecified",
+                "required": false
+              },
+              "timezone": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Edit_profile": {
+                "type": "link",
+                "required": false
+              }
+            }
+          },
+          "Privacy_and_Policies_Card": {
+            "type": "card",
+            "fields": {
+              "Data_retention_summary": {
+                "type": "link",
+                "required": false
+              }
+            }
+          },
+          "Course_Details_Card": {
+            "type": "card",
+            "fields": {
+              "Course_profiles": {
+                "type": "link",
+                "required": false
+              }
+            }
+          },
+          "Miscellaneous_Card": {
+            "type": "card",
+            "fields": {
+              "Blog_entries": {
+                "type": "link",
+                "required": false
+              },
+              "Forum_posts": {
+                "type": "link",
+                "required": false
+              },
+              "Forum_discussions": {
+                "type": "link",
+                "required": false
+              },
+              "Learning_plans": {
+                "type": "link",
+                "required": false
+              }
+            }
+          },
+          "Reports_Card": {
+            "type": "card",
+            "fields": {
+              "Browser_sessions": {
+                "type": "link",
+                "required": false
+              },
+              "Grades_overview": {
+                "type": "link",
+                "required": false
+              }
+            }
+          },
+          "Login_Activity_Card": {
+            "type": "card",
+            "fields": {
+              "First_access": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Last_access": {
+                "type": "unspecified",
+                "required": false
+              },
+              "relative_time_indicators": {
+                "type": "unspecified",
+                "required": false
+              }
+            }
+          },
+          "Message_Button": {
+            "type": "button",
+            "required": false
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 14,
+      "module_title": "Profile Edit",
+      "ast": {
+        "module_name": "Profile Edit",
+        "components": {
+          "Edit_Profile_Form": {
+            "type": "form",
+            "fields": {
+              "General": {
+                "type": "collapsible_section",
+                "fields": {
+                  "First_Name": {
+                    "type": "text",
+                    "required": true
+                  },
+                  "Last_Name": {
+                    "type": "text",
+                    "required": true
+                  },
+                  "Email_Address": {
+                    "type": "email",
+                    "required": true
+                  },
+                  "Email_Visibility": {
+                    "type": "dropdown",
+                    "required": false
+                  },
+                  "MoodleNet_Profile_ID": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "City_Town": {
+                    "type": "unspecified",
+                    "required": false
+                  },
+                  "Country": {
+                    "type": "dropdown",
+                    "required": false
+                  },
+                  "Timezone": {
+                    "type": "dropdown",
+                    "required": false
+                  },
+                  "Description": {
+                    "type": "rich_text_editor",
+                    "required": false
+                  }
+                }
+              },
+              "User_Picture": {
+                "type": "section",
+                "fields": {
+                  "New_Picture_Upload": {
+                    "type": "file_upload",
+                    "required": true,
+                    "constraints": [
+                      "drag-and-drop support"
+                    ]
+                  },
+                  "Picture_Description": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              "Additional_Names": {
+                "type": "section",
+                "fields": {
+                  "Alternative_Name_Formats": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              "Interests": {
+                "type": "tag_based_field",
+                "required": false
+              },
+              "Optional_Fields": {
+                "type": "section",
+                "fields": {
+                  "Custom_Fields": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Update Profile",
+                "on_success": "refreshes the profile page",
+                "constraints": [
+                  "validates all required fields",
+                  "upload constraints"
+                ]
+              },
+              {
+                "element_name": "Cancel",
+                "on_success": "exits without making changes"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 15,
+      "module_title": "Logout",
+      "ast": {
+        "module_name": "Logout",
+        "components": {
+          "Logout_Button": {
+            "type": "button",
+            "on_success": "terminates the current authenticated session and redirects to the login page",
+            "preconditions": [
+              "user must be authenticated"
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    }
+  ]
+}

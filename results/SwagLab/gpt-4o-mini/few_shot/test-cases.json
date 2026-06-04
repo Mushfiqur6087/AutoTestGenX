@@ -1,0 +1,170 @@
+{
+  "module": "SwagLab",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Login with valid credentials",
+      "preconditions": [
+        "User is on the Swag Labs login page"
+      ],
+      "steps": [
+        "1. Enter 'standard_user' in the Username field",
+        "2. Enter 'secret_sauce' in the Password field",
+        "3. Click Login"
+      ],
+      "expected_result": "User is redirected to the Product Inventory page with the list of products displayed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to log in with an invalid username",
+      "preconditions": [
+        "User is on the Swag Labs login page"
+      ],
+      "steps": [
+        "1. Enter 'invalid_user' in the Username field",
+        "2. Enter 'secret_sauce' in the Password field",
+        "3. Click Login"
+      ],
+      "expected_result": "An error banner is displayed with the message 'Epic sadface: Username and password do not match any user in this service.'; the user remains on the login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Login with empty username and password fields",
+      "preconditions": [
+        "User is on the Swag Labs login page"
+      ],
+      "steps": [
+        "1. Leave the Username field empty",
+        "2. Leave the Password field empty",
+        "3. Click Login"
+      ],
+      "expected_result": "An error banner is displayed with the message 'Epic sadface: Username is required.'; the user remains on the login page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Add a product to the cart from the Product Inventory page",
+      "preconditions": [
+        "User logged in as standard_user",
+        "User is on the Product Inventory page"
+      ],
+      "steps": [
+        "1. Click 'Add to cart' for the first product listed",
+        "2. Observe the cart badge in the header"
+      ],
+      "expected_result": "The cart badge count increases by 1; the 'Add to cart' button changes to 'Remove'",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to checkout with empty required fields",
+      "preconditions": [
+        "User logged in as standard_user",
+        "At least one product has been added to the cart",
+        "User is on the Shopping Cart page"
+      ],
+      "steps": [
+        "1. Click Checkout",
+        "2. Leave First Name, Last Name, and Zip/Postal Code fields empty",
+        "3. Click Continue"
+      ],
+      "expected_result": "An error banner is displayed for each missing field; user remains on the Information form",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Enter maximum length for Zip/Postal Code",
+      "preconditions": [
+        "User logged in as standard_user",
+        "At least one product has been added to the cart",
+        "User is on the Checkout - Information page"
+      ],
+      "steps": [
+        "1. Enter 'John' in the First Name field",
+        "2. Enter 'Doe' in the Last Name field",
+        "3. Enter '123456789' in the Zip/Postal Code field",
+        "4. Click Continue"
+      ],
+      "expected_result": "User is redirected to the Overview page with the order summary displayed; the system accepts the maximum length input",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Complete a full checkout with multiple items in the cart",
+      "preconditions": [
+        "User logged in as standard_user",
+        "At least two products have been added to the cart"
+      ],
+      "steps": [
+        "1. Click the shopping cart icon to navigate to the Shopping Cart page",
+        "2. Click Checkout",
+        "3. Enter 'Jane' in the First Name field",
+        "4. Enter 'Smith' in the Last Name field",
+        "5. Enter '12345' in the Zip/Postal Code field",
+        "6. Click Continue",
+        "7. Review the order summary on the Overview page",
+        "8. Click Finish"
+      ],
+      "expected_result": "Confirmation page displays 'Thank you for your order!'; the cart badge is no longer visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to log out and access protected pages",
+      "preconditions": [
+        "User logged in as standard_user",
+        "User is on the Product Inventory page"
+      ],
+      "steps": [
+        "1. Click the hamburger menu",
+        "2. Click Logout",
+        "3. Attempt to navigate back to the Product Inventory page"
+      ],
+      "expected_result": "User is redirected to the login page; protected pages are not accessible without logging in again",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Reset app state and verify cart is empty",
+      "preconditions": [
+        "User logged in as standard_user",
+        "At least one product has been added to the cart",
+        "User is on the Product Inventory page"
+      ],
+      "steps": [
+        "1. Click the hamburger menu",
+        "2. Click Reset App State",
+        "3. Observe the cart badge in the header"
+      ],
+      "expected_result": "The cart badge count is 0; all 'Add to cart' buttons are reset to their original state",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "positive": 3,
+    "negative": 3,
+    "edge": 3,
+    "high_priority": 6,
+    "medium_priority": 3,
+    "low_priority": 0
+  },
+  "_meta": {
+    "website": "SwagLab",
+    "model": "gpt-4o-mini",
+    "approach": "few_shot",
+    "generated_at": "2026-06-04T14:52:30.898475Z"
+  }
+}

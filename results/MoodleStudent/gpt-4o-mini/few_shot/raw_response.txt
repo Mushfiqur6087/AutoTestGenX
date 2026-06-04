@@ -1,0 +1,133 @@
+{
+  "module": "MoodleStudent",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Log in with valid credentials",
+      "preconditions": ["A registered student account exists"],
+      "steps": [
+        "1. Navigate to the Moodle login page",
+        "2. Enter <valid username> in the Username field",
+        "3. Enter <valid password> in the Password field",
+        "4. Click 'Log in'"
+      ],
+      "expected_result": "User is redirected to the Dashboard with a personalized greeting",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to log in with an empty username",
+      "preconditions": [],
+      "steps": [
+        "1. Navigate to the Moodle login page",
+        "2. Leave the Username field empty",
+        "3. Enter <valid password> in the Password field",
+        "4. Click 'Log in'"
+      ],
+      "expected_result": "An inline error message is displayed; the Password field is cleared",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Log in with a username that is at the maximum length",
+      "preconditions": ["A registered student account exists with maximum length username"],
+      "steps": [
+        "1. Navigate to the Moodle login page",
+        "2. Enter <maximum length username> in the Username field",
+        "3. Enter <valid password> in the Password field",
+        "4. Click 'Log in'"
+      ],
+      "expected_result": "User is redirected to the Dashboard with a personalized greeting",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "View the Dashboard and see upcoming activities",
+      "preconditions": ["User logged in as Student", "There are upcoming activities in enrolled courses"],
+      "steps": [
+        "1. Navigate to the Dashboard",
+        "2. Observe the Timeline block"
+      ],
+      "expected_result": "The Timeline block displays a list of upcoming activities",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to filter the Timeline block with no activities",
+      "preconditions": ["User logged in as Student", "No activities are due within the next 7 days"],
+      "steps": [
+        "1. Navigate to the Dashboard",
+        "2. In the Timeline block, select 'Next 7 days' from the time range dropdown"
+      ],
+      "expected_result": "An empty state message is displayed indicating no upcoming activities",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Filter the My Courses page with a very long search term",
+      "preconditions": ["User logged in as Student", "Multiple courses are available"],
+      "steps": [
+        "1. Navigate to the My Courses page",
+        "2. Enter <very long search term> in the search field",
+        "3. Click 'Search'"
+      ],
+      "expected_result": "The system processes the search and displays relevant courses or a message indicating no results",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Submit an assignment using the online text editor",
+      "preconditions": ["User logged in as Student", "An assignment with online text submission is open and within the due date"],
+      "steps": [
+        "1. Navigate to the Assignment page from the Course page",
+        "2. Click 'Add submission'",
+        "3. Enter <submission text> in the online text editor",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "Submission status row updates to 'Submitted for grading'; Last modified timestamp reflects the submission time",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to submit an assignment without any text",
+      "preconditions": ["User logged in as Student", "An assignment with online text submission is open and within the due date"],
+      "steps": [
+        "1. Navigate to the Assignment page from the Course page",
+        "2. Click 'Add submission'",
+        "3. Leave the online text editor empty",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "An inline error message is displayed indicating that submission cannot be empty",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Submit an assignment with maximum length text",
+      "preconditions": ["User logged in as Student", "An assignment with online text submission is open and within the due date"],
+      "steps": [
+        "1. Navigate to the Assignment page from the Course page",
+        "2. Click 'Add submission'",
+        "3. Enter <maximum length submission text> in the online text editor",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "Submission status row updates to 'Submitted for grading'; Last modified timestamp reflects the submission time",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "high_priority": 6,
+    "medium_priority": 3,
+    "low_priority": 0
+  }
+}

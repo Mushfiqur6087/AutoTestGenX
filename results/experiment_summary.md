@@ -1,0 +1,66 @@
+# Experiment Results Summary
+
+Generated: 2026-06-04 16:53 UTC
+
+| Website | Model | Approach | Status | Total | Positive | Negative | Edge | High | Medium | Low |
+|---------|-------|----------|--------|-------|----------|----------|------|------|--------|-----|
+| Mifos | gpt-4o-mini | agent | OK | 497 | 153 | 179 | 165 | 245 | 186 | 58 |
+| Mifos | gpt-4o-mini | few_shot | OK | 9 | 3 | 3 | 3 | 8 | 1 | 0 |
+| Mifos | gpt-4o-mini | few_shot_per_module | OK | 155 | 46 | 53 | 56 | 107 | 47 | 1 |
+| Mifos | gpt-4o-mini | zero_shot | OK | 10 | 3 | 4 | 3 | 6 | 4 | 0 |
+| Mifos | gpt-4o-mini | zero_shot_per_module | OK | 198 | 54 | 70 | 74 | 114 | 79 | 5 |
+| Mifos | gpt-5-mini | agent | OK | 807 | 362 | 242 | 203 | 416 | 319 | 72 |
+| Mifos | gpt-5-mini | few_shot | OK | 34 | 17 | 12 | 5 | 25 | 8 | 1 |
+| Mifos | gpt-5-mini | few_shot_per_module | OK | 503 | 204 | 162 | 137 | 273 | 196 | 34 |
+| Mifos | gpt-5-mini | zero_shot | OK | 36 | 16 | 13 | 7 | 20 | 14 | 2 |
+| Mifos | gpt-5-mini | zero_shot_per_module | OK | 621 | 261 | 191 | 163 | 276 | 259 | 86 |
+| MoodleStudent | gpt-4o-mini | agent | OK | 106 | 31 | 37 | 38 | 44 | 47 | 15 |
+| MoodleStudent | gpt-4o-mini | few_shot | OK | 9 | 3 | 3 | 3 | 6 | 3 | 0 |
+| MoodleStudent | gpt-4o-mini | few_shot_per_module | OK | 45 | 13 | 15 | 17 | 24 | 21 | 0 |
+| MoodleStudent | gpt-4o-mini | zero_shot | OK | 10 | 4 | 3 | 3 | 6 | 3 | 1 |
+| MoodleStudent | gpt-4o-mini | zero_shot_per_module | OK | 67 | 21 | 21 | 25 | 28 | 28 | 11 |
+| MoodleStudent | gpt-5-mini | agent | OK | 168 | 74 | 41 | 53 | 68 | 77 | 23 |
+| MoodleStudent | gpt-5-mini | few_shot | OK | 27 | 13 | 6 | 8 | 10 | 12 | 5 |
+| MoodleStudent | gpt-5-mini | few_shot_per_module | OK | 133 | 63 | 29 | 41 | 54 | 66 | 13 |
+| MoodleStudent | gpt-5-mini | zero_shot | OK | 22 | 16 | 2 | 4 | 9 | 11 | 2 |
+| MoodleStudent | gpt-5-mini | zero_shot_per_module | OK | 161 | 76 | 38 | 47 | 76 | 65 | 20 |
+| MoodleTeacher | gpt-4o-mini | agent | OK | 207 | 66 | 73 | 68 | 83 | 89 | 20 |
+| MoodleTeacher | gpt-4o-mini | few_shot | OK | 9 | 3 | 3 | 3 | 6 | 3 | 0 |
+| MoodleTeacher | gpt-4o-mini | few_shot_per_module | OK | 69 | 23 | 23 | 23 | 41 | 28 | 0 |
+| MoodleTeacher | gpt-4o-mini | zero_shot | OK | 10 | 4 | 3 | 3 | 6 | 4 | 0 |
+| MoodleTeacher | gpt-4o-mini | zero_shot_per_module | OK | 97 | 27 | 31 | 39 | 43 | 39 | 15 |
+| MoodleTeacher | gpt-5-mini | agent | OK | 295 | 147 | 65 | 83 | 126 | 138 | 31 |
+| MoodleTeacher | gpt-5-mini | few_shot | OK | 22 | 11 | 6 | 5 | 12 | 9 | 1 |
+| MoodleTeacher | gpt-5-mini | few_shot_per_module | OK | 202 | 92 | 51 | 59 | 91 | 92 | 19 |
+| MoodleTeacher | gpt-5-mini | zero_shot | OK | 25 | 18 | 4 | 3 | 13 | 11 | 1 |
+| MoodleTeacher | gpt-5-mini | zero_shot_per_module | OK | 272 | 128 | 60 | 72 | 99 | 134 | 39 |
+| Parabank | gpt-4o-mini | agent | OK | 180 | 21 | 94 | 65 | 91 | 72 | 17 |
+| Parabank | gpt-4o-mini | few_shot | OK | 12 | 4 | 4 | 4 | 8 | 4 | 0 |
+| Parabank | gpt-4o-mini | few_shot_per_module | OK | 71 | 19 | 27 | 25 | 48 | 23 | 0 |
+| Parabank | gpt-4o-mini | zero_shot | OK | 36 | 12 | 12 | 12 | 24 | 12 | 0 |
+| Parabank | gpt-4o-mini | zero_shot_per_module | OK | 92 | 21 | 36 | 35 | 56 | 35 | 1 |
+| Parabank | gpt-5-mini | agent | OK | 230 | 47 | 93 | 90 | 93 | 117 | 20 |
+| Parabank | gpt-5-mini | few_shot | OK | 32 | 13 | 11 | 8 | 9 | 17 | 6 |
+| Parabank | gpt-5-mini | few_shot_per_module | OK | 158 | 42 | 69 | 47 | 78 | 64 | 16 |
+| Parabank | gpt-5-mini | zero_shot | OK | 30 | 11 | 14 | 5 | 16 | 12 | 2 |
+| Parabank | gpt-5-mini | zero_shot_per_module | OK | 198 | 50 | 90 | 58 | 95 | 79 | 24 |
+| PHPTravels | gpt-4o-mini | agent | OK | 318 | 61 | 143 | 114 | 157 | 104 | 41 |
+| PHPTravels | gpt-4o-mini | few_shot | OK | 6 | 2 | 2 | 2 | 4 | 2 | 0 |
+| PHPTravels | gpt-4o-mini | few_shot_per_module | OK | 88 | 26 | 29 | 33 | 55 | 33 | 0 |
+| PHPTravels | gpt-4o-mini | zero_shot | OK | 21 | 7 | 7 | 7 | 14 | 7 | 0 |
+| PHPTravels | gpt-4o-mini | zero_shot_per_module | OK | 133 | 34 | 48 | 51 | 76 | 46 | 11 |
+| PHPTravels | gpt-5-mini | agent | OK | 394 | 136 | 137 | 121 | 183 | 173 | 38 |
+| PHPTravels | gpt-5-mini | few_shot | OK | 48 | 17 | 16 | 15 | 19 | 23 | 6 |
+| PHPTravels | gpt-5-mini | few_shot_per_module | OK | 289 | 115 | 91 | 83 | 139 | 121 | 29 |
+| PHPTravels | gpt-5-mini | zero_shot | OK | 30 | 13 | 10 | 7 | 16 | 12 | 2 |
+| PHPTravels | gpt-5-mini | zero_shot_per_module | OK | 410 | 149 | 130 | 127 | 189 | 167 | 54 |
+| SwagLab | gpt-4o-mini | agent | OK | 66 | 19 | 21 | 26 | 27 | 27 | 7 |
+| SwagLab | gpt-4o-mini | few_shot | OK | 9 | 3 | 3 | 3 | 6 | 3 | 0 |
+| SwagLab | gpt-4o-mini | few_shot_per_module | OK | 38 | 12 | 14 | 12 | 23 | 15 | 0 |
+| SwagLab | gpt-4o-mini | zero_shot | OK | 10 | 4 | 4 | 2 | 7 | 3 | 0 |
+| SwagLab | gpt-4o-mini | zero_shot_per_module | OK | 54 | 14 | 17 | 23 | 25 | 22 | 7 |
+| SwagLab | gpt-5-mini | agent | OK | 92 | 31 | 25 | 36 | 38 | 44 | 10 |
+| SwagLab | gpt-5-mini | few_shot | OK | 20 | 9 | 6 | 5 | 11 | 8 | 1 |
+| SwagLab | gpt-5-mini | few_shot_per_module | OK | 82 | 30 | 25 | 27 | 41 | 35 | 6 |
+| SwagLab | gpt-5-mini | zero_shot | OK | 22 | 9 | 8 | 5 | 9 | 10 | 3 |
+| SwagLab | gpt-5-mini | zero_shot_per_module | OK | 105 | 38 | 28 | 39 | 57 | 37 | 11 |

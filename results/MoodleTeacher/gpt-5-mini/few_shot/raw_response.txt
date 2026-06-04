@@ -1,0 +1,306 @@
+{
+  "module": "MoodleTeacher",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Log in with valid teacher credentials",
+      "preconditions": ["User is on the Login page", "Valid teacher username and password are available"],
+      "steps": [
+        "1. Enter a valid Username in the Username field",
+        "2. Enter the corresponding valid Password in the Password field",
+        "3. Click the 'Log in' button"
+      ],
+      "expected_result": "User is authenticated and redirected to the Dashboard where a personalized greeting and dashboard blocks are visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to log in with invalid credentials",
+      "preconditions": ["User is on the Login page"],
+      "steps": [
+        "1. Enter an invalid Username or an invalid Password",
+        "2. Click the 'Log in' button"
+      ],
+      "expected_result": "An inline error message is displayed indicating invalid credentials, the Password field is cleared and the Username value remains for correction",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Attempt to log in with empty password and valid username",
+      "preconditions": ["User is on the Login page", "Valid teacher username is known"],
+      "steps": [
+        "1. Enter a valid Username in the Username field",
+        "2. Leave the Password field empty",
+        "3. Click 'Log in'"
+      ],
+      "expected_result": "An inline validation error indicates the Password is required and the form is not submitted",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Use the top navigation bar links to go to Dashboard and My Courses",
+      "preconditions": ["User logged in as Teacher"],
+      "steps": [
+        "1. From any page, click the site name 'MoodleTest' on the left and verify it navigates to the home page",
+        "2. Click the 'Dashboard' link in the top navigation bar",
+        "3. Click the 'My Courses' link in the top navigation bar"
+      ],
+      "expected_result": "Each click navigates to the correct page: home page, Dashboard, and My Courses respectively",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Open notifications and messaging from the top-right icons",
+      "preconditions": ["User logged in as Teacher"],
+      "steps": [
+        "1. Click the notifications bell icon in the top-right",
+        "2. Observe alerts area",
+        "3. Click the messaging icon in the top-right",
+        "4. Observe the messaging drawer opens"
+      ],
+      "expected_result": "Notifications area toggles and shows alerts or empty state; messaging drawer opens showing recent conversations",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to save an assignment without entering a name",
+      "preconditions": ["User logged in as Teacher", "A course exists and Edit mode is enabled", "Activity Chooser opened and Assignment selected"],
+      "steps": [
+        "1. Open the Assignment creation form via the Activity Chooser",
+        "2. Leave the Assignment name field empty",
+        "3. Click 'Save and return to course'"
+      ],
+      "expected_result": "An inline validation error highlights the Assignment name field; the form is not submitted and remains open",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-005",
+      "category": "positive",
+      "test_case": "Create an assignment with File submissions enabled, allowed types, and a due date",
+      "preconditions": ["User logged in as Teacher", "A course exists and Edit mode is enabled", "Activity Chooser opened and Assignment selected"],
+      "steps": [
+        "1. Enter 'Assignment with files' in the Assignment name field",
+        "2. In Submission types check 'File submissions'",
+        "3. Set Maximum number of uploaded files to 3 and Maximum submission size to a valid value",
+        "4. Add 'pdf,docx' to Accepted file types",
+        "5. Enable Due date and select a valid future date/time",
+        "6. Click 'Save and return to course'"
+      ],
+      "expected_result": "Assignment is created and appears in the course; its settings show File submissions enabled with the configured file limits and the due date",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Create assignment with an extremely long name near maximum length",
+      "preconditions": ["User logged in as Teacher", "A course exists and Edit mode is enabled", "Activity Chooser opened and Assignment selected"],
+      "steps": [
+        "1. Enter an assignment name with 255 characters (or the system's maximum) in the Assignment name field",
+        "2. Fill other required fields minimally",
+        "3. Click 'Save and return to course'"
+      ],
+      "expected_result": "Assignment is saved and the long name is displayed (truncated visually if UI limits apply) without errors; no data corruption occurs",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Set cut-off date to the exact same date and time as the due date",
+      "preconditions": ["User logged in as Teacher", "A course exists and Edit mode is enabled", "Activity Chooser opened and Assignment selected"],
+      "steps": [
+        "1. Enter 'Cutoff equals due' in Assignment name",
+        "2. Enable Due date and set it to a specific date/time",
+        "3. Enable Cut-off date and set it to the exact same date/time as the Due date",
+        "4. Click 'Save and return to course'"
+      ],
+      "expected_result": "Assignment is saved successfully and appears in the course; both due and cut-off dates are identical in the assignment metadata",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-006",
+      "category": "positive",
+      "test_case": "Open Activity Chooser and add a Page resource to a section",
+      "preconditions": ["User logged in as Teacher", "A course exists and Edit mode is enabled"],
+      "steps": [
+        "1. On the Course page with Edit mode enabled, click '+ Add an activity or resource' in a section",
+        "2. In the Activity Chooser modal, use the category filter or search to find 'Page'",
+        "3. Select the Page tile and click 'Add'",
+        "4. Fill the Page name and content minimally and click 'Save and return to course'"
+      ],
+      "expected_result": "A Page resource is added to the selected section and its name appears in the course content list",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to upload a course image exceeding the Maximum upload size",
+      "preconditions": ["User logged in as Teacher", "Navigated to Course Settings form", "Maximum upload size is set to a smaller value than the file being uploaded"],
+      "steps": [
+        "1. Open Course Settings and locate the Course image upload control",
+        "2. Attempt to upload an image file larger than the configured Maximum upload size",
+        "3. Click 'Save and display'"
+      ],
+      "expected_result": "An inline validation error is shown indicating the uploaded file exceeds the maximum allowed size and the course settings are not saved",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-007",
+      "category": "positive",
+      "test_case": "Enable Dashboard Edit mode, add a block, and reset the page to default",
+      "preconditions": ["User logged in as Teacher", "User is on the Dashboard"],
+      "steps": [
+        "1. Toggle Edit mode on for the Dashboard",
+        "2. Click '+ Add a block' and select 'Text' block from the Add a block page",
+        "3. Confirm the block appears on the Dashboard with move and options controls",
+        "4. Click 'Reset page to default' and confirm the reset"
+      ],
+      "expected_result": "The new block appears when added; after reset, the Dashboard layout reverts to its default and the added block is removed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Open Add a block page then click Cancel to return to Dashboard",
+      "preconditions": ["User logged in as Teacher", "User is on the Dashboard with Edit mode enabled"],
+      "steps": [
+        "1. Click '+ Add a block' to open the Add a block page",
+        "2. Without selecting a block, click the 'Cancel' link at the bottom"
+      ],
+      "expected_result": "The Add a block page closes and the user is returned to the Dashboard without any changes",
+      "priority": "low"
+    },
+    {
+      "tc_id": "P-008",
+      "category": "positive",
+      "test_case": "Star a course from My Courses to pin it to the top",
+      "preconditions": ["User logged in as Teacher", "My Courses page is accessible and shows multiple course cards"],
+      "steps": [
+        "1. Navigate to My Courses",
+        "2. On a course card, click the three-dot menu and select 'Star this course'",
+        "3. Observe the course card moves to the top of the grid or is marked as starred"
+      ],
+      "expected_result": "The course is pinned to the top or visually indicated as starred; status dropdown reflects starred courses when filtered",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt to enrol a user without selecting a role in the Enrol users dialog",
+      "preconditions": ["User logged in as Teacher", "Course Participants page is open"],
+      "steps": [
+        "1. Click 'Enrol users' to open the enrollment dialog",
+        "2. Search and select a user in the user search field",
+        "3. Leave the Role dropdown unset or blank",
+        "4. Click the 'Enrol users' confirm button"
+      ],
+      "expected_result": "An inline validation error prevents enrollment, indicating that a Role must be selected before confirmation",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-009",
+      "category": "positive",
+      "test_case": "Edit grades inline in the Gradebook Grader report and save changes",
+      "preconditions": ["User logged in as Teacher", "Course with enrolled students and grade items exists", "Grader report is open"],
+      "steps": [
+        "1. Enable Edit mode in the Grader report",
+        "2. Click a grade cell and enter a valid grade within the activity's range",
+        "3. Repeat for another cell",
+        "4. Click 'Save changes'"
+      ],
+      "expected_result": "Edited grade values are saved; the per-cell and overall averages update accordingly and no range violations occur",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Attempt to save grades outside the configured grade range",
+      "preconditions": ["User logged in as Teacher", "Grader report is open with an activity that has a defined max grade"],
+      "steps": [
+        "1. Enable Edit mode in the Grader report",
+        "2. Enter a grade value greater than the activity's maximum grade into a grade cell",
+        "3. Click 'Save changes'"
+      ],
+      "expected_result": "The offending cell is flagged with an inline validation error and saving is blocked until the grade is corrected to within range",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-010",
+      "category": "positive",
+      "test_case": "Use Quick grading to enter inline grades on the Assignment Submissions table and save",
+      "preconditions": ["User logged in as Teacher", "Assignment with submitted students exists and Submissions view is open"],
+      "steps": [
+        "1. On the Submissions view, enable 'Quick grading' mode",
+        "2. Enter numeric grades directly into the Final grade fields for multiple students",
+        "3. Click the 'Save changes' button or equivalent"
+      ],
+      "expected_result": "Inline grades are saved and reflected in the table; Grading summary metrics update to show changes",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-005",
+      "category": "edge",
+      "test_case": "Enable File submissions and set maximum uploaded files to the minimum allowed (1) and submit one file",
+      "preconditions": ["User logged in as Teacher", "Assignment creation form is open"],
+      "steps": [
+        "1. Enter an Assignment name",
+        "2. Enable File submissions in Submission types",
+        "3. Set Maximum number of uploaded files to 1",
+        "4. Save the assignment and switch to student view or use a sample student to submit",
+        "5. Upload a single file and submit"
+      ],
+      "expected_result": "The student submission accepts the single file without error; if a second file is attempted it is rejected per the limit",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-011",
+      "category": "positive",
+      "test_case": "Edit profile with required fields and upload a new profile picture",
+      "preconditions": ["User logged in as Teacher", "Profile page is accessible"],
+      "steps": [
+        "1. Navigate to the Profile page and click 'Edit profile'",
+        "2. Update required fields: First name, Last name, and Email with valid values",
+        "3. Use the User picture upload area to upload a valid image file and provide a Picture description",
+        "4. Click 'Update profile'"
+      ],
+      "expected_result": "Profile is updated successfully; profile page displays new details and picture",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Attempt to update profile leaving the required Email field empty",
+      "preconditions": ["User logged in as Teacher", "Profile Edit form is open"],
+      "steps": [
+        "1. Clear the Email address field while leaving other fields intact",
+        "2. Click 'Update profile'"
+      ],
+      "expected_result": "An inline validation error shows that Email is required and the profile is not updated",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-012",
+      "category": "positive",
+      "test_case": "Log out terminates session and redirects to login page",
+      "preconditions": ["User logged in as Teacher"],
+      "steps": [
+        "1. Click the user's circular initials icon in the top-right to open the user menu dropdown",
+        "2. Click 'Log out' from the user menu"
+      ],
+      "expected_result": "The session ends and the user is redirected to the Login page; attempting to access protected pages requires re-authentication",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "total": 22,
+    "high_priority": 12,
+    "medium_priority": 9,
+    "low_priority": 1
+  }
+}

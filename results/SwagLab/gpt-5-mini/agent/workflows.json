@@ -1,0 +1,297 @@
+{
+  "project_name": "Swaglab",
+  "generated_at": "2026-06-04T14:12:17.959379Z",
+  "modules": [
+    {
+      "module_id": 1,
+      "module_title": "Login",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Successful login with accepted username and correct password",
+          "actor": "<role>",
+          "conditional_branch": "Username IN {standard_user, problem_user, performance_glitch_user, error_user, visual_user} AND Password == \"secret_sauce\"",
+          "terminal_action": "Login",
+          "on_success": "redirects to Product Inventory page"
+        },
+        {
+          "wf_id": "WF-002",
+          "name": "Locked out user submits credentials",
+          "actor": "<role>",
+          "conditional_branch": "Username == \"locked_out_user\" AND Password != empty",
+          "terminal_action": "Login",
+          "on_success": "Epic sadface: Sorry, this user has been locked out."
+        },
+        {
+          "wf_id": "WF-003",
+          "name": "Invalid credentials provided (username/password mismatch)",
+          "actor": "<role>",
+          "conditional_branch": "Username != empty AND Password != empty AND credentials do not match any accepted username/password pair AND Username != \"locked_out_user\"",
+          "terminal_action": "Login",
+          "on_success": "Epic sadface: Username and password do not match any user in this service."
+        },
+        {
+          "wf_id": "WF-004",
+          "name": "Submit with missing Username (Password provided)",
+          "actor": "<role>",
+          "conditional_branch": "Username == empty AND Password != empty",
+          "terminal_action": "Login",
+          "on_success": "Epic sadface: Username is required."
+        },
+        {
+          "wf_id": "WF-005",
+          "name": "Submit with missing Password (Username provided)",
+          "actor": "<role>",
+          "conditional_branch": "Username != empty AND Password == empty",
+          "terminal_action": "Login",
+          "on_success": "Epic sadface: Password is required."
+        },
+        {
+          "wf_id": "WF-006",
+          "name": "Submit with both Username and Password missing",
+          "actor": "<role>",
+          "conditional_branch": "Username == empty AND Password == empty",
+          "terminal_action": "Login",
+          "on_success": "Epic sadface: Username is required. AND Epic sadface: Password is required."
+        }
+      ],
+      "attempts": 2
+    },
+    {
+      "module_id": 2,
+      "module_title": "Product Inventory",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Open Product Detail",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Open Product Detail",
+          "on_success": "opens Product Detail page"
+        },
+        {
+          "wf_id": "WF-002",
+          "name": "Add product to cart (NotInCart state)",
+          "actor": "<role>",
+          "conditional_branch": "entity_state == NotInCart",
+          "terminal_action": "Add to cart",
+          "on_success": "adds item to cart; button changes to Remove; cart badge count increments"
+        },
+        {
+          "wf_id": "WF-003",
+          "name": "Remove product from cart (InCart state)",
+          "actor": "<role>",
+          "conditional_branch": "entity_state == InCart",
+          "terminal_action": "Remove",
+          "on_success": "removes item from cart; button changes to Add to cart; cart badge count decrements"
+        }
+      ],
+      "attempts": 1
+    },
+    {
+      "module_id": 3,
+      "module_title": "Product Detail",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Add product to cart (when not in cart)",
+          "actor": "<role>",
+          "conditional_branch": "entity_state == Not In Cart",
+          "terminal_action": "Add to cart",
+          "on_success": "adds product to cart; changes state to In Cart"
+        },
+        {
+          "wf_id": "WF-002",
+          "name": "Remove product from cart (when in cart)",
+          "actor": "<role>",
+          "conditional_branch": "entity_state == In Cart",
+          "terminal_action": "Remove",
+          "on_success": "removes product from cart; changes state to Not In Cart"
+        },
+        {
+          "wf_id": "WF-003",
+          "name": "Navigate back to Product Inventory",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Back to products",
+          "on_success": "navigates to Product Inventory page"
+        },
+        {
+          "wf_id": "WF-004",
+          "name": "Open Shopping Cart via cart icon",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Cart icon",
+          "on_success": "navigates to Shopping Cart"
+        }
+      ],
+      "attempts": 1
+    },
+    {
+      "module_id": 4,
+      "module_title": "Shopping Cart",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Remove item from cart (row action)",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Remove",
+          "on_success": "removes item from cart"
+        },
+        {
+          "wf_id": "WF-002",
+          "name": "Continue Shopping (navigate to inventory)",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Continue Shopping",
+          "on_success": "navigates to Product Inventory"
+        },
+        {
+          "wf_id": "WF-003",
+          "name": "Begin Checkout",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Checkout",
+          "on_success": "begins checkout"
+        }
+      ],
+      "attempts": 1
+    },
+    {
+      "module_id": 5,
+      "module_title": "Checkout - Information",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Continue with all required fields present",
+          "actor": "<role>",
+          "conditional_branch": "First_Name != '' AND Last_Name != '' AND Zip_Postal_Code != ''",
+          "terminal_action": "Continue",
+          "on_success": "proceeds to overview step"
+        },
+        {
+          "wf_id": "WF-002",
+          "name": "Continue with missing required field(s) (generic)",
+          "actor": "<role>",
+          "conditional_branch": "First_Name == '' OR Last_Name == '' OR Zip_Postal_Code == ''",
+          "terminal_action": "Continue",
+          "on_success": "displays error banner(s): 'Error: First Name is required', 'Error: Last Name is required', or 'Error: Postal Code is required'"
+        },
+        {
+          "wf_id": "WF-003",
+          "name": "Cancel and return to Shopping Cart",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Cancel",
+          "on_success": "returns to Shopping Cart"
+        },
+        {
+          "wf_id": "WF-004",
+          "name": "Continue with First_Name missing",
+          "actor": "<role>",
+          "conditional_branch": "First_Name == ''",
+          "terminal_action": "Continue",
+          "on_success": "displays error banner: 'Error: First Name is required'"
+        },
+        {
+          "wf_id": "WF-005",
+          "name": "Continue with Last_Name missing",
+          "actor": "<role>",
+          "conditional_branch": "Last_Name == ''",
+          "terminal_action": "Continue",
+          "on_success": "displays error banner: 'Error: Last Name is required'"
+        },
+        {
+          "wf_id": "WF-006",
+          "name": "Continue with Zip_Postal_Code missing",
+          "actor": "<role>",
+          "conditional_branch": "Zip_Postal_Code == ''",
+          "terminal_action": "Continue",
+          "on_success": "displays error banner: 'Error: Postal Code is required'"
+        }
+      ],
+      "attempts": 2
+    },
+    {
+      "module_id": 6,
+      "module_title": "Checkout - Overview",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Complete order (Finish)",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Finish",
+          "on_success": "completes order and navigates to confirmation page"
+        },
+        {
+          "wf_id": "WF-002",
+          "name": "Cancel checkout (Cancel)",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Cancel",
+          "on_success": "exits checkout"
+        }
+      ],
+      "attempts": 1
+    },
+    {
+      "module_id": 7,
+      "module_title": "Checkout - Confirmation",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Back Home \u2014 return to Product Inventory and clear cart",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Back Home",
+          "on_success": "navigates to Product Inventory and clears the cart"
+        }
+      ],
+      "attempts": 1
+    },
+    {
+      "module_id": 8,
+      "module_title": "Logout",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Logout (end session and return to login)",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Logout",
+          "on_success": {
+            "redirect": "Login_Page",
+            "effects": [
+              "end_session",
+              "protected_pages_require_authentication"
+            ],
+            "protected_pages": [
+              "inventory",
+              "detail",
+              "cart",
+              "checkout"
+            ]
+          }
+        }
+      ],
+      "attempts": 2
+    },
+    {
+      "module_id": 9,
+      "module_title": "Reset App State",
+      "workflows": [
+        {
+          "wf_id": "WF-001",
+          "name": "Click Reset App State button",
+          "actor": "<role>",
+          "conditional_branch": null,
+          "terminal_action": "Reset App State",
+          "on_success": "clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in"
+        }
+      ],
+      "attempts": 1
+    }
+  ]
+}

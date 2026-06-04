@@ -1,0 +1,266 @@
+{
+  "module": "SwagLab",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Successful login with valid standard_user credentials",
+      "preconditions": ["User is on the Swag Labs login page"],
+      "steps": [
+        "1. Enter 'standard_user' into the Username field",
+        "2. Enter 'secret_sauce' into the Password field",
+        "3. Click Login"
+      ],
+      "expected_result": "User is authenticated and redirected to the Product Inventory page; header (hamburger, title, cart) is visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to login with empty Username",
+      "preconditions": ["User is on the Swag Labs login page"],
+      "steps": [
+        "1. Leave the Username field empty",
+        "2. Enter 'secret_sauce' into the Password field",
+        "3. Click Login"
+      ],
+      "expected_result": "An error banner is displayed with message 'Epic sadface: Username is required.'; user remains on the login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to login with empty Password",
+      "preconditions": ["User is on the Swag Labs login page"],
+      "steps": [
+        "1. Enter 'standard_user' into the Username field",
+        "2. Leave the Password field empty",
+        "3. Click Login"
+      ],
+      "expected_result": "An error banner is displayed with message 'Epic sadface: Password is required.'; user remains on the login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to login with invalid credentials",
+      "preconditions": ["User is on the Swag Labs login page"],
+      "steps": [
+        "1. Enter 'invalid_user' into the Username field",
+        "2. Enter 'wrong_password' into the Password field",
+        "3. Click Login"
+      ],
+      "expected_result": "An error banner is displayed with message 'Epic sadface: Username and password do not match any user in this service.'; user remains on the login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt to login with locked_out_user account",
+      "preconditions": ["User is on the Swag Labs login page"],
+      "steps": [
+        "1. Enter 'locked_out_user' into the Username field",
+        "2. Enter 'secret_sauce' into the Password field",
+        "3. Click Login"
+      ],
+      "expected_result": "An error banner is displayed with message 'Epic sadface: Sorry, this user has been locked out.'; user remains on the login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Add a product to the cart from the Product Inventory page",
+      "preconditions": ["User logged in as standard_user", "User is on the Product Inventory page", "Cart is empty"],
+      "steps": [
+        "1. On the Product Inventory page, locate a product (e.g. 'Sauce Labs Backpack')",
+        "2. Click the product's 'Add to cart' button"
+      ],
+      "expected_result": "The product's button changes to 'Remove'; the cart badge increments to 1 and displays on the header",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Remove an item from the cart using inventory 'Remove' button",
+      "preconditions": ["User logged in as standard_user", "At least one product has been added to the cart"],
+      "steps": [
+        "1. On the Product Inventory page, identify a product currently added to cart (button shows 'Remove')",
+        "2. Click that product's 'Remove' button"
+      ],
+      "expected_result": "The product's button changes back to 'Add to cart'; the cart badge decrements accordingly and reflects the correct count",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Open Product Detail page and add the product to cart",
+      "preconditions": ["User logged in as standard_user", "User is on the Product Inventory page", "Selected product is not in cart"],
+      "steps": [
+        "1. Click the product name or image to open the Product Detail page",
+        "2. On the Product Detail page, verify product image, name, description, and price are visible",
+        "3. Click 'Add to cart' on the Product Detail page"
+      ],
+      "expected_result": "The button changes to 'Remove'; the cart badge increments accordingly; 'Back to products' navigates back to Product Inventory",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Add all available products to the cart and verify the cart badge count",
+      "preconditions": ["User logged in as standard_user", "Cart is empty"],
+      "steps": [
+        "1. On the Product Inventory page, click 'Add to cart' for every product listed",
+        "2. Observe the cart badge in the header after each addition"
+      ],
+      "expected_result": "The cart badge count equals the total number of products available; all 'Add to cart' buttons change to 'Remove'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-005",
+      "category": "positive",
+      "test_case": "Complete a full checkout with one item in the cart",
+      "preconditions": ["User logged in as standard_user", "At least one product has been added to the cart"],
+      "steps": [
+        "1. Click the shopping cart icon to navigate to the Shopping Cart page",
+        "2. Click Checkout",
+        "3. Enter 'First', 'Last', and '90210' into First Name, Last Name, and Postal Code fields respectively",
+        "4. Click Continue",
+        "5. Review the order on the Overview page and click Finish"
+      ],
+      "expected_result": "Confirmation page displays 'Thank you for your order!'; clicking 'Back Home' returns to Product Inventory and the cart is cleared (badge not visible)",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Attempt to continue checkout with missing required information (First Name)",
+      "preconditions": ["User logged in as standard_user", "At least one product has been added to the cart", "User is on the Checkout: Your Information page"],
+      "steps": [
+        "1. Leave First Name empty",
+        "2. Enter 'Last' in Last Name and '90210' in Postal Code",
+        "3. Click Continue"
+      ],
+      "expected_result": "An error banner is displayed with message 'Error: First Name is required'; user remains on the Information step",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Use very long strings for checkout information fields",
+      "preconditions": ["User logged in as standard_user", "At least one product in cart", "User is on the Checkout: Your Information page"],
+      "steps": [
+        "1. Enter a 256+ character string into First Name",
+        "2. Enter a 256+ character string into Last Name",
+        "3. Enter a 20+ character string into Postal Code (including alphanumeric)",
+        "4. Click Continue"
+      ],
+      "expected_result": "The system accepts or rejects input according to validation rules: either proceeds to Overview if allowed, or displays appropriate field-specific error(s) without crashing; inputs do not corrupt UI",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-006",
+      "category": "positive",
+      "test_case": "Reset App State clears cart without logging out",
+      "preconditions": ["User logged in as standard_user", "At least one product has been added to the cart"],
+      "steps": [
+        "1. Open the hamburger menu",
+        "2. Click 'Reset App State'",
+        "3. Observe the cart badge and product button states on the Product Inventory page"
+      ],
+      "expected_result": "Cart is cleared; cart badge is no longer visible; any 'Remove' buttons revert to 'Add to cart'; user remains logged in on the inventory page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-007",
+      "category": "positive",
+      "test_case": "Logout ends session and prevents access to protected pages",
+      "preconditions": ["User logged in as standard_user", "User is on the Product Inventory page"],
+      "steps": [
+        "1. Open the hamburger menu",
+        "2. Click 'Logout'",
+        "3. Attempt to navigate to /inventory.html (or click back to inventory via URL/links)"
+      ],
+      "expected_result": "User is returned to the login page; protected pages (inventory, product detail, cart, checkout) are not accessible without logging in again",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Verify sorting dropdown sorts products by name and price correctly",
+      "preconditions": ["User logged in as standard_user", "User is on the Product Inventory page"],
+      "steps": [
+        "1. Select 'Name (A to Z)' from the sort dropdown and observe product order",
+        "2. Select 'Name (Z to A)' and observe product order",
+        "3. Select 'Price (low to high)' and observe product order",
+        "4. Select 'Price (high to low)' and observe product order"
+      ],
+      "expected_result": "Product list reorders correctly for each sort option (alphabetical and price ordering match expected sequences)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Attempt to access inventory page without logging in",
+      "preconditions": ["User is not authenticated", "User attempts to open inventory URL directly"],
+      "steps": [
+        "1. Navigate directly to the Product Inventory page URL (e.g. /inventory.html) without logging in"
+      ],
+      "expected_result": "User is redirected to the login page; protected content is not displayed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-008",
+      "category": "positive",
+      "test_case": "Cancel checkout from Information returns to Shopping Cart",
+      "preconditions": ["User logged in as standard_user", "At least one product in cart", "User is on the Checkout: Your Information page"],
+      "steps": [
+        "1. Click Cancel on the Checkout: Your Information page"
+      ],
+      "expected_result": "User is returned to the Shopping Cart page and cart contents are unchanged",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Rapidly add and remove the same item and verify cart count stability",
+      "preconditions": ["User logged in as standard_user", "User is on the Product Inventory page"],
+      "steps": [
+        "1. For a chosen product, click 'Add to cart' then 'Remove' repeatedly (10-20 cycles)",
+        "2. Observe the cart badge after each action"
+      ],
+      "expected_result": "Cart badge accurately reflects additions and removals at each step without getting out of sync (no negative counts or stale state)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-009",
+      "category": "positive",
+      "test_case": "Finish order clears the cart and removes badge when returning Home",
+      "preconditions": ["User logged in as standard_user", "At least one product in cart", "User completes checkout and is on Confirmation page"],
+      "steps": [
+        "1. On the Confirmation page click 'Back Home'",
+        "2. Observe the Product Inventory and header cart badge"
+      ],
+      "expected_result": "User is returned to Product Inventory; cart is cleared and the cart badge is not visible",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-005",
+      "category": "edge",
+      "test_case": "Open 'About' from hamburger menu navigates to external Sauce Labs site",
+      "preconditions": ["User logged in as standard_user", "User is on the Product Inventory page"],
+      "steps": [
+        "1. Open the hamburger menu",
+        "2. Click 'About'"
+      ],
+      "expected_result": "Browser navigates to the Sauce Labs website (external page opens); application may open in same or new tab depending on implementation",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "high_priority": 11,
+    "medium_priority": 8,
+    "low_priority": 1
+  }
+}

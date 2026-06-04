@@ -1,0 +1,1450 @@
+{
+  "project_name": "SwagLab",
+  "generated_at": "2026-06-04T14:54:22.091692Z",
+  "model": "gpt-5-mini",
+  "approach": "few_shot_per_module",
+  "modules": [
+    {
+      "module": "Login",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "category": "positive",
+          "test_case": "Successful login with standard_user",
+          "preconditions": [
+            "User is on the Swag Labs login page",
+            "Network connection available"
+          ],
+          "steps": [
+            "1. Enter 'standard_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "User is authenticated and redirected to the Product Inventory page; Inventory page elements (product list, header, and cart icon) are visible",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-002",
+          "category": "positive",
+          "test_case": "Successful login with problem_user",
+          "preconditions": [
+            "User is on the Swag Labs login page",
+            "Network connection available"
+          ],
+          "steps": [
+            "1. Enter 'problem_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "User is authenticated and redirected to the Product Inventory page; page loads and product list is displayed (note: product images or behavior may be intentionally problematic but login succeeds)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-003",
+          "category": "positive",
+          "test_case": "Successful login with visual_user",
+          "preconditions": [
+            "User is on the Swag Labs login page",
+            "Network connection available"
+          ],
+          "steps": [
+            "1. Enter 'visual_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "User is authenticated and redirected to the Product Inventory page; login succeeds though visual differences may be present for this user",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-004",
+          "category": "negative",
+          "test_case": "Attempt to log in with locked_out_user",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Enter 'locked_out_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Epic sadface: Sorry, this user has been locked out.'; the user remains on the login page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-005",
+          "category": "negative",
+          "test_case": "Attempt to log in with invalid username and/or password",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Enter 'invalid_user' in the Username field",
+            "2. Enter 'wrong_password' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Epic sadface: Username and password do not match any user in this service.'; the user remains on the login page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-006",
+          "category": "negative",
+          "test_case": "Attempt to log in with missing username",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Leave the Username field empty",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Epic sadface: Username is required.'; the user remains on the login page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-007",
+          "category": "negative",
+          "test_case": "Attempt to log in with missing password",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Enter 'standard_user' in the Username field",
+            "2. Leave the Password field empty",
+            "3. Click Login"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Epic sadface: Password is required.'; the user remains on the login page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-008",
+          "category": "negative",
+          "test_case": "Attempt to log in with both username and password empty",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Leave the Username field empty",
+            "2. Leave the Password field empty",
+            "3. Click Login"
+          ],
+          "expected_result": "An error banner is displayed indicating required credentials (e.g., 'Epic sadface: Username is required.' or combined validation); the user remains on the login page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-009",
+          "category": "negative",
+          "test_case": "Attempt SQL injection or special characters in username and password fields",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Enter \"' OR '1'='1\" in the Username field",
+            "2. Enter \"' OR '1'='1\" in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "Login is rejected; an error banner displays 'Epic sadface: Username and password do not match any user in this service.' (no unauthorized access granted)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-010",
+          "category": "edge",
+          "test_case": "Login with performance_glitch_user (verify eventual success despite delay)",
+          "preconditions": [
+            "User is on the Swag Labs login page",
+            "Network connection available"
+          ],
+          "steps": [
+            "1. Enter 'performance_glitch_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login and observe response time"
+          ],
+          "expected_result": "The application may respond slowly, but the user is eventually authenticated and redirected to the Product Inventory page; no functional failure occurs due to delay",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-011",
+          "category": "edge",
+          "test_case": "Login attempt using username with leading and trailing whitespace",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Enter ' standard_user ' (with leading and trailing spaces) in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "If the system trims input, the user is authenticated and redirected to the Product Inventory page; if not, an error banner displays 'Epic sadface: Username and password do not match any user in this service.'; tester should document actual behavior",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-012",
+          "category": "edge",
+          "test_case": "Login attempt with a very long username (boundary test)",
+          "preconditions": [
+            "User is on the Swag Labs login page"
+          ],
+          "steps": [
+            "1. Enter a very long username (e.g., 500 characters) in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click Login"
+          ],
+          "expected_result": "Login is rejected with an appropriate error (e.g., 'Epic sadface: Username and password do not match any user in this service.') or an input validation message; application does not crash",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 3,
+        "negative": 6,
+        "edge": 3,
+        "high_priority": 8,
+        "medium_priority": 4,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Product Inventory",
+      "test_cases": [
+        {
+          "tc_id": "TC-013",
+          "category": "positive",
+          "test_case": "Add a single product to the cart updates button and cart badge",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed",
+            "Cart is empty"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, locate a product (e.g., 'Sauce Labs Backpack')",
+            "2. Click the product's 'Add to cart' button"
+          ],
+          "expected_result": "The product's button text changes to 'Remove'; the cart badge appears with count '1'; the product remains listed on the inventory page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-014",
+          "category": "positive",
+          "test_case": "Remove a product from the cart updates button and cart badge",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed",
+            "At least one product has been added to the cart (cart badge shows >=1)"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, locate a product with button 'Remove'",
+            "2. Click the product's 'Remove' button"
+          ],
+          "expected_result": "The product's button text changes back to 'Add to cart'; the cart badge decrements by 1 (or disappears if count becomes 0)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-015",
+          "category": "positive",
+          "test_case": "Open Product Detail page by clicking product name",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, click the name/title of a product",
+            "2. Observe navigation to the Product Detail page"
+          ],
+          "expected_result": "The Product Detail page opens for the selected product and displays the correct product name, description, and price",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-016",
+          "category": "positive",
+          "test_case": "Open Product Detail page by clicking product image",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, click the image of a product",
+            "2. Observe navigation to the Product Detail page"
+          ],
+          "expected_result": "The Product Detail page opens for the selected product and displays the correct product name, description, and price",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-017",
+          "category": "positive",
+          "test_case": "Sort products by Name (A–Z) displays ascending alphabetical order",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed with multiple products"
+          ],
+          "steps": [
+            "1. Open the sort dropdown on the Product Inventory page",
+            "2. Select 'Name (A to Z)' or equivalent option",
+            "3. Observe the order of product names in the list"
+          ],
+          "expected_result": "Products are displayed in ascending alphabetical order by product name (A–Z); product entries still show name, description, price, and 'Add to cart' button",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-018",
+          "category": "positive",
+          "test_case": "Sort products by Name (Z–A) displays descending alphabetical order",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed with multiple products"
+          ],
+          "steps": [
+            "1. Open the sort dropdown on the Product Inventory page",
+            "2. Select 'Name (Z to A)' or equivalent option",
+            "3. Observe the order of product names in the list"
+          ],
+          "expected_result": "Products are displayed in descending alphabetical order by product name (Z–A)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-019",
+          "category": "positive",
+          "test_case": "Sort products by Price (low–high and high–low) displays correct numeric order",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed with products having varying prices"
+          ],
+          "steps": [
+            "1. Open the sort dropdown and select 'Price (low to high)'",
+            "2. Verify the products are ordered from lowest price to highest price",
+            "3. Open the sort dropdown and select 'Price (high to low)'",
+            "4. Verify the products are ordered from highest price to lowest price"
+          ],
+          "expected_result": "Products reorder correctly for both price sort options; prices are displayed and numeric ordering is correct",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-020",
+          "category": "edge",
+          "test_case": "Add all available products to the cart and verify cart badge and button states",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed",
+            "Cart is empty"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, click 'Add to cart' for every product listed",
+            "2. Observe the cart badge after adding all items",
+            "3. Verify the state of each product's add/remove button"
+          ],
+          "expected_result": "Cart badge count equals the total number of products listed; every product's button text is 'Remove'; inventory still displays product details",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-021",
+          "category": "edge",
+          "test_case": "Rapidly toggle Add to cart and Remove for a product and verify final state",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed",
+            "Cart is empty"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, pick a product and click 'Add to cart' then immediately click 'Remove', repeat multiple times rapidly",
+            "2. After the rapid toggles, inspect the product's button text and the cart badge count"
+          ],
+          "expected_result": "After rapid toggling, the product button shows the final correct state ('Add to cart' if removed, 'Remove' if added) and the cart badge accurately reflects the final number of items (no negative counts or duplicate increments)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-022",
+          "category": "edge",
+          "test_case": "Sort behavior when multiple products have identical names or identical prices",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed with at least two products sharing the same name or same price"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, apply 'Name (A to Z)' and observe items with identical names",
+            "2. Apply 'Price (low to high)' and observe items with identical prices",
+            "3. Note the relative ordering of items that have identical sort keys"
+          ],
+          "expected_result": "Products with identical sort keys remain in a consistent order (stable sort) or follow the application's documented secondary sort rule; no products are lost or duplicated",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-023",
+          "category": "negative",
+          "test_case": "Attempt to access Product Inventory page without being logged in",
+          "preconditions": [
+            "User is logged out",
+            "Browser is at application base URL or direct inventory URL"
+          ],
+          "steps": [
+            "1. Navigate directly to the Product Inventory page URL or refresh the page while logged out",
+            "2. Observe the resulting page or redirection"
+          ],
+          "expected_result": "User is redirected to the Login page (or shown an authentication required message) and cannot see the Product Inventory; no 'Add to cart' buttons or cart badge are accessible",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-024",
+          "category": "negative",
+          "test_case": "Select an invalid sort option (manipulated/unsupported) and verify system handles it gracefully",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product Inventory page is displayed"
+          ],
+          "steps": [
+            "1. Using developer tools or an automated script, set the sort dropdown value to an unsupported/invalid option (e.g., 'unknown') and trigger the change event",
+            "2. Observe the product list and any error messages"
+          ],
+          "expected_result": "The application does not crash or expose raw errors; it either ignores the invalid sort and retains the previous/default order or falls back to a documented default sort; no visible error stack traces are shown to the user",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 7,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 6,
+        "medium_priority": 5,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Product Detail",
+      "test_cases": [
+        {
+          "tc_id": "TC-025",
+          "category": "positive",
+          "test_case": "Open Product Detail and verify UI elements",
+          "preconditions": [
+            "User logged in as standard_user",
+            "From Product Inventory, at least one product is visible"
+          ],
+          "steps": [
+            "1. From the Product Inventory page, click a product name or image to open its Product Detail page",
+            "2. Observe the product image, name, description, and price",
+            "3. Observe the Add to cart / Remove button state",
+            "4. Observe the Back to products button and the cart icon in the header"
+          ],
+          "expected_result": "Product image, name, description, and price are displayed; Add to cart (or Remove if already in cart) button is present; Back to products button and cart icon are visible and enabled",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-026",
+          "category": "positive",
+          "test_case": "Add product to cart from Product Detail",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Selected product is not in the cart",
+            "User is on that product's Product Detail page"
+          ],
+          "steps": [
+            "1. On the Product Detail page click the 'Add to cart' button",
+            "2. Observe the button text/state after the click",
+            "3. Observe the cart badge in the header"
+          ],
+          "expected_result": "Button text changes from 'Add to cart' to 'Remove'; cart badge increments by 1 and reflects the new cart count; product can be seen in the Shopping Cart page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-027",
+          "category": "positive",
+          "test_case": "Remove product from cart from Product Detail",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Selected product is already in the cart",
+            "User is on that product's Product Detail page"
+          ],
+          "steps": [
+            "1. On the Product Detail page click the 'Remove' button",
+            "2. Observe the button text/state after the click",
+            "3. Observe the cart badge in the header"
+          ],
+          "expected_result": "Button text changes from 'Remove' to 'Add to cart'; cart badge decrements by 1 (or disappears if count becomes 0); product is removed from the Shopping Cart page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-028",
+          "category": "positive",
+          "test_case": "Navigate back to Product Inventory and to Shopping Cart from Product Detail",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User is on any Product Detail page"
+          ],
+          "steps": [
+            "1. Click 'Back to products' on the Product Detail page",
+            "2. From Product Inventory, click the cart icon in the header"
+          ],
+          "expected_result": "Clicking 'Back to products' returns user to the Product Inventory page; clicking the cart icon navigates to the Shopping Cart page",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-029",
+          "category": "negative",
+          "test_case": "Open Product Detail with an invalid/non-existent product ID in the URL",
+          "preconditions": [
+            "User logged in as standard_user or on login page",
+            "User can edit the browser URL"
+          ],
+          "steps": [
+            "1. Manually modify the browser URL to reference a non-existent product id (e.g. /inventory-item.html?id=9999) and press Enter",
+            "2. Observe the behavior of the application"
+          ],
+          "expected_result": "Application shows an error message or redirects to the Product Inventory page; Product Detail content is not shown for the invalid id and no broken/empty UI is presented",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-030",
+          "category": "negative",
+          "test_case": "Product Detail fails to load due to server/network error",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User is on Product Inventory page"
+          ],
+          "steps": [
+            "1. Simulate a server or network error for the product detail API (e.g. block request or return 500)",
+            "2. Click a product to open its Product Detail page",
+            "3. Observe any error UI presented"
+          ],
+          "expected_result": "An informative error message is displayed (e.g. 'Failed to load product details'); user remains on a recoverable state (option to retry or navigate back to products) and the UI does not crash",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-031",
+          "category": "negative",
+          "test_case": "Attempt to add to cart while offline",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User is on a Product Detail page",
+            "Browser can be set to offline mode"
+          ],
+          "steps": [
+            "1. Turn the browser/network to offline mode",
+            "2. Click the 'Add to cart' button on the Product Detail page",
+            "3. Observe the result and any user-facing error or retry option"
+          ],
+          "expected_result": "Operation fails gracefully with an error or offline indicator; the UI displays a message such as 'Unable to update cart while offline' and the local button state does not incorrectly indicate success",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-032",
+          "category": "edge",
+          "test_case": "Open Product Detail for a product already in the cart and verify initial state",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Product A has already been added to the cart from another page"
+          ],
+          "steps": [
+            "1. From Product Inventory click to open Product A's Product Detail page",
+            "2. Observe the Add to cart / Remove button and the cart badge"
+          ],
+          "expected_result": "Product Detail shows the button as 'Remove' (reflecting that the item is in the cart); cart badge count matches the number of items in the cart",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-033",
+          "category": "edge",
+          "test_case": "Rapidly toggle Add to cart and Remove to check UI and cart count consistency",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User is on a Product Detail page",
+            "Network is responsive"
+          ],
+          "steps": [
+            "1. Repeatedly click 'Add to cart' then 'Remove' on the Product Detail page several times in quick succession (e.g. 5-10 toggles)",
+            "2. After toggling, navigate to the Shopping Cart and refresh Product Detail page",
+            "3. Observe the final button state and cart badge/count"
+          ],
+          "expected_result": "Final button state and cart badge accurately reflect the true cart contents (no duplicate entries or stale counts); application remains stable with no UI glitches",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-034",
+          "category": "edge",
+          "test_case": "Display product with extremely long name and description",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Test product exists with an extremely long name and description (very long strings)"
+          ],
+          "steps": [
+            "1. From Product Inventory click the test product with long text to open Product Detail",
+            "2. Observe layout, wrapping, scroll behavior, and visibility of Add to cart and Back to products controls"
+          ],
+          "expected_result": "Long name and description wrap or scroll without breaking layout; Add to cart, Back to products and cart icon remain visible and usable; no overflow causes controls to become inaccessible",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 10,
+        "positive": 4,
+        "negative": 3,
+        "edge": 3,
+        "high_priority": 4,
+        "medium_priority": 5,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Shopping Cart",
+      "test_cases": [
+        {
+          "tc_id": "TC-035",
+          "category": "positive",
+          "test_case": "Remove a single item from the cart",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product has been added to the cart"
+          ],
+          "steps": [
+            "1. Click the shopping cart icon to navigate to the Shopping Cart page",
+            "2. Locate an item listed in the cart and click its 'Remove' button"
+          ],
+          "expected_result": "The selected item is removed from the Shopping Cart list; the cart badge in the header decreases by one (or disappears if no items remain); the removed item's entry (description and quantity) is no longer visible",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-036",
+          "category": "positive",
+          "test_case": "Return to Product Inventory using Continue Shopping",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart contains one or more items"
+          ],
+          "steps": [
+            "1. From the Shopping Cart page, click the 'Continue Shopping' button",
+            "2. Observe the destination page"
+          ],
+          "expected_result": "The application navigates to the Product Inventory page (header/title shows 'Products'); the cart badge remains visible in the header reflecting current cart count",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-037",
+          "category": "positive",
+          "test_case": "Begin checkout from Shopping Cart",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart contains one or more items"
+          ],
+          "steps": [
+            "1. From the Shopping Cart page, click the 'Checkout' button",
+            "2. Observe the next page"
+          ],
+          "expected_result": "The user is navigated to the Checkout: Your Information page (checkout flow begins) and the cart contents are shown on the following overview step",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-038",
+          "category": "negative",
+          "test_case": "Attempt to start checkout with an empty cart",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart is empty"
+          ],
+          "steps": [
+            "1. Navigate to the Shopping Cart page",
+            "2. Click the 'Checkout' button"
+          ],
+          "expected_result": "Checkout is not completed: either the Checkout button is disabled or the application remains on the Shopping Cart page and displays an appropriate message (for example, 'Your cart is empty') indicating checkout cannot proceed",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-039",
+          "category": "negative",
+          "test_case": "Access the Shopping Cart page without being logged in",
+          "preconditions": [
+            "User is logged out"
+          ],
+          "steps": [
+            "1. Attempt to navigate directly to the Shopping Cart page URL or click a cart link while logged out"
+          ],
+          "expected_result": "The application redirects to the Login page (or shows a login prompt) and does not display cart items; user must authenticate before accessing the Shopping Cart",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-040",
+          "category": "edge",
+          "test_case": "Add all available products, verify each cart entry shows quantity 1 and has 'Remove' button",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart is empty",
+            "Multiple products available in inventory"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, click 'Add to cart' for every product listed",
+            "2. Click the shopping cart icon to open the Shopping Cart page",
+            "3. Inspect each item row for quantity and the presence of a 'Remove' button",
+            "4. Observe the cart badge count in the header"
+          ],
+          "expected_result": "Every product added appears in the Shopping Cart as a separate line item with quantity displayed as '1' and a 'Remove' button; the cart badge count equals the number of products added; all 'Add to cart' buttons on the inventory have changed to 'Remove'",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-041",
+          "category": "edge",
+          "test_case": "Remove the last item and verify empty cart state and badge disappearance",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart contains exactly one item"
+          ],
+          "steps": [
+            "1. Navigate to the Shopping Cart page",
+            "2. Click 'Remove' for the only item in the cart",
+            "3. Observe the Shopping Cart page and header cart badge"
+          ],
+          "expected_result": "The cart list shows no items (empty state); the cart badge in the header disappears or is not shown (count zero); UI does not display leftover item entries or 'Remove' buttons",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-042",
+          "category": "edge",
+          "test_case": "Rapidly remove multiple items to verify UI consistency and count synchronization",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart contains multiple items"
+          ],
+          "steps": [
+            "1. Open the Shopping Cart page",
+            "2. Rapidly click 'Remove' on several different items in quick succession (one after another)",
+            "3. Observe the cart list and cart badge after each removal"
+          ],
+          "expected_result": "UI remains responsive; each removed item disappears from the list; the cart badge count updates accurately after each removal without temporary duplication or negative counts; no JavaScript errors are shown to the user",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 3,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 5,
+        "medium_priority": 3,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Checkout - Information",
+      "test_cases": [
+        {
+          "tc_id": "TC-043",
+          "category": "positive",
+          "test_case": "Enter valid First Name, Last Name, Postal Code and continue to Overview",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product has been added to the cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. In the First Name field enter 'John'",
+            "2. In the Last Name field enter 'Doe'",
+            "3. In the Postal Code field enter '90210'",
+            "4. Click Continue"
+          ],
+          "expected_result": "User is navigated to the Checkout: Overview page; order summary and item list are displayed; no error banner is shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-044",
+          "category": "positive",
+          "test_case": "Click Cancel returns user to the Shopping Cart",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product has been added to the cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. Click Cancel on the Checkout: Your Information page"
+          ],
+          "expected_result": "User is returned to the Shopping Cart page; cart contents remain unchanged; no Checkout error banner is shown",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-045",
+          "category": "positive",
+          "test_case": "Accept names with hyphen/apostrophe and postal code with hyphen",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. In the First Name field enter 'Anne-Marie'",
+            "2. In the Last Name field enter \"O'Connor\"",
+            "3. In the Postal Code field enter '12345-6789'",
+            "4. Click Continue"
+          ],
+          "expected_result": "User is navigated to the Checkout: Overview page; entered name and postal code are accepted and displayed on the Overview summary; no error banner is shown",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-046",
+          "category": "negative",
+          "test_case": "Submit form with First Name missing",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. Leave First Name empty",
+            "2. In the Last Name field enter 'Doe'",
+            "3. In the Postal Code field enter '90210'",
+            "4. Click Continue"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Error: First Name is required'; the user remains on the Checkout: Your Information page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-047",
+          "category": "negative",
+          "test_case": "Submit form with Last Name missing",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. In the First Name field enter 'John'",
+            "2. Leave Last Name empty",
+            "3. In the Postal Code field enter '90210'",
+            "4. Click Continue"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Error: Last Name is required'; the user remains on the Checkout: Your Information page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-048",
+          "category": "negative",
+          "test_case": "Submit form with Postal Code missing",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. In the First Name field enter 'John'",
+            "2. In the Last Name field enter 'Doe'",
+            "3. Leave Postal Code empty",
+            "4. Click Continue"
+          ],
+          "expected_result": "An error banner is displayed with the message 'Error: Postal Code is required'; the user remains on the Checkout: Your Information page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-049",
+          "category": "edge",
+          "test_case": "Enter very long values in all fields (boundary length)",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. In the First Name field enter a 256-character string (e.g. 'A' repeated 256 times)",
+            "2. In the Last Name field enter a 256-character string",
+            "3. In the Postal Code field enter a 50-character string",
+            "4. Click Continue"
+          ],
+          "expected_result": "The application accepts or reliably handles the long inputs without crashing; if accepted, user is navigated to the Checkout: Overview page and the entered values are preserved or appropriately truncated with no unexpected errors",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-050",
+          "category": "edge",
+          "test_case": "Enter only whitespace characters in fields",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in cart",
+            "User is on the Checkout: Your Information page"
+          ],
+          "steps": [
+            "1. In the First Name field enter '   ' (spaces)",
+            "2. In the Last Name field enter '   ' (spaces)",
+            "3. In the Postal Code field enter '   ' (spaces)",
+            "4. Click Continue"
+          ],
+          "expected_result": "Whitespace-only input is treated as missing input; an error banner is displayed (at minimum 'Error: First Name is required') and the user remains on the Checkout: Your Information page",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 3,
+        "negative": 3,
+        "edge": 2,
+        "high_priority": 4,
+        "medium_priority": 3,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Checkout - Overview",
+      "test_cases": [
+        {
+          "tc_id": "TC-051",
+          "category": "positive",
+          "test_case": "Complete order from Overview by clicking Finish",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product is in the cart",
+            "User has completed Checkout: Information step (first name, last name, zip provided)",
+            "User is on the Checkout: Overview page"
+          ],
+          "steps": [
+            "1. Review the list of items and totals shown on the Overview page",
+            "2. Confirm payment and shipping information displayed are correct",
+            "3. Click the Finish button"
+          ],
+          "expected_result": "The app navigates to the confirmation page showing 'Thank you for your order!'; the shopping cart badge is cleared (no items shown); order summary/receipt is displayed on the confirmation page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-052",
+          "category": "positive",
+          "test_case": "Exit checkout from Overview using Cancel",
+          "preconditions": [
+            "User logged in",
+            "One or more products in the cart",
+            "User is on the Checkout: Overview page"
+          ],
+          "steps": [
+            "1. Click the Cancel button on the Overview page"
+          ],
+          "expected_result": "The app exits the checkout flow and navigates back to the Shopping Cart page; all items remain in the cart and quantities are unchanged",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-053",
+          "category": "negative",
+          "test_case": "Finish fails when server returns an order submission error",
+          "preconditions": [
+            "User logged in",
+            "Cart contains one or more items",
+            "User is on the Checkout: Overview page",
+            "Order submission API is mocked or forced to return an error (e.g., 500 response)"
+          ],
+          "steps": [
+            "1. Click the Finish button on the Overview page while the backend is returning an error"
+          ],
+          "expected_result": "An error message/banner is displayed indicating the order could not be completed (e.g., 'Order submission failed. Please try again.'); the user remains on the Overview page and cart contents are not cleared",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-054",
+          "category": "negative",
+          "test_case": "Attempt to complete checkout from Overview with an empty cart",
+          "preconditions": [
+            "User logged in",
+            "Cart is empty (user navigated to Overview URL or manipulated flow to reach Overview with empty cart)",
+            "User is on the Checkout: Overview page"
+          ],
+          "steps": [
+            "1. Confirm the Items list on the Overview page shows no products",
+            "2. Click the Finish button"
+          ],
+          "expected_result": "The system prevents order completion, displays an error message such as 'Your cart is empty' or redirects user back to the Shopping Cart page; no confirmation page is shown and no order is created",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-055",
+          "category": "edge",
+          "test_case": "Add all available products to cart and verify totals and cart badge on Overview",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart is empty"
+          ],
+          "steps": [
+            "1. On the Product Inventory page, click 'Add to cart' for every product available",
+            "2. Click the cart icon and proceed through Checkout: Information step with valid data",
+            "3. On the Checkout: Overview page, note the item total, tax, and total",
+            "4. Verify the cart badge count in the header equals the number of products added"
+          ],
+          "expected_result": "Cart badge equals the total number of products added; Overview page lists every product added; Item total equals the sum of each product price; Tax is calculated correctly from Item total and Total equals Item total plus Tax; all product action buttons in inventory changed to 'Remove' previously",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-056",
+          "category": "edge",
+          "test_case": "Display long payment and shipping information on Overview (text wrapping/truncation)",
+          "preconditions": [
+            "User logged in",
+            "At least one product in cart",
+            "User completes Checkout: Information step using very long strings for first name, last name, and postal code fields (extremely long names/addresses)"
+          ],
+          "steps": [
+            "1. Proceed to Checkout: Overview page after submitting long payment and shipping information",
+            "2. Observe how the payment and shipping information is rendered on the Overview page"
+          ],
+          "expected_result": "Long payment and shipping fields are displayed without breaking layout (text either wraps or is truncated with ellipsis according to UI spec); no overlapping UI elements or horizontal scrolling is introduced and the Finish/Cancel buttons remain visible and usable",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-057",
+          "category": "edge",
+          "test_case": "Verify totals and rounding when item prices produce fractional tax amounts",
+          "preconditions": [
+            "User logged in",
+            "Cart contains items with prices that when summed produce tax requiring rounding (e.g., prices that lead to fractional cents)"
+          ],
+          "steps": [
+            "1. Proceed through Checkout to the Overview page",
+            "2. Note the Item total, Tax amount, and Total amount",
+            "3. Calculate expected Tax and Total using the configured tax rate and rounding rules and compare to displayed values"
+          ],
+          "expected_result": "Displayed Tax and Total match the expected values according to the application's rounding rules (no off-by-one-cent errors); Item total equals sum of item prices",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 2,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 3,
+        "medium_priority": 3,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Checkout - Confirmation",
+      "test_cases": [
+        {
+          "tc_id": "TC-058",
+          "category": "positive",
+          "test_case": "Display success message and Back Home clears cart after completing checkout",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one product in the cart",
+            "User has completed Checkout Information and is on the Overview page"
+          ],
+          "steps": [
+            "1. On the Overview page, click Finish to complete the order",
+            "2. Observe the Confirmation page",
+            "3. Click the Back Home button"
+          ],
+          "expected_result": "Confirmation page displays success message such as 'Thank you for your order!'; clicking Back Home navigates to the Product Inventory page and the cart is cleared (no cart badge visible or count = 0)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-059",
+          "category": "positive",
+          "test_case": "Back Home clears cart when multiple items were purchased",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Multiple products (2 or more) were added to the cart and checkout completed to reach Confirmation page"
+          ],
+          "steps": [
+            "1. On the Confirmation page, verify the presence of the success message",
+            "2. Click Back Home",
+            "3. On the Product Inventory page, verify the cart badge and cart content"
+          ],
+          "expected_result": "User is navigated to Product Inventory; the cart badge is no longer visible (or shows 0) and the cart contains no items",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-060",
+          "category": "negative",
+          "test_case": "Attempt to access Confirmation page directly without completing checkout",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart may be empty or have items, but user has NOT completed the checkout flow (has not clicked Finish)"
+          ],
+          "steps": [
+            "1. Manually navigate to the Confirmation page URL (e.g., /checkout-complete.html) or click a direct link to it",
+            "2. Observe the resulting page"
+          ],
+          "expected_result": "User is not shown the order confirmation for a completed purchase; the app either redirects to the Product Inventory or Checkout page (or shows an appropriate message indicating the order was not completed) and no 'Thank you for your order!' confirmation is displayed",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-061",
+          "category": "negative",
+          "test_case": "Attempt to access Confirmation page while not logged in",
+          "preconditions": [
+            "User is logged out",
+            "User attempts to access the Confirmation page URL directly"
+          ],
+          "steps": [
+            "1. In a browser session where the user is not authenticated, navigate to the Confirmation page URL",
+            "2. Observe the resulting page or redirection"
+          ],
+          "expected_result": "The application redirects the user to the Login page (or displays an authentication-required message); the Confirmation page and its 'Thank you for your order!' message are not displayed to unauthenticated users",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-062",
+          "category": "edge",
+          "test_case": "Refresh the Confirmation page repeatedly and verify Back Home remains functional",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User has completed checkout and is on the Confirmation page"
+          ],
+          "steps": [
+            "1. On the Confirmation page, verify the success message is displayed",
+            "2. Refresh the browser page several times (e.g., 3 times), observing the message each time",
+            "3. After the refreshes, click Back Home"
+          ],
+          "expected_result": "The success message persists across refreshes; clicking Back Home after refresh navigates to Product Inventory and the cart is cleared (no cart badge visible)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-063",
+          "category": "edge",
+          "test_case": "Click Back Home, then use browser Back to confirm cart remains cleared",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User completed checkout and is on the Confirmation page"
+          ],
+          "steps": [
+            "1. On the Confirmation page, click Back Home to return to Product Inventory",
+            "2. Verify the cart is cleared (no cart badge)",
+            "3. Use the browser Back button to return to the Confirmation page",
+            "4. Use the browser Forward button (or click Back Home again) to return to Product Inventory"
+          ],
+          "expected_result": "After the initial Back Home click the cart is cleared; navigating back to the Confirmation page and forward again does not repopulate the cart — the cart remains empty on Product Inventory",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-064",
+          "category": "edge",
+          "test_case": "Click Back Home multiple times (idempotence) and verify stable behavior",
+          "preconditions": [
+            "User logged in as standard_user",
+            "User is on the Confirmation page after completing checkout"
+          ],
+          "steps": [
+            "1. Click Back Home once and verify navigation to Product Inventory and that the cart is cleared",
+            "2. On Product Inventory, click the Back Home button again if present in header or repeat navigation action multiple times",
+            "3. Observe application behavior"
+          ],
+          "expected_result": "Multiple Back Home clicks (or repeated navigation to home) do not cause errors; the user remains on Product Inventory and the cart remains cleared (no items added back)",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "positive": 2,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 3,
+        "medium_priority": 3,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Logout",
+      "test_cases": [
+        {
+          "tc_id": "TC-065",
+          "category": "positive",
+          "test_case": "Logout from the Inventory page via the menu",
+          "preconditions": [
+            "User is logged in (e.g., standard_user)",
+            "User is on the Product Inventory page"
+          ],
+          "steps": [
+            "1. Click the hamburger/menu button in the header",
+            "2. Click 'Logout' in the menu"
+          ],
+          "expected_result": "User is returned to the Login page (login form visible); protected pages (inventory, product detail, cart, checkout) are not accessible without logging in again",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-066",
+          "category": "positive",
+          "test_case": "Logout from a Product Detail page",
+          "preconditions": [
+            "User is logged in",
+            "User is viewing a product detail page"
+          ],
+          "steps": [
+            "1. On the product detail page, click the hamburger/menu button",
+            "2. Click 'Logout' in the menu"
+          ],
+          "expected_result": "Application navigates to the Login page; attempting to access the product detail URL now redirects to the Login page until user logs in",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-067",
+          "category": "positive",
+          "test_case": "Logout while on the Cart or Checkout pages",
+          "preconditions": [
+            "User is logged in",
+            "User is on the Shopping Cart page or Checkout Information page"
+          ],
+          "steps": [
+            "1. Click the hamburger/menu button",
+            "2. Click 'Logout'"
+          ],
+          "expected_result": "User is taken to the Login page; subsequent navigation to cart or checkout pages redirects to Login until authentication occurs",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-068",
+          "category": "negative",
+          "test_case": "Attempt to access Inventory URL directly after logging out",
+          "preconditions": [
+            "User has logged out and is on the Login page"
+          ],
+          "steps": [
+            "1. In the browser address bar, navigate directly to the inventory URL (e.g., /inventory.html)",
+            "2. Press Enter to load the page"
+          ],
+          "expected_result": "User is redirected to the Login page (no access to inventory); protected content is not displayed without valid authentication",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-069",
+          "category": "negative",
+          "test_case": "Use browser Back button after logout to try to return to protected page",
+          "preconditions": [
+            "User was on a protected page (inventory, detail, cart or checkout) and has just clicked Logout"
+          ],
+          "steps": [
+            "1. After logout completes and the Login page is shown, click the browser Back button",
+            "2. Observe the page displayed"
+          ],
+          "expected_result": "Protected content is not re-displayed; the application stays on the Login page or redirects back to Login if a protected URL is requested",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-070",
+          "category": "negative",
+          "test_case": "Attempt an authenticated action (e.g., add-to-cart API) using a stale session token after logout",
+          "preconditions": [
+            "User was logged in, then performed Logout",
+            "Tester has captured the previous session cookie or token"
+          ],
+          "steps": [
+            "1. Using a REST client or browser devtools, send an API request that requires authentication (for example POST /cart/add) including the old session cookie/token",
+            "2. Observe the response"
+          ],
+          "expected_result": "Server rejects the request (401/302 to login or equivalent); the action is not performed and protected APIs require a valid, current authentication",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-071",
+          "category": "edge",
+          "test_case": "Logout in one browser tab, then interact with the app in a second tab that still shows protected content",
+          "preconditions": [
+            "User is logged in in two browser tabs",
+            "Tab A is on Inventory, Tab B is also on Inventory or Product Detail"
+          ],
+          "steps": [
+            "1. In Tab A, open the menu and click 'Logout' to log out",
+            "2. Switch to Tab B (which still displays protected content) and attempt an authenticated action (e.g., click 'Add to cart' or navigate to another protected page)",
+            "3. Observe the behavior in Tab B"
+          ],
+          "expected_result": "Tab B does not allow the authenticated action; it either redirects to the Login page or prompts re-authentication. Protected actions require the user to log in again.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-072",
+          "category": "edge",
+          "test_case": "Rapidly click Logout multiple times (double/triple click) to verify idempotence",
+          "preconditions": [
+            "User is logged in",
+            "User is on any protected page featuring the menu logout option"
+          ],
+          "steps": [
+            "1. Open the menu and click 'Logout' rapidly multiple times (double/triple click)",
+            "2. Observe the application's response and any errors"
+          ],
+          "expected_result": "Application remains stable and ends the session once; user lands on Login page with no error dialogs or unexpected behaviors; repeated clicks do not produce duplicate sessions or errors",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 3,
+        "negative": 3,
+        "edge": 2,
+        "high_priority": 4,
+        "medium_priority": 3,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Reset App State",
+      "test_cases": [
+        {
+          "tc_id": "TC-073",
+          "category": "positive",
+          "test_case": "Reset app state clears cart and resets Add/Remove buttons",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least two products have been added to the cart",
+            "User is on the Products (Inventory) page"
+          ],
+          "steps": [
+            "1. Click the menu (burger) icon to open the side menu",
+            "2. Click 'Reset App State'",
+            "3. Close the menu (if it does not auto-close) and observe the header and product list"
+          ],
+          "expected_result": "Cart badge is no longer visible (or shows 0); all product 'Remove' buttons that were previously shown revert to 'Add to cart'; cart contents are cleared; the user remains logged in (still on the Inventory page)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-074",
+          "category": "positive",
+          "test_case": "Reset app state does not log the user out",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart contains one or more items"
+          ],
+          "steps": [
+            "1. Note a visible indication that the user is logged in (e.g., menu accessible, username present if applicable)",
+            "2. Open the menu and click 'Reset App State'",
+            "3. After reset completes, attempt to access a user-only area (e.g., open Products page or open menu options)"
+          ],
+          "expected_result": "User remains logged in and can access user-only pages; login page is not shown and session persists after reset",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-075",
+          "category": "positive",
+          "test_case": "Reset app state while on the Checkout flow clears the cart",
+          "preconditions": [
+            "User logged in as standard_user",
+            "At least one item in cart",
+            "User has navigated to Checkout: Information or Overview page"
+          ],
+          "steps": [
+            "1. On the Checkout Information or Overview page, click the menu (burger) icon",
+            "2. Click 'Reset App State'",
+            "3. Return to the header and observe the cart badge and checkout page contents"
+          ],
+          "expected_result": "Cart badge is removed or shows 0; checkout page reflects an empty cart (no items listed or item totals updated to zero); user remains logged in (not redirected to login)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-076",
+          "category": "negative",
+          "test_case": "Reset App State option is not available when user is not logged in",
+          "preconditions": [
+            "User is on the Swag Labs login page (not authenticated)"
+          ],
+          "steps": [
+            "1. Attempt to open the application menu (if accessible) from the login page or check the UI for 'Reset App State' option",
+            "2. If the menu is not present, attempt to navigate to Inventory without logging in and inspect the menu",
+            "3. Try to perform any action that would trigger 'Reset App State'"
+          ],
+          "expected_result": "'Reset App State' option is not visible or accessible when the user is not authenticated; no state reset occurs and the user remains on the login page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-077",
+          "category": "negative",
+          "test_case": "Reset App State fails with network/server error and shows an error message",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart contains one or more items",
+            "Test environment can simulate a server or network failure"
+          ],
+          "steps": [
+            "1. Simulate a network/server error condition (e.g., disable network or mock server to return error for reset endpoint)",
+            "2. Open the menu and click 'Reset App State'",
+            "3. Observe any error message or banner and the cart state"
+          ],
+          "expected_result": "An error banner or message is displayed indicating the reset failed (e.g., 'Could not reset app state'); the cart contents and add/remove button states remain unchanged until the operation succeeds; user remains logged in",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-078",
+          "category": "edge",
+          "test_case": "Reset App State when cart is already empty",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart is empty (no cart badge displayed)"
+          ],
+          "steps": [
+            "1. Open the menu and click 'Reset App State'",
+            "2. Observe the header, product buttons, and any messages after the action"
+          ],
+          "expected_result": "No errors occur; UI remains stable; cart remains empty and all product buttons show 'Add to cart'; user remains logged in",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-079",
+          "category": "edge",
+          "test_case": "Reset App State after adding all products (max items) to the cart",
+          "preconditions": [
+            "User logged in as standard_user",
+            "All available products have been added to the cart so cart badge equals total product count"
+          ],
+          "steps": [
+            "1. Verify every product shows 'Remove' and cart badge equals total number of products",
+            "2. Open the menu and click 'Reset App State'",
+            "3. Verify each product button and the cart badge"
+          ],
+          "expected_result": "Cart badge is removed or shows 0; every product button reverts to 'Add to cart'; cart contents cleared; user remains logged in",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-080",
+          "category": "edge",
+          "test_case": "Quick add then reset to test race condition",
+          "preconditions": [
+            "User logged in as standard_user",
+            "Cart empty"
+          ],
+          "steps": [
+            "1. Rapidly click 'Add to cart' on a product",
+            "2. Immediately open the menu and click 'Reset App State' before any delayed UI updates complete",
+            "3. Observe the final cart badge and button state after UI stabilizes"
+          ],
+          "expected_result": "After UI stabilizes, cart is cleared and the product button shows 'Add to cart'; no duplicate or ghost items remain in the cart; user remains logged in",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-081",
+          "category": "edge",
+          "test_case": "Reset App State for performance_glitch_user (slow UI) clears state eventually",
+          "preconditions": [
+            "User logged in as performance_glitch_user",
+            "At least one product in cart",
+            "Application may respond slowly"
+          ],
+          "steps": [
+            "1. Open the menu and click 'Reset App State'",
+            "2. Wait an extended period (accounting for slow responses) and observe the cart badge and product buttons",
+            "3. Verify user is still logged in"
+          ],
+          "expected_result": "Despite slow UI performance, after the operation completes the cart badge is removed or shows 0 and product buttons revert to 'Add to cart'; user remains logged in; no partial state remains",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-082",
+          "category": "edge",
+          "test_case": "Reset App State for problem_user (UI inconsistencies) resets visible state",
+          "preconditions": [
+            "User logged in as problem_user",
+            "Cart contains items; product buttons may behave inconsistently for this user type"
+          ],
+          "steps": [
+            "1. Open the menu and click 'Reset App State'",
+            "2. Observe product button labels, cart badge, and any visually inconsistent elements after reset",
+            "3. Manually verify cart contents via the Shopping Cart page"
+          ],
+          "expected_result": "Cart is cleared and visible state is reset (cart badge removed, products show 'Add to cart'); any UI inconsistencies do not prevent the cart from being emptied; user remains logged in",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 10,
+        "positive": 3,
+        "negative": 2,
+        "edge": 5,
+        "high_priority": 4,
+        "medium_priority": 6,
+        "low_priority": 0
+      }
+    }
+  ],
+  "total_summary": {
+    "total_modules": 9,
+    "total_tests": 82,
+    "positive": 30,
+    "negative": 25,
+    "edge": 27,
+    "high_priority": 41,
+    "medium_priority": 35,
+    "low_priority": 6
+  }
+}

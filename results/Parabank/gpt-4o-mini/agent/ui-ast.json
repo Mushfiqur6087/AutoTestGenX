@@ -1,0 +1,816 @@
+{
+  "project_name": "Parabank",
+  "generated_at": "2026-06-04T14:24:43.747159Z",
+  "modules": [
+    {
+      "module_id": 1,
+      "module_title": "Login",
+      "ast": {
+        "module_name": "Login",
+        "components": {
+          "Login_Form": {
+            "type": "form",
+            "fields": {
+              "Email_Username": {
+                "type": "email",
+                "required": true,
+                "constraints": [
+                  "must be a valid email format"
+                ]
+              },
+              "Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must be at least 8 characters",
+                  "must include uppercase, lowercase, number, and special character"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Sign In",
+                "on_success": "Signed in successfully.",
+                "preconditions": [],
+                "on_failure": {
+                  "message": "Incorrect email or password. Please try again.",
+                  "action": "clears password field"
+                }
+              }
+            ]
+          },
+          "Forgot_Password_Link": {
+            "type": "link",
+            "action_name": "Forgot Password?"
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 2,
+      "module_title": "Register",
+      "ast": {
+        "module_name": "Register",
+        "components": {
+          "Sign_Up_Form": {
+            "type": "form",
+            "fields": {
+              "First_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Last_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Street_Address": {
+                "type": "unspecified",
+                "required": true
+              },
+              "City": {
+                "type": "unspecified",
+                "required": true
+              },
+              "State": {
+                "type": "dropdown",
+                "required": true,
+                "options": []
+              },
+              "ZIP_Code": {
+                "type": "number",
+                "required": true,
+                "constraints": [
+                  "must be 5 digits or 5+4 format"
+                ]
+              },
+              "Phone_Number": {
+                "type": "number",
+                "required": true,
+                "constraints": [
+                  "must follow the format (123) 456-7890"
+                ]
+              },
+              "Social_Security_Number": {
+                "type": "number",
+                "required": true,
+                "constraints": [
+                  "must follow the format 123-45-6789"
+                ]
+              },
+              "Username": {
+                "type": "email",
+                "required": true,
+                "constraints": [
+                  "must be a valid email format"
+                ]
+              },
+              "Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must be at least 8 characters"
+                ]
+              },
+              "Confirm_Password": {
+                "type": "password",
+                "required": true
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Register",
+                "on_success": "Account created successfully \u2014 please sign in",
+                "preconditions": [],
+                "constraints": [
+                  "must validate field completeness",
+                  "must validate pattern conformance",
+                  "Confirm Password must match Password"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 3,
+      "module_title": "Accounts Overview",
+      "ast": {
+        "module_name": "Accounts Overview",
+        "components": {
+          "Accounts_Table": {
+            "type": "data_table",
+            "sortable_columns": [
+              "Open Date"
+            ],
+            "row_actions": [
+              {
+                "action_name": "View Account Number",
+                "preconditions": [
+                  "clickable but not implemented yet"
+                ]
+              }
+            ],
+            "columns": {
+              "Account_Number": {
+                "type": "clickable"
+              },
+              "Account_Type": {
+                "type": "unspecified"
+              },
+              "Current_Balance": {
+                "type": "unspecified"
+              },
+              "Account_Status": {
+                "type": "badge"
+              },
+              "Open_Date": {
+                "type": "unspecified"
+              }
+            }
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 4,
+      "module_title": "Open New Account",
+      "ast": {
+        "module_name": "Open New Account",
+        "components": {
+          "Account_Opening_Form": {
+            "type": "form",
+            "fields": {
+              "Account_Type": {
+                "type": "radio",
+                "options": [
+                  "Checking",
+                  "Savings"
+                ],
+                "required": true
+              },
+              "Initial_Deposit_Amount": {
+                "type": "number",
+                "required": true,
+                "constraints": [
+                  "must be numeric",
+                  "must be at least $25 for Checking",
+                  "must be at least $100 for Savings"
+                ]
+              },
+              "Funding_Source_Account": {
+                "type": "dropdown",
+                "required": true,
+                "constraints": [
+                  "must have sufficient balance"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Open Account",
+                "on_success": "Account opened successfully!",
+                "post_action": "redirects to accounts overview"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 5,
+      "module_title": "Transfer Funds",
+      "ast": {
+        "module_name": "Transfer Funds",
+        "components": {
+          "Transfer_Form": {
+            "type": "form",
+            "fields": {
+              "Transfer_Type": {
+                "type": "radio",
+                "options": [
+                  "My ParaBank Account",
+                  "External Account"
+                ]
+              },
+              "Transfer_Amount": {
+                "type": "number",
+                "constraints": [
+                  "must be a valid amount",
+                  "sufficient funds"
+                ]
+              },
+              "Source_Account": {
+                "type": "dropdown",
+                "options": [
+                  "Checking",
+                  "Savings"
+                ]
+              },
+              "Destination_Options": {
+                "type": "repeating_group",
+                "visible_when": "Transfer_Type == External Account",
+                "item_fields": {
+                  "External_Account_Number": {
+                    "type": "unspecified",
+                    "constraints": [
+                      "must be a valid account number"
+                    ]
+                  }
+                }
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Transfer",
+                "on_success": "Transfer completed successfully.",
+                "preconditions": [],
+                "constraints": []
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 6,
+      "module_title": "Payments",
+      "ast": {
+        "module_name": "Payments",
+        "components": {
+          "Payment_Form": {
+            "type": "form",
+            "fields": {
+              "Payee_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Street_Address": {
+                "type": "unspecified",
+                "required": true
+              },
+              "City": {
+                "type": "unspecified",
+                "required": true
+              },
+              "State": {
+                "type": "unspecified",
+                "required": true
+              },
+              "ZIP_Code": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Phone_Number": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Payee_Account_Number": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Confirm_Account_Number": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": [
+                  "must match Payee Account Number"
+                ]
+              },
+              "Payment_Amount": {
+                "type": "number",
+                "required": true
+              },
+              "Source_Account": {
+                "type": "dropdown",
+                "required": true
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Pay",
+                "on_success": "Payment submitted successfully with reference code",
+                "constraints": [
+                  "account numbers must match",
+                  "must have sufficient funds"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 7,
+      "module_title": "Request Loan",
+      "ast": {
+        "module_name": "Request Loan",
+        "components": {
+          "Loan_Type_Cards": {
+            "type": "unspecified",
+            "options": [
+              "Personal",
+              "Auto",
+              "Home"
+            ]
+          },
+          "Loan_Application_Form": {
+            "type": "form",
+            "fields": {
+              "Loan_Amount": {
+                "type": "number",
+                "constraints": [
+                  "Personal: $1,000-$50,000",
+                  "Auto: $5,000-$75,000",
+                  "Home: $50,000-$500,000"
+                ]
+              },
+              "Down_Payment_Amount": {
+                "type": "number",
+                "constraints": [
+                  "must be less than Loan_Amount",
+                  "minimum 10% of Loan_Amount"
+                ]
+              },
+              "Collateral_Account": {
+                "type": "dropdown",
+                "options": [],
+                "constraints": [
+                  "must have sufficient collateral funds",
+                  "must be at least 20% of collateral value"
+                ]
+              }
+            }
+          },
+          "Submit_Loan_Application": {
+            "type": "button",
+            "on_success": "Loan approved and created successfully!",
+            "on_failure": [
+              "Insufficient credit history",
+              "Inadequate collateral value"
+            ]
+          }
+        }
+      },
+      "attempts": 2
+    },
+    {
+      "module_id": 8,
+      "module_title": "Update Contact Info",
+      "ast": {
+        "module_name": "Update Contact Info",
+        "components": {
+          "Customer_Profile_Form": {
+            "type": "form",
+            "fields": {
+              "First_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Last_Name": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Street_Address": {
+                "type": "unspecified",
+                "required": true
+              },
+              "City": {
+                "type": "unspecified",
+                "required": true
+              },
+              "State": {
+                "type": "unspecified",
+                "required": true
+              },
+              "ZIP_Code": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Phone_Number": {
+                "type": "unspecified",
+                "required": true
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Update Profile",
+                "on_success": "Profile updated successfully.",
+                "post_action": "refreshes the data"
+              }
+            ],
+            "validation": {
+              "on_failure": "highlights invalid fields and displays an inline error banner"
+            }
+          }
+        }
+      },
+      "attempts": 2
+    },
+    {
+      "module_id": 9,
+      "module_title": "Manage Cards",
+      "ast": {
+        "module_name": "Manage Cards",
+        "components": {
+          "Card_Request_Form": {
+            "type": "form",
+            "fields": {
+              "Card_Type": {
+                "type": "dropdown",
+                "options": [
+                  "Debit",
+                  "Credit"
+                ]
+              },
+              "Account_to_Link": {
+                "type": "unspecified",
+                "required": true
+              },
+              "Shipping_Address": {
+                "type": "unspecified",
+                "constraints": [
+                  "address must be complete"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Request Card",
+                "on_success": "Card request submitted successfully.",
+                "preconditions": [
+                  "address must be complete",
+                  "account must be in good standing"
+                ],
+                "post_action": "opens a card-request ticket"
+              }
+            ]
+          },
+          "Card_Controls_Form": {
+            "type": "form",
+            "fields": {
+              "Select_Existing_Card": {
+                "type": "dropdown",
+                "required": true
+              },
+              "New_Spending_Limit": {
+                "type": "number",
+                "constraints": [
+                  "must be a valid numeric limit"
+                ]
+              },
+              "Travel_Notice": {
+                "type": "repeating_group",
+                "item_fields": {
+                  "Date": {
+                    "type": "date",
+                    "constraints": [
+                      "must be a valid date range"
+                    ]
+                  },
+                  "Destination": {
+                    "type": "unspecified",
+                    "required": true
+                  }
+                }
+              },
+              "Card_Status": {
+                "type": "dropdown",
+                "options": [
+                  "Active",
+                  "Frozen"
+                ],
+                "constraints": [
+                  "must be a valid status transition"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Update Controls",
+                "on_success": "Card controls updated successfully.",
+                "validation_failures": "appear inline, form stays editable"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 10,
+      "module_title": "Investments",
+      "ast": {
+        "module_name": "Investments",
+        "components": {
+          "Trade_Funds_Form": {
+            "type": "form",
+            "fields": {
+              "Action": {
+                "type": "dropdown",
+                "options": [
+                  "Buy",
+                  "Sell"
+                ]
+              },
+              "Fund_Symbol": {
+                "type": "autocomplete",
+                "constraints": [
+                  "symbol must exist"
+                ]
+              },
+              "Quantity": {
+                "type": "number",
+                "constraints": [
+                  "must be greater than zero"
+                ]
+              },
+              "Funding_or_Destination_Account": {
+                "type": "dropdown",
+                "constraints": [
+                  "must have sufficient buying power or share balance"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Execute Trade",
+                "on_success": "executes same-day trade, updates holdings, displays 'Trade executed successfully.' with order ID",
+                "constraints": [
+                  "symbol must exist",
+                  "quantity must be greater than zero",
+                  "customer must have sufficient buying power or share balance"
+                ]
+              }
+            ]
+          },
+          "Recurring_Investment_Plan_Form": {
+            "type": "form",
+            "fields": {
+              "Fund_Symbol": {
+                "type": "autocomplete"
+              },
+              "Contribution_Amount": {
+                "type": "number",
+                "constraints": [
+                  "must meet minimum contribution"
+                ]
+              },
+              "Frequency": {
+                "type": "dropdown",
+                "options": [
+                  "Weekly",
+                  "Monthly"
+                ]
+              },
+              "Start_Date": {
+                "type": "date",
+                "constraints": [
+                  "must be in the future"
+                ]
+              },
+              "Funding_Account": {
+                "type": "dropdown",
+                "constraints": [
+                  "must have adequate balance"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Create Plan",
+                "on_success": "stores the schedule and shows 'Plan created successfully.'",
+                "constraints": [
+                  "start date must be in the future",
+                  "contribution must meet minimum",
+                  "funding account must have adequate balance"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 11,
+      "module_title": "Account Statements",
+      "ast": {
+        "module_name": "Account Statements",
+        "components": {
+          "Generate_Statement_Form": {
+            "type": "form",
+            "fields": {
+              "Statement_Period": {
+                "type": "unspecified"
+              },
+              "Account": {
+                "type": "dropdown"
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Generate Statement",
+                "on_success": "Statement generated successfully.",
+                "on_failure": "Unable to generate statement \u2014 please try again later.",
+                "constraints": [
+                  "dates must be valid"
+                ]
+              }
+            ]
+          },
+          "E_Statement_Preference_Form": {
+            "type": "form",
+            "fields": {
+              "Opt_into_Paperless": {
+                "type": "checkbox"
+              },
+              "Email_Address": {
+                "type": "email",
+                "constraints": [
+                  "must be a valid email address"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Save Preference",
+                "on_success": "e-Statement preference updated.",
+                "constraints": [
+                  "Email_Address must be valid"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 12,
+      "module_title": "Security Settings",
+      "ast": {
+        "module_name": "Security Settings",
+        "components": {
+          "Change_Password_Form": {
+            "type": "form",
+            "fields": {
+              "Current_Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must verify current password"
+                ]
+              },
+              "New_Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must meet strong-password policy"
+                ]
+              },
+              "Confirm_New_Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must match New Password"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Change Password",
+                "on_success": "Password changed successfully."
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 13,
+      "module_title": "Support Center",
+      "ast": {
+        "module_name": "Support Center",
+        "components": {
+          "Secure_Message_Form": {
+            "type": "form",
+            "fields": {
+              "Subject": {
+                "type": "unspecified",
+                "constraints": [
+                  "subject length must be valid"
+                ]
+              },
+              "Category": {
+                "type": "dropdown",
+                "options": [
+                  "Account",
+                  "Technical",
+                  "Security",
+                  "Other"
+                ]
+              },
+              "Message_Body": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": [
+                  "message body must be present"
+                ]
+              },
+              "Attachment": {
+                "type": "file_upload",
+                "constraints": [
+                  "attachment types must be valid"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Send Message",
+                "on_success": "Message sent successfully with ticket ID"
+              }
+            ]
+          },
+          "Schedule_Callback_Form": {
+            "type": "form",
+            "fields": {
+              "Reason_for_Call": {
+                "type": "dropdown"
+              },
+              "Preferred_Date": {
+                "type": "date",
+                "constraints": [
+                  "date must be at least the next business day"
+                ]
+              },
+              "Preferred_Time_Window": {
+                "type": "unspecified"
+              },
+              "Phone_Number": {
+                "type": "unspecified",
+                "constraints": [
+                  "phone number format must be valid"
+                ],
+                "pre_filled": true
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Request Callback",
+                "on_success": "Callback request submitted and email confirmation sent"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    }
+  ]
+}

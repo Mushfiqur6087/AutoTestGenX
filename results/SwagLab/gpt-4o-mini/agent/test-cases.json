@@ -1,0 +1,1151 @@
+{
+  "project_name": "Swaglab",
+  "generated_at": "2026-06-04T14:06:32.842285Z",
+  "model": "openai/gpt-4o-mini",
+  "modules": [
+    {
+      "module": "Login",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Login with valid credentials",
+          "preconditions": [
+            "User logged in as <User>",
+            "User is on the Login page"
+          ],
+          "steps": [
+            "1. Enter 'standard_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "authenticates and redirects to Product Inventory page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": null,
+          "test_case": "Leave the Username field blank and submit",
+          "preconditions": [],
+          "steps": [
+            "1. Leave the Username field blank",
+            "2. Fill the Password field with <valid password>",
+            "3. Click Login"
+          ],
+          "expected_result": "Inline validation error appears on the Username field indicating it is required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": null,
+          "test_case": "Leave the Password field blank and submit",
+          "preconditions": [],
+          "steps": [
+            "1. Fill the Username field with <valid username>",
+            "2. Leave the Password field blank",
+            "3. Click Login"
+          ],
+          "expected_result": "Inline validation error appears on the Password field indicating it is required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": null,
+          "test_case": "Submit with invalid credentials",
+          "preconditions": [],
+          "steps": [
+            "1. Fill the Username field with <invalid username>",
+            "2. Fill the Password field with <invalid password>",
+            "3. Click Login"
+          ],
+          "expected_result": "Error message displayed: 'Epic sadface: Username and password do not match any user in this service.'",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": null,
+          "test_case": "Attempt to login with locked out user",
+          "preconditions": [],
+          "steps": [
+            "1. Fill the Username field with 'locked_out_user'",
+            "2. Fill the Password field with 'secret_sauce'",
+            "3. Click Login"
+          ],
+          "expected_result": "Error message displayed: 'Epic sadface: Sorry, this user has been locked out.'",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": "WF-002",
+          "subcategory": "boundary",
+          "test_case": "Attempt login with empty Username",
+          "preconditions": [],
+          "steps": [
+            "1. Leave the Username field empty",
+            "2. Enter a valid password in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Epic sadface: Username is required.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-007",
+          "wf_ref": "WF-003",
+          "subcategory": "boundary",
+          "test_case": "Attempt login with empty Password",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a valid username in the Username field",
+            "2. Leave the Password field empty",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Epic sadface: Password is required.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-008",
+          "wf_ref": "WF-004",
+          "subcategory": "boundary",
+          "test_case": "Attempt login with invalid credentials",
+          "preconditions": [],
+          "steps": [
+            "1. Enter an invalid username in the Username field",
+            "2. Enter an invalid password in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Epic sadface: Username and password do not match any user in this service.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-009",
+          "wf_ref": "WF-005",
+          "subcategory": "boundary",
+          "test_case": "Attempt login with locked out user",
+          "preconditions": [],
+          "steps": [
+            "1. Enter 'locked_out_user' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Epic sadface: Sorry, this user has been locked out.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-010",
+          "wf_ref": null,
+          "subcategory": "input_edge",
+          "test_case": "Attempt login with long Username",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a long string (200+ characters) in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Login attempt is blocked; error message is shown indicating the username is too long.",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-011",
+          "wf_ref": null,
+          "subcategory": "input_edge",
+          "test_case": "Attempt login with special characters in Username",
+          "preconditions": [],
+          "steps": [
+            "1. Enter special characters (e.g., '!@#$%^&*()') in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Login attempt is blocked; error message is shown indicating invalid username.",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-012",
+          "wf_ref": null,
+          "subcategory": "input_edge",
+          "test_case": "Attempt login with leading/trailing whitespace in Username",
+          "preconditions": [],
+          "steps": [
+            "1. Enter '   standard_user   ' in the Username field",
+            "2. Enter 'secret_sauce' in the Password field",
+            "3. Click the Login button"
+          ],
+          "expected_result": "Leading/trailing whitespace is trimmed; user is authenticated and redirected to Product Inventory page.",
+          "priority": "low",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 1,
+        "negative": 4,
+        "edge": 7,
+        "boundary": 4,
+        "input_edge": 3,
+        "interaction_edge": 0,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 5,
+        "medium_priority": 4,
+        "low_priority": 3
+      }
+    },
+    {
+      "module": "Product Inventory",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "View Product Details",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click on the product name or image in the Product List"
+          ],
+          "expected_result": "opens Product Detail page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-002",
+          "test_case": "Add Product to Cart",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click 'Add to cart' button for a product"
+          ],
+          "expected_result": "adds item to cart",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-003",
+          "test_case": "Remove Product from Cart",
+          "preconditions": [
+            "User logged in as <Role>",
+            "Item is added to cart"
+          ],
+          "steps": [
+            "1. Click 'Remove' button for the product in the cart"
+          ],
+          "expected_result": "removes item from cart",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": null,
+          "test_case": "Sort Products by Name A-Z",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Select 'Name (A\u2013Z)' from the Sort Dropdown"
+          ],
+          "expected_result": "Products are sorted in ascending order by name",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": null,
+          "test_case": "Sort Products by Price Low-High",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Select 'Price (low\u2013high)' from the Sort Dropdown"
+          ],
+          "expected_result": "Products are sorted in ascending order by price",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": null,
+          "test_case": "Attempt to add product to cart without selecting an item",
+          "preconditions": [],
+          "steps": [
+            "1. Navigate to the Product Inventory page",
+            "2. Click 'Add to cart' without selecting any product"
+          ],
+          "expected_result": "No product is added to cart; 'Add to cart' button remains unchanged",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-007",
+          "wf_ref": null,
+          "test_case": "Attempt to remove product from cart without selecting an item",
+          "preconditions": [],
+          "steps": [
+            "1. Navigate to the Product Inventory page",
+            "2. Click 'Remove' without having any product in the cart"
+          ],
+          "expected_result": "No product is removed from cart; 'Remove' button remains unchanged",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-008",
+          "wf_ref": "WF-002",
+          "subcategory": "interaction_edge",
+          "test_case": "Rapidly click 'Add to cart' twice",
+          "preconditions": [
+            "Product is available in the inventory"
+          ],
+          "steps": [
+            "1. Click 'Add to cart' for a product",
+            "2. Immediately click 'Add to cart' again for the same product"
+          ],
+          "expected_result": "Second click is blocked; only one item is added to the cart, and the cart badge count updates accordingly",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-009",
+          "wf_ref": "WF-003",
+          "subcategory": "interaction_edge",
+          "test_case": "Rapidly click 'Remove' twice",
+          "preconditions": [
+            "Product is in the cart"
+          ],
+          "steps": [
+            "1. Click 'Remove' for a product in the cart",
+            "2. Immediately click 'Remove' again for the same product"
+          ],
+          "expected_result": "Second click is blocked; product remains removed from the cart, and the cart badge count updates accordingly",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-010",
+          "wf_ref": null,
+          "subcategory": "input_edge",
+          "test_case": "Enter a very long product name",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a string of 200+ characters in the 'Name' field of a new product"
+          ],
+          "expected_result": "Form accepts the long name or shows an error indicating the name is too long",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-011",
+          "wf_ref": null,
+          "subcategory": "input_edge",
+          "test_case": "Enter special characters in the product description",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a string with special characters in the 'Description' field of a new product"
+          ],
+          "expected_result": "Form accepts the special characters or shows a specific error indicating invalid characters",
+          "priority": "low",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 11,
+        "positive": 5,
+        "negative": 2,
+        "edge": 4,
+        "boundary": 0,
+        "input_edge": 2,
+        "interaction_edge": 2,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 3,
+        "medium_priority": 4,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Product Detail",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Add product to cart",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click 'Add to cart / Remove' button"
+          ],
+          "expected_result": "The cart state updates to reflect the added product",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-002",
+          "test_case": "Navigate back to products",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click 'Back to products' button"
+          ],
+          "expected_result": "Navigates to Product Inventory page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-003",
+          "test_case": "Navigate to shopping cart",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click on the Cart Icon"
+          ],
+          "expected_result": "Navigates to Shopping Cart",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": "WF-001",
+          "test_case": "Attempt to add a product to the cart when the cart is already full",
+          "preconditions": [
+            "Cart is at maximum capacity"
+          ],
+          "steps": [
+            "1. Click 'Add to cart / Remove' button"
+          ],
+          "expected_result": "Action is blocked; cart state remains unchanged; error shown indicating 'Cart is full'",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": "WF-002",
+          "test_case": "Attempt to navigate back to products without any products in the cart",
+          "preconditions": [
+            "No products in the cart"
+          ],
+          "steps": [
+            "1. Click 'Back to products' button"
+          ],
+          "expected_result": "Navigates to Product Inventory page; cart state remains unchanged",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": "WF-003",
+          "test_case": "Attempt to navigate to shopping cart without any items added",
+          "preconditions": [
+            "No items in the cart"
+          ],
+          "steps": [
+            "1. Click on the Cart Icon"
+          ],
+          "expected_result": "Navigates to Shopping Cart; message displayed 'Your cart is empty'",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-007",
+          "wf_ref": "WF-001",
+          "subcategory": "interaction_edge",
+          "test_case": "Rapid consecutive Add to cart / Remove actions",
+          "preconditions": [
+            "Product is available for adding to cart"
+          ],
+          "steps": [
+            "1. Click 'Add to cart' button",
+            "2. Immediately click 'Remove' button"
+          ],
+          "expected_result": "'Add to cart' action succeeds, followed by 'Remove' action also succeeding; cart state updates accordingly.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-008",
+          "wf_ref": "WF-002",
+          "subcategory": "interaction_edge",
+          "test_case": "Back to products navigation after adding to cart",
+          "preconditions": [
+            "Product has been added to cart"
+          ],
+          "steps": [
+            "1. Click 'Add to cart' button",
+            "2. Click 'Back to products' button"
+          ],
+          "expected_result": "Navigates to Product Inventory page without duplicating the product in the cart.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-009",
+          "wf_ref": "WF-003",
+          "subcategory": "interaction_edge",
+          "test_case": "Navigate to Shopping Cart from Product Detail",
+          "preconditions": [
+            "Product is in cart"
+          ],
+          "steps": [
+            "1. Click on Cart Icon"
+          ],
+          "expected_result": "Navigates to the Shopping Cart page displaying the product added.",
+          "priority": "medium",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 9,
+        "positive": 3,
+        "negative": 3,
+        "edge": 3,
+        "boundary": 0,
+        "input_edge": 0,
+        "interaction_edge": 3,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 4,
+        "medium_priority": 5,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Shopping Cart",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Continue Shopping from Shopping Cart",
+          "preconditions": [
+            "User logged in as <Role>",
+            "Shopping Cart has items added"
+          ],
+          "steps": [
+            "1. Click Continue Shopping"
+          ],
+          "expected_result": "returns to Product Inventory",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-002",
+          "test_case": "Begin Checkout from Shopping Cart",
+          "preconditions": [
+            "User logged in as <Role>",
+            "Shopping Cart has items added"
+          ],
+          "steps": [
+            "1. Click Checkout"
+          ],
+          "expected_result": "begins checkout process",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-003",
+          "test_case": "Remove Item from Shopping Cart",
+          "preconditions": [
+            "User logged in as <Role>",
+            "Shopping Cart has items added"
+          ],
+          "steps": [
+            "1. Click Remove button for an item"
+          ],
+          "expected_result": "Item removed from cart",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": "WF-001",
+          "test_case": "Attempt to continue shopping without any items in the cart",
+          "preconditions": [],
+          "steps": [
+            "1. Ensure the cart is empty",
+            "2. Click 'Continue Shopping'"
+          ],
+          "expected_result": "User remains on the Shopping Cart page; no items are returned to the Product Inventory",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": "WF-002",
+          "test_case": "Attempt to checkout with no items in the cart",
+          "preconditions": [],
+          "steps": [
+            "1. Ensure the cart is empty",
+            "2. Click 'Checkout'"
+          ],
+          "expected_result": "User remains on the Shopping Cart page; no checkout process begins",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": "WF-003",
+          "test_case": "Attempt to remove an item that is not in the cart",
+          "preconditions": [],
+          "steps": [
+            "1. Ensure the cart is empty",
+            "2. Click 'Remove' for a non-existent item"
+          ],
+          "expected_result": "No action occurs; the item is not removed and remains unchanged",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-007",
+          "wf_ref": "WF-001",
+          "subcategory": "interaction_edge",
+          "test_case": "Rapid re-submission after redirect from Continue Shopping",
+          "preconditions": [
+            "User has items in the cart"
+          ],
+          "steps": [
+            "1. Click Continue Shopping",
+            "2. Press the browser back button immediately after redirection"
+          ],
+          "expected_result": "User is redirected to the Product Inventory without the cart being pre-filled with items",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-008",
+          "wf_ref": "WF-003",
+          "subcategory": "interaction_edge",
+          "test_case": "Remove Item from Cart and check cart status",
+          "preconditions": [
+            "User has items in the cart"
+          ],
+          "steps": [
+            "1. Click Remove on an item in the cart",
+            "2. Check the cart items displayed"
+          ],
+          "expected_result": "The item is removed from the cart; remaining items are displayed correctly",
+          "priority": "medium",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 3,
+        "negative": 3,
+        "edge": 2,
+        "boundary": 0,
+        "input_edge": 0,
+        "interaction_edge": 2,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 2,
+        "medium_priority": 3,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Checkout - Information",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Submit valid checkout information",
+          "preconditions": [
+            "User logged in as <Customer>"
+          ],
+          "steps": [
+            "1. Enter <valid first name> in the First Name field",
+            "2. Enter <valid last name> in the Last Name field",
+            "3. Enter <valid zip/postal code> in the Zip/Postal Code field",
+            "4. Click Continue"
+          ],
+          "expected_result": "User proceeds to the overview step",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-002",
+          "test_case": "Cancel checkout information",
+          "preconditions": [
+            "User logged in as <Customer>"
+          ],
+          "steps": [
+            "1. Click Cancel"
+          ],
+          "expected_result": "User returns to the Shopping Cart",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-001",
+          "test_case": "Leave First Name blank and submit",
+          "preconditions": [],
+          "steps": [
+            "1. Leave the First_Name field blank",
+            "2. Fill Last_Name with <valid last name>",
+            "3. Fill Zip_Postal_Code with <valid postal code>",
+            "4. Click Continue"
+          ],
+          "expected_result": "Inline validation error appears on the First_Name field indicating it is required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": "WF-001",
+          "test_case": "Leave Last Name blank and submit",
+          "preconditions": [],
+          "steps": [
+            "1. Fill First_Name with <valid first name>",
+            "2. Leave the Last_Name field blank",
+            "3. Fill Zip_Postal_Code with <valid postal code>",
+            "4. Click Continue"
+          ],
+          "expected_result": "Inline validation error appears on the Last_Name field indicating it is required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": "WF-001",
+          "test_case": "Leave Zip/Postal Code blank and submit",
+          "preconditions": [],
+          "steps": [
+            "1. Fill First_Name with <valid first name>",
+            "2. Fill Last_Name with <valid last name>",
+            "3. Leave the Zip_Postal_Code field blank",
+            "4. Click Continue"
+          ],
+          "expected_result": "Inline validation error appears on the Zip_Postal_Code field indicating it is required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": "WF-001",
+          "test_case": "Leave all required fields empty and submit",
+          "preconditions": [],
+          "steps": [
+            "1. Leave the First_Name field blank",
+            "2. Leave the Last_Name field blank",
+            "3. Leave the Zip_Postal_Code field blank",
+            "4. Click Continue"
+          ],
+          "expected_result": "Inline validation error appears on the First_Name field indicating it is required; Inline validation error appears on the Last_Name field indicating it is required; Inline validation error appears on the Zip_Postal_Code field indicating it is required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-007",
+          "wf_ref": "WF-001",
+          "subcategory": "boundary",
+          "test_case": "Submit with First Name filled, Last Name and Zip/Postal Code empty",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a valid value in the First Name field",
+            "2. Leave the Last Name field empty",
+            "3. Leave the Zip/Postal Code field empty",
+            "4. Click Continue"
+          ],
+          "expected_result": "Error banner displays: 'Error: Last Name is required'",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-008",
+          "wf_ref": "WF-001",
+          "subcategory": "boundary",
+          "test_case": "Submit with Last Name filled, First Name and Zip/Postal Code empty",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a valid value in the Last Name field",
+            "2. Leave the First Name field empty",
+            "3. Leave the Zip/Postal Code field empty",
+            "4. Click Continue"
+          ],
+          "expected_result": "Error banner displays: 'Error: First Name is required'",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-009",
+          "wf_ref": "WF-001",
+          "subcategory": "boundary",
+          "test_case": "Submit with Zip/Postal Code filled, First Name and Last Name empty",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a valid value in the Zip/Postal Code field",
+            "2. Leave the First Name field empty",
+            "3. Leave the Last Name field empty",
+            "4. Click Continue"
+          ],
+          "expected_result": "Error banner displays: 'Error: First Name is required'",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-010",
+          "wf_ref": "WF-001",
+          "subcategory": "input_edge",
+          "test_case": "Submit with leading/trailing whitespace in First Name",
+          "preconditions": [],
+          "steps": [
+            "1. Enter '   John   ' in the First Name field",
+            "2. Enter a valid value in the Last Name field",
+            "3. Enter a valid value in the Zip/Postal Code field",
+            "4. Click Continue"
+          ],
+          "expected_result": "Form submits successfully; saved value for First Name shows 'John' without extra spaces",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-011",
+          "wf_ref": "WF-001",
+          "subcategory": "input_edge",
+          "test_case": "Submit with special characters in Last Name",
+          "preconditions": [],
+          "steps": [
+            "1. Enter a valid value in the First Name field",
+            "2. Enter '@Doe!' in the Last Name field",
+            "3. Enter a valid value in the Zip/Postal Code field",
+            "4. Click Continue"
+          ],
+          "expected_result": "Form submits successfully; saved value for Last Name shows '@Doe!'",
+          "priority": "low",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 11,
+        "positive": 2,
+        "negative": 4,
+        "edge": 5,
+        "boundary": 3,
+        "input_edge": 2,
+        "interaction_edge": 0,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 5,
+        "medium_priority": 4,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Checkout - Overview",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Complete the order successfully",
+          "preconditions": [
+            "User logged in as <Role>",
+            "Order summary is displayed with items and totals"
+          ],
+          "steps": [
+            "1. Click Finish"
+          ],
+          "expected_result": "The order is completed and navigates to the confirmation page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-002",
+          "test_case": "Cancel the checkout process",
+          "preconditions": [
+            "User logged in as <Role>",
+            "Order summary is displayed with items and totals"
+          ],
+          "steps": [
+            "1. Click Cancel"
+          ],
+          "expected_result": "Exits checkout",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-001",
+          "test_case": "Attempt to finish the order without any payment or shipping information",
+          "preconditions": [],
+          "steps": [
+            "1. Leave the Payment Information section blank",
+            "2. Leave the Shipping Information section blank",
+            "3. Click Finish"
+          ],
+          "expected_result": "Form does not submit; order is not completed; error shown indicating that payment and shipping information are required",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": "WF-002",
+          "test_case": "Attempt to cancel the checkout",
+          "preconditions": [],
+          "steps": [
+            "1. Click Cancel"
+          ],
+          "expected_result": "User is exited from checkout; no order is completed",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": "WF-001",
+          "subcategory": "interaction_edge",
+          "test_case": "Rapid re-submission after redirect",
+          "preconditions": [
+            "Order summary is displayed",
+            "Payment and shipping information are filled"
+          ],
+          "steps": [
+            "1. Click the Finish button to complete the order",
+            "2. Immediately press the browser back button"
+          ],
+          "expected_result": "User is redirected to the confirmation page without a second order being created",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": "WF-002",
+          "subcategory": "interaction_edge",
+          "test_case": "Cancel checkout and ensure exit",
+          "preconditions": [
+            "Order summary is displayed"
+          ],
+          "steps": [
+            "1. Click the Cancel button"
+          ],
+          "expected_result": "User exits checkout and is returned to the previous page without any order being processed",
+          "priority": "medium",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 6,
+        "positive": 2,
+        "negative": 2,
+        "edge": 2,
+        "boundary": 0,
+        "input_edge": 0,
+        "interaction_edge": 2,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 2,
+        "medium_priority": 4,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Checkout - Confirmation",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Return to Product Inventory from Confirmation Page",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click Back Home button"
+          ],
+          "expected_result": "returns to Product Inventory and clears the cart",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-001",
+          "test_case": "Attempt to return to Product Inventory without a valid order",
+          "preconditions": [],
+          "steps": [
+            "1. Navigate to the Confirmation Page",
+            "2. Click on the 'Back Home' button"
+          ],
+          "expected_result": "User remains on the Confirmation Page; no cart is cleared; confirmation message is still displayed.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-001",
+          "subcategory": "interaction_edge",
+          "test_case": "Rapid re-submission after redirect",
+          "preconditions": [
+            "User has completed the checkout process and is on the confirmation page."
+          ],
+          "steps": [
+            "1. Click the 'Back Home' button."
+          ],
+          "expected_result": "User is redirected to the Product Inventory page; the cart is cleared and no duplicate order confirmation appears.",
+          "priority": "medium",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "positive": 1,
+        "negative": 1,
+        "edge": 1,
+        "boundary": 0,
+        "input_edge": 0,
+        "interaction_edge": 1,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 2,
+        "medium_priority": 1,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Logout",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "User successfully logs out",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click Logout_Action button"
+          ],
+          "expected_result": "ends the session and redirects to the login page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-001",
+          "test_case": "Attempt to logout while not logged in",
+          "preconditions": [
+            "user must be logged out"
+          ],
+          "steps": [
+            "1. Ensure the user is not logged in",
+            "2. Click the Logout button"
+          ],
+          "expected_result": "Logout action is not performed; user remains on the current page and is not redirected",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-001",
+          "subcategory": "interaction_edge",
+          "test_case": "Attempt to logout when not logged in",
+          "preconditions": [
+            "User is not logged in"
+          ],
+          "steps": [
+            "1. Click the Logout button"
+          ],
+          "expected_result": "Logout action is blocked; user remains on the current page with no session ended.",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": "WF-001",
+          "subcategory": "interaction_edge",
+          "test_case": "Logout after rapid consecutive clicks",
+          "preconditions": [
+            "User is logged in"
+          ],
+          "steps": [
+            "1. Click the Logout button",
+            "2. Immediately click the Logout button again"
+          ],
+          "expected_result": "First logout action succeeds; user is redirected to the login page, and the second click has no effect.",
+          "priority": "medium",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 4,
+        "positive": 1,
+        "negative": 1,
+        "edge": 2,
+        "boundary": 0,
+        "input_edge": 0,
+        "interaction_edge": 2,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 2,
+        "medium_priority": 2,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Reset App State",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Reset App State functionality",
+          "preconditions": [
+            "User logged in as <Role>"
+          ],
+          "steps": [
+            "1. Click Reset App State Button"
+          ],
+          "expected_result": "clears the cart and resets in-app state",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-001",
+          "test_case": "Attempt to reset app state without any preconditions",
+          "preconditions": [],
+          "steps": [
+            "1. Click the Reset App State button"
+          ],
+          "expected_result": "The app state does not reset; the cart remains unchanged",
+          "priority": "high",
+          "category": "negative"
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "positive": 1,
+        "negative": 1,
+        "edge": 0,
+        "boundary": 0,
+        "input_edge": 0,
+        "interaction_edge": 0,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 2,
+        "medium_priority": 0,
+        "low_priority": 0
+      }
+    }
+  ],
+  "total_summary": {
+    "total_modules": 9,
+    "total_tests": 66,
+    "positive": 19,
+    "negative": 21,
+    "boundary": 7,
+    "edge": 26,
+    "high_priority": 27,
+    "medium_priority": 27,
+    "low_priority": 7
+  }
+}

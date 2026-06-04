@@ -1,0 +1,3583 @@
+{
+  "project_name": "MoodleTeacher",
+  "generated_at": "2026-06-04T15:11:28.358494Z",
+  "model": "gpt-5-mini",
+  "approach": "few_shot_per_module",
+  "modules": [
+    {
+      "module": "Login",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "category": "positive",
+          "test_case": "Log in with valid teacher credentials",
+          "preconditions": [
+            "User is on the Login page",
+            "Valid teacher credentials are available"
+          ],
+          "steps": [
+            "1. Enter <valid username> in the Username field",
+            "2. Enter <valid password> in the Password field",
+            "3. Click the 'Log in' button"
+          ],
+          "expected_result": "User is authenticated and redirected to the Dashboard as the teacher",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-002",
+          "category": "positive",
+          "test_case": "Submit login form using Enter key with valid credentials",
+          "preconditions": [
+            "User is on the Login page",
+            "Valid teacher credentials are available"
+          ],
+          "steps": [
+            "1. Enter <valid username> in the Username field",
+            "2. Enter <valid password> in the Password field",
+            "3. Press Enter (keyboard) while focus is in the Password field"
+          ],
+          "expected_result": "Form is submitted; user is authenticated and redirected to the Dashboard",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-003",
+          "category": "positive",
+          "test_case": "Access as a guest",
+          "preconditions": [
+            "User is on the Login page",
+            "Guest access is enabled on the site"
+          ],
+          "steps": [
+            "1. Click the 'Access as a guest' button in the guest access section"
+          ],
+          "expected_result": "User is allowed into the site in a guest session (unauthenticated browsing) and is taken to the appropriate front page or guest view",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-004",
+          "category": "positive",
+          "test_case": "Open Cookies notice",
+          "preconditions": [
+            "User is on the Login page"
+          ],
+          "steps": [
+            "1. Click the 'Cookies notice' button"
+          ],
+          "expected_result": "A cookie usage information panel/modal/popover is displayed with details; user can close the panel and return to the Login form",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-005",
+          "category": "negative",
+          "test_case": "Attempt to log in with empty Username",
+          "preconditions": [
+            "User is on the Login page"
+          ],
+          "steps": [
+            "1. Leave the Username field empty",
+            "2. Enter <some password> in the Password field",
+            "3. Click the 'Log in' button"
+          ],
+          "expected_result": "Inline validation error highlights the Username field and/or shows an error message; the form is not submitted; the Password field is cleared and Username remains empty for correction",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-006",
+          "category": "negative",
+          "test_case": "Attempt to log in with empty Password",
+          "preconditions": [
+            "User is on the Login page"
+          ],
+          "steps": [
+            "1. Enter <username> in the Username field",
+            "2. Leave the Password field empty",
+            "3. Click the 'Log in' button"
+          ],
+          "expected_result": "Inline validation error highlights the Password field and/or shows an error message; the form is not submitted; the Password field is cleared (remains empty) and the Username value is retained for correction",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-007",
+          "category": "negative",
+          "test_case": "Attempt to log in with both fields empty",
+          "preconditions": [
+            "User is on the Login page"
+          ],
+          "steps": [
+            "1. Leave both Username and Password fields empty",
+            "2. Click the 'Log in' button"
+          ],
+          "expected_result": "Inline validation errors appear for required fields; form is not submitted; Password remains cleared and Username remains empty",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-008",
+          "category": "negative",
+          "test_case": "Attempt to log in with invalid credentials",
+          "preconditions": [
+            "User is on the Login page",
+            "Invalid/incorrect credentials are available"
+          ],
+          "steps": [
+            "1. Enter <invalid username> or <valid username> in the Username field",
+            "2. Enter <incorrect password> in the Password field",
+            "3. Click the 'Log in' button"
+          ],
+          "expected_result": "An inline error message indicates authentication failed; the Password field is cleared; the Username value is retained to allow correction",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-009",
+          "category": "edge",
+          "test_case": "Login using username with leading and trailing whitespace",
+          "preconditions": [
+            "User is on the Login page",
+            "Valid teacher credentials are available (username without surrounding spaces)"
+          ],
+          "steps": [
+            "1. Enter '  <valid username>  ' (username with leading and trailing spaces) in the Username field",
+            "2. Enter <valid password> in the Password field",
+            "3. Click 'Log in'"
+          ],
+          "expected_result": "If the system trims whitespace, authentication succeeds and user is redirected to Dashboard; if the system does not trim, authentication fails with an inline error and the Password field is cleared (tester should verify trimming behavior)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-010",
+          "category": "edge",
+          "test_case": "Login with very long username (255 characters) and valid password",
+          "preconditions": [
+            "User is on the Login page",
+            "A valid account exists with the long username or the system accepts long usernames"
+          ],
+          "steps": [
+            "1. Enter a 255-character username in the Username field",
+            "2. Enter the matching <valid password> in the Password field",
+            "3. Click 'Log in'"
+          ],
+          "expected_result": "If the system accepts the long username and credentials match, user is authenticated and redirected to Dashboard; otherwise, an inline error is displayed and the Password field is cleared (tester should confirm max length handling)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-011",
+          "category": "edge",
+          "test_case": "Login with password containing only whitespace characters",
+          "preconditions": [
+            "User is on the Login page"
+          ],
+          "steps": [
+            "1. Enter <valid username> in the Username field",
+            "2. Enter a password made only of whitespace characters (e.g., several spaces) in the Password field",
+            "3. Click 'Log in'"
+          ],
+          "expected_result": "Authentication is expected to fail; an inline error message is shown; the Password field is cleared and the Username is retained (verifies that whitespace-only passwords are not accepted as valid credentials)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-012",
+          "category": "edge",
+          "test_case": "Login using non-ASCII / special characters in username and password",
+          "preconditions": [
+            "User is on the Login page",
+            "An account exists with non-ASCII characters in username and password or the system supports UTF-8 credentials"
+          ],
+          "steps": [
+            "1. Enter a username containing non-ASCII characters (e.g., accented letters, emojis) in the Username field",
+            "2. Enter a password containing special/non-ASCII characters in the Password field",
+            "3. Click 'Log in'"
+          ],
+          "expected_result": "If the system supports UTF-8 credentials and the pair is valid, user is authenticated and redirected to Dashboard; if unsupported or invalid, an inline error is shown and the Password field is cleared",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 4,
+        "negative": 4,
+        "edge": 4,
+        "high_priority": 7,
+        "medium_priority": 5,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Dashboard",
+      "test_cases": [
+        {
+          "tc_id": "TC-013",
+          "category": "positive",
+          "test_case": "Personalized greeting is displayed at top of Dashboard",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is reachable from the site navigation"
+          ],
+          "steps": [
+            "1. Navigate to the Dashboard",
+            "2. Observe the top area of the page"
+          ],
+          "expected_result": "A personalized greeting containing the teacher's name (or username) is visible at the top of the Dashboard",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-014",
+          "category": "positive",
+          "test_case": "Timeline shows upcoming teaching actions for the default time range (Next 7 days)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher is enrolled in at least one course that has scheduled activities within the next 7 days",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. Locate the Timeline block on the Dashboard",
+            "2. Confirm the time range dropdown is set to 'Next 7 days' (or default)",
+            "3. Observe the list of timeline items"
+          ],
+          "expected_result": "Timeline lists upcoming teaching actions across all enrolled courses that fall within the next 7 days; each item shows name, type and scheduled date/time",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-015",
+          "category": "positive",
+          "test_case": "Search field in Timeline filters items by name or type",
+          "preconditions": [
+            "User logged in as Teacher",
+            "There are multiple timeline items with distinguishable names/types within the selected time range",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. In the Timeline block, enter a known activity name (or type) into the search field",
+            "2. Press Enter or click the search icon",
+            "3. Observe the timeline list after search"
+          ],
+          "expected_result": "Timeline displays only items whose name or type matches the search query; non-matching items are hidden",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-016",
+          "category": "positive",
+          "test_case": "Timeline displays empty state when no items exist in the selected range",
+          "preconditions": [
+            "User logged in as Teacher",
+            "No upcoming teaching actions exist for the selected time range",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. In the Timeline block, select a time range known to have no items (e.g., a short future window)",
+            "2. Observe the Timeline content area"
+          ],
+          "expected_result": "An empty state message or illustration is shown in the Timeline block indicating there are no items for the selected range",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-017",
+          "category": "positive",
+          "test_case": "Calendar shows current month and highlights current date; event names are displayed inline on their dates",
+          "preconditions": [
+            "User logged in as Teacher",
+            "There is at least one calendar event in the current month for any enrolled course",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. Locate the Calendar block on the Dashboard",
+            "2. Verify the heading displays the current month and year",
+            "3. Check that today's date is visually highlighted",
+            "4. Verify dates with events display event names inline within the calendar cells"
+          ],
+          "expected_result": "The Calendar heading shows the current month and year, the current date is highlighted, and dates that have events display the event names inline",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-018",
+          "category": "positive",
+          "test_case": "All courses dropdown filters calendar events to a selected course",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher is enrolled in multiple courses and at least one course has calendar events in the current month",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. In the Calendar block, open the 'All courses' dropdown",
+            "2. Select a specific course from the list",
+            "3. Observe the calendar view after selection"
+          ],
+          "expected_result": "Calendar updates to show only events belonging to the selected course; events from other courses are not shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-019",
+          "category": "positive",
+          "test_case": "Clicking 'New event' opens event creation UI",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. In the Calendar block, click the 'New event' button",
+            "2. Observe the UI that appears (modal or new page)"
+          ],
+          "expected_result": "A new event creation form or modal opens allowing the teacher to enter event details (title, date/time, course, etc.)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-020",
+          "category": "positive",
+          "test_case": "Calendar month navigation arrows update the month heading and calendar grid",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. Note the current month and year shown in the Calendar heading",
+            "2. Click the right arrow to move to the next month and observe the heading and grid",
+            "3. Click the left arrow to return to the original month and observe the heading and grid"
+          ],
+          "expected_result": "Clicking the right arrow advances the calendar to the next month (heading updates accordingly) and the grid shows correct dates/events; clicking left returns to the previous month",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-021",
+          "category": "positive",
+          "test_case": "Bottom links open full calendar and import/export pages",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. Scroll to the bottom of the Calendar block",
+            "2. Click 'Full calendar' link and observe navigation",
+            "3. Return to Dashboard, then click 'Import or export calendars' link and observe navigation"
+          ],
+          "expected_result": "'Full calendar' opens the dedicated full calendar view; 'Import or export calendars' opens the calendar data management/import-export interface",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-022",
+          "category": "negative",
+          "test_case": "Attempt to create a new calendar event without a title should be rejected",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open",
+            "Clicking 'New event' opens an event creation form with required fields including Title"
+          ],
+          "steps": [
+            "1. Click 'New event' in the Calendar block to open the event creation form",
+            "2. Leave the Title field empty and fill other required fields with valid values",
+            "3. Click 'Save' (or equivalent) to attempt to create the event"
+          ],
+          "expected_result": "The system prevents saving and displays an inline validation error indicating the Title field is required; the event is not created",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-023",
+          "category": "negative",
+          "test_case": "Attempt to create a calendar event where end date/time is earlier than start date/time should be rejected",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open",
+            "Event creation form supports start and end date/time fields"
+          ],
+          "steps": [
+            "1. Click 'New event' to open the event creation form",
+            "2. Enter a valid Title, set Start date/time to a later time and End date/time to an earlier time",
+            "3. Click 'Save' (or equivalent)"
+          ],
+          "expected_result": "The system prevents saving and shows a validation error indicating the end time must be after the start time; the event is not created",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-024",
+          "category": "edge",
+          "test_case": "Use Timeline search with a very long string containing special characters",
+          "preconditions": [
+            "User logged in as Teacher",
+            "There are timeline items present",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. In the Timeline search field, enter a very long string (e.g., 1024 characters) including special characters and punctuation",
+            "2. Press Enter or click search",
+            "3. Observe behavior and any errors"
+          ],
+          "expected_result": "The search is processed without causing UI errors or crashes; either no results are shown (if none match) or matching results are displayed. Input is safely handled (no application error shown)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-025",
+          "category": "edge",
+          "test_case": "Set Timeline time range to a very large range (e.g., 'Next 365 days') to verify performance and aggregation",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open",
+            "There are events spanning multiple months/within the next year"
+          ],
+          "steps": [
+            "1. In the Timeline block, select a large time range option such as 'Next 365 days' or equivalent",
+            "2. Observe how Timeline aggregates and displays items",
+            "3. Check that the UI remains responsive"
+          ],
+          "expected_result": "Timeline displays items across the extended range correctly, perhaps paginated or grouped; the UI remains responsive and no items are omitted unexpectedly",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-026",
+          "category": "edge",
+          "test_case": "Navigate calendar across year boundary (December to January) and verify month/year heading updates correctly",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Dashboard page is open",
+            "Current calendar view can be navigated to December or January"
+          ],
+          "steps": [
+            "1. Use the month navigation arrows to move the calendar view to December of any year",
+            "2. Click the right arrow to move into January of the next year and observe the heading",
+            "3. Click the left arrow to return to December and observe the heading"
+          ],
+          "expected_result": "Calendar heading updates correctly to show month and the new year after crossing the boundary; the displayed grid corresponds to the correct month and year",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-027",
+          "category": "edge",
+          "test_case": "Calendar displays days with multiple events and truncates or stacks inline names appropriately",
+          "preconditions": [
+            "User logged in as Teacher",
+            "One calendar date has multiple events (3 or more) across courses",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. Navigate the calendar to the month that contains the date with multiple events",
+            "2. Observe how the calendar cell for that date displays multiple event names (e.g., inline, truncated, or stacked)",
+            "3. Hover over or click the date if necessary to reveal full event details"
+          ],
+          "expected_result": "The calendar cell indicates multiple events visually (e.g., truncated names with an overflow indicator or a stacked list); the user can see full event details via hover or drill-down without layout breakage",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-028",
+          "category": "edge",
+          "test_case": "Sort order change in Timeline when items have identical timestamps ensures stable/consistent ordering",
+          "preconditions": [
+            "User logged in as Teacher",
+            "There are at least two timeline items with identical scheduled date/time across courses",
+            "Dashboard page is open"
+          ],
+          "steps": [
+            "1. In the Timeline block, set the sort order to 'ascending' and note the order of items with identical timestamps",
+            "2. Change the sort order to 'descending' and then switch back to the original order",
+            "3. Observe whether items with identical timestamps maintain a predictable order (e.g., grouped by course or name)"
+          ],
+          "expected_result": "Changing sort order reorders items overall but items with identical timestamps are presented in a stable and predictable manner (no random reordering on each refresh); no duplicates or missing items occur",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 16,
+        "positive": 9,
+        "negative": 2,
+        "edge": 5,
+        "high_priority": 8,
+        "medium_priority": 6,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Dashboard — Edit Mode",
+      "test_cases": [
+        {
+          "tc_id": "TC-029",
+          "category": "positive",
+          "test_case": "Toggle Edit mode on shows Edit controls (Reset and Add a block)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and user is on the Dashboard page",
+            "Edit mode is currently off"
+          ],
+          "steps": [
+            "1. On the Dashboard page, click the 'Edit mode' toggle to turn it on",
+            "2. Observe the top right corner and area below the Dashboard heading"
+          ],
+          "expected_result": "A 'Reset page to default' button appears at the top right and a '+ Add a block' button appears below the Dashboard heading; existing blocks now show move icons and three-dot options menus",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-030",
+          "category": "positive",
+          "test_case": "Add a Text block via '+ Add a block' and verify it appears and persists after reload",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard"
+          ],
+          "steps": [
+            "1. Click '+ Add a block' below the Dashboard heading",
+            "2. On the Add a block page, locate and select 'Text' from the list of block types",
+            "3. Click the control to add the selected block (e.g., 'Add' or equivalent) and complete any minimal required configuration",
+            "4. Return to the Dashboard page and note the presence and position of the new Text block",
+            "5. Reload the Dashboard page"
+          ],
+          "expected_result": "The new Text block appears in the Dashboard immediately after adding and remains visible in the same position after reloading the page (layout change persisted for this user)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-031",
+          "category": "positive",
+          "test_case": "Use 'Cancel' on Add a block page to return without adding a block",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "No new blocks have been added in this test session"
+          ],
+          "steps": [
+            "1. Click '+ Add a block' to open the Add a block page",
+            "2. Click the 'Cancel' link at the bottom of the Add a block page"
+          ],
+          "expected_result": "The user is returned to the Dashboard page and no new block has been added",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-032",
+          "category": "positive",
+          "test_case": "Delete an existing block using the three-dot options menu and verify it's removed and persistence",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "At least one block exists on the Dashboard"
+          ],
+          "steps": [
+            "1. Identify an existing block on the Dashboard",
+            "2. Click the block's three-dot options menu and choose 'Delete' (or equivalent)",
+            "3. Confirm the deletion if a confirmation dialog appears",
+            "4. Observe the Dashboard to ensure the block is removed",
+            "5. Reload the Dashboard page"
+          ],
+          "expected_result": "The selected block is removed from the Dashboard immediately and remains removed after reloading (deletion persisted for this user)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-033",
+          "category": "positive",
+          "test_case": "Use 'Reset page to default' to revert user layout changes",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "User has made at least one layout change (e.g., added, moved or deleted blocks)"
+          ],
+          "steps": [
+            "1. Verify the Dashboard shows user-made layout changes",
+            "2. Click the 'Reset page to default' button at the top right",
+            "3. Confirm the reset action if prompted",
+            "4. Observe the Dashboard after reset"
+          ],
+          "expected_result": "The Dashboard layout is reverted to the system default for the user (all user-specific layout changes are undone); the reverted state persists after reload",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-034",
+          "category": "negative",
+          "test_case": "Attempt to access Add a block when Edit mode is off",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and user is on the Dashboard page",
+            "Edit mode is currently off"
+          ],
+          "steps": [
+            "1. Verify the '+ Add a block' control is not visible on the Dashboard",
+            "2. Attempt to open the Add a block page directly via its URL (manual navigation/bookmark) while still not in Edit mode"
+          ],
+          "expected_result": "The '+ Add a block' control is not visible when Edit mode is off; attempting to access the Add a block page directly is blocked or redirects back to the Dashboard (no block addition allowed while Edit mode is off)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-035",
+          "category": "negative",
+          "test_case": "Attempt to save a block configuration with required field(s) missing",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "Selecting a block type that opens a configuration form with required fields (e.g., a block that requires a title or content)"
+          ],
+          "steps": [
+            "1. Click '+ Add a block' and select a block type that requires configuration",
+            "2. In the block configuration form, leave required field(s) empty",
+            "3. Click 'Save' (or equivalent) to attempt to add the block"
+          ],
+          "expected_result": "The form is not submitted; inline validation highlights the missing required field(s) and displays an error message; the block is not added until required input is provided",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-036",
+          "category": "negative",
+          "test_case": "Initiate block deletion but cancel the confirmation to ensure block remains",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "At least one block exists on the Dashboard"
+          ],
+          "steps": [
+            "1. Click the three-dot options menu for an existing block and choose 'Delete'",
+            "2. When the confirmation dialog appears, click 'Cancel' (or equivalent) instead of confirming",
+            "3. Observe the Dashboard"
+          ],
+          "expected_result": "The block remains on the Dashboard unchanged after cancelling the deletion; no deletion occurs and the layout is unaffected",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-037",
+          "category": "edge",
+          "test_case": "Open Add a block page and verify the list includes all available block types",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard"
+          ],
+          "steps": [
+            "1. Click '+ Add a block' below the Dashboard heading",
+            "2. Scroll through the Add a block page and enumerate the listed block types"
+          ],
+          "expected_result": "The Add a block page lists all available block types: Comments, Course overview, Latest announcements, Latest badges, Learning plans, Logged in user, Mentees, Online users, Private files, Random glossary entry, Recently accessed courses, Starred courses, Tags, Text, and Upcoming events",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-038",
+          "category": "edge",
+          "test_case": "Move a block to the topmost and bottommost positions and verify persistence",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "At least two blocks exist on the Dashboard"
+          ],
+          "steps": [
+            "1. Use the move icon/controls on a selected block to move it to the topmost position of the region",
+            "2. Observe the new order on the Dashboard",
+            "3. Move the same (or another) block to the bottommost position",
+            "4. Reload the Dashboard page"
+          ],
+          "expected_result": "Blocks reorder immediately when moved to the topmost or bottommost positions; the new ordering is retained after page reload (layout change persisted for this user)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-039",
+          "category": "edge",
+          "test_case": "Click 'Reset page to default' when no user changes have been made",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled on the Dashboard",
+            "Dashboard is already in the system default layout for this user (no prior changes)"
+          ],
+          "steps": [
+            "1. Confirm the Dashboard layout matches the system default",
+            "2. Click 'Reset page to default' at the top right",
+            "3. Confirm the reset action if prompted",
+            "4. Observe the Dashboard"
+          ],
+          "expected_result": "No visible change occurs (layout remains the system default); the action completes without errors and the Dashboard remains unchanged",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-040",
+          "category": "edge",
+          "test_case": "Verify layout changes persist per user by comparing two teacher accounts",
+          "preconditions": [
+            "Two distinct Teacher accounts exist (Teacher A and Teacher B)",
+            "A course exists and both teachers have access to the Dashboard",
+            "Edit mode can be enabled by both accounts"
+          ],
+          "steps": [
+            "1. Log in as Teacher A and enable Edit mode on the Dashboard",
+            "2. Make a visible layout change (e.g., add a Text block or move a block)",
+            "3. Log out Teacher A and log in as Teacher B",
+            "4. Navigate to the same Dashboard and observe the layout",
+            "5. Log out Teacher B and log back in as Teacher A",
+            "6. Verify Teacher A's layout changes remain"
+          ],
+          "expected_result": "Teacher B sees the default Dashboard layout (Teacher A's changes do not affect Teacher B); Teacher A sees the layout changes made earlier (layout persisted per user)",
+          "priority": "high"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 5,
+        "negative": 3,
+        "edge": 4,
+        "high_priority": 7,
+        "medium_priority": 4,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "My Courses",
+      "test_cases": [
+        {
+          "tc_id": "TC-041",
+          "category": "positive",
+          "test_case": "My Courses page loads and displays course cards and controls",
+          "preconditions": [
+            "User logged in as Teacher"
+          ],
+          "steps": [
+            "1. Navigate to the My Courses page (from dashboard or main navigation)",
+            "2. Observe the top of the page and the course grid"
+          ],
+          "expected_result": "The page displays a grid of course cards. Each card shows a banner image, the course name as a clickable link, and the category name. The controls above the grid include the Status dropdown, Search field, Sort dropdown, and Layout dropdown (Card, List, Summary).",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-042",
+          "category": "positive",
+          "test_case": "Filter courses using Status dropdown (In progress)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "There are courses in different statuses including In progress"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Click the Status dropdown and select 'In progress'"
+          ],
+          "expected_result": "Only courses that are in progress are displayed in the grid; other courses are hidden. The selected filter is visibly active in the dropdown.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-043",
+          "category": "positive",
+          "test_case": "Search for a course by name (case-insensitive)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with the name 'Biology 101'"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Type 'biology 101' (lowercase) into the Search field and press Enter or click the search icon"
+          ],
+          "expected_result": "The course card for 'Biology 101' is displayed. Search is case-insensitive and returns matching results.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-044",
+          "category": "positive",
+          "test_case": "Sort courses by name ascending",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Multiple courses with distinct names exist"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Open the Sort dropdown and select 'Name (A-Z)' or equivalent ascending name sort"
+          ],
+          "expected_result": "Course cards are reordered and displayed in ascending alphabetical order by course name.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-045",
+          "category": "positive",
+          "test_case": "Change layout between Card, List, and Summary",
+          "preconditions": [
+            "User logged in as Teacher",
+            "My Courses contains at least one course"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Open the Layout dropdown and select 'List' and observe the display",
+            "3. Open the Layout dropdown again and select 'Summary' and observe the display",
+            "4. Return to 'Card' layout"
+          ],
+          "expected_result": "The page layout changes to List and Summary representations respectively; content remains consistent and readable in each layout. Switching back to Card restores the card grid.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-046",
+          "category": "positive",
+          "test_case": "Navigate to a course by clicking the course name",
+          "preconditions": [
+            "User logged in as Teacher",
+            "At least one course is visible on My Courses"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Click the course name link on any visible course card"
+          ],
+          "expected_result": "The browser navigates to that course's main page (course homepage). The course main page header shows the correct course name.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-047",
+          "category": "positive",
+          "test_case": "Star a course from the three-dot menu and verify it is pinned to the top",
+          "preconditions": [
+            "User logged in as Teacher",
+            "At least two courses visible"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. On a course card that is not currently pinned, click the three-dot menu",
+            "3. Select 'Star this course'",
+            "4. Observe the course list ordering"
+          ],
+          "expected_result": "The starred course is pinned to the top of the list/grid. The course card indicates it is starred. Other courses remain visible below the pinned course.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-048",
+          "category": "positive",
+          "test_case": "Remove a course from view using the three-dot menu",
+          "preconditions": [
+            "User logged in as Teacher",
+            "At least one course visible that the user can remove from view"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. On a target course card, click the three-dot menu",
+            "3. Select 'Remove from view' and confirm any confirmation prompt if presented",
+            "4. Observe the course grid and, optionally, open the Status dropdown and select 'Hidden' to verify"
+          ],
+          "expected_result": "The course card is removed from the main view and no longer appears in the current list. The course is not unenrolled; when filtering by 'Hidden' (or similar), the removed course appears in that list indicating it is hidden rather than unenrolled.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-049",
+          "category": "negative",
+          "test_case": "Attempt to navigate to a course after it has been removed from view",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course has been removed from view by the same user"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Remove a specific course from view using the three-dot menu",
+            "3. Look for the removed course in the default view and attempt to click its name link"
+          ],
+          "expected_result": "The removed course no longer appears in the default list; there is no visible name link to click. If the user attempts to navigate directly via the previously bookmarked link, access may still succeed (course enrollment unchanged) but the My Courses UI prevents navigation via the removed card. No broken links or UI errors are shown on the My Courses page.",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-050",
+          "category": "negative",
+          "test_case": "Search returns no results for a non-matching term",
+          "preconditions": [
+            "User logged in as Teacher",
+            "My Courses contains courses but none match the test string"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Enter a random non-matching string such as 'no-such-course-xyz' into the Search field and press Enter"
+          ],
+          "expected_result": "The grid shows no course cards and the UI displays an appropriate empty state message such as 'No courses found' or suggestions. No technical error or stack trace is shown.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-051",
+          "category": "negative",
+          "test_case": "Three-dot menu options are not available to a user without teacher permissions",
+          "preconditions": [
+            "User logged in as Student (insufficient permissions)"
+          ],
+          "steps": [
+            "1. Open the My Courses page as a Student",
+            "2. Attempt to locate and open the three-dot menu on any course card"
+          ],
+          "expected_result": "Three-dot menu options 'Star this course' and 'Remove from view' are not displayed (or are disabled) for non-teacher roles. The UI does not allow starring or removing courses and displays no permission errors beyond absence/disabled state of the control.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-052",
+          "category": "edge",
+          "test_case": "Star multiple courses and verify pinned ordering",
+          "preconditions": [
+            "User logged in as Teacher",
+            "At least three courses available"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Star Course A using the three-dot menu",
+            "3. Star Course B using the three-dot menu",
+            "4. Star Course C using the three-dot menu",
+            "5. Observe the order of pinned (starred) courses at the top"
+          ],
+          "expected_result": "All starred courses appear at the top of the list/grid. The UI preserves a consistent deterministic order for starred items (e.g., most recently starred first or a stable ordering), no duplicates of the same course are created, and non-starred courses remain below.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-053",
+          "category": "edge",
+          "test_case": "Search with special characters and HTML/script-like input",
+          "preconditions": [
+            "User logged in as Teacher",
+            "My Courses page open"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Enter a search string with special characters such as \"<script>alert(1)</script>\" or \"C++ Programming\" into the Search field and press Enter"
+          ],
+          "expected_result": "The search treats the input as text; no script is executed. The UI returns matching results if any course names contain those characters or shows a 'No courses found' empty state. There is no XSS, UI breakage, or error message.",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-054",
+          "category": "edge",
+          "test_case": "Select Hidden status filter when no courses are hidden",
+          "preconditions": [
+            "User logged in as Teacher",
+            "No courses have been removed from view/hidden by the user"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Click the Status dropdown and select 'Hidden'"
+          ],
+          "expected_result": "The page shows an appropriate empty state indicating there are no hidden courses (e.g., 'No courses found' or 'You have no hidden courses'). No errors are shown and controls remain usable.",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-055",
+          "category": "edge",
+          "test_case": "Display a course with an extremely long course name",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with an extremely long name (e.g., > 255 characters)"
+          ],
+          "steps": [
+            "1. Open the My Courses page",
+            "2. Observe the course card with the very long name in Card, List, and Summary layouts"
+          ],
+          "expected_result": "The long course name is displayed in a truncated or wrapped manner consistent with UI design; the course name link remains clickable and navigates to the course page. The layout does not break and controls remain usable.",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 15,
+        "positive": 8,
+        "negative": 3,
+        "edge": 4,
+        "high_priority": 8,
+        "medium_priority": 5,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Course Page",
+      "test_cases": [
+        {
+          "tc_id": "TC-056",
+          "category": "positive",
+          "test_case": "Course page displays course name, navigation bar and section list",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least one section"
+          ],
+          "steps": [
+            "1. Navigate to the Course page (click course name from Dashboard or Courses list)",
+            "2. Observe the top of the page"
+          ],
+          "expected_result": "The page heading shows the course name, the navigation tab bar is visible below the heading, and the main content lists one or more sections each with a chevron and section name",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-057",
+          "category": "positive",
+          "test_case": "Expand and collapse an individual section using the section chevron",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least one collapsed section"
+          ],
+          "steps": [
+            "1. Open the Course page",
+            "2. Locate a collapsed section and click its chevron icon",
+            "3. Click the same chevron again"
+          ],
+          "expected_result": "After the first click the section expands and its activities/resources are displayed; after the second click the section collapses and the activities/resources are hidden",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-058",
+          "category": "positive",
+          "test_case": "Use 'Collapse all' link to collapse all sections at once",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with multiple expanded sections"
+          ],
+          "steps": [
+            "1. Open the Course page with multiple sections expanded",
+            "2. Click the 'Collapse all' link at the top right of the sections area"
+          ],
+          "expected_result": "All course sections collapse; only section headers with chevrons remain visible and no section shows its activities/resources",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-059",
+          "category": "positive",
+          "test_case": "Open an activity/resource by clicking its name",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and at least one section contains an activity or resource with a valid target"
+          ],
+          "steps": [
+            "1. Open the Course page and expand the section containing the activity/resource",
+            "2. Click the activity/resource name link"
+          ],
+          "expected_result": "The browser opens the activity or resource page (or popup) corresponding to the clicked item; the resource content or activity interface loads successfully",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-060",
+          "category": "negative",
+          "test_case": "Attempt to use 'Collapse all' when the course has no sections",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with zero sections (empty course)"
+          ],
+          "steps": [
+            "1. Open the Course page for the empty course",
+            "2. Look for the 'Collapse all' link at the top right of the sections area and attempt to click it"
+          ],
+          "expected_result": "The 'Collapse all' link is not present or is disabled/inactive; clicking it does nothing and no JavaScript error is thrown; UI remains stable",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-061",
+          "category": "negative",
+          "test_case": "Click an activity/resource link whose target is missing (broken link)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with a section containing an activity/resource that points to a missing file or invalid URL"
+          ],
+          "steps": [
+            "1. Open the Course page and expand the section with the broken resource",
+            "2. Click the name of the broken activity/resource"
+          ],
+          "expected_result": "The system displays an error page or a meaningful error message (e.g., 'File not found' or 'Resource unavailable'); the Course page remains accessible and no unexpected behavior occurs",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-062",
+          "category": "negative",
+          "test_case": "Attempt to expand/collapse sections with browser JavaScript disabled",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with multiple sections",
+            "Browser has JavaScript disabled"
+          ],
+          "steps": [
+            "1. Open the Course page with JavaScript disabled",
+            "2. Click a section chevron and click the 'Collapse all' link"
+          ],
+          "expected_result": "Chevrons and 'Collapse all' do not perform dynamic collapse/expand actions; sections remain in their server-rendered default state. No JavaScript errors appear, and links degrade gracefully (page may reload if server-side fallback exists)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-063",
+          "category": "edge",
+          "test_case": "Load a course page with a very large number of sections",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with a very large number of sections (e.g., 200+)"
+          ],
+          "steps": [
+            "1. Open the Course page for the course with many sections",
+            "2. Scroll through the sections and interact with several chevrons (expand/collapse)",
+            "3. Click 'Collapse all'"
+          ],
+          "expected_result": "The page loads within acceptable time (no catastrophic failure); every section displays a chevron and name; expanding/collapsing individual sections and using 'Collapse all' works across the list without UI corruption or loss of responsiveness",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-064",
+          "category": "edge",
+          "test_case": "Display extremely long section and activity names",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with section and activity names near the system's maximum length"
+          ],
+          "steps": [
+            "1. Open the Course page containing very long section and activity/resource names",
+            "2. Inspect how names are rendered in the section headers and activity list"
+          ],
+          "expected_result": "Long names do not break the layout; text wraps or is truncated with ellipsis according to UI policy, and full names are accessible via tooltip or by opening the activity; chevrons and icons remain properly aligned and clickable",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-065",
+          "category": "edge",
+          "test_case": "Operate section chevrons and 'Collapse all' using keyboard only (accessibility)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with multiple sections",
+            "User can use keyboard (Tab/Enter/Space)"
+          ],
+          "steps": [
+            "1. Open the Course page",
+            "2. Use Tab to focus a section chevron and press Enter (or Space)",
+            "3. Tab to the 'Collapse all' link and press Enter"
+          ],
+          "expected_result": "Focused chevrons toggle the corresponding section on Enter/Space; 'Collapse all' can be focused and activated by keyboard to collapse all sections; focus order is logical and visible focus indicator is present",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 10,
+        "positive": 4,
+        "negative": 3,
+        "edge": 3,
+        "high_priority": 5,
+        "medium_priority": 5,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Course Edit Mode and Activity Chooser",
+      "test_cases": [
+        {
+          "tc_id": "TC-066",
+          "category": "positive",
+          "test_case": "Enable Edit mode shows inline authoring controls",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists"
+          ],
+          "steps": [
+            "1. Navigate to the Course page",
+            "2. Click the 'Turn editing on' / 'Edit mode' toggle in the course header"
+          ],
+          "expected_result": "The Course page switches to authoring view: each section and activity row shows inline controls (edit icon, activity and section three-dot menus), '+ Add an activity or resource' appears at bottom of each section, '+ Add a subsection' control is visible",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-067",
+          "category": "positive",
+          "test_case": "Open Activity Chooser and add an Assignment",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. In a target section click '+ Add an activity or resource'",
+            "2. In the Activity Chooser modal select the 'Assignment' tile",
+            "3. Click the 'Add' button"
+          ],
+          "expected_result": "The Assignment creation form opens (Assignment name and settings fields visible); the Activity Chooser closes",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-068",
+          "category": "positive",
+          "test_case": "Filter Activity Chooser by 'Resources' and add a File resource",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Click '+ Add an activity or resource' in a section to open the Activity Chooser",
+            "2. Click the 'Resources' category filter in the chooser",
+            "3. Verify the grid shows resource tiles (e.g., File, Page, URL)",
+            "4. Select the 'File' tile and click 'Add'"
+          ],
+          "expected_result": "The File resource creation form opens with fields for file upload and name; the chooser closes",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-069",
+          "category": "positive",
+          "test_case": "Search Activity Chooser and open Quiz creation form",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Activity Chooser from a course section",
+            "2. Type 'quiz' (different case variations) into the search field",
+            "3. Select the 'Quiz' tile from search results and click 'Add'"
+          ],
+          "expected_result": "Search returns the Quiz tile (search is case-insensitive); clicking 'Add' opens the Quiz creation form",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-070",
+          "category": "positive",
+          "test_case": "Use bulk actions to hide multiple activities",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least two activities in a section",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. In the course page, select the checkboxes for two activities in the same or different sections",
+            "2. Confirm the bulk actions toolbar appears",
+            "3. Click the 'Hide' (or 'Hide selected') bulk action and confirm any confirmation prompt"
+          ],
+          "expected_result": "Both selected activities are hidden (appear dimmed/with hidden icon) and their visibility state updates; bulk toolbar indicates action completed",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-071",
+          "category": "positive",
+          "test_case": "Duplicate a section from the section-level menu",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least one section containing content",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. In the target section click the section three-dot menu",
+            "2. Choose 'Duplicate' from the menu",
+            "3. Confirm any confirmation prompt if shown"
+          ],
+          "expected_result": "A duplicate of the section is created below the original containing the same activities/resources; duplicated items are visible in the course",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-072",
+          "category": "negative",
+          "test_case": "Add activity button not available when Edit mode is off",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is disabled"
+          ],
+          "steps": [
+            "1. Navigate to the Course page with Edit mode off",
+            "2. Inspect a section for an '+ Add an activity or resource' button"
+          ],
+          "expected_result": "The '+ Add an activity or resource' button is not visible; section-level and activity inline authoring controls are not present",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-073",
+          "category": "negative",
+          "test_case": "Attempt to click 'Add' in Activity Chooser without selecting a tile",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Activity Chooser from a course section",
+            "2. Do not select any tile",
+            "3. Attempt to click the 'Add' button (or press Enter) in the chooser"
+          ],
+          "expected_result": "The 'Add' button is disabled or no action occurs; if clickable, an inline message or focus indicates a tile must be selected before adding",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-074",
+          "category": "negative",
+          "test_case": "Cancel deletion of an activity and ensure it remains",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least one activity",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Click the activity-level three-dot menu for an activity and choose 'Delete'",
+            "2. When a confirmation dialog appears, click 'Cancel' (or 'No')"
+          ],
+          "expected_result": "The activity is not deleted and stays in the section; the course page remains unchanged",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-075",
+          "category": "negative",
+          "test_case": "Bulk actions not available with no selected activities",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Ensure no activity checkboxes are selected on the course page",
+            "2. Check for presence and state of the bulk actions toolbar"
+          ],
+          "expected_result": "Bulk actions toolbar is not shown or its action buttons are disabled until at least one activity is selected",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-076",
+          "category": "negative",
+          "test_case": "Attempt to save a section with an empty name via inline edit",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with named sections",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Click the edit icon on a section to rename it inline",
+            "2. Clear the section name so the field is empty",
+            "3. Click 'Save' or press Enter"
+          ],
+          "expected_result": "Inline validation prevents saving an empty section name; a validation error highlights the name field and the empty value is not accepted",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-077",
+          "category": "edge",
+          "test_case": "Create deeply nested subsections repeatedly (depth boundary)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. In a section click '+ Add a subsection' to create a child subsection",
+            "2. In the new subsection repeat step 1, creating subsequent nested subsections until reaching 10 levels (or until system prevents further nesting)",
+            "3. Observe system behavior at each step"
+          ],
+          "expected_result": "The UI either successfully creates subsections up to the system limit without crashing, or when a nesting limit is reached a clear validation message is shown and no crash occurs; the course page remains responsive",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-078",
+          "category": "edge",
+          "test_case": "Star (favorite) multiple activity tiles and verify Recommended filter shows them",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Activity Chooser",
+            "2. Click the star toggle on two different tiles (e.g., Assignment and File) to mark them as favorites",
+            "3. Click the 'Recommended' category filter in the chooser"
+          ],
+          "expected_result": "Both starred tiles appear under the 'Recommended' filter; each starred tile shows the star state and un-starring removes it from Recommended",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-079",
+          "category": "edge",
+          "test_case": "Search Activity Chooser with special characters and long string",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Activity Chooser",
+            "2. Enter a long string of special characters and text (e.g., '<>/?&%$#@! verylongsearchstring...') into the search field",
+            "3. Observe search results and UI responsiveness"
+          ],
+          "expected_result": "Search handles the input gracefully: no crash or JS errors occur; if no matches exist a 'No activities found' message is shown and the chooser remains usable",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-080",
+          "category": "edge",
+          "test_case": "Create activity and section names at very large length",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open an activity or section rename/create form",
+            "2. Enter a very long name near typical limits (e.g., 255 characters) and save",
+            "3. Inspect how the name is displayed on the course page and in edit forms"
+          ],
+          "expected_result": "The system accepts names up to its maximum length; the item is saved successfully. On the course page the long name may be truncated with ellipsis but the full name is visible in the edit form or on hover; no data corruption occurs",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-081",
+          "category": "edge",
+          "test_case": "Duplicate an activity repeatedly to test duplication limits/performance",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least one duplicable activity",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. For the target activity use the activity-level three-dot menu and select 'Duplicate'",
+            "2. Repeat duplication in quick succession up to 50 times or until the system shows a limit or warning",
+            "3. Observe UI responsiveness and resulting number of duplicates"
+          ],
+          "expected_result": "Either all requested duplicates are created and visible (possibly up to a system limit) or the system shows a clear limit/warning; the UI remains responsive and no data corruption occurs",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 16,
+        "positive": 6,
+        "negative": 5,
+        "edge": 5,
+        "high_priority": 6,
+        "medium_priority": 9,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Assignment Creation",
+      "test_cases": [
+        {
+          "tc_id": "TC-082",
+          "category": "positive",
+          "test_case": "Create an assignment with only required fields and save to course",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Navigate to the course page",
+            "2. Click '+ Add an activity or resource' in the target section",
+            "3. Select Assignment and click Add",
+            "4. Enter 'Assignment 1' in the Assignment name field",
+            "5. Leave all optional panels collapsed/untouched",
+            "6. Click 'Save and return to course'"
+          ],
+          "expected_result": "The assignment appears in the course section with a link and default metadata; no validation errors; redirected back to course",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-083",
+          "category": "positive",
+          "test_case": "Create an assignment and click 'Save and display' to open the assignment page",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter 'Assignment Display Test' in Assignment name",
+            "3. Optionally enter description",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "The new assignment page opens showing the created assignment details; assignment present in course's activities list",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-084",
+          "category": "positive",
+          "test_case": "Enable File submissions and configure max files, max size and accepted types",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Submission types' panel and check 'File submissions'",
+            "4. Set Maximum number of uploaded files to 5",
+            "5. Set Maximum submission size to 10 MB",
+            "6. Enter accepted file types 'pdf,docx,zip'",
+            "7. Click 'Save and return to course'"
+          ],
+          "expected_result": "Assignment saved successfully; assignment settings reflect File submissions enabled with configured max files, size, and accepted types",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-085",
+          "category": "positive",
+          "test_case": "Set availability dates with toggles enabled (Allow submissions from and Due date)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Availability' panel",
+            "4. Enable 'Allow submissions from' and choose a start date in the future",
+            "5. Enable 'Due date' and choose a later date/time than the start date",
+            "6. Leave Cut-off date disabled",
+            "7. Click 'Save and return to course'"
+          ],
+          "expected_result": "Assignment saved successfully; availability metadata shows Allow submissions from and Due date with chosen values; no cut-off enforced",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-086",
+          "category": "positive",
+          "test_case": "Enable group submissions, require all group members to submit, and select a grouping",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists, groups and groupings configured, and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Group submission settings'",
+            "4. Enable group submission",
+            "5. Enable 'Require all group members to submit'",
+            "6. Select an existing grouping from the grouping selector",
+            "7. Click 'Save and display'"
+          ],
+          "expected_result": "Assignment saved; assignment page shows group submission enabled with requirement and selected grouping; group submission configuration persists",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-087",
+          "category": "positive",
+          "test_case": "Add an access restriction via the '+ Add restriction' picker",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Access restrictions' panel",
+            "4. Click '+ Add restriction' and choose a restriction type (e.g., Date)",
+            "5. Configure the restriction (e.g., set available from date)",
+            "6. Click 'Save and return to course'"
+          ],
+          "expected_result": "Assignment saved; access restriction appears in assignment settings and is enforced; restriction details visible on assignment page",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-088",
+          "category": "positive",
+          "test_case": "Configure grading to use Points with a maximum grade and grade to pass",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Grade' panel",
+            "4. Select Grade type 'Point' and set Maximum points to 20",
+            "5. Set 'Grade to pass' to 12",
+            "6. Click 'Save and display'"
+          ],
+          "expected_result": "Assignment saved; grade settings show Maximum points 20 and Grade to pass 12; grading display on assignment page reflects settings",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-089",
+          "category": "positive",
+          "test_case": "Add tags and link competencies to the assignment",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists, competencies available, and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Tags' and add tag 'midterm'",
+            "4. Expand 'Competencies' and link one or more course competencies",
+            "5. Click 'Save and return to course'"
+          ],
+          "expected_result": "Assignment saved; tags and competencies visible in assignment summary; competencies linked correctly",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-090",
+          "category": "negative",
+          "test_case": "Attempt to save an assignment without entering a name",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Leave the Assignment name field empty",
+            "3. Click 'Save and return to course'"
+          ],
+          "expected_result": "An inline validation error highlights the Assignment name field; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-091",
+          "category": "negative",
+          "test_case": "Enable File submissions and set Maximum number of uploaded files to 0 (invalid)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Submission types' and enable 'File submissions'",
+            "4. Set Maximum number of uploaded files to 0",
+            "5. Click 'Save and return to course'"
+          ],
+          "expected_result": "Validation error message displayed near the maximum files field indicating value must be 1 or greater; form not submitted",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-092",
+          "category": "negative",
+          "test_case": "Set Cut-off date earlier than Due date",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Availability' panel",
+            "4. Enable Due date and set it to <date/time A>",
+            "5. Enable Cut-off date and set it to a date/time earlier than <date/time A>",
+            "6. Click 'Save and return to course'"
+          ],
+          "expected_result": "An inline validation error indicates that the cut-off date must be equal to or after the due date; form not submitted",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-093",
+          "category": "negative",
+          "test_case": "Enter non-numeric text into Maximum submission size field (invalid input)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Submission types' and enable 'File submissions'",
+            "4. Attempt to enter 'tenMB' into Maximum submission size",
+            "5. Click 'Save and return to course'"
+          ],
+          "expected_result": "Inline validation error displayed indicating an invalid size value; form not submitted",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-094",
+          "category": "edge",
+          "test_case": "Set the Cut-off date to the exact same date and time as the Due date",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Expand 'Availability'",
+            "4. Enable Due date and select <specific date and time>",
+            "5. Enable Cut-off date and set it to the identical date and time",
+            "6. Click 'Save and return to course'"
+          ],
+          "expected_result": "Assignment is saved successfully and appears in the course; both due and cut-off dates are identical in the assignment metadata",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-095",
+          "category": "edge",
+          "test_case": "Use a very long assignment name at system boundary (e.g., 255 characters)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "System maximum length known or assumed 255 characters"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter an assignment name consisting of 255 characters",
+            "3. Click 'Save and return to course'"
+          ],
+          "expected_result": "If within allowed limit, assignment saved and name stored exactly; if limit exceeded, inline validation error indicates maximum length; no data corruption or UI breakage",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-096",
+          "category": "edge",
+          "test_case": "Save assignment with all date/time toggles disabled (no availability enforcement)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Ensure 'Allow submissions from', 'Due date' and 'Cut-off date' toggles are all disabled",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "Assignment saved successfully; no availability dates shown in metadata; submissions are available immediately according to default behavior",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-097",
+          "category": "edge",
+          "test_case": "Enter an extremely long accepted file types list (many comma-separated extensions)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Open the Add Assignment form",
+            "2. Enter <assignment name>",
+            "3. Enable File submissions",
+            "4. In accepted file types, paste a long comma-separated list (e.g., 100 extensions)",
+            "5. Click 'Save and return to course'"
+          ],
+          "expected_result": "If accepted types field accepts long lists, assignment is saved and accepted types list is stored (possibly truncated by server limits) without UI crash; if limit exceeded, validation or truncation warning displayed and form handled gracefully",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 16,
+        "positive": 8,
+        "negative": 4,
+        "edge": 4,
+        "high_priority": 8,
+        "medium_priority": 5,
+        "low_priority": 3
+      }
+    },
+    {
+      "module": "Course Settings",
+      "test_cases": [
+        {
+          "tc_id": "TC-098",
+          "category": "positive",
+          "test_case": "Save course settings with only required fields",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. In Course full name enter 'Intro to Testing'",
+            "2. In Course short name enter 'TEST101'",
+            "3. Select a Course category from the dropdown",
+            "4. Leave all other fields as default",
+            "5. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved and the user is returned to the course page; the course shows the new full and short names and category; no validation errors are shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-099",
+          "category": "positive",
+          "test_case": "Enable end date and set start and end dates",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter Course full name and Course short name and select category",
+            "2. Set Course start date to <start date>",
+            "3. Toggle 'Enable' for Course end date and set Course end date to a later <end date>",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved and returned to the course page; course metadata shows the configured start and end dates and the end date is enabled",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-100",
+          "category": "positive",
+          "test_case": "Add course summary with rich text formatting and upload a course image",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. In the Course summary rich text editor add a paragraph and apply bold and a link",
+            "3. Use Course image upload to upload a valid image file (e.g., course.jpg)",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved; course summary displays the formatted text and the uploaded image appears on the course page or in course header as per theme",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-101",
+          "category": "positive",
+          "test_case": "Change Course format to Weekly and adjust layout controls",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. In Course format dropdown select 'Weekly format'",
+            "3. Verify layout controls for Weekly format appear (e.g., number of weeks or start day)",
+            "4. Adjust a layout control (e.g., set number of weeks to 12)",
+            "5. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved; course uses Weekly format with the configured layout controls reflected on the course page",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-102",
+          "category": "positive",
+          "test_case": "Enable completion tracking",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Toggle 'Enable completion tracking' on",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved; course completion tracking is enabled and visible in course settings/participants UI",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-103",
+          "category": "positive",
+          "test_case": "Set Groups to Separate groups and select an existing grouping",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "At least one grouping exists in the course",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. In Groups section set Group mode to 'Separate groups'",
+            "3. In Grouping dropdown select an existing grouping",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved; Group mode is set to Separate groups and the selected grouping is associated with the course",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-104",
+          "category": "positive",
+          "test_case": "Hide course from students using Course visibility",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. In Course visibility dropdown select 'Hide'",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved; the course is marked hidden (students cannot access it) and visibility status shows 'Hidden' on the course page",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-105",
+          "category": "positive",
+          "test_case": "Add tags and set Maximum upload size",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. In Tags field add one or more tags (e.g., 'testing', 'spring2026')",
+            "3. Set Maximum upload size to 50 MB using the dropdown",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved; tags are attached to the course and Maximum upload size is set to 50 MB in course metadata",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-106",
+          "category": "negative",
+          "test_case": "Attempt to save without Course full name",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Leave Course full name empty",
+            "2. Enter valid Course short name and select a category",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "An inline validation error highlights the Course full name field; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-107",
+          "category": "negative",
+          "test_case": "Attempt to save without Course short name",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter Course full name",
+            "2. Leave Course short name empty",
+            "3. Select a category",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "An inline validation error highlights the Course short name field; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-108",
+          "category": "negative",
+          "test_case": "Attempt to save without selecting Course category",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter Course full name and Course short name",
+            "2. Leave Course category unselected (or set to placeholder 'Choose...')",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "An inline validation error highlights the Course category dropdown; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-109",
+          "category": "negative",
+          "test_case": "Set end date earlier than start date",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter Course full name, Course short name and select category",
+            "2. Set Course start date to <later date/time>",
+            "3. Toggle Enable for Course end date and set Course end date to an earlier <earlier date/time>",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "A validation error is shown indicating the end date must be after the start date; the form is not submitted",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-110",
+          "category": "negative",
+          "test_case": "Attempt to upload an invalid image file type for Course image",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Use Course image upload to attempt to upload an unsupported file type (e.g., course.txt)",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "The upload control rejects the file and an inline error indicates invalid file type; the form is not submitted until a valid image is chosen",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-111",
+          "category": "negative",
+          "test_case": "Enter a non-numeric value into a numeric appearance field (news items)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened and contains a numeric News items field"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. In the News items field enter a non-numeric string (e.g., 'ten')",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "An inline validation error highlights the News items field indicating a numeric value is required; the form is not submitted",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-112",
+          "category": "negative",
+          "test_case": "Attempt to select a grouping when Group mode is 'No groups' (grouping should be disabled)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Set Group mode to 'No groups'",
+            "3. Attempt to select a value in the Grouping dropdown",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "Grouping selection control is disabled/uneditable when Group mode is 'No groups'; if an attempt is made it has no effect and no invalid grouping is saved; no unexpected errors occur",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-113",
+          "category": "edge",
+          "test_case": "Enter a Course full name at the maximum allowed length (boundary)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. In Course full name enter a string of 255 characters (or the documented maximum length)",
+            "2. Enter valid Course short name and select a category",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "If within system limits the full name is accepted and saved exactly as entered; no truncation or error occurs. If there is a documented smaller max length an inline validation error indicates the maximum length exceeded",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-114",
+          "category": "edge",
+          "test_case": "Set Course start date to Feb 29 on a leap year",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Set Course start date to Feb 29 on a leap year (e.g., 2024-02-29)",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved successfully and the start date shows 29 Feb of the leap year; no date validation errors occur",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-115",
+          "category": "edge",
+          "test_case": "Enable End date and set it to exactly the same date/time as the Start date",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Set Course start date to <specific date/time>",
+            "3. Toggle Enable for Course end date and set Course end date to the identical <specific date/time>",
+            "4. Click 'Save and display'"
+          ],
+          "expected_result": "If the system allows identical start and end dates the settings are saved and both dates are identical in metadata; if the system requires end > start a clear validation message is shown and the form is not submitted",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-116",
+          "category": "edge",
+          "test_case": "Save with all optional fields left empty",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Leave optional fields blank: Course ID number, Course summary, Course image, Tags, appearance customizations",
+            "3. Click 'Save and display'"
+          ],
+          "expected_result": "Settings are saved successfully; optional fields remain blank/empty and no validation errors occur",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-117",
+          "category": "edge",
+          "test_case": "Switch Course format between different formats and verify layout controls reset/update",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is enabled",
+            "Course Settings form is opened"
+          ],
+          "steps": [
+            "1. Enter required Course full name, Course short name and select category",
+            "2. Select 'Topics format' and note available layout controls",
+            "3. Change Course format to 'Weekly format' and verify Weekly-specific controls appear",
+            "4. Change format back to 'Topics format' and verify Topics controls reappear and previous Weekly-only values are not applied incorrectly",
+            "5. Click 'Save and display'"
+          ],
+          "expected_result": "The form updates controls appropriately when formats change and saved settings match the currently selected format; no orphaned layout settings from previous format are applied",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 20,
+        "positive": 8,
+        "negative": 7,
+        "edge": 5,
+        "high_priority": 6,
+        "medium_priority": 11,
+        "low_priority": 3
+      }
+    },
+    {
+      "module": "Participants Management",
+      "test_cases": [
+        {
+          "tc_id": "TC-118",
+          "category": "positive",
+          "test_case": "Enroll a user via 'Enrol users' dialog with role and duration",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click the 'Enrol users' button on the Participants page",
+            "2. In the enrol dialog, enter an existing user's name in the user search field and select the user",
+            "3. Select 'Student' from the Role dropdown",
+            "4. Enable Enrollment duration and set a valid end date (optional step to verify duration handling)",
+            "5. Click 'Enrol users' or Confirm"
+          ],
+          "expected_result": "Dialog closes; the selected user appears in the participants table with role 'Student' and the enrollment duration reflected in enrollment metadata; a success notification is shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-119",
+          "category": "positive",
+          "test_case": "Filter participants by enrolled-users scope dropdown",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with participants in multiple enrollment contexts",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click the enrolled-users scope dropdown at the top of the Participants page",
+            "2. Select a specific enrollment context (e.g., a section or cohort)",
+            "3. Observe the participants list update"
+          ],
+          "expected_result": "Participant list refreshes to show only users enrolled via the selected context; counts and table rows reflect the filtered context",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-120",
+          "category": "positive",
+          "test_case": "Apply a filter condition to show only users with a specific Role",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with multiple roles assigned to participants",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. In the filter area, ensure 'Any' toggle is in the intended state (off to require all conditions)",
+            "2. Use the Select attribute dropdown to choose 'Role'",
+            "3. Choose the role 'Teacher' as the condition value",
+            "4. Click 'Apply filters'"
+          ],
+          "expected_result": "Participants table shows only users with the 'Teacher' role; the applied filter is visible in the filter UI",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-121",
+          "category": "positive",
+          "test_case": "Use alphabetical Last name filter to show names starting with a chosen letter",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with participants whose last names start with various letters",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. In the Last name alphabetical filter, click the letter 'B'",
+            "2. Observe the participants list update"
+          ],
+          "expected_result": "Participants table displays only users whose last name begins with 'B'; the active letter is highlighted",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-122",
+          "category": "positive",
+          "test_case": "Sort the participants table by First name ascending",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with multiple participants",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click the 'First name' column header in the participants table",
+            "2. If necessary, click again to set ascending order",
+            "3. Observe the ordering of rows"
+          ],
+          "expected_result": "Table rows are reordered alphabetically by First name in ascending order; column header indicates sort direction",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-123",
+          "category": "positive",
+          "test_case": "Open a participant's profile from their name link",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with participants",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click on a participant's First name or Last name link in the table",
+            "2. Observe the navigation or modal that opens"
+          ],
+          "expected_result": "The participant's profile page or profile modal opens displaying user details (name, email, roles, last access); back/close returns to the Participants page",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-124",
+          "category": "positive",
+          "test_case": "Send a message to multiple selected participants using 'With selected users...'",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with at least two participants",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Check the checkboxes for two participants in the table",
+            "2. Open the 'With selected users...' dropdown at the bottom",
+            "3. Select 'Send a message' or equivalent bulk action",
+            "4. Compose a short message in the message interface and send"
+          ],
+          "expected_result": "Message compose opens with the two participants pre-selected as recipients; after sending, a confirmation is shown and recipients receive the message",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-125",
+          "category": "negative",
+          "test_case": "Attempt to enrol a user without selecting a Role",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click 'Enrol users' to open the dialog",
+            "2. Search for and select an existing user in the user search field",
+            "3. Leave the Role dropdown unset or set to blank",
+            "4. Click 'Enrol users' or Confirm"
+          ],
+          "expected_result": "Inline validation prevents submission; the Role field is highlighted with an error message indicating a role must be selected; the dialog remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-126",
+          "category": "negative",
+          "test_case": "Search for a non-existent user in Enrol dialog and attempt to confirm",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click 'Enrol users' to open the dialog",
+            "2. Enter a non-existent username or gibberish in the user search field",
+            "3. Attempt to select a user (no results) and click 'Enrol users' or Confirm"
+          ],
+          "expected_result": "No user is selected; an inline message indicates 'No users found' and the enrol action is not completed; dialog remains open",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-127",
+          "category": "negative",
+          "test_case": "Attempt to apply filters with an incomplete condition (attribute not selected)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. In the filter area, click '+ Add condition' to create a new condition row",
+            "2. Leave the Select attribute dropdown blank or unset for that condition",
+            "3. Click 'Apply filters'"
+          ],
+          "expected_result": "The system highlights the incomplete condition and displays a validation error asking to select an attribute or remove the condition; filters are not applied until corrected",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-128",
+          "category": "edge",
+          "test_case": "Attempt to enrol the same user twice into the same course",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "User A is already enrolled in the course",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click 'Enrol users' to open the dialog",
+            "2. Search for and select User A who is already enrolled",
+            "3. Select a Role and click 'Enrol users' or Confirm"
+          ],
+          "expected_result": "The system prevents duplicate enrollment and displays an informative message (e.g., 'User is already enrolled') or updates role if allowed by policy; participants list remains consistent with no duplicate entries",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-129",
+          "category": "edge",
+          "test_case": "Apply multiple filter conditions with 'Any' toggle enabled that produce contradictory results",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with varied participants",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. In the filter area, enable the 'Any' toggle",
+            "2. Add two conditions that contradict (e.g., Role = 'Student' and Role = 'Teacher')",
+            "3. Click 'Apply filters'"
+          ],
+          "expected_result": "With 'Any' enabled, participants matching either condition are shown (union). If the two conditions are contradictory and no user matches either, the table shows zero results and a 'No participants found' message; the applied filter summary shows both conditions with 'Any' indicated",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-130",
+          "category": "edge",
+          "test_case": "Use alphabetical 'All' filter for both First name and Last name to ensure full list is displayed",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with multiple participants",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. In the First name alphabetical filter, click 'All'",
+            "2. In the Last name alphabetical filter, click 'All'",
+            "3. Ensure no other filters are applied and observe the participants list"
+          ],
+          "expected_result": "Participants table displays all enrolled users (no alphabetical filtering); the 'All' buttons are highlighted and full count of participants is shown",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-131",
+          "category": "edge",
+          "test_case": "Set an unusually long enrollment duration when enrolling a user",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists",
+            "User is on the Course Participants page"
+          ],
+          "steps": [
+            "1. Click 'Enrol users' to open the dialog",
+            "2. Select an existing user and choose a Role",
+            "3. Enable Enrollment duration and set a far future end date (e.g., +100 years) or the maximum allowed value",
+            "4. Click 'Enrol users' or Confirm"
+          ],
+          "expected_result": "System accepts the long duration if within allowed limits and enrolment is created; participants list shows the user with enrollment metadata reflecting the chosen duration, or if the value exceeds allowed limits, a clear validation error explaining acceptable range is shown",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 14,
+        "positive": 7,
+        "negative": 3,
+        "edge": 4,
+        "high_priority": 6,
+        "medium_priority": 7,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Assignment — Teacher View",
+      "test_cases": [
+        {
+          "tc_id": "TC-132",
+          "category": "positive",
+          "test_case": "Display assignment metadata, full description and attachments",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists and Edit mode is disabled",
+            "An assignment exists in the course with Opened date, Due date, a long Description (HTML) and at least one attached file"
+          ],
+          "steps": [
+            "1. Navigate to the Course page",
+            "2. Click the assignment link to open the Assignment page (teacher view)"
+          ],
+          "expected_result": "The Assignment page displays the Opened date and Due date correctly; the full HTML Description renders (including formatting) and all attached files appear as downloadable links with filenames and file sizes",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-133",
+          "category": "positive",
+          "test_case": "Open grading interface using the Grade button",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with at least one participant and at least one submission"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Click the 'Grade' button"
+          ],
+          "expected_result": "The grading interface opens (student-by-student grading view); the first student's submission is visible and grading controls are available",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-134",
+          "category": "positive",
+          "test_case": "Grading summary panel shows correct read-only metrics",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with known values: Number of participants = 10, Number of submissions = 7, Needs grading = 2, Visibility = 'Visible', and a Due date set in the future"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Observe the Grading summary panel"
+          ],
+          "expected_result": "The Grading summary panel displays Number of participants: 10; Number of submissions: 7; Needs grading: 2; Visibility: Visible; Time remaining: calculated correctly based on the Due date. All metrics are displayed as read-only text (no input fields)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-135",
+          "category": "positive",
+          "test_case": "Tab bar navigation shows corresponding sections",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Click the 'Assignment' tab in the tab bar and verify content",
+            "3. Click the 'Settings' tab and verify the settings area opens",
+            "4. Click the 'Submissions' tab and verify the submissions list/table appears",
+            "5. Click the 'Advanced grading' tab and verify advanced grading options appear",
+            "6. Click the 'More' tab and verify additional actions/options are shown"
+          ],
+          "expected_result": "Each tab loads its respective content area without errors; the UI updates to show the selected tab's contents and any relevant controls",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-136",
+          "category": "negative",
+          "test_case": "Attempt to edit Grading summary metrics directly",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists and the Grading summary panel is visible"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Attempt to click into, focus, or type into the Number of participants value, Number of submissions value, and Needs grading value fields"
+          ],
+          "expected_result": "The metrics are not editable (no text caret appears, clicks do not convert them into input fields). No save or submit action is available for these metrics. The system does not accept changes and does not produce an error dialog — the fields remain read-only",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-137",
+          "category": "negative",
+          "test_case": "Click 'Grade' when there are zero participants/submissions",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with Number of participants = 0 and Number of submissions = 0"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Click the 'Grade' button"
+          ],
+          "expected_result": "The grading interface either opens and shows a clear message such as 'No participants' or 'No submissions to grade', or the 'Grade' button is disabled and a tooltip or message explains there are no submissions; no error or crash occurs",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-138",
+          "category": "negative",
+          "test_case": "Click an attachment whose resource is missing or broken",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists that lists an attached file whose backend resource has been removed or is inaccessible"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Click the listed attachment link that points to the missing resource"
+          ],
+          "expected_result": "The system displays a clear error or informative message (e.g., 'File not found' or 'Resource unavailable') and does not crash the page; the rest of the Assignment page remains usable",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-139",
+          "category": "negative",
+          "test_case": "Assignment missing Opened date displays gracefully",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists without an Opened date set"
+          ],
+          "steps": [
+            "1. Open the Assignment page"
+          ],
+          "expected_result": "The page does not crash; the Opened date field shows 'Not set' or an equivalent placeholder and other metadata and functionality remain accessible",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-140",
+          "category": "edge",
+          "test_case": "Render extremely long HTML Description with many attachments",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with a very large HTML Description (e.g., >100KB or many nested tags) and a large number of attachments (e.g., 50 files)"
+          ],
+          "steps": [
+            "1. Open the Assignment page"
+          ],
+          "expected_result": "The page loads within acceptable time limits, the Description renders without layout breaking (scrollbars appear if needed), all attachments are listed (possibly paginated or collapsed by UI) and remain usable; no unhandled errors occur",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-141",
+          "category": "edge",
+          "test_case": "Assignment with Due date in the past shows overdue/time remaining correctly",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with Due date set in the past relative to current system time"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Observe the Time remaining metric in the Grading summary panel"
+          ],
+          "expected_result": "The Time remaining metric reflects that the due date has passed (e.g., shows 'Overdue by X days' or 'Past due') and the rest of the summary renders normally; values are accurate and not negative/garbled",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-142",
+          "category": "edge",
+          "test_case": "Set Due date equal to Opened date/time (zero duration)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with Opened date/time equal to the Due date/time"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Observe the Time remaining and date displays"
+          ],
+          "expected_result": "The Assignment page displays both dates identically and the Time remaining is shown as zero or 'Due now' / '0 minutes remaining' depending on UI; the page does not error",
+          "priority": "low"
+        },
+        {
+          "tc_id": "TC-143",
+          "category": "edge",
+          "test_case": "Very large participant and submission counts render correctly",
+          "preconditions": [
+            "User logged in as Teacher",
+            "An assignment exists with very large counts (e.g., Number of participants = 1,000,000 and Number of submissions = 999,999)"
+          ],
+          "steps": [
+            "1. Open the Assignment page",
+            "2. Observe the Number of participants and Number of submissions values in the Grading summary panel"
+          ],
+          "expected_result": "The large numbers are displayed correctly (with appropriate formatting if applicable), do not overflow UI elements, the layout remains usable, and values are accurate and read-only",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 4,
+        "negative": 4,
+        "edge": 4,
+        "high_priority": 5,
+        "medium_priority": 5,
+        "low_priority": 2
+      }
+    },
+    {
+      "module": "Assignment Submissions",
+      "test_cases": [
+        {
+          "tc_id": "TC-144",
+          "category": "positive",
+          "test_case": "Open Submissions view and verify table columns and rows",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with an Assignment that has submissions from multiple students",
+            "Teacher has permission to view submissions"
+          ],
+          "steps": [
+            "1. Navigate to the course and open the Assignment",
+            "2. Click 'View submissions' (or equivalent) to open the Submissions view"
+          ],
+          "expected_result": "The Submissions view displays a table with rows for each student and the columns: Student identity (name and initials icon linked to profile), Submission status, Grading status, Submission date/time, Time since submission, Online text preview, File submission links, Submission comments, Feedback comments, Feedback files, and Final grade",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-145",
+          "category": "positive",
+          "test_case": "Search submissions by student full name and narrow results",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Course contains an Assignment with multiple student submissions including a student named 'Alice Example'",
+            "Submissions view is open"
+          ],
+          "steps": [
+            "1. In the search control above the table, enter 'Alice Example' in the student name field",
+            "2. Click the Search / Apply filters button"
+          ],
+          "expected_result": "The table updates to show only rows for 'Alice Example'; other students are not shown and the matched row displays all relevant columns",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-146",
+          "category": "positive",
+          "test_case": "Filter submissions by Submission status 'Submitted for grading'",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Assignment has students with various submission statuses, including at least one 'Submitted for grading'",
+            "Submissions view is open"
+          ],
+          "steps": [
+            "1. Open the Submission status filter control",
+            "2. Select 'Submitted for grading' and click Apply"
+          ],
+          "expected_result": "The table shows only students whose Submission status is 'Submitted for grading'; each row shows submission date/time and a link to file(s) or online text where applicable",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-147",
+          "category": "positive",
+          "test_case": "Filter submissions by Grading status 'Not graded'",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Assignment has students with grading statuses including 'Not graded'",
+            "Submissions view is open"
+          ],
+          "steps": [
+            "1. Open the Grading status filter control",
+            "2. Select 'Not graded' and click Apply"
+          ],
+          "expected_result": "The table shows only students whose Grading status is 'Not graded'; Final grade column is empty or shows placeholder and action menu is available to start grading",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-148",
+          "category": "positive",
+          "test_case": "Open a student's profile by clicking their name or initials icon",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and at least one student row is present"
+          ],
+          "steps": [
+            "1. In a student row, click the student's name (or initials/profile icon) link"
+          ],
+          "expected_result": "The student's profile page opens (new tab or same window depending on system behavior) showing student details; returning to the Submissions view shows the table intact",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-149",
+          "category": "positive",
+          "test_case": "Open grading workflow from a student's action menu",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and at least one submission is present"
+          ],
+          "steps": [
+            "1. In a student's row, open the action menu (three dots or similar)",
+            "2. Select the option to 'Grade' or 'Open grading workflow'"
+          ],
+          "expected_result": "The grading workflow UI opens for that student (in a popup or new panel) allowing the teacher to view submission, add feedback, and enter a grade",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-150",
+          "category": "positive",
+          "test_case": "Enable Quick grading and enter an inline grade, then save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and assignment allows Quick grading",
+            "At least one student row is present with an editable Final grade cell"
+          ],
+          "steps": [
+            "1. Click the 'Quick grading' toggle or button to enable inline editing",
+            "2. In a student's Final grade cell, enter '85' (or a valid grade for the assignment)",
+            "3. Click 'Save changes' (or equivalent) for quick grading"
+          ],
+          "expected_result": "The inline grade is saved and displayed in the Final grade column; the student's Grading status updates to 'Graded' (or reflects the new grade) and a confirmation message is shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-151",
+          "category": "negative",
+          "test_case": "Search for a non-existent student name returns no results",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open"
+          ],
+          "steps": [
+            "1. Enter 'NonExistent Student 12345' in the student name search field",
+            "2. Click Search / Apply filters"
+          ],
+          "expected_result": "The submissions table shows a 'No results' or 'No records found' message and no student rows; no system errors occur",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-152",
+          "category": "negative",
+          "test_case": "Attempt to save an inline grade exceeding maximum allowed value",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open with Quick grading enabled",
+            "Assignment maximum grade is known (e.g., 100)"
+          ],
+          "steps": [
+            "1. In a student's Final grade inline field enter '150' (greater than max 100)",
+            "2. Click 'Save changes' for quick grading"
+          ],
+          "expected_result": "An inline validation error is shown (e.g., 'Grade must be between 0 and 100'); the invalid grade is not saved and the old grade (or empty) remains",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-153",
+          "category": "negative",
+          "test_case": "Click file submission link for student who has no files",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and one student row has 'No files submitted' status (no file links present)"
+          ],
+          "steps": [
+            "1. Identify a student row that indicates no file submissions",
+            "2. Attempt to click any file link area or icon in that row"
+          ],
+          "expected_result": "No file viewer opens; either no clickable link exists or a gentle message (e.g., 'No files submitted') is shown; no JavaScript errors or crashes occur",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-154",
+          "category": "edge",
+          "test_case": "Enter boundary grades: minimum (0) and maximum (exact max) via Quick grading",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open with Quick grading enabled",
+            "Assignment max grade is 100 and some students are ungraded"
+          ],
+          "steps": [
+            "1. In one student's Final grade inline cell enter '0' and save changes",
+            "2. In another student's Final grade inline cell enter '100' (exact maximum) and save changes"
+          ],
+          "expected_result": "Both boundary grades are accepted and saved; Final grade column shows '0' and '100' respectively and Grading status updates appropriately without validation errors",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-155",
+          "category": "edge",
+          "test_case": "Display handling of very long submission comments in the table",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and at least one student's submission comment contains a very long string (>10,000 characters)"
+          ],
+          "steps": [
+            "1. Observe the Submission comments column for the student with the very long comment",
+            "2. If available, click to expand or open full comment"
+          ],
+          "expected_result": "The table remains responsive; the comments cell is truncated appropriately in the table view, an ellipsis or 'show more' link is present if required, and expanding/opening shows the full comment without data loss or UI breakage",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-156",
+          "category": "edge",
+          "test_case": "Apply multiple filters (partial student name + Submission status) to verify correct intersection results",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and multiple students with similar names and varying statuses exist"
+          ],
+          "steps": [
+            "1. Enter a partial name such as 'Ali' in the student name search field",
+            "2. Select Submission status 'Submitted for grading' and click Apply"
+          ],
+          "expected_result": "The table shows only students whose names match the partial search AND whose Submission status is 'Submitted for grading'; rows not matching both criteria are excluded",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-157",
+          "category": "edge",
+          "test_case": "Handle a submission date/time that is in the future (clock skew or manual timestamp)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Submissions view is open and at least one submission has a recorded submission date/time in the future"
+          ],
+          "steps": [
+            "1. Observe the Submission date/time and Time since submission columns for the row with the future timestamp"
+          ],
+          "expected_result": "The future submission timestamp is displayed accurately; the 'Time since submission' either shows a negative value, 'in x time', or a clear indicator; the UI does not crash and filtering/sorting still works for that row",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 14,
+        "positive": 7,
+        "negative": 3,
+        "edge": 4,
+        "high_priority": 6,
+        "medium_priority": 7,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Gradebook — Grader Report",
+      "test_cases": [
+        {
+          "tc_id": "TC-158",
+          "category": "positive",
+          "test_case": "Switch report type using report-type selector dropdown",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "Edit mode may be off or on"
+          ],
+          "steps": [
+            "1. Navigate to the course and open the Gradebook -> Grader report page",
+            "2. Locate the report-type selector dropdown at the top-left",
+            "3. Click the dropdown and select 'User report'",
+            "4. Observe the page update and then select 'Overview report'",
+            "5. Return the selector to 'Grader report'"
+          ],
+          "expected_result": "Selecting each report updates the displayed report view accordingly (User report shows per-user summary, Overview shows course totals); selecting 'Grader report' returns to the spreadsheet view without errors",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-159",
+          "category": "positive",
+          "test_case": "Filter rows by student name using the user search control",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "At least three enrolled students exist with distinct names",
+            "Grader report is open"
+          ],
+          "steps": [
+            "1. In the Grader report, locate the user search control above the table",
+            "2. Enter a known student's full name (<student full name>) and press Enter or click Search",
+            "3. Verify the table refreshes to show only rows matching the search",
+            "4. Clear the search field and enter a partial name substring common to multiple students",
+            "5. Verify only rows that match the substring are shown"
+          ],
+          "expected_result": "The table rows are filtered to show only students matching the search query; clearing or changing the query updates results accordingly",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-160",
+          "category": "positive",
+          "test_case": "Filter rows by group using the group filter control",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "At least two groups exist with enrolled students",
+            "Grader report is open"
+          ],
+          "steps": [
+            "1. In the Grader report, locate the group filter control above the table",
+            "2. Open the group dropdown and select Group A",
+            "3. Verify the table displays only students who are members of Group A",
+            "4. Switch to Group B and verify displayed rows update to Group B members",
+            "5. Select 'All participants' to return to the full student list"
+          ],
+          "expected_result": "Selecting a group filters the table rows to the group's members; switching or resetting the filter updates the table correctly",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-161",
+          "category": "positive",
+          "test_case": "Open per-column action menu and update an activity's grade settings",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "At least one graded activity (column) exists in the Grader report",
+            "User has capability to edit grade settings"
+          ],
+          "steps": [
+            "1. Open the Grader report and locate an activity column header",
+            "2. Click the per-column action (three-dot) menu on that column header",
+            "3. Select 'Edit grade settings' (or equivalent) from the menu",
+            "4. In the edit dialog change a setting (e.g., adjust the maximum grade to <new max>) and save",
+            "5. Verify the column header or activity metadata reflects the changed settings"
+          ],
+          "expected_result": "The edit dialog saves successfully and the activity's grade settings are updated; subsequent grade inputs and calculations use the new settings",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-162",
+          "category": "positive",
+          "test_case": "Edit an individual grade via per-cell three-dot menu",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "At least one student and one graded activity exist",
+            "Grader report is open"
+          ],
+          "steps": [
+            "1. Locate a specific student's grade cell for an activity",
+            "2. Click the per-cell three-dot menu and choose 'Edit' (or equivalent)",
+            "3. In the inline or modal editor enter a valid grade value (e.g., <valid grade>) and an optional feedback comment",
+            "4. Save the individual grade edit",
+            "5. Verify the cell displays the updated grade and feedback indicator if applicable"
+          ],
+          "expected_result": "The individual grade is updated immediately in the table and any inline indicators (e.g., comment icon) are shown; overall averages update accordingly",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-163",
+          "category": "positive",
+          "test_case": "Enable Edit mode, make inline edits to multiple grade cells within range, and Save changes",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "At least three students and multiple graded activities exist",
+            "Teacher has permission to edit grades"
+          ],
+          "steps": [
+            "1. Open the Grader report and toggle 'Edit mode' ON",
+            "2. Click several grade cells and enter valid numeric grades within each activity's configured min/max range",
+            "3. Verify inline validation does not flag any values",
+            "4. Click the 'Save changes' action",
+            "5. Observe the table refresh and check that the entered grades persist and the overall average row updates"
+          ],
+          "expected_result": "All inline edits are saved successfully, the grade cells show the new values, and the overall average row reflects the updated averages; no validation errors are shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-164",
+          "category": "negative",
+          "test_case": "Attempt to save when at least one edited grade is outside the configured grade range",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled",
+            "At least one graded activity has a defined min/max range (e.g., 0 to 100)",
+            "Edit mode is enabled and there are editable grade cells"
+          ],
+          "steps": [
+            "1. Toggle Edit mode ON in the Grader report",
+            "2. Edit one or more grade cells and set at least one cell to a value outside the allowed range (e.g., 150 when max is 100)",
+            "3. Observe inline validation on the out-of-range cell",
+            "4. Click 'Save changes'"
+          ],
+          "expected_result": "The system prevents saving; the out-of-range cell is flagged with an inline validation error message, a summary error may appear, and the form remains unsaved until all invalid values are corrected",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-165",
+          "category": "negative",
+          "test_case": "Attempt to save invalid activity grade settings via column action menu (empty required field)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled and at least one activity column",
+            "Teacher has permission to edit activity grade settings"
+          ],
+          "steps": [
+            "1. In the Grader report, open an activity column's action menu and choose 'Edit grade settings'",
+            "2. In the settings dialog clear a required field (for example, remove the Activity name or set an empty grade item name) ",
+            "3. Click Save in the settings dialog"
+          ],
+          "expected_result": "The settings dialog displays inline validation errors for the required field(s); the invalid settings are not saved and the dialog remains open until corrected",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-166",
+          "category": "edge",
+          "test_case": "Enter boundary grade values equal to the minimum and maximum allowed and save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled and activities with known min/max grades (e.g., min=0, max=100)",
+            "Edit mode is enabled"
+          ],
+          "steps": [
+            "1. Toggle Edit mode ON in the Grader report",
+            "2. In one activity column set a student's grade to the exact minimum allowed (e.g., 0)",
+            "3. In another student's cell for the same activity set the grade to the exact maximum allowed (e.g., 100)",
+            "4. Click 'Save changes'",
+            "5. Verify the saved values and overall averages"
+          ],
+          "expected_result": "Both boundary values are accepted and saved without validation errors; the grade cells display the boundary values and the overall average row updates correctly",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-167",
+          "category": "edge",
+          "test_case": "Open Grader report for a course with no enrolled students",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course exists with Gradebook enabled but no enrolled students",
+            "At least one graded activity exists"
+          ],
+          "steps": [
+            "1. Navigate to the Grader report for the course with zero students",
+            "2. Observe the grade table and any displayed rows/headers",
+            "3. Verify presence or absence of the overall average row and any messages indicating no participants"
+          ],
+          "expected_result": "The Grader report displays column headers for activities but no student rows; the average row either shows N/A or is absent and a clear informational message indicates there are no enrolled students; no errors occur",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 10,
+        "positive": 6,
+        "negative": 2,
+        "edge": 2,
+        "high_priority": 3,
+        "medium_priority": 6,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Profile",
+      "test_cases": [
+        {
+          "tc_id": "TC-168",
+          "category": "positive",
+          "test_case": "Profile header displays initials icon, full name, Message button and description",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher has a profile with a non-empty description",
+            "A course exists (not required to be associated)"
+          ],
+          "steps": [
+            "1. Navigate to the teacher's Profile page (e.g., click on user avatar -> Profile)",
+            "2. Observe the top of the Profile page"
+          ],
+          "expected_result": "A circular initials icon is visible, the teacher's full name is displayed prominently, a 'Message' button is present and enabled, and the profile description text is visible beneath the name",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-169",
+          "category": "positive",
+          "test_case": "User details card shows email, visibility note, timezone and Edit profile link; Edit profile opens edit form",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher account has an email address and a timezone configured",
+            "Teacher has permission to edit their profile"
+          ],
+          "steps": [
+            "1. Open the teacher's Profile page",
+            "2. Locate the 'User details' information card",
+            "3. Verify the email address, visibility note and timezone are displayed",
+            "4. Click the 'Edit profile' link"
+          ],
+          "expected_result": "The User details card displays the teacher's email, a textual visibility note (e.g., 'Email visible to: ...'), and the configured timezone. Clicking 'Edit profile' navigates to the Edit profile form/page",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-170",
+          "category": "positive",
+          "test_case": "Privacy and policies card contains Data retention summary link that opens the correct page",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Course site has a Data retention summary page or modal configured"
+          ],
+          "steps": [
+            "1. Navigate to the teacher's Profile page",
+            "2. Scroll to the 'Privacy and policies' information card",
+            "3. Click the 'Data retention summary' link"
+          ],
+          "expected_result": "Clicking the Data retention summary link opens the Data retention summary page or modal and the content relevant to data retention is displayed",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-171",
+          "category": "positive",
+          "test_case": "Course details card lists associated courses with links that open course profiles",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher is associated with at least two courses",
+            "Course profiles are available"
+          ],
+          "steps": [
+            "1. Open the teacher's Profile page",
+            "2. Locate the 'Course details' information card",
+            "3. Verify that links for all associated course profiles are listed",
+            "4. Click a course link"
+          ],
+          "expected_result": "All associated courses are listed as links in the Course details card. Clicking a course link navigates to that course's profile page (or the expected course destination)",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-172",
+          "category": "positive",
+          "test_case": "Miscellaneous links (Blog entries, Forum posts, Forum discussions, Learning plans) navigate to the correct listings",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher has at least one blog entry, forum post, forum discussion, or learning plan (or the links still exist even if lists are empty)"
+          ],
+          "steps": [
+            "1. Open the teacher's Profile page",
+            "2. Find the 'Miscellaneous' information card",
+            "3. Click each link: 'Blog entries', 'Forum posts', 'Forum discussions', 'Learning plans' one at a time"
+          ],
+          "expected_result": "Each clicked link opens the corresponding listing page showing the teacher's blog entries, forum posts, discussions, or learning plans (or a valid empty-state message if none exist)",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-173",
+          "category": "positive",
+          "test_case": "Reports card links (Browser sessions and Grades overview) open the appropriate reports",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Reporting features are enabled for the site"
+          ],
+          "steps": [
+            "1. Navigate to the teacher's Profile page",
+            "2. Locate the 'Reports' information card",
+            "3. Click 'Browser sessions' and verify the page/content",
+            "4. Return to the Profile page and click 'Grades overview'"
+          ],
+          "expected_result": "'Browser sessions' opens the browser sessions report/page showing recent sessions for the user; 'Grades overview' opens the grades overview report relevant to the teacher",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-174",
+          "category": "positive",
+          "test_case": "Login activity shows First and Last access with exact dates and relative time indicators",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher has recorded First and Last access timestamps (site login history exists)"
+          ],
+          "steps": [
+            "1. Open the teacher's Profile page",
+            "2. Scroll to the 'Login activity' information card",
+            "3. Observe the 'First access' and 'Last access' fields including exact dates and relative time indicators (e.g., '2 days ago')"
+          ],
+          "expected_result": "Both First and Last access display exact date/time values and a relative time indicator. The dates correspond to the recorded access times and the relative labels match the difference from the current time",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-175",
+          "category": "negative",
+          "test_case": "Access Profile page while not logged in should redirect to login or show limited public view",
+          "preconditions": [
+            "User is not logged in (logged out state)"
+          ],
+          "steps": [
+            "1. Attempt to navigate directly to the teacher's Profile page URL while logged out"
+          ],
+          "expected_result": "The site redirects the user to the login page or displays a public/limited profile view that does not show private details (e.g., no Edit profile link, no email), preventing unauthorized access to private profile actions",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-176",
+          "category": "negative",
+          "test_case": "Profile does not display email when the user's email visibility is set to hidden",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher's profile settings have email visibility set to 'hidden' or 'only me'"
+          ],
+          "steps": [
+            "1. Open the teacher's Profile page",
+            "2. Inspect the User details card for the email address and visibility note"
+          ],
+          "expected_result": "The email address is not displayed on the Profile page. A visibility note indicates that the email is hidden or restricted. No plain email text should be visible",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-177",
+          "category": "edge",
+          "test_case": "Display very long multi-line profile description (stress test for layout)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher's profile description is set to a very long text (e.g., 10,000 characters) including multiple line breaks and HTML-like characters"
+          ],
+          "steps": [
+            "1. Navigate to the teacher's Profile page",
+            "2. Scroll to the profile description area and observe rendering and layout behavior"
+          ],
+          "expected_result": "The long description is rendered without breaking the overall page layout. Text wraps or is scrollable/ paginated according to UI rules, no content overflows outside container boundaries, and the page remains responsive. If truncation with 'Show more' is the intended behaviour, the control is present and expands/collapses correctly",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-178",
+          "category": "edge",
+          "test_case": "First and Last access times are identical (user logged in once); relative indicators handle equality",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher has identical First and Last access timestamps (e.g., single recorded login)"
+          ],
+          "steps": [
+            "1. Open the teacher's Profile page",
+            "2. Observe the Login activity card for First access and Last access display"
+          ],
+          "expected_result": "Both First and Last access fields show the same exact date/time and relative time indicators; relative labels are coherent (e.g., both show 'x minutes ago' or 'just now') and no UI errors are shown",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-179",
+          "category": "edge",
+          "test_case": "Teacher with no associated courses shows appropriate empty state in Course details card",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Teacher is not associated with any courses"
+          ],
+          "steps": [
+            "1. Navigate to the teacher's Profile page",
+            "2. Locate the 'Course details' information card and inspect its contents"
+          ],
+          "expected_result": "The Course details card displays a clear empty state message (e.g., 'No courses found' or similar) or the card is omitted per design. No broken links or placeholder links are shown",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 12,
+        "positive": 7,
+        "negative": 2,
+        "edge": 3,
+        "high_priority": 5,
+        "medium_priority": 6,
+        "low_priority": 1
+      }
+    },
+    {
+      "module": "Profile Edit",
+      "test_cases": [
+        {
+          "tc_id": "TC-180",
+          "category": "positive",
+          "test_case": "Update required personal details and save profile",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page (Edit profile form opened)"
+          ],
+          "steps": [
+            "1. In the General section, enter 'Alice' in First name",
+            "2. Enter 'Smith' in Last name",
+            "3. Enter 'alice.smith@example.edu' in Email address",
+            "4. Select a Country and Timezone from their dropdowns",
+            "5. Enter a short bio in Description (rich text)",
+            "6. Click 'Update profile'"
+          ],
+          "expected_result": "The profile page refreshes; the displayed profile shows First name 'Alice', Last name 'Smith', the provided email, chosen country and timezone, and the updated Description; no validation errors are shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-181",
+          "category": "positive",
+          "test_case": "Use 'Expand all' then upload a valid user picture with drag-and-drop and save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "A valid image file (JPEG, < configured max size) is available for upload"
+          ],
+          "steps": [
+            "1. Click the 'Expand all' link at the top right to open all collapsible sections",
+            "2. In the User picture section, drag-and-drop the valid JPEG image into the upload area",
+            "3. Enter 'Profile photo' in Picture description",
+            "4. Click 'Update profile'"
+          ],
+          "expected_result": "The profile page refreshes; the user's picture is updated to the uploaded image and the Picture description displays 'Profile photo'; no upload errors are shown",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-182",
+          "category": "positive",
+          "test_case": "Add and remove interests tags and save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "Interests field is visible"
+          ],
+          "steps": [
+            "1. In the Interests section, type 'math' and press Enter to add the tag",
+            "2. Type 'photography' and press Enter to add the second tag",
+            "3. Remove the 'math' tag using the tag removal control",
+            "4. Click 'Update profile'"
+          ],
+          "expected_result": "The profile page refreshes; interests show only the 'photography' tag; no validation errors are shown",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-183",
+          "category": "positive",
+          "test_case": "Fill Additional names optional fields and save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "Additional names section is available"
+          ],
+          "steps": [
+            "1. Expand Additional names section",
+            "2. Enter 'A. Smith' in the Alternative format field (or other available additional name fields)",
+            "3. Click 'Update profile'"
+          ],
+          "expected_result": "The profile page refreshes; the additional name(s) appear in the user's profile details or additional name area; no errors are shown",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-184",
+          "category": "positive",
+          "test_case": "Edit a site-defined optional custom field and save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "At least one site-defined optional custom field is configured and visible"
+          ],
+          "steps": [
+            "1. Locate the Optional fields section and fill the custom field(s) with valid data",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "The profile page refreshes; the provided custom field values are displayed on the profile and persisted for future visits",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-185",
+          "category": "positive",
+          "test_case": "Make changes then click Cancel to discard edits",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page"
+          ],
+          "steps": [
+            "1. Change First name to 'TempName' and change Description to a temporary value",
+            "2. Click the 'Cancel' button"
+          ],
+          "expected_result": "The Edit profile form closes and the profile page is shown unchanged; the temporary changes are not saved",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-186",
+          "category": "negative",
+          "test_case": "Attempt to save profile with First name missing",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page"
+          ],
+          "steps": [
+            "1. Clear the First name field so it is empty",
+            "2. Ensure other required fields are valid (Last name, Email present)",
+            "3. Click 'Update profile'"
+          ],
+          "expected_result": "An inline validation error highlights the First name field indicating it is required; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-187",
+          "category": "negative",
+          "test_case": "Attempt to save profile with invalid Email format",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page"
+          ],
+          "steps": [
+            "1. Enter 'invalid-email' (missing @/domain) into the Email address field",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "An inline validation error highlights the Email address field indicating invalid email format; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-188",
+          "category": "negative",
+          "test_case": "Attempt to upload unsupported file type as user picture",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "An unsupported file (e.g., .exe or .txt) is available"
+          ],
+          "steps": [
+            "1. In User picture section, attempt to upload the unsupported file via drag-and-drop or file select",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "The upload is rejected with an error message indicating unsupported file type; profile is not saved; existing picture remains unchanged",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-189",
+          "category": "negative",
+          "test_case": "Attempt to upload a picture that exceeds maximum allowed file size",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "An image file larger than the configured max size is available"
+          ],
+          "steps": [
+            "1. Attempt to upload the oversized image in the User picture upload area",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "The upload is rejected with an error message indicating file is too large; profile is not saved and the previous picture remains unchanged",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-190",
+          "category": "negative",
+          "test_case": "Attempt to save profile with Email field cleared (required)",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page"
+          ],
+          "steps": [
+            "1. Clear the Email address field leaving it empty",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "An inline validation error highlights the Email address field as required; the form is not submitted and remains open",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-191",
+          "category": "edge",
+          "test_case": "Save profile with First and Last name at maximum allowed length",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "System maximum length for name fields is known (e.g., 255 chars)"
+          ],
+          "steps": [
+            "1. Enter a string at the maximum allowed length (e.g., 255 characters) into First name",
+            "2. Enter a string at the maximum allowed length into Last name",
+            "3. Fill other required fields validly",
+            "4. Click 'Update profile'"
+          ],
+          "expected_result": "The profile is saved successfully; both long First and Last names are displayed correctly on the profile without truncation or errors",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-192",
+          "category": "edge",
+          "test_case": "Save very large rich-text Description containing formatting and long content",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page"
+          ],
+          "steps": [
+            "1. In Description (rich text editor), paste a very large content block (e.g., several thousand characters) including bold, lists, and an embedded image link",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "The profile is saved successfully; the Description retains formatting (bold, lists) and displays the large content; no editor-related errors occur",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-193",
+          "category": "edge",
+          "test_case": "Upload a user picture exactly at the maximum allowed file size boundary",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page",
+            "An image file exactly equal to the configured max upload size is available"
+          ],
+          "steps": [
+            "1. Upload the boundary-size image via drag-and-drop or file selector in User picture",
+            "2. Click 'Update profile'"
+          ],
+          "expected_result": "The upload is accepted and profile is saved; the new picture displays on the profile and no size-related errors are shown",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-194",
+          "category": "edge",
+          "test_case": "Set Email visibility to 'Hidden' (or equivalent) and verify email is not displayed after save",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on the Edit profile page"
+          ],
+          "steps": [
+            "1. In the General section, change Email visibility dropdown to the option that hides the email (e.g., 'Only me' or 'Hidden')",
+            "2. Click 'Update profile'",
+            "3. View the public profile page or the profile display area"
+          ],
+          "expected_result": "The profile is saved successfully; the email address is not visible to viewers according to the selected visibility setting; no validation errors occur",
+          "priority": "medium"
+        }
+      ],
+      "summary": {
+        "total": 15,
+        "positive": 6,
+        "negative": 5,
+        "edge": 4,
+        "high_priority": 8,
+        "medium_priority": 7,
+        "low_priority": 0
+      }
+    },
+    {
+      "module": "Logout",
+      "test_cases": [
+        {
+          "tc_id": "TC-195",
+          "category": "positive",
+          "test_case": "Log out via user menu from course page",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A course page is open",
+            "Edit mode may be on or off (not required)"
+          ],
+          "steps": [
+            "1. On the course page, click the user profile dropdown / user menu in the header",
+            "2. Click 'Log out' (or 'Log out' link/button) from the dropdown"
+          ],
+          "expected_result": "User session is terminated; the browser is redirected to the login page; attempting to access any protected page requires re-authentication",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-196",
+          "category": "positive",
+          "test_case": "Log out using the global header logout link",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User is on any protected page (e.g., Dashboard, Course, Assignment)"
+          ],
+          "steps": [
+            "1. Click the global header/profile logout link or icon",
+            "2. Confirm logout if a confirmation dialog appears"
+          ],
+          "expected_result": "User is logged out and redirected to the login page; session cookies are cleared or invalidated",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-197",
+          "category": "positive",
+          "test_case": "After logout, accessing a protected page redirects to login",
+          "preconditions": [
+            "User logged in as Teacher",
+            "A known protected page URL is available (e.g., direct course URL)"
+          ],
+          "steps": [
+            "1. Perform logout (via menu or logout link) and confirm redirection to login page",
+            "2. Attempt to navigate to the previously accessible protected page by entering its URL or using browser back/navigation"
+          ],
+          "expected_result": "The system redirects the user to the login page and does not show protected content; user must authenticate to regain access",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-198",
+          "category": "negative",
+          "test_case": "Invoke logout endpoint with missing/invalid session token (sesskey) while logged in",
+          "preconditions": [
+            "User logged in as Teacher",
+            "Tester can modify URL parameters"
+          ],
+          "steps": [
+            "1. Note the logout endpoint URL (e.g., /login/logout.php?sesskey=<value>)",
+            "2. Modify the URL to remove the sesskey parameter or change it to an invalid value and navigate to that URL",
+            "3. Observe the response"
+          ],
+          "expected_result": "The logout request is rejected due to missing/invalid session token; the system shows an appropriate error or warning (e.g., 'Invalid session' or 403) and the user remains authenticated until a valid logout is performed",
+          "priority": "high"
+        },
+        {
+          "tc_id": "TC-199",
+          "category": "edge",
+          "test_case": "Log out in one browser tab while another tab still has protected pages open",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User has the site open in at least two tabs and a protected page loaded in each"
+          ],
+          "steps": [
+            "1. In Tab A, perform logout via the user menu",
+            "2. In Tab B, attempt to perform an action that requires authentication (e.g., open a course, click 'Turn editing on' or load a protected resource)",
+            "3. Observe Tab B behavior"
+          ],
+          "expected_result": "Tab A shows the login page after logout. Tab B either displays the login page when attempting the action or prompts for re-authentication; protected actions are not allowed without logging in again",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-200",
+          "category": "edge",
+          "test_case": "Click Log out during a long-running upload or form submission",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User starts a long-running file upload or an editing action (e.g., editing a resource with large file upload)"
+          ],
+          "steps": [
+            "1. Initiate a large file upload or long-running form submission (but do not complete it)",
+            "2. While upload/submission is in progress, click the user menu and select 'Log out'",
+            "3. Observe behavior and any messages"
+          ],
+          "expected_result": "The upload/submission is aborted or cancelled; the session is terminated and the user is redirected to the login page. Any partial upload does not leave the user authenticated and should not result in inconsistent state",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-201",
+          "category": "edge",
+          "test_case": "Session has expired (timeout) then user clicks Log out",
+          "preconditions": [
+            "User previously logged in as Teacher, but session has expired (simulate by clearing session cookie or waiting for timeout)"
+          ],
+          "steps": [
+            "1. Ensure the user's session is expired or remove session cookies",
+            "2. Click the 'Log out' link (if visible) or navigate to the logout URL",
+            "3. Observe resulting page and messages"
+          ],
+          "expected_result": "The system redirects to the login page without error; no protected content is accessible. The logout action does not cause an application crash or expose sensitive information",
+          "priority": "medium"
+        },
+        {
+          "tc_id": "TC-202",
+          "category": "edge",
+          "test_case": "Use browser Back button after logout to attempt to view a protected page",
+          "preconditions": [
+            "User logged in as Teacher",
+            "User navigated to a protected page, then logged out"
+          ],
+          "steps": [
+            "1. From a protected page, perform logout and confirm redirection to login page",
+            "2. Click the browser Back button",
+            "3. Observe whether cached content is shown and attempt to perform any action on that page"
+          ],
+          "expected_result": "Browser may show cached view briefly, but any attempt to interact or to load protected resources requires re-authentication and the user is redirected to the login page; sensitive actions are not possible from the cached view",
+          "priority": "low"
+        }
+      ],
+      "summary": {
+        "total": 8,
+        "positive": 3,
+        "negative": 1,
+        "edge": 4,
+        "high_priority": 3,
+        "medium_priority": 4,
+        "low_priority": 1
+      }
+    }
+  ],
+  "total_summary": {
+    "total_modules": 15,
+    "total_tests": 202,
+    "positive": 92,
+    "negative": 51,
+    "edge": 59,
+    "high_priority": 91,
+    "medium_priority": 92,
+    "low_priority": 19
+  }
+}

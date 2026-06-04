@@ -1,0 +1,312 @@
+{
+  "project_name": "Swaglab",
+  "generated_at": "2026-06-04T14:06:32.796185Z",
+  "modules": [
+    {
+      "module_id": 1,
+      "module_title": "Login",
+      "ast": {
+        "module_name": "Login",
+        "components": {
+          "Login_Form": {
+            "type": "form",
+            "fields": {
+              "Username": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": [
+                  "must not be empty"
+                ]
+              },
+              "Password": {
+                "type": "password",
+                "required": true,
+                "constraints": [
+                  "must not be empty"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Login",
+                "on_success": "authenticates and redirects to Product Inventory page",
+                "constraints": [
+                  "valid credentials required"
+                ]
+              }
+            ]
+          },
+          "Error_Handling": {
+            "type": "error_messages",
+            "messages": [
+              "Epic sadface: Username is required.",
+              "Epic sadface: Password is required.",
+              "Epic sadface: Username and password do not match any user in this service.",
+              "Epic sadface: Sorry, this user has been locked out."
+            ]
+          }
+        }
+      },
+      "attempts": 2
+    },
+    {
+      "module_id": 2,
+      "module_title": "Product Inventory",
+      "ast": {
+        "module_name": "Product Inventory",
+        "components": {
+          "Product_List": {
+            "type": "data_table",
+            "sortable_columns": [
+              "Name",
+              "Price"
+            ],
+            "row_actions": [
+              {
+                "action_name": "View Product",
+                "on_success": "opens Product Detail page"
+              },
+              {
+                "action_name": "Add to cart",
+                "on_success": "adds item to cart",
+                "fields": {
+                  "Product_Image": {
+                    "type": "unspecified",
+                    "required": false
+                  }
+                }
+              },
+              {
+                "action_name": "Remove",
+                "on_success": "removes item from cart"
+              }
+            ],
+            "fields": {
+              "Name": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Description": {
+                "type": "unspecified",
+                "required": false
+              },
+              "Price": {
+                "type": "number",
+                "required": false
+              },
+              "Product_Image": {
+                "type": "unspecified",
+                "required": false
+              }
+            },
+            "bulk_actions": [],
+            "constraints": []
+          },
+          "Sort_Dropdown": {
+            "type": "dropdown",
+            "options": [
+              "Name (A\u2013Z)",
+              "Name (Z\u2013A)",
+              "Price (low\u2013high)",
+              "Price (high\u2013low)"
+            ]
+          }
+        }
+      },
+      "attempts": 3
+    },
+    {
+      "module_id": 3,
+      "module_title": "Product Detail",
+      "ast": {
+        "module_name": "Product Detail",
+        "components": {
+          "Add_Remove_Button": {
+            "type": "button",
+            "action_name": "Add to cart / Remove",
+            "on_success": "updates cart state"
+          },
+          "Back_To_Products_Button": {
+            "type": "button",
+            "action_name": "Back to products",
+            "on_success": "navigates to Product Inventory page"
+          },
+          "Cart_Icon": {
+            "type": "link",
+            "action_name": "Navigate to Shopping Cart"
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 4,
+      "module_title": "Shopping Cart",
+      "ast": {
+        "module_name": "Shopping Cart",
+        "components": {
+          "Cart_Items": {
+            "type": "data_table",
+            "row_actions": [
+              {
+                "action_name": "Remove"
+              }
+            ]
+          },
+          "Cart_Actions": {
+            "type": "action_bar",
+            "submit_actions": [
+              {
+                "element_name": "Continue Shopping",
+                "on_success": "returns to Product Inventory"
+              },
+              {
+                "element_name": "Checkout",
+                "on_success": "begins checkout process"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 5,
+      "module_title": "Checkout - Information",
+      "ast": {
+        "module_name": "Checkout",
+        "components": {
+          "Information_Form": {
+            "type": "form",
+            "fields": {
+              "First_Name": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": [
+                  "must not be empty"
+                ]
+              },
+              "Last_Name": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": [
+                  "must not be empty"
+                ]
+              },
+              "Zip_Postal_Code": {
+                "type": "unspecified",
+                "required": true,
+                "constraints": [
+                  "must not be empty"
+                ]
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Continue",
+                "on_success": "proceeds to the overview step",
+                "constraints": [
+                  "must fill all required fields"
+                ]
+              },
+              {
+                "element_name": "Cancel",
+                "on_success": "returns to the Shopping Cart"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 6,
+      "module_title": "Checkout - Overview",
+      "ast": {
+        "module_name": "Checkout",
+        "components": {
+          "Overview_Step": {
+            "type": "step",
+            "fields": {
+              "Order_Summary": {
+                "type": "unspecified"
+              },
+              "Totals_Section": {
+                "type": "unspecified"
+              },
+              "Payment_Information": {
+                "type": "unspecified"
+              },
+              "Shipping_Information": {
+                "type": "unspecified"
+              }
+            },
+            "submit_actions": [
+              {
+                "element_name": "Finish",
+                "on_success": "completes the order and navigates to the confirmation page"
+              },
+              {
+                "element_name": "Cancel",
+                "on_success": "exits checkout"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 7,
+      "module_title": "Checkout - Confirmation",
+      "ast": {
+        "module_name": "Checkout - Confirmation",
+        "components": {
+          "Confirmation_Page": {
+            "type": "unspecified",
+            "submit_actions": [
+              {
+                "element_name": "Back Home",
+                "on_success": "returns to Product Inventory and clears the cart"
+              }
+            ]
+          }
+        }
+      },
+      "attempts": 2
+    },
+    {
+      "module_id": 8,
+      "module_title": "Logout",
+      "ast": {
+        "module_name": "Logout",
+        "components": {
+          "Logout_Action": {
+            "type": "button",
+            "on_success": "ends the session and redirects to the login page",
+            "preconditions": [
+              "user must be logged in"
+            ]
+          }
+        }
+      },
+      "attempts": 1
+    },
+    {
+      "module_id": 9,
+      "module_title": "Reset App State",
+      "ast": {
+        "module_name": "Reset App State",
+        "components": {
+          "Reset_App_State_Button": {
+            "type": "button",
+            "on_success": "clears the cart and resets in-app state",
+            "preconditions": [],
+            "constraints": []
+          }
+        }
+      },
+      "attempts": 1
+    }
+  ]
+}

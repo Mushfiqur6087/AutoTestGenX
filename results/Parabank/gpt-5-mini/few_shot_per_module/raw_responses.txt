@@ -1,0 +1,2870 @@
+=== MODULE: Login ===
+{
+  "module": "Login",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Successful sign in using registered email and valid password",
+      "preconditions": [
+        "User is registered with email 'user@example.com' and password 'P@ssw0rd1'",
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'user@example.com' in the Email/Username field",
+        "2. Enter 'P@ssw0rd1' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Flash message 'Signed in successfully.' is displayed and the user is redirected to the Accounts Overview page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Successful sign in using registered username and valid password",
+      "preconditions": [
+        "User is registered with username 'testuser' and password 'Strong#123'",
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'testuser' in the Email/Username field",
+        "2. Enter 'Strong#123' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Flash message 'Signed in successfully.' is displayed and the user is redirected to the Accounts Overview page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt sign in with incorrect password for existing user",
+      "preconditions": [
+        "User is registered with email 'user@example.com' and password 'P@ssw0rd1'",
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'user@example.com' in the Email/Username field",
+        "2. Enter 'WrongPass!1' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Error message 'Incorrect email or password. Please try again.' is displayed; the Password field is cleared and the user remains on the Login page allowing another attempt",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt sign in with an unregistered email",
+      "preconditions": [
+        "No user exists with email 'noone@example.com'",
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'noone@example.com' in the Email/Username field",
+        "2. Enter 'SomePass#1' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Error message 'Incorrect email or password. Please try again.' is displayed; the Password field is cleared and the user remains on the Login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Submit with invalid email format",
+      "preconditions": [
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'invalid-email-format' in the Email/Username field",
+        "2. Enter 'P@ssw0rd1' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Client-side validation prevents submission and displays an inline error like 'Please enter a valid email address.'; no authentication attempt is sent",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Submit with password shorter than minimum length",
+      "preconditions": [
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'user@example.com' in the Email/Username field",
+        "2. Enter 'Aa1!' (fewer than 8 characters) in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Client-side validation prevents submission and displays an inline error like 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.'; no authentication attempt is sent",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Submit password missing required character classes (no uppercase)",
+      "preconditions": [
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'user@example.com' in the Email/Username field",
+        "2. Enter 'p@ssw0rd!' (no uppercase letter) in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Client-side validation prevents submission and displays an inline error like 'Password must include uppercase, lowercase, number, and special character.'; no authentication attempt is sent",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Sign in with password at exact minimum length (8) meeting all complexity rules",
+      "preconditions": [
+        "User is registered with email 'minpass@example.com' and password 'Aa1!aa11' (8 characters, includes uppercase, lowercase, number, special char)",
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'minpass@example.com' in the Email/Username field",
+        "2. Enter 'Aa1!aa11' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Flash message 'Signed in successfully.' is displayed and the user is redirected to the Accounts Overview page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Attempt sign in using SQL injection strings in input fields",
+      "preconditions": [
+        "User is on the Login page",
+        "Registered users exist in the database"
+      ],
+      "steps": [
+        "1. Enter \"' OR '1'='1@example.com\" in the Email/Username field",
+        "2. Enter \"' OR '1'='1\" in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "System securely validates inputs; authentication fails and the generic error 'Incorrect email or password. Please try again.' is displayed; the Password field is cleared and no database compromise occurs",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Submit the form with Email/Username field empty",
+      "preconditions": [
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Leave the Email/Username field empty",
+        "2. Enter 'P@ssw0rd1' in the Password field",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Inline validation displays 'Email or Username is required.' and submission is prevented; user remains on the Login page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-007",
+      "category": "negative",
+      "test_case": "Submit the form with Password field empty",
+      "preconditions": [
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'user@example.com' in the Email/Username field",
+        "2. Leave the Password field empty",
+        "3. Click 'Sign In'"
+      ],
+      "expected_result": "Inline validation displays 'Password is required.' and submission is prevented; user remains on the Login page",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Fail authentication once and verify the password field is cleared and user can immediately retry",
+      "preconditions": [
+        "User is registered with email 'user@example.com' and password 'P@ssw0rd1'",
+        "User is on the Login page"
+      ],
+      "steps": [
+        "1. Enter 'user@example.com' in the Email/Username field",
+        "2. Enter 'WrongPass!1' in the Password field",
+        "3. Click 'Sign In' and observe the failure",
+        "4. Re-enter the correct password 'P@ssw0rd1' in the Password field",
+        "5. Click 'Sign In' again"
+      ],
+      "expected_result": "After step 3 the message 'Incorrect email or password. Please try again.' is displayed and the Password field is cleared; after step 5, with correct credentials, flash 'Signed in successfully.' appears and user is redirected to Accounts Overview",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "high_priority": 8,
+    "medium_priority": 4,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Register ===
+{
+  "module": "Register",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Successful registration with all valid inputs",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Enter First Name: John",
+        "2. Enter Last Name: Doe",
+        "3. Enter Street Address: 123 Main St",
+        "4. Enter City: Springfield",
+        "5. Select State: IL",
+        "6. Enter ZIP Code: 62704",
+        "7. Enter Phone Number: 2175551234",
+        "8. Enter SSN: 123456789",
+        "9. Enter Username: john.doe@example.com",
+        "10. Enter Password: SecurePass1",
+        "11. Enter Confirm Password: SecurePass1",
+        "12. Click Register"
+      ],
+      "expected_result": "Form accepts input; phone number displays as (217) 555-1234 and SSN displays as 123-45-6789; page shows 'Account created successfully — please sign in' and user is redirected to the Login page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Successful registration with password at minimum length (8 characters)",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values",
+        "2. Enter Password: Abcdef12 (8 characters)",
+        "3. Enter Confirm Password: Abcdef12",
+        "4. Click Register"
+      ],
+      "expected_result": "Registration succeeds; system shows 'Account created successfully — please sign in' and redirects to Login",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Successful registration with ZIP+4 format",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values",
+        "2. Enter ZIP Code: 12345-6789",
+        "3. Click Register"
+      ],
+      "expected_result": "ZIP+4 accepted; registration succeeds with 'Account created successfully — please sign in' and redirect to Login",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Automatic formatting applied for Phone and SSN when digits are pasted",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Paste 9876543210 into Phone Number field",
+        "2. Paste 987654321 into SSN field",
+        "3. Fill remaining required fields with valid values",
+        "4. Click Register"
+      ],
+      "expected_result": "Phone displays as (987) 654-3210 and SSN as 987-65-4321; registration succeeds and user is redirected to Login",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Submission fails when a required field (First Name) is empty",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Leave First Name blank",
+        "2. Fill all other required fields with valid values",
+        "3. Click Register"
+      ],
+      "expected_result": "Form validation prevents submission; an inline error 'First Name is required' is displayed and user remains on Register page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Invalid Username (not an email) is rejected",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values except Username",
+        "2. Enter Username: johndoe (missing @ and domain)",
+        "3. Click Register"
+      ],
+      "expected_result": "Inline error 'Enter a valid email address' is shown for Username; registration is not processed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Phone Number with too few digits is rejected",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values except Phone Number",
+        "2. Enter Phone Number: 1234567 (7 digits)",
+        "3. Click Register"
+      ],
+      "expected_result": "Inline error 'Enter a valid phone number (e.g., (123) 456-7890)' is displayed; submission blocked",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "ZIP Code with letters is rejected",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values except ZIP Code",
+        "2. Enter ZIP Code: 12A45",
+        "3. Click Register"
+      ],
+      "expected_result": "Inline error 'Enter a valid ZIP Code (12345 or 12345-6789)' is shown; registration not allowed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "SSN with wrong pattern is rejected",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values except SSN",
+        "2. Enter SSN: 12345678 (8 digits)",
+        "3. Click Register"
+      ],
+      "expected_result": "Inline error 'Enter a valid SSN (e.g., 123-45-6789)' is displayed; submission blocked",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Password shorter than 8 characters is rejected",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values except Password",
+        "2. Enter Password: Abc123 (6 characters)",
+        "3. Enter Confirm Password: Abc123",
+        "4. Click Register"
+      ],
+      "expected_result": "Inline error 'Password must be at least 8 characters' is shown; registration is not processed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-007",
+      "category": "negative",
+      "test_case": "Confirm Password not matching Password is rejected",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill all required fields with valid values",
+        "2. Enter Password: SecurePass1",
+        "3. Enter Confirm Password: SecurePass2",
+        "4. Click Register"
+      ],
+      "expected_result": "Inline error 'Passwords do not match' is shown next to Confirm Password; submission blocked",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Leading and trailing spaces are trimmed from text fields on submission",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Enter First Name: '  Alice  ' (with leading/trailing spaces)",
+        "2. Enter other required fields with valid values (some with extra spaces)",
+        "3. Click Register"
+      ],
+      "expected_result": "System trims whitespace and accepts inputs if otherwise valid; registration succeeds and user is redirected to Login",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Very long names handled (e.g., 255 characters)",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Enter First Name with 255 characters",
+        "2. Enter Last Name with 255 characters",
+        "3. Fill remaining required fields with valid values",
+        "4. Click Register"
+      ],
+      "expected_result": "Form either accepts and persists the long names or shows a clear validation message specifying maximum length; UI remains stable (no crash/overflow)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Boundary ZIP codes (00000 and 99999) accepted if valid format",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Fill required fields with valid values using ZIP Code: 00000",
+        "2. Click Register and observe result",
+        "3. Repeat with ZIP Code: 99999"
+      ],
+      "expected_result": "Both 00000 and 99999 are treated as syntactically valid ZIP codes; registration succeeds if all other validations pass",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Pasting fully formatted Phone and SSN (with separators) is accepted and preserved",
+      "preconditions": [
+        "User is on the Register page"
+      ],
+      "steps": [
+        "1. Paste Phone Number as (415) 123-4567 into Phone field",
+        "2. Paste SSN as 321-54-9876 into SSN field",
+        "3. Fill remaining fields with valid values",
+        "4. Click Register"
+      ],
+      "expected_result": "System accepts formatted Phone and SSN without altering content; registration succeeds and user is redirected to Login",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "high_priority": 8,
+    "medium_priority": 6,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Accounts Overview ===
+{
+  "module": "Accounts Overview",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Dashboard displays welcome message and accounts table with footer total",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to the Accounts Overview page from the dashboard or main menu",
+        "2. Observe the page header and accounts table"
+      ],
+      "expected_result": "A welcome message containing the user's full name is visible (e.g., 'Welcome John Smith!'). The accounts table is displayed with columns: Account Number, Account Type, Current Balance, Account Status, Open Date. A footer row is visible showing the total balance across all accounts. Table rows are present for each customer account.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Account numbers are masked showing only the last 4 digits",
+      "preconditions": [
+        "User logged in",
+        "At least one account exists with a known account number ending in 5001"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. Locate the row for the account with the known account number",
+        "3. Inspect the Account Number column value"
+      ],
+      "expected_result": "The account number is masked for security and displays only the last four digits, e.g., '****5001' (no full account number is visible).",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Rows are ordered by account creation date (earliest first)",
+      "preconditions": [
+        "User logged in",
+        "User has at least three accounts with distinct open dates"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. Note the Open Date values for the first, middle and last rows",
+        "3. Verify the ordering of rows by open date"
+      ],
+      "expected_result": "Rows are ordered by Open Date ascending (earliest creation date appears in the first row and the latest in the last row).",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Active accounts show 'Active' status badge",
+      "preconditions": [
+        "User logged in",
+        "At least one account exists and is in Active status"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. Locate an account known to be Active",
+        "3. Inspect the Account Status column for that row"
+      ],
+      "expected_result": "The Account Status column shows an 'Active' badge for the active account and the badge styling is visible as per design (clear label indicating Active).",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to access Accounts Overview when not logged in",
+      "preconditions": [
+        "User not logged in"
+      ],
+      "steps": [
+        "1. Open the Accounts Overview URL directly in a new browser session without logging in",
+        "2. Observe the behavior"
+      ],
+      "expected_result": "User is redirected to the login page (or shown an authentication required message). Accounts Overview content is not displayed.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Account full numbers are not exposed in the UI",
+      "preconditions": [
+        "User logged in",
+        "Tester has access to the full account numbers via backend/test data for verification"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. For each displayed account row, compare visible Account Number text with the known full account number",
+        "3. Verify no full account number digits beyond the last four are present in the page source or visible text"
+      ],
+      "expected_result": "No account shows its unmasked full account number in the UI or page source. Only masked forms that reveal at most the last four digits are present. If any full account number appears, it is a failure.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "User with no accounts sees appropriate empty state and total zero",
+      "preconditions": [
+        "User logged in",
+        "User has zero bank accounts"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. Observe the accounts table area and footer"
+      ],
+      "expected_result": "Table displays a clear empty state (e.g., 'No accounts found' or empty table body). Footer displays a total balance of 0.00 (or equivalent formatted zero) and no account rows are present.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Accounts with negative balances and cents sum correctly in footer",
+      "preconditions": [
+        "User logged in",
+        "User has multiple accounts including negative balances and balances with cents (e.g., -12.34, 100.56)"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. Note each account's Current Balance including sign and cents",
+        "3. Calculate the expected total by summing the individual balances to two decimal places",
+        "4. Compare the calculated total with the footer total displayed"
+      ],
+      "expected_result": "Each account balance is displayed with correct sign and two-decimal formatting. The footer total equals the arithmetic sum of all displayed balances to two decimal places. Negative totals are displayed correctly (with a minus sign or parentheses) and formatting is consistent.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Large number of accounts still shows correct ordering and accurate footer total",
+      "preconditions": [
+        "User logged in",
+        "User has a large number of accounts (e.g., 1000 test accounts) in test environment"
+      ],
+      "steps": [
+        "1. Navigate to Accounts Overview",
+        "2. Verify that the first and last visible rows correspond to the earliest and latest open dates respectively",
+        "3. Sample-check several rows across the table for ordering consistency",
+        "4. Optionally compute the sum of a subset of visible balances and compare with the corresponding portion of the footer total if pagination/virtualization is present"
+      ],
+      "expected_result": "Page loads and renders the accounts list. The ordering by open date remains earliest-first for the visible rows. The footer shows the total balance which matches the sum of all accounts (for environments that display the full total regardless of paging). UI remains usable (no critical rendering errors).",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "high_priority": 5,
+    "medium_priority": 3,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Open New Account ===
+{
+  "module": "Open New Account",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Open a Checking account with a valid deposit above minimum",
+      "preconditions": [
+        "User logged in",
+        "At least one funding account exists with a balance of at least $50"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Enter 50 in the Initial Deposit Amount field",
+        "4. Select the funding account with at least $50 from the Funding Source Account dropdown",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Page shows 'Account opened successfully!' and redirects to Accounts Overview; the new Checking account appears and the funding account balance is reduced by $50",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Open a Savings account with a valid deposit above minimum",
+      "preconditions": [
+        "User logged in",
+        "At least one funding account exists with a balance of at least $150"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Savings account card",
+        "3. Enter 150 in the Initial Deposit Amount field",
+        "4. Select the funding account with at least $150 from the Funding Source Account dropdown",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Page shows 'Account opened successfully!' and redirects to Accounts Overview; the new Savings account appears and the funding account balance is reduced by $150",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to open account without selecting account type",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with sufficient balance"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Do not select Checking or Savings",
+        "3. Enter 50 in the Initial Deposit Amount field",
+        "4. Select a funding account from the Funding Source Account dropdown",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Real-time or submission validation shows an error like 'Please select an account type' and account is not created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Enter an initial deposit below the minimum required for selected account",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with sufficient balance"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Enter 20 in the Initial Deposit Amount field (below $25 minimum)",
+        "4. Select a funding account",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Validation error is displayed stating the minimum deposit (e.g., 'Deposit must be at least $25 for Checking'); account is not created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Enter a non-numeric value in Initial Deposit Amount",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Type 'abc' into the Initial Deposit Amount field",
+        "4. Select a funding account",
+        "5. Observe real-time validation and attempt to click Open Account"
+      ],
+      "expected_result": "Real-time validation shows an error like 'Enter a valid numeric amount' and submission is blocked; no account is created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt to open account when funding account has insufficient balance",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with a known balance of $75"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Savings account card",
+        "3. Enter 100 in the Initial Deposit Amount field",
+        "4. Select the funding account that has only $75",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Error message is displayed such as 'Insufficient funds in funding account' and account creation is prevented",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Attempt to open account without selecting a funding source",
+      "preconditions": [
+        "User logged in",
+        "At least one account could be used as funding but none selected"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Enter 30 in the Initial Deposit Amount field",
+        "4. Do not select any option in the Funding Source Account dropdown",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Validation error appears stating funding source is required (e.g., 'Please select a funding account'); account is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Open a Savings account with the exact minimum deposit amount ($100)",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with at least $100"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Savings account card",
+        "3. Enter 100 in the Initial Deposit Amount field",
+        "4. Select the funding account with at least $100",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Page shows 'Account opened successfully!' and redirects to Accounts Overview; the new Savings account appears",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Open a Checking account with the exact minimum deposit amount ($25)",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with at least $25"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Enter 25 in the Initial Deposit Amount field",
+        "4. Select the funding account with at least $25",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Page shows 'Account opened successfully!' and redirects to Accounts Overview; the new Checking account appears",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Enter a valid deposit amount including cents (decimal) and open account",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with sufficient balance"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Enter 25.50 in the Initial Deposit Amount field",
+        "4. Select a funding account with at least $25.50",
+        "5. Click Open Account"
+      ],
+      "expected_result": "Page shows 'Account opened successfully!' and redirects to Accounts Overview; new account appears and funding balance reduced by $25.50",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Attempt to open account with a very large deposit amount to test upper limits",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with a very large balance (or test environment supports large amounts)"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Savings account card",
+        "3. Enter 1000000000 in the Initial Deposit Amount field",
+        "4. Select a funding account capable of covering the amount",
+        "5. Click Open Account"
+      ],
+      "expected_result": "System accepts the numeric amount if within application limits and shows 'Account opened successfully!' and redirects; if application limit is exceeded, a clear validation error is shown (e.g., 'Amount exceeds allowed maximum')",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-005",
+      "category": "edge",
+      "test_case": "Leave Initial Deposit Amount empty and observe real-time validation",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Clear the Initial Deposit Amount field (leave empty)",
+        "4. Select a funding account",
+        "5. Attempt to click Open Account"
+      ],
+      "expected_result": "Real-time validation indicates the deposit is required (e.g., 'Initial deposit is required') and submission is blocked",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-006",
+      "category": "edge",
+      "test_case": "Enter a deposit amount with more than two decimal places",
+      "preconditions": [
+        "User logged in",
+        "A funding account exists with sufficient balance"
+      ],
+      "steps": [
+        "1. Navigate to Open New Account",
+        "2. Select the Checking account card",
+        "3. Enter 25.999 in the Initial Deposit Amount field",
+        "4. Select a funding account",
+        "5. Click Open Account or observe real-time validation"
+      ],
+      "expected_result": "System shows validation error or normalizes format (expected behaviour: validation error 'Enter a valid currency amount' or automatic rounding to two decimals with confirmation); account creation only proceeds if input is accepted or adjusted to a valid currency format",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "high_priority": 5,
+    "medium_priority": 6,
+    "low_priority": 2
+  }
+}
+
+=== MODULE: Transfer Funds ===
+{
+  "module": "Transfer Funds",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Transfer funds between two internal ParaBank accounts successfully",
+      "preconditions": [
+        "User logged in",
+        "At least two Checking or Savings accounts exist with sufficient balance (e.g., Source balance >= transfer amount)"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'My ParaBank Account' radio button",
+        "3. Enter 250.00 in the Transfer Amount field",
+        "4. Select <source account> from the Source Account dropdown",
+        "5. Select <destination account> from the Destination Account dropdown",
+        "6. Click Transfer"
+      ],
+      "expected_result": "Page displays 'Transfer completed successfully.' with a transaction ID; Accounts Overview shows the source account balance decreased and the destination account balance increased by $250.00",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Transfer funds to an external account with matching account numbers",
+      "preconditions": [
+        "User logged in",
+        "At least one Checking or Savings account exists with sufficient balance",
+        "External recipient account number available"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'External Account' radio button",
+        "3. Enter 100.00 in the Transfer Amount field",
+        "4. Select <source account> from the Source Account dropdown",
+        "5. Enter 12345678 in the Account Number field",
+        "6. Enter 12345678 in the Confirm Account Number field",
+        "7. Click Transfer"
+      ],
+      "expected_result": "Page displays 'Transfer completed successfully.' with a transaction ID; source account balance decreased by $100.00 and transfer is recorded as an external transaction",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt a transfer with amount exceeding source account balance",
+      "preconditions": [
+        "User logged in",
+        "A Checking or Savings account exists with a known balance (e.g., $500.00)"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'My ParaBank Account' radio button",
+        "3. Enter 1000.00 in the Transfer Amount field (greater than the known balance)",
+        "4. Select the source and a destination account",
+        "5. Click Transfer"
+      ],
+      "expected_result": "An error message 'Insufficient funds' is displayed; no transfer is processed and balances remain unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "External transfer with non-matching account numbers",
+      "preconditions": [
+        "User logged in",
+        "At least one Checking or Savings account exists with sufficient balance"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'External Account' radio button",
+        "3. Enter 50.00 in the Transfer Amount field",
+        "4. Select <source account> from the Source Account dropdown",
+        "5. Enter 11112222 in the Account Number field",
+        "6. Enter 22223333 in the Confirm Account Number field (does not match)",
+        "7. Click Transfer"
+      ],
+      "expected_result": "An error message 'Account numbers do not match.' is displayed; no transfer is processed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt transfer with empty Transfer Amount field",
+      "preconditions": [
+        "User logged in",
+        "At least one Checking or Savings account exists"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select either transfer type (Internal or External)",
+        "3. Leave Transfer Amount field blank",
+        "4. Select source and destination (or enter external account numbers if External selected)",
+        "5. Click Transfer"
+      ],
+      "expected_result": "A validation error is shown such as 'Please enter a valid transfer amount' and the transfer is not submitted",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt transfer with zero or negative amount",
+      "preconditions": [
+        "User logged in",
+        "At least one Checking or Savings account exists"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'My ParaBank Account' radio button",
+        "3. Enter 0.00 (or -10.00) in the Transfer Amount field",
+        "4. Select source and destination accounts",
+        "5. Click Transfer"
+      ],
+      "expected_result": "A validation error is displayed such as 'Transfer amount must be greater than 0' and the transfer is not processed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "User has no eligible source accounts (no Checking or Savings) and attempts transfer",
+      "preconditions": [
+        "User logged in",
+        "User has accounts, but none are Checking or Savings (e.g., only Loan or Credit Card accounts exist)"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Observe the Source Account dropdown or transfer form"
+      ],
+      "expected_result": "Source Account dropdown is empty or disabled and the UI shows an explanatory message such as 'No eligible source accounts available' or prevents submission; user cannot initiate a transfer",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Transfer an amount equal to the source account's entire balance",
+      "preconditions": [
+        "User logged in",
+        "A Checking or Savings account exists with a known balance (e.g., $500.00)"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'My ParaBank Account' radio button",
+        "3. Enter 500.00 (the exact account balance) in the Transfer Amount field",
+        "4. Select the source and a destination account",
+        "5. Click Transfer"
+      ],
+      "expected_result": "If allowed by business rules, page shows 'Transfer completed successfully.' with a transaction ID; Accounts Overview shows the source account balance reduced to $0.00 and destination increased by $500.00. If disallowed, an 'Insufficient funds' or equivalent error is shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Source Account dropdown only lists Checking and Savings accounts",
+      "preconditions": [
+        "User logged in",
+        "User has multiple account types including Checking, Savings, Loan, Credit Card"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Open the Source Account dropdown"
+      ],
+      "expected_result": "Dropdown contains only the user's Checking and Savings accounts; Loan, Credit Card and other account types are not listed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Transfer type toggle updates destination input fields correctly",
+      "preconditions": [
+        "User logged in",
+        "At least one eligible source account exists"
+      ],
+      "steps": [
+        "1. Navigate to Transfer Funds",
+        "2. Select 'My ParaBank Account' radio button and observe destination input (destination dropdown visible, external account fields hidden)",
+        "3. Select 'External Account' radio button and observe destination input (Account Number and Confirm Account Number fields visible, destination dropdown hidden)",
+        "4. Switch back to 'My ParaBank Account' and verify original state is restored"
+      ],
+      "expected_result": "UI shows/hides destination controls according to transfer type selection: internal shows destination account dropdown, external shows account number and confirm account fields; no data leakage between fields and form validation applies correctly",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "high_priority": 5,
+    "medium_priority": 4,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Payments ===
+{
+  "module": "Payments",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Submit a standard successful bill payment",
+      "preconditions": ["User logged in", "At least one source account exists with sufficient balance", "Payee details available"],
+      "steps": [
+        "1. Navigate to the Bill Payment page",
+        "2. Enter a valid Payee Name, Street Address, City, State, ZIP Code, and Phone Number",
+        "3. Enter a valid Payee Account Number and repeat the same number in Confirm Account Number",
+        "4. Enter a Payment Amount less than the source account balance",
+        "5. Select the Source Account from the dropdown",
+        "6. Click Pay"
+      ],
+      "expected_result": "Page displays 'Payment submitted successfully.' with a reference code; Accounts Overview (or account details) shows the source account balance decreased by the payment amount; the bill-payment form remains available/editable",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Submit a payment that equals the exact available balance (exact-fund payment)",
+      "preconditions": ["User logged in", "A source account exists with a known balance X"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Fill in valid payee details",
+        "3. Enter Payee Account Number and Confirm Account Number matching",
+        "4. Enter Payment Amount exactly equal to the source account balance X",
+        "5. Select the source account",
+        "6. Click Pay"
+      ],
+      "expected_result": "Page displays 'Payment submitted successfully.' with a reference code; the source account balance updates to zero (or to allowed minimum) and the payment posts; the form remains editable",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Submit payment using an alternative source account (e.g., Savings)",
+      "preconditions": ["User logged in", "Multiple source accounts exist (Checking and Savings) and the selected Savings account has sufficient funds"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Fill in valid payee details and matching account numbers",
+        "3. Enter a valid Payment Amount within Savings account balance",
+        "4. Select the Savings account from Source Account dropdown",
+        "5. Click Pay"
+      ],
+      "expected_result": "Page displays 'Payment submitted successfully.' with a reference code; the Savings account balance decreases by the payment amount; the other accounts are unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Submit payment with ZIP+4 and formatted phone number accepted",
+      "preconditions": ["User logged in", "Source account with sufficient funds exists"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Enter Payee details using a ZIP+4 format (e.g., 12345-6789) and a phone formatted as (123) 456-7890",
+        "3. Enter matching Payee Account Number and Confirm Account Number",
+        "4. Enter a valid Payment Amount and select Source Account",
+        "5. Click Pay"
+      ],
+      "expected_result": "Page displays 'Payment submitted successfully.' with reference code; payment processes and source account balance updates accordingly; formatted ZIP and phone are accepted",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt payment when Payee Account Number and Confirm Account Number do not match",
+      "preconditions": ["User logged in", "Source account exists with sufficient funds"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Enter valid payee contact and address information",
+        "3. Enter a Payee Account Number and enter a different value in Confirm Account Number",
+        "4. Enter a valid Payment Amount and select Source Account",
+        "5. Click Pay"
+      ],
+      "expected_result": "Inline error 'Account numbers do not match' (or equivalent) is displayed next to the account fields; payment is not submitted; the form remains editable for correction",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt payment with amount exceeding the source account balance (insufficient funds)",
+      "preconditions": ["User logged in", "A source account exists with known balance Y"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Enter valid payee details and matching account numbers",
+        "3. Enter a Payment Amount greater than Y",
+        "4. Select the source account",
+        "5. Click Pay"
+      ],
+      "expected_result": "Inline error 'Insufficient funds' (or equivalent) is displayed; payment is not processed; source account balance remains unchanged; form remains editable",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt payment with missing required field: Payee Name blank",
+      "preconditions": ["User logged in", "Source account exists"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Leave Payee Name blank and fill all other fields with valid values",
+        "3. Enter matching Payee Account Number and Confirm Account Number",
+        "4. Enter a valid Payment Amount and select Source Account",
+        "5. Click Pay"
+      ],
+      "expected_result": "Inline validation error indicating Payee Name is required is displayed; payment is not submitted; form remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt payment with non-numeric characters in Payment Amount",
+      "preconditions": ["User logged in", "Source account exists"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Fill in valid payee details and matching account numbers",
+        "3. Enter a Payment Amount containing letters or symbols (e.g., 'one hundred' or '100,00.00')",
+        "4. Select Source Account",
+        "5. Click Pay"
+      ],
+      "expected_result": "Inline validation error indicating invalid payment amount (must be numeric) is shown; payment not processed; form remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Attempt payment with zero or negative payment amount",
+      "preconditions": ["User logged in", "Source account exists"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Fill in valid payee details and matching account numbers",
+        "3. Enter Payment Amount 0 or a negative value (e.g., -50)",
+        "4. Select Source Account",
+        "5. Click Pay"
+      ],
+      "expected_result": "Inline error indicating payment amount must be greater than zero is displayed; payment not submitted; form remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Attempt payment without selecting a Source Account",
+      "preconditions": ["User logged in", "At least one account exists but user leaves Source Account unselected"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Fill in valid payee details and matching account numbers",
+        "3. Enter a valid Payment Amount",
+        "4. Leave Source Account dropdown unselected",
+        "5. Click Pay"
+      ],
+      "expected_result": "Inline validation error prompting selection of a Source Account is displayed; payment not processed; form remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-007",
+      "category": "negative",
+      "test_case": "Attempt payment with invalid ZIP code format (letters or too short)",
+      "preconditions": ["User logged in", "Source account exists"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Enter payee address with invalid ZIP (e.g., '12AB' or empty)",
+        "3. Fill other fields correctly including matching account numbers and valid amount",
+        "4. Select Source Account and click Pay"
+      ],
+      "expected_result": "Inline validation error indicating invalid ZIP code format is displayed; payment not submitted; form remains editable",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Submit payment with a very long Payee Name (boundary length)",
+      "preconditions": ["User logged in", "Source account with sufficient funds exists"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Enter a Payee Name at an extreme length (e.g., 500 characters) and valid values for other required fields including matching account numbers",
+        "3. Enter a valid Payment Amount and select Source Account",
+        "4. Click Pay"
+      ],
+      "expected_result": "If accepted, page displays 'Payment submitted successfully.' with reference code and balance updates; if rejected, an inline error about Payee Name length appears and the form remains editable. The system must not crash",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Submit payment where Payee Account Number fields include leading/trailing spaces (trim behavior)",
+      "preconditions": ["User logged in", "Source account exists with sufficient funds"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Enter Payee Account Number with leading/trailing spaces and enter the same value (including spaces) in Confirm Account Number",
+        "3. Fill other fields validly and enter Payment Amount within balance",
+        "4. Select Source Account and click Pay"
+      ],
+      "expected_result": "System trims whitespace and either accepts matching account numbers (displays 'Payment submitted successfully.' and updates balance) or displays a clear validation message; form remains editable. No unexpected errors occur",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Submit a minimal valid payment amount ($0.01)",
+      "preconditions": ["User logged in", "Source account exists with at least $0.01"],
+      "steps": [
+        "1. Navigate to Bill Payment",
+        "2. Fill in valid payee details and matching account numbers",
+        "3. Enter Payment Amount as 0.01",
+        "4. Select Source Account and click Pay"
+      ],
+      "expected_result": "Page displays 'Payment submitted successfully.' with a reference code; source account balance decreases by $0.01; form remains editable",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 14,
+    "high_priority": 5,
+    "medium_priority": 7,
+    "low_priority": 2
+  }
+}
+
+=== MODULE: Request Loan ===
+{
+  "module": "Request Loan",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Approve Personal loan with valid amounts and sufficient collateral",
+      "preconditions": [
+        "User logged in",
+        "A Personal loan-eligible collateral account exists with a balance >= 20% of the requested loan amount",
+        "Requested loan amount between $1,000 and $50,000"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Personal' loan card",
+        "3. Enter 10000 in Loan Amount",
+        "4. Enter 2000 in Down Payment (>= 10% and < loan amount)",
+        "5. Select the collateral account with balance >= 20% of 10000 from Collateral Account dropdown",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "Page shows 'Loan approved and created successfully!' and displays new loan account details (loan id, terms, interest rate). Accounts/Loans overview shows the new loan record. (Note: mock system does not debit balances.)",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Approve Auto loan at minimum amount with exact 10% down payment and exact 20% collateral value",
+      "preconditions": [
+        "User logged in",
+        "An Auto loan-eligible collateral account exists with balance exactly 20% of $5,000 (i.e., $1,000)",
+        "Requested loan amount within Auto range ($5,000-$75,000)"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Auto' loan card",
+        "3. Enter 5000 in Loan Amount (Auto minimum)",
+        "4. Enter 500 in Down Payment (exactly 10%)",
+        "5. Select the collateral account with balance $1,000 from Collateral Account dropdown",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "Page shows 'Loan approved and created successfully!' with loan/account details. If credit engine denies (simulated 20% of cases), a denial message will appear — this test expects approval under normal simulated credit conditions.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Approve Home loan at maximum amount with generous down payment and collateral",
+      "preconditions": [
+        "User logged in",
+        "A collateral account exists with balance >= 20% of $500,000",
+        "Requested loan amount within Home range ($50,000-$500,000)"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Home' loan card",
+        "3. Enter 500000 in Loan Amount (Home maximum)",
+        "4. Enter 100000 in Down Payment (>= 10% and < loan amount)",
+        "5. Select the collateral account with sufficient balance (>= 100,000) from Collateral Account dropdown",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "Page shows 'Loan approved and created successfully!' and displays the created loan account details and terms. (Mock system: no balances are debited.)",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Reject loan request with amount below Personal minimum",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Personal' loan card",
+        "3. Enter 500 in Loan Amount (below $1,000 minimum)",
+        "4. Enter 50 in Down Payment",
+        "5. Select any collateral account",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "The system displays a validation error indicating the loan amount is out of range (e.g., 'Loan amount must be between $1,000 and $50,000'). No loan is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Reject loan request with amount above Auto maximum",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Auto' loan card",
+        "3. Enter 100000 in Loan Amount (above Auto max $75,000)",
+        "4. Enter 10000 in Down Payment",
+        "5. Select any collateral account",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "The system displays a validation error indicating the loan amount is out of range (e.g., 'Loan amount must be between $5,000 and $75,000'). No loan is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Reject loan when Down Payment is equal to or greater than Loan Amount",
+      "preconditions": [
+        "User logged in",
+        "Loan type selected supports given loan amount"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select any loan card (e.g., Personal)",
+        "3. Enter 10000 in Loan Amount",
+        "4. Enter 10000 in Down Payment (equal to loan amount)",
+        "5. Select any collateral account",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "The system displays an error indicating Down Payment must be less than Loan Amount (e.g., 'Down payment must be less than the loan amount'). No loan is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Reject loan when Down Payment is below required minimum (less than 10%)",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Personal' loan card",
+        "3. Enter 10000 in Loan Amount",
+        "4. Enter 500 in Down Payment (5%)",
+        "5. Select a collateral account with sufficient balance",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "The system rejects the request with a message about minimum down payment (e.g., 'Minimum down payment is 10% of the loan amount') or credit engine denies due to insufficient down payment. No loan is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Deny loan due to inadequate collateral value (collateral balance < 20% of loan amount)",
+      "preconditions": [
+        "User logged in",
+        "A collateral account exists but its balance is less than 20% of the requested loan amount"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select any loan card (e.g., Home)",
+        "3. Enter 100000 in Loan Amount",
+        "4. Enter 20000 in Down Payment (>=10%)",
+        "5. Select the collateral account with balance less than 20,000 from Collateral Account dropdown",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "The request is denied with a specific message like 'Inadequate collateral value' or a validation preventing submission. No loan is created.",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Attempt to submit without selecting a collateral account",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select a loan card (any type)",
+        "3. Enter a valid Loan Amount and Down Payment",
+        "4. Leave Collateral Account dropdown unselected or at default 'Select account'",
+        "5. Click Apply / Submit"
+      ],
+      "expected_result": "The system shows a validation error prompting selection of a collateral account (e.g., 'Please select a collateral account'). No loan is created.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Request Personal loan at exact minimum with exact boundary down payment and collateral",
+      "preconditions": [
+        "User logged in",
+        "A collateral account exists with balance exactly 20% of $1,000 (i.e., $200)"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Personal' loan card",
+        "3. Enter 1000 in Loan Amount (exact minimum)",
+        "4. Enter 100 in Down Payment (exactly 10%)",
+        "5. Select the collateral account with balance $200 from Collateral Account dropdown",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "If credit engine approves (simulated 80% chance), page shows 'Loan approved and created successfully!' and displays loan details. If denied, a specific denial reason (e.g., 'Insufficient credit history') is displayed. No balances are debited in either case.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Accept Loan Amounts with decimal/cents values",
+      "preconditions": [
+        "User logged in",
+        "Loan type chosen permits the entered decimal amount within allowed range"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Personal' loan card",
+        "3. Enter 10000.50 in Loan Amount (decimal value within range)",
+        "4. Enter 1500.25 in Down Payment (>=10% and < loan amount)",
+        "5. Select a collateral account with sufficient balance",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "System accepts decimal amounts; either shows 'Loan approved and created successfully!' with loan details if approved by credit engine or shows specific denial message. Validation does not reject due to presence of cents.",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Reject non-numeric input in Loan Amount field",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select any loan card",
+        "3. Enter 'ten thousand' or '10,000abc' in Loan Amount",
+        "4. Enter a valid numeric Down Payment",
+        "5. Select a collateral account",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "The system shows a validation error indicating loan amount must be numeric (e.g., 'Please enter a valid numeric loan amount'). No loan is created.",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Home loan at maximum boundary with exact 10% down payment and exact 20% collateral",
+      "preconditions": [
+        "User logged in",
+        "A collateral account exists with balance exactly 20% of $500,000 (i.e., $100,000)"
+      ],
+      "steps": [
+        "1. Navigate to Request Loan",
+        "2. Select the 'Home' loan card",
+        "3. Enter 500000 in Loan Amount (exact maximum)",
+        "4. Enter 50000 in Down Payment (exactly 10%)",
+        "5. Select the collateral account with balance $100,000 from Collateral Account dropdown",
+        "6. Click Apply / Submit"
+      ],
+      "expected_result": "If credit engine approves, page shows 'Loan approved and created successfully!' with loan/account details. If denied, a specific denial reason is shown such as 'Insufficient credit history' or similar. The system validates boundary values correctly.",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "high_priority": 7,
+    "medium_priority": 5,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Update Contact Info ===
+{
+  "module": "Update Contact Info",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Update a single contact field (Phone Number) with a valid value",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. On the Customer Profile page, locate the Phone Number field",
+        "2. Replace the existing phone number with a valid 10-digit number (e.g. 5551234567)",
+        "3. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline success message 'Profile updated successfully.' is shown; the page refreshes and the Phone Number displays the new value; no error banners or highlighted fields are present",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Update multiple contact fields with valid values",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Change First Name, Last Name, Street Address, City and State to valid new values",
+        "2. Enter a valid 5-digit ZIP code (e.g. 12345) and a valid phone number",
+        "3. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline success message 'Profile updated successfully.' is shown; the page refreshes and all updated fields display the new values; no fields are highlighted and no error banner is displayed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Submit the Update Profile form without changing any values",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page and fields are pre-filled"
+      ],
+      "steps": [
+        "1. Confirm all pre-filled fields have valid values",
+        "2. Click the 'Update Profile' button without changing any field"
+      ],
+      "expected_result": "An inline success message 'Profile updated successfully.' is shown; the page refreshes and the displayed data remains unchanged; no error banners or highlighted fields are present",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to update profile with First Name left blank",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Clear the First Name field so it is empty",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline error banner is displayed and the First Name field is highlighted with an inline message indicating the field is required (e.g. 'First Name is required'); the profile is not updated and existing data remains unchanged",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to update profile with invalid ZIP code (non-numeric)",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Enter 'ABCDE' into the ZIP Code field",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline error banner is displayed and the ZIP Code field is highlighted with a validation message indicating invalid ZIP format (e.g. 'ZIP code is invalid'); the profile is not updated",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to update profile with invalid Phone Number (too short and containing letters)",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Enter '12ab' into the Phone Number field",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline error banner is displayed and the Phone Number field is highlighted with a validation message indicating invalid phone number format (e.g. 'Phone number is invalid'); the profile is not updated",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt to update profile with an invalid State value (not in allowed list)",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Enter 'ZZZZ' (an invalid state code/name) into the State field",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline error banner is displayed and the State field is highlighted with a validation message indicating invalid state selection; the profile is not updated",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Update Phone Number with common formatted value including parentheses and dashes",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Enter '(123) 456-7890' into the Phone Number field",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "An inline success message 'Profile updated successfully.' is shown and the page refreshes; the Phone Number displays the value in an acceptable format (either preserved or normalized) and no error is shown",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Update names using very long input at system boundary length",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields",
+        "A test value equal to the application's maximum expected length is available (e.g. 100 characters)"
+      ],
+      "steps": [
+        "1. Enter a 100-character string into First Name and Last Name fields",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "If within allowed limits the inline success message 'Profile updated successfully.' is shown and the page refreshes showing the long names; if the length exceeds allowed maximum, an inline error banner appears and the name fields are highlighted with a length validation message; data is not updated in that case",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Enter a 9-digit ZIP code with hyphen (ZIP+4) and verify acceptance",
+      "preconditions": [
+        "User logged in",
+        "User is on the Customer Profile page with pre-filled fields"
+      ],
+      "steps": [
+        "1. Enter '12345-6789' into the ZIP Code field",
+        "2. Click the 'Update Profile' button"
+      ],
+      "expected_result": "If the application supports ZIP+4, an inline success message 'Profile updated successfully.' is shown and the page refreshes showing the ZIP as entered or normalized; if not supported, an inline error banner and ZIP field highlight indicate invalid ZIP format; profile is updated only on success",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "high_priority": 5,
+    "medium_priority": 5,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Manage Cards ===
+{
+  "module": "Manage Cards",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Request a Debit card with a complete shipping address and eligible account",
+      "preconditions": [
+        "User logged in",
+        "User has at least one linked account in good standing",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Request card, select Card Type = Debit",
+        "2. Select an Account to Link that is in good standing",
+        "3. Enter a complete Shipping Address (street, city, state, ZIP, country)",
+        "4. Click Request Card"
+      ],
+      "expected_result": "Page shows message 'Card request submitted successfully.' with a tracking ID; a card-request ticket is opened in the system",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Request a Credit card for eligible account and verify confirmation",
+      "preconditions": [
+        "User logged in",
+        "User has at least one account eligible for a credit card",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Request card, select Card Type = Credit",
+        "2. Select eligible Account to Link",
+        "3. Enter a complete Shipping Address",
+        "4. Click Request Card"
+      ],
+      "expected_result": "Confirmation message 'Card request submitted successfully.' with a tracking ID is displayed; linked account is validated and ticket created",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Update existing card controls: set valid spending limit, add travel notice, freeze card",
+      "preconditions": [
+        "User logged in",
+        "At least one active card exists and appears in Select Existing Card dropdown",
+        "Policy maximum spending limit is known"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing Active card from the dropdown",
+        "2. Enter a New Spending Limit within the allowed policy (e.g., less than the max)",
+        "3. Enter a Travel Notice: Start Date = tomorrow, End Date = 7 days from tomorrow, add destinations",
+        "4. Set Card Status = Frozen",
+        "5. Click Update Controls"
+      ],
+      "expected_result": "Page displays 'Card controls updated successfully.'; the card's spending limit, travel notice, and status reflect the changes; no validation errors are shown",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Reactivate a Frozen card to Active when allowed",
+      "preconditions": [
+        "User logged in",
+        "User has a card currently in Frozen status",
+        "No security holds prevent reactivation"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select the Frozen card from the dropdown",
+        "2. Set Card Status = Active",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "Page displays 'Card controls updated successfully.'; the card status is updated to Active and the form remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to request a card with an incomplete shipping address",
+      "preconditions": [
+        "User logged in",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Request card, select Card Type and select an Account to Link",
+        "2. Enter a Shipping Address missing required fields (e.g., no ZIP or no street)",
+        "3. Click Request Card"
+      ],
+      "expected_result": "Inline validation error(s) highlight the missing address fields (e.g., 'Shipping address incomplete'); no ticket is created and the form remains editable",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to request a card for an account not in good standing",
+      "preconditions": [
+        "User logged in",
+        "User has at least one account in bad standing (e.g., blocked or delinquent)",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Request card, select Card Type",
+        "2. Select the account that is not in good standing from Account to Link",
+        "3. Enter a complete Shipping Address",
+        "4. Click Request Card"
+      ],
+      "expected_result": "An error message is displayed such as 'Selected account is not eligible for card requests'; no ticket is opened and the Card Request form remains editable",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to update controls with a spending limit above policy maximum",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists and policy maximum spending limit is known",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter a New Spending Limit greater than the policy maximum",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "Inline validation error appears near the spending limit field stating limit exceeds policy (e.g., 'Limit exceeds allowed maximum'); the form remains editable and no update is applied",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Enter an invalid travel date range (end date before start date)",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter Travel Notice Start Date = 2026-06-10 and End Date = 2026-06-05 (end before start)",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "Inline validation error appears near the travel dates (e.g., 'End date must be on or after Start date'); update is rejected and form stays editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Enter non-numeric characters in the New Spending Limit field",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter invalid non-numeric input in New Spending Limit (e.g., 'five thousand')",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "Inline validation error indicates invalid numeric input (e.g., 'Enter a valid numeric amount'); the update is not applied and the field remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Attempt to update controls without selecting an existing card",
+      "preconditions": [
+        "User logged in",
+        "Manage Cards page is open",
+        "Select Existing Card dropdown default is 'Select' or empty"
+      ],
+      "steps": [
+        "1. In the Card Controls card, leave Select Existing Card unselected",
+        "2. Enter a valid New Spending Limit and/or other fields",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "Inline or banner error indicates a card must be selected (e.g., 'Please select a card to update'); no update occurs and the form remains editable",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Request a card with a maximum-length shipping address",
+      "preconditions": [
+        "User logged in",
+        "Manage Cards page is open",
+        "System's maximum address field length is known"
+      ],
+      "steps": [
+        "1. In the Card Request card, select Card Type and Account to Link",
+        "2. Enter a Shipping Address where one or more fields use the maximum allowed length (e.g., very long street name)",
+        "3. Click Request Card"
+      ],
+      "expected_result": "If within limits, 'Card request submitted successfully.' with tracking ID is shown; input is accepted without truncation or unexpected errors. If beyond limits, inline validation identifies the specific field length violation",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Request a card with shipping address containing special/unicode characters",
+      "preconditions": [
+        "User logged in",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Request card, select Card Type and Account to Link",
+        "2. Enter a Shipping Address containing special characters and Unicode (e.g., é, 漢字, emojis)",
+        "3. Click Request Card"
+      ],
+      "expected_result": "Address is accepted if allowed; 'Card request submitted successfully.' is shown. If characters are disallowed, an inline validation error is shown explaining allowed characters",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Set New Spending Limit equal to the policy maximum (boundary)",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists",
+        "Policy maximum spending limit is known"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter New Spending Limit equal to the policy maximum",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "Page displays 'Card controls updated successfully.'; the spending limit is set to the maximum without validation error",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Set New Spending Limit to zero to test boundary behavior",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists",
+        "Business rule about zero limits is known (allowed or disallowed)"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter New Spending Limit = 0",
+        "3. Click Update Controls"
+      ],
+      "expected_result": "If zero is allowed, 'Card controls updated successfully.' and limit is set to 0; if disallowed, inline validation explains minimum allowed value and update is rejected",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-005",
+      "category": "edge",
+      "test_case": "Create a travel notice with start and end dates equal (single-day travel)",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter Travel Notice Start Date = 2026-06-10 and End Date = 2026-06-10",
+        "3. Add one or more destinations",
+        "4. Click Update Controls"
+      ],
+      "expected_result": "If single-day travel is allowed, 'Card controls updated successfully.' and travel notice is recorded; if not allowed, inline validation explains the rule",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "category": "edge",
+      "test_case": "Create a travel notice with a very long list of destinations",
+      "preconditions": [
+        "User logged in",
+        "At least one card exists",
+        "Manage Cards page is open"
+      ],
+      "steps": [
+        "1. In the Card Controls card, select an existing card",
+        "2. Enter valid travel dates",
+        "3. Enter a long list of destinations (many entries or a long string) in the Destinations field",
+        "4. Click Update Controls"
+      ],
+      "expected_result": "If allowed, 'Card controls updated successfully.' and all destinations are saved or truncated according to policy; if not allowed, inline validation appears indicating maximum destinations or character limit",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "high_priority": 6,
+    "medium_priority": 6,
+    "low_priority": 4
+  }
+}
+
+=== MODULE: Investments ===
+{
+  "module": "Investments",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Execute a Buy trade for an existing fund with sufficient buying power",
+      "preconditions": [
+        "User logged in",
+        "Portfolio shows fund holdings and cash/buying power in at least one funding account",
+        "Fund symbol 'ABC' exists and price is known",
+        "Funding account has sufficient buying power for the purchase"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Buy",
+        "3. Enter 'ABC' in Fund Symbol and select the matching autocomplete result",
+        "4. Enter a positive Quantity (e.g., 10)",
+        "5. Select the funding account with sufficient buying power from the Funding Account dropdown",
+        "6. Click Execute Trade"
+      ],
+      "expected_result": "Page shows 'Trade executed successfully.' with an order ID; Portfolio Snapshot updates to reflect the new holdings and cash/buying power reduced by the purchase amount",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Execute a Sell trade for an owned fund with sufficient share balance",
+      "preconditions": [
+        "User logged in",
+        "Portfolio contains at least one fund 'XYZ' with >= 50 shares",
+        "Destination account (cash) exists"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Sell",
+        "3. Enter 'XYZ' in Fund Symbol and select the matching autocomplete result",
+        "4. Enter Quantity = 20 (<= owned shares)",
+        "5. Select the destination/funding account from the dropdown",
+        "6. Click Execute Trade"
+      ],
+      "expected_result": "Page shows 'Trade executed successfully.' with an order ID; Portfolio Snapshot decreases 'XYZ' holdings by 20 shares and cash/destination account balance increases accordingly",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Create a monthly recurring investment plan with valid future start date and sufficient funding",
+      "preconditions": [
+        "User logged in",
+        "Fund symbol 'DEF' exists",
+        "Funding account has at least the minimum contribution available"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Recurring Investment Plan",
+        "2. Enter 'DEF' in Fund Symbol and select the suggestion",
+        "3. Enter Contribution Amount meeting the minimum (e.g., $50)",
+        "4. Select Frequency = Monthly",
+        "5. Choose a Start Date at least one week in the future",
+        "6. Select the Funding Account with sufficient balance",
+        "7. Click Create Plan"
+      ],
+      "expected_result": "Page shows 'Plan created successfully.' and the plan appears in the user's scheduled plans list with correct symbol, amount, frequency and start date",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "View portfolio snapshot as a read-only summary of holdings and unrealised gains/losses",
+      "preconditions": [
+        "User logged in",
+        "Account has at least one fund holding"
+      ],
+      "steps": [
+        "1. Navigate to Investments",
+        "2. Observe the Portfolio Snapshot panel"
+      ],
+      "expected_result": "Portfolio Snapshot displays current fund holdings, market value and unrealised gain or loss; fields are read-only and no edit controls are present",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt a trade with a non-existent fund symbol",
+      "preconditions": [
+        "User logged in",
+        "No fund with symbol 'ZZZNOT' exists in the system"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Buy",
+        "3. Type 'ZZZNOT' in Fund Symbol and attempt to submit (do not select any autocomplete suggestion)",
+        "4. Enter a valid Quantity (e.g., 1) and select a funding account",
+        "5. Click Execute Trade"
+      ],
+      "expected_result": "Inline validation displays an error such as 'Symbol not found' or similar and the trade is not executed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to execute a trade with zero or negative quantity",
+      "preconditions": [
+        "User logged in",
+        "Fund symbol 'ABC' exists"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Buy",
+        "3. Enter 'ABC' in Fund Symbol and select suggestion",
+        "4. Enter Quantity = 0 (or a negative value)",
+        "5. Select a funding account",
+        "6. Click Execute Trade"
+      ],
+      "expected_result": "Inline validation displays 'Quantity must be greater than zero'; trade is not executed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to sell more shares than are owned",
+      "preconditions": [
+        "User logged in",
+        "Portfolio contains fund 'LMN' with 10 shares"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Sell",
+        "3. Enter 'LMN' in Fund Symbol and select suggestion",
+        "4. Enter Quantity = 11 (greater than owned)",
+        "5. Select destination account",
+        "6. Click Execute Trade"
+      ],
+      "expected_result": "Inline validation displays an error such as 'Insufficient share balance' and the trade is not executed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Create a recurring plan with a start date in the past",
+      "preconditions": [
+        "User logged in",
+        "Fund symbol 'GHI' exists",
+        "Funding account has sufficient balance"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Recurring Investment Plan",
+        "2. Enter 'GHI' in Fund Symbol and select suggestion",
+        "3. Enter a valid Contribution Amount",
+        "4. Select Frequency = Weekly",
+        "5. Choose a Start Date in the past (e.g., yesterday)",
+        "6. Select Funding Account",
+        "7. Click Create Plan"
+      ],
+      "expected_result": "Inline validation highlights Start Date with message 'Start date must be in the future' (or similar) and plan is not created",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Create a recurring plan with Start Date = tomorrow (boundary future date)",
+      "preconditions": [
+        "User logged in",
+        "Fund symbol 'JKL' exists",
+        "Funding account has adequate balance for initial contribution"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Recurring Investment Plan",
+        "2. Enter 'JKL' in Fund Symbol and select suggestion",
+        "3. Enter Contribution Amount equal to minimum allowed",
+        "4. Select Frequency = Weekly",
+        "5. Choose Start Date = tomorrow",
+        "6. Select Funding Account",
+        "7. Click Create Plan"
+      ],
+      "expected_result": "Page shows 'Plan created successfully.' and the scheduled plan lists the start date as tomorrow; no start-date validation error is displayed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Execute a Buy trade when funding account balance equals the exact purchase cost (no leftover buying power)",
+      "preconditions": [
+        "User logged in",
+        "Fund symbol 'MNO' exists with known price",
+        "Funding account cash = exact price * desired quantity"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Buy",
+        "3. Enter 'MNO' in Fund Symbol and select suggestion",
+        "4. Enter Quantity that makes total cost equal to funding account balance",
+        "5. Select the funding account with exact available buying power",
+        "6. Click Execute Trade"
+      ],
+      "expected_result": "Page shows 'Trade executed successfully.' with an order ID; funding account balance becomes zero and Portfolio Snapshot shows the purchased holdings",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Execute a Buy trade using a very small fractional quantity (minimal positive quantity)",
+      "preconditions": [
+        "User logged in",
+        "Fund symbol 'PQR' exists and system supports fractional shares or minimal quantity granularity",
+        "Funding account has sufficient buying power for the fractional purchase"
+      ],
+      "steps": [
+        "1. Navigate to Investments > Trade Funds",
+        "2. Select Action = Buy",
+        "3. Enter 'PQR' in Fund Symbol and select suggestion",
+        "4. Enter a very small positive Quantity (e.g., 0.0001 or smallest supported fractional unit)",
+        "5. Select funding account",
+        "6. Click Execute Trade"
+      ],
+      "expected_result": "If fractional shares are supported: Page shows 'Trade executed successfully.' with an order ID and Portfolio Snapshot reflects the fractional holding; if fractional shares are not supported: inline validation displays a clear message (e.g., 'Quantity must be an integer' or 'Minimum quantity is X') and trade is not executed",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "high_priority": 5,
+    "medium_priority": 5,
+    "low_priority": 0
+  }
+}
+
+=== MODULE: Account Statements ===
+{
+  "module": "Account Statements",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Generate monthly statement using month-and-year selector",
+      "preconditions": ["User logged in", "At least one account exists with transactions for the selected month"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. In the Generate Statement form select month-and-year mode",
+        "3. Choose <month-year> (e.g. May 2024) in the Statement Period control",
+        "4. Select <account> from the Account dropdown",
+        "5. Click Generate Statement"
+      ],
+      "expected_result": "Page shows 'Statement generated successfully.' and the statement view lists transactions for the selected month; account statement reflects correct start/end dates corresponding to the selected month",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Generate statement for a custom date range",
+      "preconditions": ["User logged in", "Selected account has transactions within the custom date range"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. In the Generate Statement form choose custom date range mode",
+        "3. Enter a valid Start Date and End Date where Start Date < End Date",
+        "4. Select <account> from the Account dropdown",
+        "5. Click Generate Statement"
+      ],
+      "expected_result": "Page shows 'Statement generated successfully.' and the statement view lists transactions between the provided dates only",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Enable paperless statements and save a valid email address",
+      "preconditions": ["User logged in"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. In the e-Statement Preference form check the 'Paperless statements' checkbox",
+        "3. Enter a valid email address (e.g. user@example.com) in the Email Address field",
+        "4. Click Save Preference"
+      ],
+      "expected_result": "Page shows 'e-Statement preference updated.' and the preference persists (checkbox checked and email saved) when revisiting the Statements page",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Generate statement for an account with no transactions returns an empty statement",
+      "preconditions": ["User logged in", "Selected account exists and has zero transactions in the requested period"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. Select a month-or custom date range that yields no transactions",
+        "3. Select the account with no transactions from the Account dropdown",
+        "4. Click Generate Statement"
+      ],
+      "expected_result": "Page shows 'Statement generated successfully.' and the statement view indicates no transactions for the period (e.g. 'No transactions found' or empty transactions table) without errors",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to generate statement with End Date before Start Date",
+      "preconditions": ["User logged in"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. In the Generate Statement form choose custom date range mode",
+        "3. Enter an End Date that is earlier than the Start Date",
+        "4. Select <account> from the Account dropdown",
+        "5. Click Generate Statement"
+      ],
+      "expected_result": "The system prevents generation and displays a validation error near the date fields (no 'Statement generated successfully.' message) explaining that the date range is invalid",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to generate statement without selecting an account",
+      "preconditions": ["User logged in", "Generate Statement form is visible"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. Choose any valid Statement Period (month or custom range)",
+        "3. Leave the Account dropdown unselected or set to default empty value",
+        "4. Click Generate Statement"
+      ],
+      "expected_result": "The system prevents generation and displays an error or inline validation prompting the user to select an account; no 'Statement generated successfully.' message appears",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to save e-statement preference with invalid email formats",
+      "preconditions": ["User logged in"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. Check the 'Paperless statements' checkbox",
+        "3. Enter invalid email examples one at a time (e.g. 'plainaddress', 'user@', 'user@.com') in the Email Address field",
+        "4. Click Save Preference"
+      ],
+      "expected_result": "The system rejects each invalid email, highlights the Email Address field and displays guidance about valid email format; no 'e-Statement preference updated.' message is shown",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Generate statement when Start Date equals End Date (single-day statement)",
+      "preconditions": ["User logged in", "Selected account may have transactions on that specific date"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. In the Generate Statement form choose custom date range mode",
+        "3. Enter the same date for Start Date and End Date",
+        "4. Select <account> from the Account dropdown",
+        "5. Click Generate Statement"
+      ],
+      "expected_result": "Page shows 'Statement generated successfully.' and the statement view lists only transactions from that single date (or shows 'No transactions found' if none exist)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Save e-statement preference with a very long but valid email address",
+      "preconditions": ["User logged in"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. Check the 'Paperless statements' checkbox",
+        "3. Enter a very long but valid email address near the system's expected max length (e.g. 254 characters) in the Email Address field",
+        "4. Click Save Preference"
+      ],
+      "expected_result": "If the system accepts the address, it shows 'e-Statement preference updated.' and persists the long email; if there's a length limit, the Email Address field is highlighted with guidance explaining the maximum allowed length",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Simulate backend failure during statement generation to verify error message",
+      "preconditions": ["User logged in", "Mechanism to simulate backend/service failure is available (test environment)"],
+      "steps": [
+        "1. Navigate to Account Statements page",
+        "2. Choose any valid Statement Period and select an Account",
+        "3. Configure backend to fail statement generation (simulate service outage or 500 response)",
+        "4. Click Generate Statement"
+      ],
+      "expected_result": "The page shows 'Unable to generate statement — please try again later.' and no partial statement is displayed; the UI remains stable and allows retrying the action",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "high_priority": 6,
+    "medium_priority": 3,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Security Settings ===
+{
+  "module": "Security Settings",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Change password with valid current password and strong new password",
+      "preconditions": [
+        "User logged in",
+        "User knows current password",
+        "Collapsible Security Settings panel is accessible"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. If the change password panel is collapsed, expand it",
+        "3. Enter <current password> in Current Password",
+        "4. Enter a strong password (e.g. 'Str0ng!Passw0rd') in New Password",
+        "5. Enter the same strong password in Confirm New Password",
+        "6. Click Change Password"
+      ],
+      "expected_result": "Page displays 'Password changed successfully.'; fields are cleared; credentials are updated so the user can log in with the new password and not with the old one",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Open collapsed panel then change password successfully",
+      "preconditions": [
+        "User logged in",
+        "Change password panel is initially collapsed",
+        "User knows current password"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Verify the change password form is inside a collapsed panel",
+        "3. Click the panel header to expand the form",
+        "4. Fill Current Password, New Password and Confirm New Password with valid values",
+        "5. Click Change Password"
+      ],
+      "expected_result": "Panel expands to reveal the form; after submission the page shows 'Password changed successfully.' and the form is reset",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt change with incorrect current password",
+      "preconditions": [
+        "User logged in",
+        "User does NOT know or enters incorrect current password"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings and expand the change password panel if necessary",
+        "2. Enter an incorrect value in Current Password",
+        "3. Enter a valid strong password in New Password and Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "An error message such as 'Current password is incorrect' is displayed; Current Password field is highlighted as invalid; password is not changed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "New password and confirmation do not match",
+      "preconditions": [
+        "User logged in",
+        "User knows current password"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter valid Current Password",
+        "3. Enter a valid strong password in New Password",
+        "4. Enter a different value in Confirm New Password",
+        "5. Click Change Password"
+      ],
+      "expected_result": "An error message such as 'New password and confirmation do not match' is displayed; Confirm New Password field is highlighted; password is not changed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "New password fails strong-password policy (too weak)",
+      "preconditions": [
+        "User logged in",
+        "User knows current password",
+        "Application enforces a strong-password policy (e.g., minimum complexity)"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter valid Current Password",
+        "3. Enter a weak password (e.g. 'password123') in New Password and Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "A validation error such as 'Password does not meet strength requirements' is shown; New Password (and possibly Confirm) field(s) are highlighted; password is not changed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Attempt to submit with Current Password field empty",
+      "preconditions": [
+        "User logged in"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Leave Current Password empty",
+        "3. Enter valid values in New Password and Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "A validation error such as 'Current Password is required' is displayed; Current Password field is highlighted; password is not changed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "New password identical to current password",
+      "preconditions": [
+        "User logged in",
+        "User knows current password"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter the current password in Current Password",
+        "3. Enter the same value in New Password and Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "A validation message such as 'New password must be different from current password' is displayed (or strong-policy message); appropriate fields are highlighted; password is not changed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "New password exceeds maximum allowed length",
+      "preconditions": [
+        "User logged in",
+        "Maximum password length is defined by the system"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter valid Current Password",
+        "3. Enter an excessively long string (e.g. 256 characters) in New Password and Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "A validation error such as 'Password is too long' is displayed or the input is truncated and an error shown; New Password (and Confirm) field(s) are highlighted; password is not changed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-007",
+      "category": "negative",
+      "test_case": "Confirm New Password left empty",
+      "preconditions": [
+        "User logged in",
+        "User knows current password"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter valid Current Password",
+        "3. Enter a valid strong password in New Password",
+        "4. Leave Confirm New Password empty",
+        "5. Click Change Password"
+      ],
+      "expected_result": "A validation error such as 'Please confirm your new password' is displayed; Confirm New Password field is highlighted; password is not changed",
+      "priority": "high"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Change password with new password at exact minimum length",
+      "preconditions": [
+        "User logged in",
+        "System minimum password length is known (assume 8 characters) and policy otherwise satisfied"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter valid Current Password",
+        "3. Enter a new password that meets the strong-password requirements and is exactly the minimum length (e.g. 8-char meeting complexity) in New Password and Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "If the password meets the policy (including minimum length), 'Password changed successfully.' is displayed and credentials updated; otherwise a clear policy error is shown indicating which requirement failed",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Change password containing Unicode characters and surrounding spaces",
+      "preconditions": [
+        "User logged in",
+        "System supports Unicode in passwords (or behavior to be verified)"
+      ],
+      "steps": [
+        "1. Navigate to Security Settings",
+        "2. Enter valid Current Password",
+        "3. Enter a new password that includes Unicode characters and leading/trailing spaces (e.g. '  PässwØrd!  ') in New Password and the identical value in Confirm New Password",
+        "4. Click Change Password"
+      ],
+      "expected_result": "If allowed, 'Password changed successfully.' is displayed and the exact password (including spaces and Unicode) is accepted for subsequent login; if not allowed, a clear validation error is shown indicating unsupported characters or trimming rules",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "high_priority": 6,
+    "medium_priority": 4,
+    "low_priority": 1
+  }
+}
+
+=== MODULE: Support Center ===
+{
+  "module": "Support Center",
+  "category": "all",
+  "test_cases": [
+    {
+      "tc_id": "P-001",
+      "category": "positive",
+      "test_case": "Send secure message with required fields only",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open"
+      ],
+      "steps": [
+        "1. On Support Center, select the Secure Message form",
+        "2. Enter 'Account balance question' in Subject",
+        "3. Select 'Account' from Category dropdown",
+        "4. Enter a meaningful message in Message Body",
+        "5. Leave Attachment empty",
+        "6. Click 'Send Message'"
+      ],
+      "expected_result": "Page displays 'Message sent successfully.' and shows a ticket ID; message appears in user's secure messages inbox or confirmations area",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-002",
+      "category": "positive",
+      "test_case": "Send secure message with a valid PDF attachment",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "Have a valid PDF file available for upload (e.g., statement.pdf)"
+      ],
+      "steps": [
+        "1. Select the Secure Message form",
+        "2. Enter 'Attached statement for review' in Subject",
+        "3. Select 'Technical' from Category dropdown",
+        "4. Enter message text in Message Body",
+        "5. Attach statement.pdf (PDF)",
+        "6. Click 'Send Message'"
+      ],
+      "expected_result": "Page displays 'Message sent successfully.' with a ticket ID; attached file is listed on the sent message record",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "P-003",
+      "category": "positive",
+      "test_case": "Request callback for the next business day with prefilled phone number",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "User profile has a valid phone number prefilled"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Select a Reason for Call (e.g., 'Account Inquiry')",
+        "3. Choose a Preferred Date that is the next business day",
+        "4. Select a Preferred Time Window (e.g., '09:00-11:00')",
+        "5. Confirm the pre-filled Phone Number or leave it unchanged",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Page displays 'Callback request submitted.' and an email confirmation is sent to the user's registered email; callback appears in user's request history",
+      "priority": "high"
+    },
+    {
+      "tc_id": "P-004",
+      "category": "positive",
+      "test_case": "Request callback with edited valid phone number and chosen time window",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Select Reason for Call 'Technical Support'",
+        "3. Choose Preferred Date that is at least the next business day",
+        "4. Select Preferred Time Window '14:00-16:00'",
+        "5. Edit the Phone Number field to a valid format (e.g., '(123) 456-7890')",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Page displays 'Callback request submitted.' and an email confirmation is received; the edited phone number is stored for the request",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-001",
+      "category": "negative",
+      "test_case": "Attempt to send secure message without a Message Body",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open"
+      ],
+      "steps": [
+        "1. Select the Secure Message form",
+        "2. Enter 'Forgot to include body' in Subject",
+        "3. Select 'Other' from Category dropdown",
+        "4. Leave Message Body empty",
+        "5. Click 'Send Message'"
+      ],
+      "expected_result": "Inline validation error shown near Message Body: 'Message body is required.'; message is not sent and no ticket ID is generated",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-002",
+      "category": "negative",
+      "test_case": "Attempt to send secure message with Subject exceeding maximum length",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "Subject maximum length validation exists (e.g., 255 characters)"
+      ],
+      "steps": [
+        "1. Select the Secure Message form",
+        "2. Enter a Subject string longer than allowed (e.g., 256+ characters)",
+        "3. Select 'Security' from Category dropdown",
+        "4. Enter a valid Message Body",
+        "5. Click 'Send Message'"
+      ],
+      "expected_result": "Inline validation error is displayed near Subject (e.g., 'Subject cannot exceed 255 characters'); message is not sent",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-003",
+      "category": "negative",
+      "test_case": "Attempt to attach an invalid file type to secure message",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "Have an .exe file available for upload"
+      ],
+      "steps": [
+        "1. Select the Secure Message form",
+        "2. Enter 'Invalid attachment test' in Subject",
+        "3. Select 'Technical' from Category dropdown",
+        "4. Enter a valid Message Body",
+        "5. Attach malicious.exe (an unsupported file type)",
+        "6. Click 'Send Message'"
+      ],
+      "expected_result": "Inline validation near Attachment shows 'Unsupported file type' or similar; upload is rejected and message is not sent",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "N-004",
+      "category": "negative",
+      "test_case": "Request callback with Preferred Date equal to today (not allowed)",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "Today is a business day"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Choose a Reason for Call",
+        "3. Select Preferred Date = today",
+        "4. Select a Preferred Time Window",
+        "5. Ensure Phone Number is valid",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Inline validation error shown near Preferred Date: 'Please select a date at least the next business day.'; callback is not submitted",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-005",
+      "category": "negative",
+      "test_case": "Request callback with invalid phone number format",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Select Reason for Call",
+        "3. Choose Preferred Date at least next business day",
+        "4. Choose Preferred Time Window",
+        "5. Edit Phone Number to an invalid value (e.g., '12345')",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Inline validation near Phone Number displays 'Enter a valid phone number' or format guidance; callback is not submitted",
+      "priority": "high"
+    },
+    {
+      "tc_id": "N-006",
+      "category": "negative",
+      "test_case": "Request callback with Preferred Date on a weekend (non-business day)",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "Selected date is a Saturday or Sunday"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Select Reason for Call",
+        "3. Choose Preferred Date that falls on a weekend",
+        "4. Select Preferred Time Window",
+        "5. Confirm Phone Number is valid",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Inline validation error near Preferred Date: 'Selected date must be a business day (at least the next business day)'; callback is not submitted",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-001",
+      "category": "edge",
+      "test_case": "Send secure message with Subject exactly at maximum allowed length (boundary)",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "System enforces a Subject maximum length (assumed 255 characters)"
+      ],
+      "steps": [
+        "1. Select the Secure Message form",
+        "2. Enter a Subject exactly 255 characters long",
+        "3. Select 'Other' from Category dropdown",
+        "4. Enter a valid Message Body",
+        "5. Click 'Send Message'"
+      ],
+      "expected_result": "Message is accepted and 'Message sent successfully.' is shown with a ticket ID (boundary accepted)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "category": "edge",
+      "test_case": "Send secure message with minimal Subject length (1 character) and no attachment",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open"
+      ],
+      "steps": [
+        "1. Select the Secure Message form",
+        "2. Enter 'A' in Subject",
+        "3. Select 'Account' from Category dropdown",
+        "4. Enter a valid Message Body",
+        "5. Leave Attachment blank",
+        "6. Click 'Send Message'"
+      ],
+      "expected_result": "Message is accepted and 'Message sent successfully.' is displayed with a ticket ID",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-003",
+      "category": "edge",
+      "test_case": "Request callback when today is Friday and chosen date is next Monday (next business day calculation)",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open",
+        "Today is Friday"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Select Reason for Call",
+        "3. Choose Preferred Date equal to upcoming Monday (next business day)",
+        "4. Select Preferred Time Window",
+        "5. Confirm Phone Number is valid",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Request is accepted and 'Callback request submitted.' is displayed; email confirmation is sent and the requested date is Monday (system correctly skips weekend)",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "category": "edge",
+      "test_case": "Request callback using international phone number in E.164 format",
+      "preconditions": [
+        "User logged in",
+        "Support Center page is open"
+      ],
+      "steps": [
+        "1. Select the Schedule Callback form",
+        "2. Select Reason for Call",
+        "3. Choose a Preferred Date at least the next business day",
+        "4. Choose a Preferred Time Window",
+        "5. Edit Phone Number to an international E.164 format (e.g., '+441234567890')",
+        "6. Click 'Request Callback'"
+      ],
+      "expected_result": "Request is accepted and 'Callback request submitted.' is displayed; email confirmation is sent and international phone number is stored for the request",
+      "priority": "low"
+    }
+  ],
+  "summary": {
+    "total": 14,
+    "high_priority": 6,
+    "medium_priority": 6,
+    "low_priority": 2
+  }
+}
