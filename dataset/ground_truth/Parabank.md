@@ -7,11 +7,11 @@
 
 ## Table of Contents
 1. [Login](#1-login)
-2. [Registration](#2-registration)
+2. [Register](#2-register)
 3. [Accounts Overview](#3-accounts-overview)
 4. [Open New Account](#4-open-new-account)
 5. [Transfer Funds](#5-transfer-funds)
-6. [Bill Pay](#6-bill-pay)
+6. [Payments](#6-payments)
 7. [Request Loan](#7-request-loan)
 8. [Update Contact Info](#8-update-contact-info)
 9. [Manage Cards](#9-manage-cards)
@@ -67,7 +67,7 @@
 
 ---
 
-## 2. Registration
+## 2. Register
 
 ### Functional Tests
 
@@ -188,7 +188,7 @@
 
 ---
 
-## 6. Bill Pay
+## 6. Payments
 
 ### Functional Tests
 
@@ -412,11 +412,11 @@
 | Module | Total Tests | High Priority | Medium Priority | Low Priority |
 |--------|-------------|---------------|-----------------|--------------|
 | Login | 12 | 10 | 2 | 0 |
-| Registration | 23 | 17 | 4 | 2 |
+| Register | 23 | 17 | 4 | 2 |
 | Accounts Overview | 6 | 4 | 2 | 0 |
 | Open New Account | 12 | 10 | 2 | 0 |
 | Transfer Funds | 14 | 12 | 1 | 1 |
-| Bill Pay | 15 | 14 | 1 | 0 |
+| Payments | 15 | 14 | 1 | 0 |
 | Request Loan | 18 | 15 | 3 | 0 |
 | Update Contact Info | 18 | 14 | 4 | 0 |
 | Manage Cards | 10 | 7 | 3 | 0 |

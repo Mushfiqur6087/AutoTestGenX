@@ -1,4 +1,4 @@
-# Swag Labs Test Cases
+﻿# Swag Labs Test Cases
 
 **Website URL:** https://www.saucedemo.com/
 **Test Suite Version:** 1.0
@@ -13,9 +13,8 @@
 5. [Checkout - Information](#5-checkout---information)
 6. [Checkout - Overview](#6-checkout---overview)
 7. [Checkout - Confirmation](#7-checkout---confirmation)
-8. [Navigation Menu](#8-navigation-menu)
-9. [Logout](#9-logout)
-10. [Reset App State](#10-reset-app-state)
+8. [Logout](#8-logout)
+9. [Reset App State](#9-reset-app-state)
 
 ---
 
@@ -237,27 +236,7 @@
 
 ---
 
-## 8. Navigation Menu
-
-### Functional Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-NAV-001 | Open hamburger menu | User logged in | 1. Click hamburger icon (☰) | Side menu opens with options | High |
-| SL-NAV-002 | All Items navigation | Menu open | 1. Click "All Items" | Navigates to inventory page | High |
-| SL-NAV-003 | About navigation | Menu open | 1. Click "About" | Navigates to Sauce Labs website | Medium |
-| SL-NAV-004 | Close menu | Menu open | 1. Click X or outside menu | Menu closes | Medium |
-
-### UI/UX Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-NAV-005 | Menu items visible | Menu open | 1. View menu | All Items, About, Logout, Reset App State visible | Medium |
-| SL-NAV-006 | Menu animation | Open/close menu | 1. Open and close menu | Smooth slide animation | Low |
-
----
-
-## 9. Logout
+## 8. Logout
 
 ### Functional Tests
 
@@ -270,7 +249,7 @@
 
 ---
 
-## 10. Reset App State
+## 9. Reset App State
 
 ### Functional Tests
 
@@ -279,163 +258,6 @@
 | SL-RESET-001 | Reset clears cart | Items in cart | 1. Open hamburger menu<br>2. Click "Reset App State" | Cart cleared, badge removed | High |
 | SL-RESET-002 | Reset button states | Items added (buttons show "Remove") | 1. Click "Reset App State" | All "Remove" buttons revert to "Add to cart" | High |
 | SL-RESET-003 | Reset preserves login | User logged in with items | 1. Click "Reset App State" | User remains logged in | Medium |
-
----
-
-## 11. Browser Behavior & Session Management
-
-### Functional Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-BROWSER-001 | Refresh preserves cart | Items in cart | 1. Add items to cart<br>2. Refresh the page<br>3. Check cart | Cart items still present | High |
-| SL-BROWSER-002 | Refresh preserves sort | Inventory sorted | 1. Sort inventory Z-A<br>2. Refresh page<br>3. Check sort order | Sort order preserved as Z-A | High |
-| SL-BROWSER-003 | Direct URL navigation | Logged in | 1. Enter inventory.html directly in URL | Page loads and is accessible | High |
-| SL-BROWSER-004 | Direct URL without login | Not logged in | 1. Enter inventory URL directly<br>2. Check redirect | Redirected to login page | High |
-| SL-BROWSER-005 | Browser back button | On product detail | 1. View product detail<br>2. Click browser back | Returns to inventory with sort preserved | High |
-| SL-BROWSER-006 | Browser forward button | After clicking back | 1. Click browser back<br>2. Click browser forward | Returns to product detail page | Medium |
-| SL-BROWSER-007 | Multi-tab cart sync | Cart open in tab 1 | 1. Add item in tab 1<br>2. Switch to tab 2 cart<br>3. Refresh tab 2 | Cart in tab 2 shows new item | Medium |
-| SL-BROWSER-008 | Session persistence | Logged in | 1. Close browser completely<br>2. Reopen site | Session state depending on browser settings | Low |
-| SL-BROWSER-009 | Incognito session isolation | Normal and incognito windows | 1. Login in normal window<br>2. Open incognito<br>3. Try to access inventory | Incognito requires separate login | Medium |
-
-### Negative Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-BROWSER-010 | Access inventory while logged out | Logged out | 1. Navigate to inventory URL<br>2. Check error message | Error: "You can only access '/inventory.html' when logged in" | High |
-
----
-
-## 12. User Persona Special Behaviors
-
-### Functional Tests - Standard User
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-PERSONA-001 | standard_user normal flow | None | 1. Login as standard_user<br>2. Browse inventory<br>3. Add to cart<br>4. Checkout | All functionality works perfectly, no errors | High |
-| SL-PERSONA-002 | standard_user pricing | Logged in as standard_user | 1. View all products | All prices display correctly ($29.99, $9.99, etc.) | High |
-
-### Functional Tests - Locked Out User
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-PERSONA-003 | locked_out_user login denied | None | 1. Enter locked_out_user<br>2. Enter secret_sauce<br>3. Click Login | Error: "Sorry, this user has been locked out" | High |
-
-### Functional Tests - Problem User
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-PERSONA-004 | problem_user missing buttons | None | 1. Login as problem_user<br>2. View inventory | Some products may not have "Add to cart" button | High |
-| SL-PERSONA-005 | problem_user missing prices | Logged in as problem_user | 1. View inventory<br>2. Check prices | Some product prices may not display | High |
-| SL-PERSONA-006 | problem_user missing images | Logged in as problem_user | 1. View inventory<br>2. Check images | Some product images may not load | Medium |
-
-### Functional Tests - Performance Glitch User
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-PERSONA-007 | performance_glitch_user slow load | None | 1. Login as performance_glitch_user<br>2. Monitor page load time | Inventory page loads 5-10 seconds slower than normal | Medium |
-| SL-PERSONA-008 | performance_glitch_user delayed cart | Logged in as performance_glitch_user | 1. Add item to cart<br>2. Observe badge update delay | Cart badge updates with slight delay | Medium |
-
-### Functional Tests - Error User
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-PERSONA-009 | error_user checkout error | Logged in as error_user, items in cart | 1. Proceed to checkout<br>2. Complete info<br>3. Click Finish | Error message like "Payment failed" | High |
-| SL-PERSONA-010 | error_user inconsistent state | Logged in as error_user | 1. Try to complete checkout<br>2. Observe order status | Order may be created despite error message | Medium |
-
-### Functional Tests - Visual User
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-PERSONA-011 | visual_user CSS glitches | None | 1. Login as visual_user<br>2. View inventory | Text misaligned, colors incorrect, fonts rendering improperly | Medium |
-| SL-PERSONA-012 | visual_user button functionality | Logged in as visual_user | 1. Despite visual glitches<br>2. Try "Add to cart" button | Button still functions despite styling issues | High |
-
----
-
-## 13. Cart & Inventory State Management
-
-### Functional Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-STATE-001 | No duplicate items in cart | Standard user, item added | 1. Add item from inventory<br>2. Navigate to product detail<br>3. Try to add same item again | Item not duplicated, quantity remains 1 | High |
-| SL-STATE-002 | Add from multiple pages | Standard user | 1. Add item from inventory<br>2. Go to product detail<br>3. Remove from detail<br>4. Add again from inventory | Item is removed and re-added correctly | High |
-| SL-STATE-003 | Sorting preserves cart | Standard user with items | 1. Add items to cart<br>2. Sort inventory different ways<br>3. Check cart | Cart contents unchanged by sorting | High |
-| SL-STATE-004 | Badge accuracy | Standard user | 1. Add 3 items<br>2. Remove 1 item<br>3. Refresh page | Badge accurately shows number of items | High |
-| SL-STATE-005 | Reset clears cart items | Standard user with multiple items | 1. Add 3 items<br>2. Click Reset App State<br>3. Check cart | Cart completely empty | High |
-| SL-STATE-006 | Reset reverts buttons | Items in cart (Remove buttons visible) | 1. Click Reset App State<br>2. Go to inventory | All buttons revert to "Add to cart" | High |
-| SL-STATE-007 | Cart persistence across pages | Standard user with items | 1. Add to cart<br>2. Navigate to detail page<br>3. Go back to inventory | Cart items still present | High |
-
----
-
-## 14. Checkout Flow Edge Cases
-
-### Boundary Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-EDGE-001 | Single character name | On checkout info | 1. Enter "A" in First Name<br>2. Enter "B" in Last Name<br>3. Click Continue | Either accepted or rejected with validation message | Medium |
-| SL-EDGE-002 | Very long name | On checkout info | 1. Enter 100+ character string<br>2. Click Continue | System truncates or rejects gracefully | Low |
-| SL-EDGE-003 | Special characters in name | On checkout info | 1. Enter "John@123" in First Name<br>2. Click Continue | May accept or reject depending on validation | Low |
-| SL-EDGE-004 | Non-numeric postal code | On checkout info | 1. Enter "ABC12" in Postal Code<br>2. Click Continue | Error: "Postal Code must contain only numbers" | High |
-| SL-EDGE-005 | Minimum length validation | On checkout info | 1. Enter 1 character names<br>2. Click Continue | Minimum 2 characters enforced or accepted | Medium |
-| SL-EDGE-006 | Postal code numeric only | On checkout info | 1. Enter "12345"<br>2. Click Continue | Accepted, proceeds to next step | High |
-
-### Error Handling Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-EDGE-007 | Partial form submission | On checkout info | 1. Enter only First Name<br>2. Leave others empty<br>3. Click Continue | Partial submission prevented, errors for missing fields | High |
-| SL-EDGE-008 | Multiple duplicate orders | Standard user | 1. Complete checkout<br>2. Quickly click Finish again | Either prevented or handled gracefully, no duplicate | Medium |
-| SL-EDGE-009 | Session timeout | On checkout step 2 | 1. Wait for extended period<br>2. Try to complete checkout | Session timeout message or re-authentication | Low |
-| SL-EDGE-010 | Browser back during checkout | Checkout info page | 1. Fill checkout form<br>2. Click browser back<br>3. Go forward | State may or may not be preserved | Low |
-
-### Tax Calculation Tests
-
-| TC ID | Test Case | Preconditions | Steps | Expected Result | Priority |
-|-------|-----------|---------------|-------|-----------------|----------|
-| SL-EDGE-011 | Tax calculation (8% applied) | On checkout overview | 1. Add items totaling $100<br>2. Check tax | Tax calculated as $8.00 | High |
-| SL-EDGE-012 | Total calculation accuracy | Multiple items in cart | 1. Add various priced items<br>2. View overview | Total = Item total + (Item total × 0.08) | High |
-| SL-EDGE-013 | Single item tax | Single $10 item in cart | 1. View checkout overview | Tax = $0.80, Total = $10.80 | High |
-
----
-
-## End-to-End Test Scenarios
-
-### E2E-001: Complete Purchase Flow
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Navigate to https://www.saucedemo.com/ | Login page displayed |
-| 2 | Login with standard_user / secret_sauce | Inventory page displayed |
-| 3 | Add "Sauce Labs Backpack" to cart | Cart badge shows "1" |
-| 4 | Add "Sauce Labs Bike Light" to cart | Cart badge shows "2" |
-| 5 | Click cart icon | Cart page with 2 items |
-| 6 | Click "Checkout" | Checkout info page |
-| 7 | Enter: John, Doe, 12345 | Fields populated |
-| 8 | Click "Continue" | Checkout overview page |
-| 9 | Verify items and total | Correct items and calculated total |
-| 10 | Click "Finish" | Confirmation page, "Thank you" message |
-| 11 | Click "Back Home" | Inventory page, empty cart |
-
-### E2E-002: Add and Remove Items Flow
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Login as standard_user | Inventory page |
-| 2 | Add 3 different items | Cart badge shows "3" |
-| 3 | Navigate to cart | 3 items listed |
-| 4 | Remove 1 item | 2 items listed, badge shows "2" |
-| 5 | Continue shopping | Inventory page |
-| 6 | Remove item from inventory | Button reverts, badge shows "1" |
-| 7 | Proceed to checkout | Checkout with 1 item |
-
-### E2E-003: Sort and Filter Products
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Login as standard_user | Inventory page, sorted A-Z |
-| 2 | Sort by Price (low to high) | Cheapest item first |
-| 3 | Sort by Price (high to low) | Most expensive item first |
-| 4 | Sort by Name (Z to A) | Reverse alphabetical |
-| 5 | Sort by Name (A to Z) | Default alphabetical order |
 
 ---
 
@@ -450,23 +272,6 @@
 | Checkout - Information | 12 | 6 | 2 | 4 |
 | Checkout - Overview | 9 | 6 | 3 | 0 |
 | Checkout - Confirmation | 5 | 3 | 2 | 0 |
-| Navigation Menu | 6 | 2 | 3 | 1 |
 | Logout | 4 | 4 | 0 | 0 |
 | Reset App State | 3 | 2 | 1 | 0 |
-| Browser Behavior & Session | 10 | 6 | 3 | 1 |
-| User Persona Special Behaviors | 12 | 6 | 4 | 2 |
-| Cart & Inventory State | 7 | 7 | 0 | 0 |
-| Checkout Flow Edge Cases | 13 | 6 | 5 | 2 |
-| **TOTAL** | **151** | **84** | **42** | **11** |
-
----
-
-## Special User Testing
-
-| User Type | Purpose | Test Focus |
-|-----------|---------|------------|
-| locked_out_user | Verify lockout functionality | Login should fail with specific error |
-| problem_user | Test application error handling | Images may not load, add to cart may fail |
-| performance_glitch_user | Performance testing | Pages load slowly, interactions delayed |
-| error_user | Error state testing | Various errors triggered during flow |
-| visual_user | Visual regression testing | UI elements may appear incorrectly |
+| **TOTAL** | **82** | **51** | **26** | **5** |
