@@ -137,8 +137,6 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-After installation, the `autospectest` command is available in the venv.
-
 ---
 
 ## Quick start
