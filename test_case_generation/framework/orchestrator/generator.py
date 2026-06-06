@@ -9,7 +9,7 @@ from test_case_generation.framework.orchestrator.runs import CHECKPOINT_DB
 from test_case_generation.framework.orchestrator.state import PipelineState
 
 
-class UIASTGenerator:
+class TestGenerationPipeline:
 
     def __init__(
         self,

@@ -18,7 +18,7 @@ load_dotenv()
 
 import test_case_generation
 from test_case_generation.framework.agents.base import set_max_concurrency
-from test_case_generation.framework.orchestrator.generator import UIASTGenerator
+from test_case_generation.framework.orchestrator.generator import TestGenerationPipeline
 from test_case_generation.framework.orchestrator.runs import (
     make_run_id,
     make_run_metadata,
@@ -143,7 +143,7 @@ def _generate(args):
 
     set_max_concurrency(args.max_concurrency)
 
-    generator = UIASTGenerator(
+    generator = TestGenerationPipeline(
         api_key=args.api_key,
         model=model,
         debug=args.debug,

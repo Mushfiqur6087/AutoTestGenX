@@ -9,7 +9,7 @@ def _md_escape(text: str) -> str:
 
 def _render_critique_md(data: dict) -> str:
     lines = []
-    lines.append(f"# Semantic Critique — {data.get('project_name', '')}")
+    lines.append(f"# Structural Model Critique — {data.get('project_name', '')}")
     lines.append("")
     lines.append(f"Generated: {data.get('generated_at', '')}")
     lines.append("")
