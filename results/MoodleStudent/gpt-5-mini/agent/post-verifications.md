@@ -1,15 +1,14 @@
 # Post-Verification Specifications
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. After being redirected to the Login page, attempt to navigate to a protected page URL (e.g., open <protected page URL>)
+
+**Original Expected Result:** Logout is enforced and access is blocked: After clicking 'Log out' the user is redirected to the Login page. When attempting to open <protected page URL>, the system redirects to the Login page and does not display protected content (the Login form is shown). The session state remains Unauthenticated and protected resources require re-authentication.
 
 ---
 
@@ -35,15 +34,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Double-click / rapid repeat of Log out button
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the "Log out" button
 2. 2. Immediately click the "Log out" button again (second click occurs before the app finishes redirecting)
+
+**Original Expected Result:** First click succeeds: the current authenticated session is terminated and the user is redirected to the login page with the login form visible. The second click is blocked / has no additional effect: no duplicate session termination occurs, no duplicate redirects occur, and no error is shown to the user; the login page remains visible.
 
 ---
 
@@ -67,15 +65,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Logout in one tab, then attempt action/reload in another authenticated tab
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the "Log out" button
 2. 2. In Tab B, immediately reload the protected page or click a protected-action button (perform the action) without re-authenticating
+
+**Original Expected Result:** Logout in Tab A succeeds: the session is terminated and Tab A is redirected to the login page. The attempt in Tab B is blocked / error shown in the sense that the protected request is not allowed: the reload or protected action redirects Tab B to the login page (login form visible) and the protected action does not complete under an authenticated session.
 
 ---
 
@@ -99,15 +96,14 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Manually navigate to a protected URL after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the "Log out" button
 2. 2. After redirect to the login page, enter the URL of a protected page in the browser address bar and press Enter
+
+**Original Expected Result:** Logout succeeds: the session is terminated and the user is on the login page. The manual navigation to the protected URL is blocked: the app prevents access and redirects to the login page (login form visible). The protected page content is not accessible without re-authentication.
 
 ---
 
@@ -130,15 +126,14 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Open Edit profile when not the profile owner (precondition violation)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. On <user B>'s Profile page, locate the Edit profile link
 2. 2. Click the Edit profile link
+
+**Original Expected Result:** Edit_Profile_Form does not open; a visible permission/authorization notification or inline error is shown on the Profile page indicating the action is not allowed; no navigation to the edit form occurs
 
 ---
 
@@ -162,17 +157,16 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Leave First name blank and attempt to Update profile (required text field)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Clear the First name field (leave it blank)
 2. 2. Enter <valid last name> in Last name
 3. 3. Enter <valid email> in Email address
 4. 4. Click the Update profile button
+
+**Original Expected Result:** First name field displays an inline validation error indicating it is required; form does not submit; profile is not saved; Edit_Profile_Form remains open
 
 ---
 
@@ -194,16 +188,15 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Enter invalid format in Email address and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <invalid email format> in the Email address field
 2. 2. Ensure other required fields contain <valid values>
 3. 3. Click the Update profile button
+
+**Original Expected Result:** Email address field displays an inline validation error indicating the email format is invalid; form does not submit; profile is not saved; Edit_Profile_Form remains open
 
 ---
 
@@ -225,14 +218,13 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Open Browser sessions report from Reports card
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Browser sessions link in the Reports card
+
+**Original Expected Result:** opens Browser_sessions — The Browser sessions report is displayed
 
 ---
 
@@ -258,14 +250,13 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Open Grades overview from Reports card
 **Category**: `positive` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Grades overview link in the Reports card
+
+**Original Expected Result:** opens Grades_overview — The Grades overview page is displayed
 
 ---
 
@@ -287,16 +278,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Browser Back navigation after logout
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the "Log out" button
 2. 2. Wait for redirect to the login page (login form visible)
 3. 3. Press the browser Back button once
+
+**Original Expected Result:** Pressing Back is blocked from restoring protected content: the protected page is not returned to. The user remains unauthenticated and the login page (login form) is shown (either the browser stays on the login page or the protected page immediately redirects back to the login page).
 
 ---
 
@@ -318,16 +308,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to use Log out when not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page (or a page that would normally show the Log out control)
 2. 2. Verify whether a 'Log out' button is present in the UI
 3. 3. Navigate directly to the logout endpoint (e.g., click a /logout link or enter the logout URL)
+
+**Original Expected Result:** Precondition enforced: The 'Log out' control is not available to unauthenticated users (the Log out button is not visible). Navigating directly to the logout endpoint redirects to the Login page and displays the Login form; no logout success action is performed because there was no active session (session remains unauthenticated). Protected content is not accessible without authentication.
 
 ---
 
@@ -353,16 +342,15 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. After being redirected to the Login page, attempt to navigate to a protected page URL (e.g., open <protected page URL>)
+
+**Original Expected Result:** Logout is enforced and access is blocked: After clicking 'Log out' the user is redirected to the Login page. When attempting to open <protected page URL>, the system redirects to the Login page and does not display protected content (the Login form is shown). The session state remains Unauthenticated and protected resources require re-authentication.
 
 ---
 
@@ -386,15 +374,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Double-click / rapid repeat of Log out button
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the "Log out" button
 2. 2. Immediately click the "Log out" button again (second click occurs before the app finishes redirecting)
+
+**Original Expected Result:** First click succeeds: the current authenticated session is terminated and the user is redirected to the login page with the login form visible. The second click is blocked / has no additional effect: no duplicate session termination occurs, no duplicate redirects occur, and no error is shown to the user; the login page remains visible.
 
 ---
 
@@ -420,16 +407,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Browser Back navigation after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the "Log out" button
 2. 2. Wait for redirect to the login page (login form visible)
 3. 3. Press the browser Back button once
+
+**Original Expected Result:** Pressing Back is blocked from restoring protected content: the protected page is not returned to. The user remains unauthenticated and the login page (login form) is shown (either the browser stays on the login page or the protected page immediately redirects back to the login page).
 
 ---
 
@@ -457,16 +443,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Browser Back navigation after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the "Log out" button
 2. 2. Wait for redirect to the login page (login form visible)
 3. 3. Press the browser Back button once
+
+**Original Expected Result:** Pressing Back is blocked from restoring protected content: the protected page is not returned to. The user remains unauthenticated and the login page (login form) is shown (either the browser stays on the login page or the protected page immediately redirects back to the login page).
 
 ---
 
@@ -490,11 +475,8 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Update profile: edit General fields and save
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Edit profile' link on the User Details card to open the Edit Profile form
@@ -506,6 +488,8 @@
 7. 7. Select <Timezone> from Timezone
 8. 8. Enter <description> in Description
 9. 9. Click the 'Update profile' button
+
+**Original Expected Result:** saves profile and returns to Profile page — The Profile page is displayed and the User Details card shows the updated name as <First name> <Last name>, Email address as <valid email>, and Timezone as <Timezone>
 
 ---
 
@@ -535,15 +519,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Click Log out terminates session and returns to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Locate the 'Log out' button in the application header or navigation
 2. 2. Click the 'Log out' button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page. The Login page is displayed with the authentication form (prompting for credentials) — the authenticated area is no longer visible.
 
 ---
 

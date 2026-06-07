@@ -1,14 +1,13 @@
 # Post-Verification Specifications
 
-### [TC-002] Unknown Title
+### [TC-002] Reset when cart is already empty keeps UI cleared and user logged in
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -33,15 +32,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated user cannot perform Reset App State
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application page that contains the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** Action is blocked: the user is redirected to the Login page (or shown an authentication prompt); Reset App State is not performed — the cart contents remain unchanged and the cart badge and add/remove button states remain as before; no 'reset' confirmation is shown
 
 ---
 
@@ -64,15 +62,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset clears a populated cart and resets in-app button states
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -97,15 +94,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Reset when cart is already empty keeps UI cleared and user logged in
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -129,15 +125,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset clears a populated cart and resets in-app button states
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -160,15 +155,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset clears a populated cart and resets in-app button states
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -192,15 +186,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Reset when cart is already empty keeps UI cleared and user logged in
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -224,15 +217,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset clears a populated cart and resets in-app button states
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 
@@ -258,15 +250,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Reset when cart is already empty keeps UI cleared and user logged in
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the page containing the Reset App State button
 2. 2. Click the Reset App State button
+
+**Original Expected Result:** clears cart and resets in-app state (updates cart badge and resets add/remove button states); user remains logged in
 
 ---
 

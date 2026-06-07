@@ -1,16 +1,15 @@
 # Post-Verification Specifications
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -32,17 +31,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -64,11 +62,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -76,6 +71,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 
@@ -97,17 +94,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -129,11 +125,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -141,6 +134,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 
@@ -162,17 +157,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -194,17 +188,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -226,11 +219,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -238,6 +228,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 
@@ -259,16 +251,15 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Leave the Message Body field blank and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Message Body field blank
 2. 2. Fill in Subject and Category with valid values
 3. 3. Click Send Message
+
+**Original Expected Result:** Inline validation error appears on the Message Body field indicating it is required
 
 ---
 
@@ -290,17 +281,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -332,17 +322,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -366,11 +355,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -378,6 +364,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 
@@ -401,17 +389,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -435,11 +422,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -447,6 +431,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 
@@ -468,11 +454,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -480,6 +463,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 
@@ -501,17 +486,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -535,17 +519,16 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send a secure message successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid subject> in the Subject field
 2. 2. Select 'Technical' from the Category dropdown
 3. 3. Enter <valid message body> in the Message Body field
 4. 4. Click 'Send Message'
+
+**Original Expected Result:** Message sent successfully with ticket ID
 
 ---
 
@@ -568,11 +551,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Request a callback successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select <valid reason for call> from the Reason for Call dropdown
@@ -580,6 +560,8 @@
 3. 3. Enter <valid time window> in the Preferred Time Window field
 4. 4. Verify the Phone Number field is pre-filled
 5. 5. Click 'Request Callback'
+
+**Original Expected Result:** Callback request submitted and email confirmation sent
 
 ---
 

@@ -1,16 +1,15 @@
 # Post-Verification Specifications
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (post-logout access requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. Observe that the application redirects to the Login page (post-logout)
 4. 4. From the browser address bar, navigate to a protected page at <protected page URL>
+
+**Original Expected Result:** Navigation to <protected page URL> is blocked and the user is redirected to the Login page; protected page content is not displayed and re-authentication is required (session remains terminated).
 
 ---
 
@@ -34,15 +33,14 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Rapid double-click the Log out button
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button once
 2. 2. Immediately click the 'Log out' button a second time (within 1 second of the first click)
+
+**Original Expected Result:** Only a single logout action succeeds: the user is redirected to the login page and the UI shows the login page. The second click is ignored (no duplicate navigation or duplicate login page stacks are visible).
 
 ---
 
@@ -69,15 +67,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Log out in one tab, then refresh a protected page in another tab
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the 'Log out' button
 2. 2. In Tab B, click the browser refresh button (reload the protected page)
+
+**Original Expected Result:** The logout in Tab A succeeds and redirects Tab A to the login page. In Tab B, the refresh is blocked from showing protected content: Tab B is redirected to the login page (access to protected page is blocked).
 
 ---
 
@@ -102,14 +99,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Click Log out while the browser is offline
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. With network offline, click the 'Log out' button
+
+**Original Expected Result:** The client-side logout flow succeeds: the app clears the local authenticated state and displays the login page (user is shown the login page). Subsequent navigation to a protected page remains blocked (the login page is shown).
 
 ---
 
@@ -133,15 +129,14 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Use browser Back after successful logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
 2. 2. After being redirected to the login page, press the browser Back button once
+
+**Original Expected Result:** Returning via the browser Back button does not restore access to the previously viewed protected page: the user remains on or is redirected back to the login page and access to protected content is blocked.
 
 ---
 
@@ -166,17 +161,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Enter an invalid email format and attempt to save
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <invalid email format> into the Email_Address field
 2. 2. Enter <valid first name> into the First_Name field
 3. 3. Enter <valid last name> into the Last_Name field
 4. 4. Click the 'Update profile' button
+
+**Original Expected Result:** Inline validation error appears on the Email_Address field indicating the value is not a valid email address; the form does not submit; profile is not updated
 
 ---
 
@@ -198,11 +192,8 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Upload a file that violates site upload constraints and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attach <file violating site upload constraints> to the Picture_Upload control (via drag-and-drop or file picker)
@@ -210,6 +201,8 @@
 3. 3. Enter <valid last name> into the Last_Name field
 4. 4. Enter <valid email address> into the Email_Address field
 5. 5. Click the 'Update profile' button
+
+**Original Expected Result:** Upload control displays an error indicating the file violates site upload constraints (e.g. file type or size invalid); the form does not submit; profile is not updated
 
 ---
 
@@ -232,14 +225,13 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Unauthenticated user attempts to access Edit profile page
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Edit profile page URL while signed out
+
+**Original Expected Result:** User is redirected to the login page (Edit profile page is not accessible); no profile edit controls are shown to the unauthenticated user
 
 ---
 
@@ -263,16 +255,15 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Upload file exactly at the site's maximum allowed upload size and save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'User picture' collapsible section
 2. 2. Drag-and-drop the file that is exactly the site's maximum allowed upload size onto the Picture_Upload area
 3. 3. Click the 'Update profile' button
+
+**Original Expected Result:** Upload and save succeeds; clicking 'Update profile' submits successfully, the profile page refreshes, and the new picture is visible on the profile page (picture replaced by the uploaded file).
 
 ---
 
@@ -295,16 +286,15 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Upload file one unit over the site's maximum allowed upload size and attempt to save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'User picture' collapsible section
 2. 2. Drag-and-drop the file that is one unit over the site's maximum allowed upload size onto the Picture_Upload area
 3. 3. Click the 'Update profile' button
+
+**Original Expected Result:** Upload is blocked / error shown; submission is blocked and an inline error is shown near the Picture_Upload field indicating the file exceeds the site's maximum allowed upload size, and the profile page does not refresh.
 
 ---
 
@@ -329,17 +319,16 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Enter a very long string (200+ characters) into the Description rich text editor and save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'General' collapsible section
 2. 2. Place the cursor in the Description rich text editor
 3. 3. Paste a continuous text block of 200+ characters into the Description editor
 4. 4. Click the 'Update profile' button
+
+**Original Expected Result:** Form submission proceeds; after clicking 'Update profile' the profile page refreshes. The saved Description either (a) displays the full long text on the profile detail page (accepted), or (b) displays a visibly truncated Description with an explicit truncation indicator/ellipsis or inline message indicating the Description was trimmed. Either outcome must be visible on the refreshed profile page.
 
 ---
 
@@ -362,17 +351,16 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Enter emoji and non-Latin Unicode characters into Description and First Name fields and save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'General' collapsible section
 2. 2. Enter emoji and non-Latin Unicode characters into the First_Name field
 3. 3. Enter emoji and non-Latin Unicode characters into the Description rich text editor
 4. 4. Click the 'Update profile' button
+
+**Original Expected Result:** Unicode input handling visible; after clicking 'Update profile' the profile page refreshes. The saved values either appear exactly as entered (emoji and Unicode characters visible) or an inline validation error is shown indicating unsupported characters. The visible outcome must clearly show whether the characters were saved or rejected.
 
 ---
 
@@ -399,17 +387,16 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Enter leading and trailing whitespace in required First Name and Last Name and save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'General' collapsible section
 2. 2. Enter a value with leading and trailing spaces into the First_Name field
 3. 3. Enter a value with leading and trailing spaces into the Last_Name field
 4. 4. Click the 'Update profile' button
+
+**Original Expected Result:** Whitespace trimming behavior visible; submission succeeds. On the refreshed profile page, the First and Last name values are shown without leading or trailing spaces (whitespace trimmed). If the system treats whitespace-only as empty, submission is blocked and an inline required-field error is shown for the affected field(s).
 
 ---
 
@@ -434,11 +421,8 @@
 
 ---
 
-### [TC-017] Unknown Title
+### [TC-017] Add an Additional Name, remove it, then save (repeating group add-then-remove all)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'Additional names' collapsible section
@@ -446,6 +430,8 @@
 3. 3. Enter a value into the Alternative_Name field for the new item
 4. 4. Remove the Additional_Names_List item just added
 5. 5. Click the 'Update profile' button
+
+**Original Expected Result:** Submission succeeds; because Additional_Names_List has min=0, the form submits successfully and the refreshed profile page shows no additional names entries (no residual empty/ghost entries).
 
 ---
 
@@ -469,16 +455,15 @@
 
 ---
 
-### [TC-018] Unknown Title
+### [TC-018] Immediately press browser Back after successful Update profile to check for duplicate or stale edit form behavior
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Update profile' button to save changes
 2. 2. Wait for the profile page to refresh (successful save)
 3. 3. Immediately press the browser Back button
+
+**Original Expected Result:** No duplicate or unintended state; after pressing Back the browser either (a) shows the refreshed profile page (not the edit form), or (b) shows the edit form but with fields blank or reflecting the saved values (not causing a second save). No additional profile entities are created and only the single intended save exists.
 
 ---
 
@@ -502,17 +487,16 @@
 
 ---
 
-### [TC-019] Unknown Title
+### [TC-019] Make multiple edits then click Cancel to ensure no changes are saved
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'General' collapsible section
 2. 2. Change the First_Name field
 3. 3. Change the Description rich text editor
 4. 4. Click the 'Cancel' button
+
+**Original Expected Result:** Cancel exits without saving; the profile page is shown (or user is navigated away) and the previously saved profile values remain unchanged (the changes made in the edit form are not persisted).
 
 ---
 
@@ -536,11 +520,8 @@
 
 ---
 
-### [TC-021] Unknown Title
+### [TC-021] Confirm enrollment then immediately navigate back to attempt resubmission (avoid duplicate enrollment)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Enrol users button
@@ -550,6 +531,8 @@
 5. 5. Click Confirm enrollment
 6. 6. After enrollment completes and the participants list updates, use the browser back button (navigate back to the previous page/state)
 7. 7. If the enrolment dialog or form appears again, attempt to click Confirm enrollment a second time
+
+**Original Expected Result:** Any attempt to create a duplicate enrollment is blocked; only one enrollment record for the selected user exists in the participants list. The second Confirm enrollment action is either disabled or results in a visible message preventing duplicate creation (no duplicate row appears in the participants table).
 
 ---
 
@@ -573,15 +556,14 @@
 
 ---
 
-### [TC-023] Unknown Title
+### [TC-023] Open bottom 'With selected users…' bulk actions dropdown with no users selected
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Scroll to the bottom bulk actions area
 2. 2. Click the With selected users… dropdown
+
+**Original Expected Result:** Bulk actions menu opens; available bulk action options are visible but actions that operate on selected participants are disabled until at least one participant is checked. The UI shows that no bulk action can be performed without selection (attempting to trigger a bulk action without selection is blocked or results in an inline prompt to select users).
 
 ---
 
@@ -605,11 +587,8 @@
 
 ---
 
-### [TC-024] Unknown Title
+### [TC-024] Course End Date one day before Course Start Date (enabled) — save blocked with inline error
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid Course Full Name> in the Course_Full_Name field
@@ -619,6 +598,8 @@
 5. 5. Check the Enable_Course_End_Date checkbox
 6. 6. Enter <date B minus 1 day> in the Course_End_Date field
 7. 7. Click the Save and display button
+
+**Original Expected Result:** Course_End_Date field displays an inline validation error indicating the end date must be on or after the Course_Start_Date and the save action is blocked (error shown).
 
 ---
 
@@ -642,15 +623,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Log out in one tab, then refresh a protected page in another tab
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the 'Log out' button
 2. 2. In Tab B, click the browser refresh button (reload the protected page)
+
+**Original Expected Result:** The logout in Tab A succeeds and redirects Tab A to the login page. In Tab B, the refresh is blocked from showing protected content: Tab B is redirected to the login page (access to protected page is blocked).
 
 ---
 
@@ -675,14 +655,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Click Log out while the browser is offline
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. With network offline, click the 'Log out' button
+
+**Original Expected Result:** The client-side logout flow succeeds: the app clears the local authenticated state and displays the login page (user is shown the login page). Subsequent navigation to a protected page remains blocked (the login page is shown).
 
 ---
 
@@ -706,16 +685,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to use Log out control while not authenticated (precondition violation) - button visibility
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application's main page while not authenticated
 2. 2. Inspect the page header and navigation area for a 'Log out' button
 3. 3. If a 'Log out' button is present, attempt to click it
+
+**Original Expected Result:** The 'Log out' button is not visible/available to the anonymous user (control is not present or is disabled); clicking it is not possible. The application does not send a logout request and the user remains unauthenticated (no session was terminated).
 
 ---
 
@@ -741,15 +719,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Direct access to the Logout endpoint while unauthenticated is blocked/redirects to login
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open a browser while not authenticated
 2. 2. Enter the application's Logout endpoint URL (<logout endpoint URL>) in the address bar and navigate there
+
+**Original Expected Result:** The application redirects the anonymous user to the Login page instead of performing a logout; no session termination occurs and no protected content is exposed.
 
 ---
 
@@ -771,15 +748,14 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Rapid double-click the Log out button
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button once
 2. 2. Immediately click the 'Log out' button a second time (within 1 second of the first click)
+
+**Original Expected Result:** Only a single logout action succeeds: the user is redirected to the login page and the UI shows the login page. The second click is ignored (no duplicate navigation or duplicate login page stacks are visible).
 
 ---
 
@@ -801,15 +777,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Log out in one tab, then refresh a protected page in another tab
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the 'Log out' button
 2. 2. In Tab B, click the browser refresh button (reload the protected page)
+
+**Original Expected Result:** The logout in Tab A succeeds and redirects Tab A to the login page. In Tab B, the refresh is blocked from showing protected content: Tab B is redirected to the login page (access to protected page is blocked).
 
 ---
 
@@ -832,17 +807,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Enter an invalid email format and attempt to save
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <invalid email format> into the Email_Address field
 2. 2. Enter <valid first name> into the First_Name field
 3. 3. Enter <valid last name> into the Last_Name field
 4. 4. Click the 'Update profile' button
+
+**Original Expected Result:** Inline validation error appears on the Email_Address field indicating the value is not a valid email address; the form does not submit; profile is not updated
 
 ---
 
@@ -865,16 +839,15 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Upload file exactly at the site's maximum allowed upload size and save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'User picture' collapsible section
 2. 2. Drag-and-drop the file that is exactly the site's maximum allowed upload size onto the Picture_Upload area
 3. 3. Click the 'Update profile' button
+
+**Original Expected Result:** Upload and save succeeds; clicking 'Update profile' submits successfully, the profile page refreshes, and the new picture is visible on the profile page (picture replaced by the uploaded file).
 
 ---
 
@@ -900,16 +873,15 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Upload file one unit over the site's maximum allowed upload size and attempt to save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'User picture' collapsible section
 2. 2. Drag-and-drop the file that is one unit over the site's maximum allowed upload size onto the Picture_Upload area
 3. 3. Click the 'Update profile' button
+
+**Original Expected Result:** Upload is blocked / error shown; submission is blocked and an inline error is shown near the Picture_Upload field indicating the file exceeds the site's maximum allowed upload size, and the profile page does not refresh.
 
 ---
 
@@ -933,17 +905,16 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Enter emoji and non-Latin Unicode characters into Description and First Name fields and save
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'General' collapsible section
 2. 2. Enter emoji and non-Latin Unicode characters into the First_Name field
 3. 3. Enter emoji and non-Latin Unicode characters into the Description rich text editor
 4. 4. Click the 'Update profile' button
+
+**Original Expected Result:** Unicode input handling visible; after clicking 'Update profile' the profile page refreshes. The saved values either appear exactly as entered (emoji and Unicode characters visible) or an inline validation error is shown indicating unsupported characters. The visible outcome must clearly show whether the characters were saved or rejected.
 
 ---
 
@@ -965,11 +936,8 @@
 
 ---
 
-### [TC-017] Unknown Title
+### [TC-017] Add an Additional Name, remove it, then save (repeating group add-then-remove all)
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'Additional names' collapsible section
@@ -977,6 +945,8 @@
 3. 3. Enter a value into the Alternative_Name field for the new item
 4. 4. Remove the Additional_Names_List item just added
 5. 5. Click the 'Update profile' button
+
+**Original Expected Result:** Submission succeeds; because Additional_Names_List has min=0, the form submits successfully and the refreshed profile page shows no additional names entries (no residual empty/ghost entries).
 
 ---
 
@@ -998,16 +968,15 @@
 
 ---
 
-### [TC-018] Unknown Title
+### [TC-018] Immediately press browser Back after successful Update profile to check for duplicate or stale edit form behavior
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Update profile' button to save changes
 2. 2. Wait for the profile page to refresh (successful save)
 3. 3. Immediately press the browser Back button
+
+**Original Expected Result:** No duplicate or unintended state; after pressing Back the browser either (a) shows the refreshed profile page (not the edit form), or (b) shows the edit form but with fields blank or reflecting the saved values (not causing a second save). No additional profile entities are created and only the single intended save exists.
 
 ---
 
@@ -1032,17 +1001,16 @@
 
 ---
 
-### [TC-019] Unknown Title
+### [TC-019] Make multiple edits then click Cancel to ensure no changes are saved
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand the 'General' collapsible section
 2. 2. Change the First_Name field
 3. 3. Change the Description rich text editor
 4. 4. Click the 'Cancel' button
+
+**Original Expected Result:** Cancel exits without saving; the profile page is shown (or user is navigated away) and the previously saved profile values remain unchanged (the changes made in the edit form are not persisted).
 
 ---
 
@@ -1068,15 +1036,14 @@
 
 ---
 
-### [TC-022] Unknown Title
+### [TC-022] First name alphabetical filter when no participants match the chosen initial
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the First name alphabet filter control
 2. 2. Select the alphabet letter <chosen initial>
+
+**Original Expected Result:** Filter selection succeeds; the participants table updates to show zero rows (an empty state is visible) indicating no participants match the selected initial. The UI reflects the active filter (the chosen letter is highlighted).
 
 ---
 
@@ -1099,14 +1066,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Click 'Log out' button terminates session and redirects to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page; the Login page is displayed and the login form prompting for credentials is visible
 
 ---
 
@@ -1136,16 +1102,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to use Log out control while not authenticated (precondition violation) - button visibility
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application's main page while not authenticated
 2. 2. Inspect the page header and navigation area for a 'Log out' button
 3. 3. If a 'Log out' button is present, attempt to click it
+
+**Original Expected Result:** The 'Log out' button is not visible/available to the anonymous user (control is not present or is disabled); clicking it is not possible. The application does not send a logout request and the user remains unauthenticated (no session was terminated).
 
 ---
 
@@ -1171,15 +1136,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Direct access to the Logout endpoint while unauthenticated is blocked/redirects to login
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open a browser while not authenticated
 2. 2. Enter the application's Logout endpoint URL (<logout endpoint URL>) in the address bar and navigate there
+
+**Original Expected Result:** The application redirects the anonymous user to the Login page instead of performing a logout; no session termination occurs and no protected content is exposed.
 
 ---
 
@@ -1205,15 +1169,14 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Rapid double-click the Log out button
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button once
 2. 2. Immediately click the 'Log out' button a second time (within 1 second of the first click)
+
+**Original Expected Result:** Only a single logout action succeeds: the user is redirected to the login page and the UI shows the login page. The second click is ignored (no duplicate navigation or duplicate login page stacks are visible).
 
 ---
 
@@ -1238,14 +1201,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Click Log out while the browser is offline
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. With network offline, click the 'Log out' button
+
+**Original Expected Result:** The client-side logout flow succeeds: the app clears the local authenticated state and displays the login page (user is shown the login page). Subsequent navigation to a protected page remains blocked (the login page is shown).
 
 ---
 
@@ -1269,15 +1231,14 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Use browser Back after successful logout
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
 2. 2. After being redirected to the login page, press the browser Back button once
+
+**Original Expected Result:** Returning via the browser Back button does not restore access to the previously viewed protected page: the user remains on or is redirected back to the login page and access to protected content is blocked.
 
 ---
 
@@ -1302,11 +1263,8 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Upload a file that violates site upload constraints and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attach <file violating site upload constraints> to the Picture_Upload control (via drag-and-drop or file picker)
@@ -1314,6 +1272,8 @@
 3. 3. Enter <valid last name> into the Last_Name field
 4. 4. Enter <valid email address> into the Email_Address field
 5. 5. Click the 'Update profile' button
+
+**Original Expected Result:** Upload control displays an error indicating the file violates site upload constraints (e.g. file type or size invalid); the form does not submit; profile is not updated
 
 ---
 
@@ -1336,14 +1296,13 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Unauthenticated user attempts to access Edit profile page
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Edit profile page URL while signed out
+
+**Original Expected Result:** User is redirected to the login page (Edit profile page is not accessible); no profile edit controls are shown to the unauthenticated user
 
 ---
 
@@ -1367,14 +1326,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Click 'Log out' button terminates session and redirects to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page; the Login page is displayed and the login form prompting for credentials is visible
 
 ---
 
@@ -1408,16 +1366,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to use Log out control while not authenticated (precondition violation) - button visibility
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application's main page while not authenticated
 2. 2. Inspect the page header and navigation area for a 'Log out' button
 3. 3. If a 'Log out' button is present, attempt to click it
+
+**Original Expected Result:** The 'Log out' button is not visible/available to the anonymous user (control is not present or is disabled); clicking it is not possible. The application does not send a logout request and the user remains unauthenticated (no session was terminated).
 
 ---
 
@@ -1451,17 +1408,16 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (post-logout access requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. Observe that the application redirects to the Login page (post-logout)
 4. 4. From the browser address bar, navigate to a protected page at <protected page URL>
+
+**Original Expected Result:** Navigation to <protected page URL> is blocked and the user is redirected to the Login page; protected page content is not displayed and re-authentication is required (session remains terminated).
 
 ---
 
@@ -1493,15 +1449,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Direct access to the Logout endpoint while unauthenticated is blocked/redirects to login
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open a browser while not authenticated
 2. 2. Enter the application's Logout endpoint URL (<logout endpoint URL>) in the address bar and navigate there
+
+**Original Expected Result:** The application redirects the anonymous user to the Login page instead of performing a logout; no session termination occurs and no protected content is exposed.
 
 ---
 
@@ -1535,15 +1490,14 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Rapid double-click the Log out button
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button once
 2. 2. Immediately click the 'Log out' button a second time (within 1 second of the first click)
+
+**Original Expected Result:** Only a single logout action succeeds: the user is redirected to the login page and the UI shows the login page. The second click is ignored (no duplicate navigation or duplicate login page stacks are visible).
 
 ---
 
@@ -1579,15 +1533,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Log out in one tab, then refresh a protected page in another tab
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the 'Log out' button
 2. 2. In Tab B, click the browser refresh button (reload the protected page)
+
+**Original Expected Result:** The logout in Tab A succeeds and redirects Tab A to the login page. In Tab B, the refresh is blocked from showing protected content: Tab B is redirected to the login page (access to protected page is blocked).
 
 ---
 
@@ -1623,14 +1576,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Click Log out while the browser is offline
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. With network offline, click the 'Log out' button
+
+**Original Expected Result:** The client-side logout flow succeeds: the app clears the local authenticated state and displays the login page (user is shown the login page). Subsequent navigation to a protected page remains blocked (the login page is shown).
 
 ---
 
@@ -1666,15 +1618,14 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Use browser Back after successful logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
 2. 2. After being redirected to the login page, press the browser Back button once
+
+**Original Expected Result:** Returning via the browser Back button does not restore access to the previously viewed protected page: the user remains on or is redirected back to the login page and access to protected content is blocked.
 
 ---
 
@@ -1713,15 +1664,14 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Rapid double-click the Log out button
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button once
 2. 2. Immediately click the 'Log out' button a second time (within 1 second of the first click)
+
+**Original Expected Result:** Only a single logout action succeeds: the user is redirected to the login page and the UI shows the login page. The second click is ignored (no duplicate navigation or duplicate login page stacks are visible).
 
 ---
 
@@ -1743,17 +1693,16 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (post-logout access requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. Observe that the application redirects to the Login page (post-logout)
 4. 4. From the browser address bar, navigate to a protected page at <protected page URL>
+
+**Original Expected Result:** Navigation to <protected page URL> is blocked and the user is redirected to the Login page; protected page content is not displayed and re-authentication is required (session remains terminated).
 
 ---
 
@@ -1778,14 +1727,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Click 'Log out' button terminates session and redirects to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page; the Login page is displayed and the login form prompting for credentials is visible
 
 ---
 
@@ -1809,16 +1757,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to use Log out control while not authenticated (precondition violation) - button visibility
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application's main page while not authenticated
 2. 2. Inspect the page header and navigation area for a 'Log out' button
 3. 3. If a 'Log out' button is present, attempt to click it
+
+**Original Expected Result:** The 'Log out' button is not visible/available to the anonymous user (control is not present or is disabled); clicking it is not possible. The application does not send a logout request and the user remains unauthenticated (no session was terminated).
 
 ---
 
@@ -1840,17 +1787,16 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (post-logout access requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. Observe that the application redirects to the Login page (post-logout)
 4. 4. From the browser address bar, navigate to a protected page at <protected page URL>
+
+**Original Expected Result:** Navigation to <protected page URL> is blocked and the user is redirected to the Login page; protected page content is not displayed and re-authentication is required (session remains terminated).
 
 ---
 
@@ -1872,16 +1818,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to use Log out control while not authenticated (precondition violation) - button visibility
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application's main page while not authenticated
 2. 2. Inspect the page header and navigation area for a 'Log out' button
 3. 3. If a 'Log out' button is present, attempt to click it
+
+**Original Expected Result:** The 'Log out' button is not visible/available to the anonymous user (control is not present or is disabled); clicking it is not possible. The application does not send a logout request and the user remains unauthenticated (no session was terminated).
 
 ---
 
@@ -1905,17 +1850,16 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] After logging out, accessing a protected page is blocked (post-logout access requires re-authentication)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as <role>
 2. 2. Click the 'Log out' button
 3. 3. Observe that the application redirects to the Login page (post-logout)
 4. 4. From the browser address bar, navigate to a protected page at <protected page URL>
+
+**Original Expected Result:** Navigation to <protected page URL> is blocked and the user is redirected to the Login page; protected page content is not displayed and re-authentication is required (session remains terminated).
 
 ---
 
@@ -1941,15 +1885,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Direct access to the Logout endpoint while unauthenticated is blocked/redirects to login
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open a browser while not authenticated
 2. 2. Enter the application's Logout endpoint URL (<logout endpoint URL>) in the address bar and navigate there
+
+**Original Expected Result:** The application redirects the anonymous user to the Login page instead of performing a logout; no session termination occurs and no protected content is exposed.
 
 ---
 
@@ -1971,14 +1914,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Click 'Log out' button terminates session and redirects to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Log out' button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page; the Login page is displayed and the login form prompting for credentials is visible
 
 ---
 

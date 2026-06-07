@@ -1,13 +1,12 @@
 # Post-Verification Specifications
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to reset app state without any preconditions
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Reset App State button
+
+**Original Expected Result:** The app state does not reset; the cart remains unchanged
 
 ---
 
@@ -27,14 +26,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to logout when not logged in
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page with no session ended.
 
 ---
 
@@ -57,14 +55,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset App State functionality
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Reset App State Button
+
+**Original Expected Result:** clears the cart and resets in-app state
 
 ---
 
@@ -86,14 +83,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to logout when not logged in
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page with no session ended.
 
 ---
 
@@ -115,14 +111,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset App State functionality
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Reset App State Button
+
+**Original Expected Result:** clears the cart and resets in-app state
 
 ---
 
@@ -146,14 +141,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset App State functionality
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Reset App State Button
+
+**Original Expected Result:** clears the cart and resets in-app state
 
 ---
 
@@ -177,14 +171,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Reset App State functionality
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Reset App State Button
+
+**Original Expected Result:** clears the cart and resets in-app state
 
 ---
 

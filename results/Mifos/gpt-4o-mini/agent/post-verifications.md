@@ -1,13 +1,12 @@
 # Post-Verification Specifications
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -29,17 +28,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -59,14 +57,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -90,14 +87,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -119,14 +115,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Attempt to stop all jobs when none are running
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Stop All
+
+**Original Expected Result:** No jobs stopped; error message displayed indicating there are no jobs currently running
 
 ---
 
@@ -148,16 +143,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Add maximum allowed entries to Column Definitions
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add exactly maximum allowed entries to the Column Definitions repeating group
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum number of column definitions
 
 ---
 
@@ -178,17 +172,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Attempt to add one more entry to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add maximum allowed entries to the Column Definitions repeating group
 4. 4. Attempt to add one more entry to the Column Definitions
+
+**Original Expected Result:** Attempt to add entry is blocked; visible error shown indicating maximum entries reached
 
 ---
 
@@ -210,17 +203,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Enter maximum length for Name in Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add an entry to the Column Definitions repeating group
 4. 4. Enter exactly maximum length for the Name field
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum length Name
 
 ---
 
@@ -244,17 +236,16 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Enter one character less than maximum length for Name in Column Definitions
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add an entry to the Column Definitions repeating group
 4. 4. Enter one character less than the maximum length for the Name field
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the Name field accepted
 
 ---
 
@@ -277,14 +268,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Enter long text in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a very long string (200+ characters) in the Data_Table_Name field
+
+**Original Expected Result:** Form submission is either accepted or truncated with a visible indicator
 
 ---
 
@@ -306,14 +296,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Enter special characters in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter special characters in the Data_Table_Name field
+
+**Original Expected Result:** Form submission is either accepted or a specific error shown
 
 ---
 
@@ -339,14 +328,13 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Enter leading/trailing whitespace in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a value with leading/trailing spaces in the Data_Table_Name field
+
+**Original Expected Result:** Leading/trailing whitespace is trimmed; saved value shown on detail page has no extra spaces
 
 ---
 
@@ -368,15 +356,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -397,15 +384,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -427,14 +413,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -455,17 +440,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -489,14 +473,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -518,14 +501,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -546,14 +528,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Attempt to stop all jobs when none are running
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Stop All
+
+**Original Expected Result:** No jobs stopped; error message displayed indicating there are no jobs currently running
 
 ---
 
@@ -574,15 +555,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -606,15 +586,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -638,17 +617,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -670,14 +648,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -701,14 +678,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -730,14 +706,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Attempt to stop all jobs when none are running
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Stop All
+
+**Original Expected Result:** No jobs stopped; error message displayed indicating there are no jobs currently running
 
 ---
 
@@ -758,15 +733,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -791,14 +765,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -819,17 +792,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -855,14 +827,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -886,14 +857,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -914,16 +884,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Add maximum allowed entries to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add exactly maximum allowed entries to the Column Definitions repeating group
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum number of column definitions
 
 ---
 
@@ -945,15 +914,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -974,15 +942,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1003,14 +970,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -1031,15 +997,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -1060,15 +1025,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1092,14 +1056,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -1120,15 +1083,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -1149,15 +1111,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1181,14 +1142,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -1208,15 +1168,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1237,14 +1196,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -1268,15 +1226,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -1297,15 +1254,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1326,15 +1282,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -1356,15 +1311,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1387,14 +1341,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -1415,17 +1368,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -1446,14 +1398,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -1475,14 +1426,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -1506,14 +1456,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Attempt to stop all jobs when none are running
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Stop All
+
+**Original Expected Result:** No jobs stopped; error message displayed indicating there are no jobs currently running
 
 ---
 
@@ -1537,16 +1486,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Add maximum allowed entries to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add exactly maximum allowed entries to the Column Definitions repeating group
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum number of column definitions
 
 ---
 
@@ -1568,17 +1516,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Attempt to add one more entry to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add maximum allowed entries to the Column Definitions repeating group
 4. 4. Attempt to add one more entry to the Column Definitions
+
+**Original Expected Result:** Attempt to add entry is blocked; visible error shown indicating maximum entries reached
 
 ---
 
@@ -1600,17 +1547,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Enter maximum length for Name in Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add an entry to the Column Definitions repeating group
 4. 4. Enter exactly maximum length for the Name field
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum length Name
 
 ---
 
@@ -1632,17 +1578,16 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Enter one character less than maximum length for Name in Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add an entry to the Column Definitions repeating group
 4. 4. Enter one character less than the maximum length for the Name field
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the Name field accepted
 
 ---
 
@@ -1666,14 +1611,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Enter long text in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a very long string (200+ characters) in the Data_Table_Name field
+
+**Original Expected Result:** Form submission is either accepted or truncated with a visible indicator
 
 ---
 
@@ -1695,14 +1639,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Enter special characters in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter special characters in the Data_Table_Name field
+
+**Original Expected Result:** Form submission is either accepted or a specific error shown
 
 ---
 
@@ -1724,14 +1667,13 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Enter leading/trailing whitespace in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a value with leading/trailing spaces in the Data_Table_Name field
+
+**Original Expected Result:** Leading/trailing whitespace is trimmed; saved value shown on detail page has no extra spaces
 
 ---
 
@@ -1753,11 +1695,8 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Create Holiday with From_Date one day before To_Date
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click + Create Holiday
@@ -1765,6 +1704,8 @@
 3. 3. Enter today's date in the From_Date field
 4. 4. Enter tomorrow's date in the To_Date field
 5. 5. Click Submit
+
+**Original Expected Result:** Holiday is created successfully; From_Date is today and To_Date is tomorrow
 
 ---
 
@@ -1785,15 +1726,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -1815,15 +1755,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1843,14 +1782,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -1872,17 +1810,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -1904,14 +1841,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -1933,15 +1869,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -1965,15 +1900,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -1995,14 +1929,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -2022,17 +1955,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -2056,14 +1988,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -2085,14 +2016,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -2116,14 +2046,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Attempt to stop all jobs when none are running
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Stop All
+
+**Original Expected Result:** No jobs stopped; error message displayed indicating there are no jobs currently running
 
 ---
 
@@ -2146,16 +2075,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Add maximum allowed entries to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add exactly maximum allowed entries to the Column Definitions repeating group
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum number of column definitions
 
 ---
 
@@ -2179,15 +2107,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -2209,15 +2136,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -2239,14 +2165,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -2268,17 +2193,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -2300,14 +2224,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -2329,14 +2252,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -2358,14 +2280,13 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Attempt to stop all jobs when none are running
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Stop All
+
+**Original Expected Result:** No jobs stopped; error message displayed indicating there are no jobs currently running
 
 ---
 
@@ -2391,16 +2312,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Add maximum allowed entries to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add exactly maximum allowed entries to the Column Definitions repeating group
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum number of column definitions
 
 ---
 
@@ -2422,17 +2342,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Attempt to add one more entry to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add maximum allowed entries to the Column Definitions repeating group
 4. 4. Attempt to add one more entry to the Column Definitions
+
+**Original Expected Result:** Attempt to add entry is blocked; visible error shown indicating maximum entries reached
 
 ---
 
@@ -2454,17 +2373,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Enter maximum length for Name in Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add an entry to the Column Definitions repeating group
 4. 4. Enter exactly maximum length for the Name field
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum length Name
 
 ---
 
@@ -2486,17 +2404,16 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Enter one character less than maximum length for Name in Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add an entry to the Column Definitions repeating group
 4. 4. Enter one character less than the maximum length for the Name field
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the Name field accepted
 
 ---
 
@@ -2518,14 +2435,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Enter long text in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a very long string (200+ characters) in the Data_Table_Name field
+
+**Original Expected Result:** Form submission is either accepted or truncated with a visible indicator
 
 ---
 
@@ -2547,14 +2463,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Enter special characters in Data Table Name
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter special characters in the Data_Table_Name field
+
+**Original Expected Result:** Form submission is either accepted or a specific error shown
 
 ---
 
@@ -2576,15 +2491,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -2605,15 +2519,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -2633,14 +2546,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -2660,15 +2572,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -2698,15 +2609,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -2730,15 +2640,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -2759,15 +2668,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -2788,14 +2696,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -2815,17 +2722,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -2846,15 +2752,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -2878,14 +2783,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -2906,14 +2810,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -2937,14 +2840,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -2965,15 +2867,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -2995,14 +2896,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -3024,15 +2924,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -3054,15 +2953,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -3084,14 +2982,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -3113,17 +3010,16 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Click on 'Log Out'
 3. 3. Immediately click on the User Profile Icon again
 4. 4. Click on 'Log Out' again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the login page without a second session being created.
 
 ---
 
@@ -3145,14 +3041,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -3174,15 +3069,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -3204,14 +3098,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -3232,15 +3125,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -3262,15 +3154,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -3291,15 +3182,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -3320,15 +3210,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -3354,14 +3243,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 
@@ -3383,14 +3271,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Navigate to authenticated page after logout
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page.
 
 ---
 
@@ -3414,14 +3301,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Attempt to start all jobs when none are scheduled
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Start All
+
+**Original Expected Result:** No jobs started; error message displayed indicating there are no scheduled jobs to start
 
 ---
 
@@ -3442,16 +3328,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Add maximum allowed entries to Column Definitions
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter a valid Data Table Name in the Data_Table_Name field
 2. 2. Select an Application Table Name from the dropdown
 3. 3. Add exactly maximum allowed entries to the Column Definitions repeating group
+
+**Original Expected Result:** Form submits successfully; custom data table is created with the maximum number of column definitions
 
 ---
 
@@ -3477,15 +3362,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully from the user profile icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the User Profile Icon in the top-right corner
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User is redirected to the login page and the authenticated session is terminated
 
 ---
 
@@ -3506,15 +3390,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out without being authenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the User Profile Icon
 2. 2. Select 'Log Out' from the dropdown
+
+**Original Expected Result:** User remains on the current page; no session is terminated; user is not redirected to the login page
 
 ---
 
@@ -3538,14 +3421,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to access an authenticated page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to an authenticated page
+
+**Original Expected Result:** User is redirected to the login page
 
 ---
 

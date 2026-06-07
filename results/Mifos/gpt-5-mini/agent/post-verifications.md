@@ -1,14 +1,13 @@
 # Post-Verification Specifications
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -33,14 +32,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -69,17 +67,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -105,16 +102,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -136,14 +132,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -167,14 +162,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Move a code value down in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Down on the row for <entry B>
+
+**Original Expected Result:** moves entry down in ordering and <entry B> is now displayed below the previous item in the list ordering
 
 ---
 
@@ -196,15 +190,14 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Open Create Data Table form from Manage Data Tables
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Create Data Table (Create_Data_Table action)
+
+**Original Expected Result:** Create_Data_Table form opens and the Create Data Table form is displayed with fields Data Table Name, Application Table Name, Multi Row, and Column Definitions
 
 ---
 
@@ -228,15 +221,14 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Open data table definition editor via Edit_Data_Table row action
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Edit for the <Data_Table_Name> row
+
+**Original Expected Result:** opens data table definition editor and the data table definition editor for <Data_Table_Name> is displayed
 
 ---
 
@@ -262,16 +254,15 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Delete a custom data table with confirmation
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Delete for the <Data_Table_Name> row
 3. 3. Click Confirm on the deletion confirmation dialog
+
+**Original Expected Result:** deletes custom data table and the row for <Data_Table_Name> is no longer visible in the Manage Data Tables list
 
 ---
 
@@ -298,11 +289,8 @@
 
 ---
 
-### [TC-017] Unknown Title
+### [TC-017] Submit Create Data Table form with columns (Create)
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Create Data Table form, enter Data Table Name = <data table name>
@@ -310,6 +298,8 @@
 3. 3. Optionally check Multi Row
 4. 4. Click Add Row in Column Definitions, then for the new column enter Name = <column name>, Type = <column type>, set Length/Is Mandatory/Is Unique as needed
 5. 5. Click Create
+
+**Original Expected Result:** New row appears in Manage Data Tables with the entered Data Table Name and Application Table Name and the Create Data Table form closes
 
 ---
 
@@ -333,11 +323,8 @@
 
 ---
 
-### [TC-021] Unknown Title
+### [TC-021] Submit Create Data Table form with ALL required fields empty
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Create Data Table' action to open Create_Data_Table_Form
@@ -345,6 +332,8 @@
 3. 3. Leave the Application Table Name dropdown unselected
 4. 4. Do not add any Column Definitions items
 5. 5. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation errors appear: Data Table Name field displays an error indicating it is required; Application Table Name field displays an error indicating it is required.
 
 ---
 
@@ -368,16 +357,15 @@
 
 ---
 
-### [TC-022] Unknown Title
+### [TC-022] Create Data Table: leave representative text field (Data Table Name) blank
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Data Table Name field blank
 2. 2. Select <valid application table> in the Application Table Name dropdown
 3. 3. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation error appears on the Data Table Name field indicating it is required.
 
 ---
 
@@ -401,16 +389,15 @@
 
 ---
 
-### [TC-023] Unknown Title
+### [TC-023] Create Data Table: leave representative dropdown (Application Table Name) blank
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid name> in the Data Table Name field
 2. 2. Leave the Application Table Name dropdown unselected
 3. 3. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation error appears on the Application Table Name field indicating it is required.
 
 ---
 
@@ -434,11 +421,8 @@
 
 ---
 
-### [TC-024] Unknown Title
+### [TC-024] Create Data Table: Column Definitions item with missing required column Name
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <valid name> in the Data Table Name field
@@ -447,6 +431,8 @@
 4. 4. Leave the Column 'Name' field blank in the new item
 5. 5. Select <valid Type> in the new item's Type dropdown
 6. 6. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation error appears on the Column Definitions item's Name field indicating it is required.
 
 ---
 
@@ -469,16 +455,15 @@
 
 ---
 
-### [TC-025] Unknown Title
+### [TC-025] Inline edit CRON expression with invalid CRON format
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the CRON Expression cell for a job to edit inline
 2. 2. Enter <invalid CRON expression> into the CRON Expression field
 3. 3. Save the inline edit
+
+**Original Expected Result:** Inline validation error appears on the CRON Expression field stating it must be a valid CRON expression; the change is rejected and the job's CRON expression remains unchanged.
 
 ---
 
@@ -501,15 +486,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -533,14 +517,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -571,11 +554,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -586,6 +566,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -609,17 +591,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -643,17 +624,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -675,16 +655,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -708,14 +687,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Move a code value down in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Down on the row for <entry B>
+
+**Original Expected Result:** moves entry down in ordering and <entry B> is now displayed below the previous item in the list ordering
 
 ---
 
@@ -739,15 +717,14 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Open Create Data Table form from Manage Data Tables
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Create Data Table (Create_Data_Table action)
+
+**Original Expected Result:** Create_Data_Table form opens and the Create Data Table form is displayed with fields Data Table Name, Application Table Name, Multi Row, and Column Definitions
 
 ---
 
@@ -769,15 +746,14 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Open data table definition editor via Edit_Data_Table row action
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Edit for the <Data_Table_Name> row
+
+**Original Expected Result:** opens data table definition editor and the data table definition editor for <Data_Table_Name> is displayed
 
 ---
 
@@ -801,16 +777,15 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Delete a custom data table with confirmation
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Delete for the <Data_Table_Name> row
 3. 3. Click Confirm on the deletion confirmation dialog
+
+**Original Expected Result:** deletes custom data table and the row for <Data_Table_Name> is no longer visible in the Manage Data Tables list
 
 ---
 
@@ -835,14 +810,13 @@
 
 ---
 
-### [TC-018] Unknown Title
+### [TC-018] Cancel Create Data Table form (Cancel)
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Create Data Table form, click Cancel
+
+**Original Expected Result:** closes form without creating and the Create Data Table form is closed with no new row added to Manage Data Tables
 
 ---
 
@@ -866,16 +840,15 @@
 
 ---
 
-### [TC-019] Unknown Title
+### [TC-019] Approve an Audit Trail entry when maker-checker is enabled and Processing Result is Pending
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Audit Trails
 2. 2. Locate the audit row for <Action_Name> with Processing Result = Pending
 3. 3. Click Approve for that audit row
+
+**Original Expected Result:** sets Processing Result to Approved and the Processing Result column for the selected audit row displays 'Approved'
 
 ---
 
@@ -897,11 +870,8 @@
 
 ---
 
-### [TC-021] Unknown Title
+### [TC-021] Submit Create Data Table form with ALL required fields empty
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Create Data Table' action to open Create_Data_Table_Form
@@ -909,6 +879,8 @@
 3. 3. Leave the Application Table Name dropdown unselected
 4. 4. Do not add any Column Definitions items
 5. 5. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation errors appear: Data Table Name field displays an error indicating it is required; Application Table Name field displays an error indicating it is required.
 
 ---
 
@@ -933,16 +905,15 @@
 
 ---
 
-### [TC-022] Unknown Title
+### [TC-022] Create Data Table: leave representative text field (Data Table Name) blank
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Data Table Name field blank
 2. 2. Select <valid application table> in the Application Table Name dropdown
 3. 3. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation error appears on the Data Table Name field indicating it is required.
 
 ---
 
@@ -971,15 +942,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -1002,14 +972,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -1032,11 +1001,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -1047,6 +1013,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -1069,17 +1037,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -1103,17 +1070,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -1137,14 +1103,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -1168,11 +1133,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -1183,6 +1145,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -1204,17 +1168,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -1239,17 +1202,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -1272,17 +1234,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -1303,16 +1264,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -1340,14 +1300,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -1375,14 +1334,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -1404,14 +1362,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -1435,14 +1392,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -1467,11 +1423,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -1482,6 +1435,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -1505,17 +1460,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -1537,17 +1491,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -1569,17 +1522,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -1604,16 +1556,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -1635,14 +1586,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -1665,15 +1615,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -1697,14 +1646,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -1733,15 +1681,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -1763,17 +1710,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -1796,17 +1742,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -1835,17 +1780,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -1875,16 +1819,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -1916,17 +1859,16 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `partial`
 
 **Coverage Note**: *Creation of the floating rate and its base-flag can be fully verified in-app. Automatic adjustment of linked loan products' effective interest rates can only be verified if one or more loan products are already linked to this floating rate (and their effective rates are recalculated/displayed). If no loan products are linked, that side-effect cannot be observed by this test and requires a separate cross-entity verification.*
 
-**Original Test Case Description:**
-> No description available.
-
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -1952,14 +1894,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -1985,16 +1926,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `partial`
 
 **Coverage Note**: *The Floating Rate detail and its Rate Periods table are directly observable. Changes to already-approved/active loan accounts' calculated interest may be applied by scheduled background jobs (e.g., rate revaluation) and might not be immediate; verify product-level or loan-preview values if available. If linked loan recalculation is asynchronous, this verification confirms the rate period addition and immediate product-level linkage, not necessarily all downstream amortization recalculations.*
 
-**Original Test Case Description:**
-> No description available.
-
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -2022,15 +1962,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -2055,15 +1994,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -2087,14 +2025,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -2116,15 +2053,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -2149,14 +2085,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -2182,14 +2117,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -2217,11 +2151,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -2232,6 +2163,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -2258,17 +2191,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -2293,17 +2225,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -2328,17 +2259,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -2365,16 +2295,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -2396,14 +2325,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -2431,14 +2359,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Move a code value down in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Down on the row for <entry B>
+
+**Original Expected Result:** moves entry down in ordering and <entry B> is now displayed below the previous item in the list ordering
 
 ---
 
@@ -2466,15 +2393,14 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Open Create Data Table form from Manage Data Tables
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Create Data Table (Create_Data_Table action)
+
+**Original Expected Result:** Create_Data_Table form opens and the Create Data Table form is displayed with fields Data Table Name, Application Table Name, Multi Row, and Column Definitions
 
 ---
 
@@ -2500,15 +2426,14 @@
 
 ---
 
-### [TC-015] Unknown Title
+### [TC-015] Open data table definition editor via Edit_Data_Table row action
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Edit for the <Data_Table_Name> row
+
+**Original Expected Result:** opens data table definition editor and the data table definition editor for <Data_Table_Name> is displayed
 
 ---
 
@@ -2537,16 +2462,15 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Delete a custom data table with confirmation
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Delete for the <Data_Table_Name> row
 3. 3. Click Confirm on the deletion confirmation dialog
+
+**Original Expected Result:** deletes custom data table and the row for <Data_Table_Name> is no longer visible in the Manage Data Tables list
 
 ---
 
@@ -2572,11 +2496,8 @@
 
 ---
 
-### [TC-017] Unknown Title
+### [TC-017] Submit Create Data Table form with columns (Create)
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Create Data Table form, enter Data Table Name = <data table name>
@@ -2584,6 +2505,8 @@
 3. 3. Optionally check Multi Row
 4. 4. Click Add Row in Column Definitions, then for the new column enter Name = <column name>, Type = <column type>, set Length/Is Mandatory/Is Unique as needed
 5. 5. Click Create
+
+**Original Expected Result:** New row appears in Manage Data Tables with the entered Data Table Name and Application Table Name and the Create Data Table form closes
 
 ---
 
@@ -2609,14 +2532,13 @@
 
 ---
 
-### [TC-018] Unknown Title
+### [TC-018] Cancel Create Data Table form (Cancel)
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Create Data Table form, click Cancel
+
+**Original Expected Result:** closes form without creating and the Create Data Table form is closed with no new row added to Manage Data Tables
 
 ---
 
@@ -2644,16 +2566,15 @@
 
 ---
 
-### [TC-019] Unknown Title
+### [TC-019] Approve an Audit Trail entry when maker-checker is enabled and Processing Result is Pending
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Audit Trails
 2. 2. Locate the audit row for <Action_Name> with Processing Result = Pending
 3. 3. Click Approve for that audit row
+
+**Original Expected Result:** sets Processing Result to Approved and the Processing Result column for the selected audit row displays 'Approved'
 
 ---
 
@@ -2681,17 +2602,16 @@
 
 ---
 
-### [TC-020] Unknown Title
+### [TC-020] Reject an Audit Trail entry with an optional rejection reason
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Audit Trails
 2. 2. Locate the audit row for <Action_Name> with Processing Result = Pending
 3. 3. Click Reject for that audit row
 4. 4. Enter <rejection reason> in the Rejection_Reason field (optional) and click Confirm
+
+**Original Expected Result:** sets Processing Result to Rejected and the Processing Result column for the selected audit row displays 'Rejected'
 
 ---
 
@@ -2715,11 +2635,8 @@
 
 ---
 
-### [TC-021] Unknown Title
+### [TC-021] Submit Create Data Table form with ALL required fields empty
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Create Data Table' action to open Create_Data_Table_Form
@@ -2727,6 +2644,8 @@
 3. 3. Leave the Application Table Name dropdown unselected
 4. 4. Do not add any Column Definitions items
 5. 5. Click the Create button
+
+**Original Expected Result:** Form does not submit; Data table is not created. Inline validation errors appear: Data Table Name field displays an error indicating it is required; Application Table Name field displays an error indicating it is required.
 
 ---
 
@@ -2752,15 +2671,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -2790,15 +2708,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -2822,14 +2739,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -2853,15 +2769,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -2887,14 +2802,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -2918,14 +2832,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -2950,11 +2863,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -2965,6 +2875,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -2990,17 +2902,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -3025,17 +2936,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -3061,16 +2971,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -3097,14 +3006,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -3130,14 +3038,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Move a code value down in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Down on the row for <entry B>
+
+**Original Expected Result:** moves entry down in ordering and <entry B> is now displayed below the previous item in the list ordering
 
 ---
 
@@ -3163,15 +3070,14 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Open Create Data Table form from Manage Data Tables
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Create Data Table (Create_Data_Table action)
+
+**Original Expected Result:** Create_Data_Table form opens and the Create Data Table form is displayed with fields Data Table Name, Application Table Name, Multi Row, and Column Definitions
 
 ---
 
@@ -3196,15 +3102,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -3230,15 +3135,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -3266,14 +3170,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -3297,15 +3200,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -3331,14 +3233,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -3365,14 +3266,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -3394,11 +3294,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -3409,6 +3306,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -3438,17 +3337,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -3475,15 +3373,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -3509,15 +3406,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -3545,14 +3441,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -3576,14 +3471,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -3610,11 +3504,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -3625,6 +3516,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -3648,17 +3541,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -3685,17 +3577,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -3720,17 +3611,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -3755,16 +3645,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -3786,14 +3675,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -3821,14 +3709,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Move a code value down in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Down on the row for <entry B>
+
+**Original Expected Result:** moves entry down in ordering and <entry B> is now displayed below the previous item in the list ordering
 
 ---
 
@@ -3852,15 +3739,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -3884,14 +3770,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -3915,11 +3800,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -3930,6 +3812,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -3951,15 +3835,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -3984,14 +3867,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -4016,15 +3898,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -4050,14 +3931,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4085,15 +3965,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -4118,14 +3997,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -4150,14 +4028,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4181,15 +4058,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -4214,14 +4090,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -4246,15 +4121,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -4280,14 +4154,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -4313,15 +4186,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -4345,15 +4217,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -4379,14 +4250,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -4408,15 +4278,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -4445,14 +4314,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4480,15 +4348,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -4514,14 +4381,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -4545,15 +4411,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -4580,14 +4445,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4613,15 +4477,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -4643,15 +4506,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -4681,15 +4543,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -4714,14 +4575,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4745,15 +4605,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -4779,14 +4638,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -4809,14 +4667,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4843,14 +4700,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -4874,15 +4730,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -4909,15 +4764,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -4941,14 +4795,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -4973,15 +4826,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -5005,14 +4857,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -5035,17 +4886,16 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Rapid double-click Log Out
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Log in as a valid user
 2. 2. Click the Profile Icon in the top-right corner
 3. 3. Click the "Log Out" button
 4. 4. Immediately click the "Log Out" button again
+
+**Original Expected Result:** First click succeeds: authenticated session is terminated and the user is redirected to the login page. The immediate second click is ignored (no additional navigation or error shown) and only a single logout action takes effect.
 
 ---
 
@@ -5072,17 +4922,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -5107,14 +4956,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -5140,15 +4988,14 @@
 
 ---
 
-### [TC-014] Unknown Title
+### [TC-014] Open Create Data Table form from Manage Data Tables
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Create Data Table (Create_Data_Table action)
+
+**Original Expected Result:** Create_Data_Table form opens and the Create Data Table form is displayed with fields Data Table Name, Application Table Name, Multi Row, and Column Definitions
 
 ---
 
@@ -5172,16 +5019,15 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Delete a custom data table with confirmation
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Delete for the <Data_Table_Name> row
 3. 3. Click Confirm on the deletion confirmation dialog
+
+**Original Expected Result:** deletes custom data table and the row for <Data_Table_Name> is no longer visible in the Manage Data Tables list
 
 ---
 
@@ -5203,14 +5049,13 @@
 
 ---
 
-### [TC-018] Unknown Title
+### [TC-018] Cancel Create Data Table form (Cancel)
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Create Data Table form, click Cancel
+
+**Original Expected Result:** closes form without creating and the Create Data Table form is closed with no new row added to Manage Data Tables
 
 ---
 
@@ -5238,17 +5083,16 @@
 
 ---
 
-### [TC-020] Unknown Title
+### [TC-020] Reject an Audit Trail entry with an optional rejection reason
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Audit Trails
 2. 2. Locate the audit row for <Action_Name> with Processing Result = Pending
 3. 3. Click Reject for that audit row
 4. 4. Enter <rejection reason> in the Rejection_Reason field (optional) and click Confirm
+
+**Original Expected Result:** sets Processing Result to Rejected and the Processing Result column for the selected audit row displays 'Rejected'
 
 ---
 
@@ -5272,15 +5116,14 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Open Profile Settings via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Profile Settings' in the dropdown
+
+**Original Expected Result:** navigates to Profile Settings page
 
 ---
 
@@ -5308,15 +5151,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Log Out via Profile Icon
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Profile Icon in the top-right corner to open the User Profile Menu
 2. 2. Click 'Log Out' in the dropdown
+
+**Original Expected Result:** terminates authenticated session; clears authentication token; redirects to login page
 
 ---
 
@@ -5340,14 +5182,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Unauthenticated navigation to a protected page redirects to login
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Enter <authenticated page URL> in the browser address bar and navigate to it
+
+**Original Expected Result:** redirects to login page
 
 ---
 
@@ -5369,15 +5210,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Profile icon/menu inaccessible when unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the application home page while not logged in
 2. 2. Click the top-right Profile Icon
+
+**Original Expected Result:** Profile Icon and profile menu are not available: the Profile Icon is not visible in the top-right; no dropdown opens; 'Profile Settings' and 'Log Out' options are not present or accessible. The user remains on the public/unauthenticated page (no authenticated UI is shown).
 
 ---
 
@@ -5403,14 +5243,13 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Direct navigation to Profile Settings while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Profile Settings page URL
+
+**Original Expected Result:** Auth Guard blocks access: browser is redirected to the Login page; Profile Settings content is not displayed and no profile settings UI elements are visible.
 
 ---
 
@@ -5432,14 +5271,13 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Invoking Log Out endpoint while unauthenticated is blocked
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the browser address bar, navigate to the Log Out endpoint/URL that the 'Log Out' button would call
+
+**Original Expected Result:** Precondition prevents logout action: browser is redirected to the Login page; no logout success behavior occurs (no authenticated session existed and no session changes happen).
 
 ---
 
@@ -5461,11 +5299,8 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Using browser Back after Log Out does not return to authenticated pages
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Login page
@@ -5476,6 +5311,8 @@
 6. 6. Click the Profile Icon
 7. 7. Click the 'Log Out' button in the profile menu
 8. 8. After the application redirects to the Login page, click the browser Back button to return to the previously viewed protected page
+
+**Original Expected Result:** After logout the protected page remains inaccessible: Auth Guard immediately redirects to the Login page; protected page content is not displayed; the user remains logged out (authentication token/session cleared).
 
 ---
 
@@ -5497,17 +5334,16 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Browser Back after Log Out should not return to protected page
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the protected page, click the Profile Icon
 2. 2. Click the "Log Out" button
 3. 3. Wait for redirect to the login page
 4. 4. Press the browser Back button
+
+**Original Expected Result:** Navigation back to the protected page is blocked: Auth_Guard redirects to the login page and the protected page is not displayed. The back navigation is effectively blocked and the login page is shown.
 
 ---
 
@@ -5531,17 +5367,16 @@
 
 ---
 
-### [TC-010] Unknown Title
+### [TC-010] Log Out in one tab, then attempt Log Out in another tab (concurrent session edge)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Profile Icon
 2. 2. In Tab A, click the "Log Out" button
 3. 3. In Tab B, click the Profile Icon
 4. 4. In Tab B, click the "Log Out" button
+
+**Original Expected Result:** Logout in Tab A succeeds: Tab A is redirected to the login page and authentication token cleared. In Tab B, clicking "Log Out" succeeds in resulting in the login page (no error shown) but performs no additional session termination; Tab B is redirected to the login page as well.
 
 ---
 
@@ -5565,16 +5400,15 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Profile menu and Profile Settings access when user is unauthenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is logged out (if not, perform Log Out)
 2. 2. Observe whether the Profile Icon is visible in the top-right corner
 3. 3. In the browser address bar, manually navigate to the Profile Settings page URL and press Enter
+
+**Original Expected Result:** Profile Icon is not visible when unauthenticated (no dropdown available). Direct navigation to the Profile Settings URL is blocked: Auth_Guard redirects to the login page and the Profile Settings page is not displayed.
 
 ---
 
@@ -5596,14 +5430,13 @@
 
 ---
 
-### [TC-012] Unknown Title
+### [TC-012] Move a code value up in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Up on the row for <entry A>
+
+**Original Expected Result:** moves entry up in ordering and <entry A> is now displayed above the previous item in the list ordering
 
 ---
 
@@ -5629,14 +5462,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Move a code value down in ordering
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In the Code Values Editor for <Code List Name>, click Move Down on the row for <entry B>
+
+**Original Expected Result:** moves entry down in ordering and <entry B> is now displayed below the previous item in the list ordering
 
 ---
 
@@ -5660,16 +5492,15 @@
 
 ---
 
-### [TC-016] Unknown Title
+### [TC-016] Delete a custom data table with confirmation
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Manage Data Tables
 2. 2. Click Delete for the <Data_Table_Name> row
 3. 3. Click Confirm on the deletion confirmation dialog
+
+**Original Expected Result:** deletes custom data table and the row for <Data_Table_Name> is no longer visible in the Manage Data Tables list
 
 ---
 
@@ -5691,11 +5522,8 @@
 
 ---
 
-### [TC-017] Unknown Title
+### [TC-017] Submit Create Data Table form with columns (Create)
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Create Data Table form, enter Data Table Name = <data table name>
@@ -5703,6 +5531,8 @@
 3. 3. Optionally check Multi Row
 4. 4. Click Add Row in Column Definitions, then for the new column enter Name = <column name>, Type = <column type>, set Length/Is Mandatory/Is Unique as needed
 5. 5. Click Create
+
+**Original Expected Result:** New row appears in Manage Data Tables with the entered Data Table Name and Application Table Name and the Create Data Table form closes
 
 ---
 
@@ -5726,16 +5556,15 @@
 
 ---
 
-### [TC-019] Unknown Title
+### [TC-019] Approve an Audit Trail entry when maker-checker is enabled and Processing Result is Pending
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Audit Trails
 2. 2. Locate the audit row for <Action_Name> with Processing Result = Pending
 3. 3. Click Approve for that audit row
+
+**Original Expected Result:** sets Processing Result to Approved and the Processing Result column for the selected audit row displays 'Approved'
 
 ---
 
@@ -5762,17 +5591,16 @@
 
 ---
 
-### [TC-020] Unknown Title
+### [TC-020] Reject an Audit Trail entry with an optional rejection reason
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to System Administration > Audit Trails
 2. 2. Locate the audit row for <Action_Name> with Processing Result = Pending
 3. 3. Click Reject for that audit row
 4. 4. Enter <rejection reason> in the Rejection_Reason field (optional) and click Confirm
+
+**Original Expected Result:** sets Processing Result to Rejected and the Processing Result column for the selected audit row displays 'Rejected'
 
 ---
 

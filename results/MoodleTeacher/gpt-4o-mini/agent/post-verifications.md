@@ -1,13 +1,12 @@
 # Post-Verification Specifications
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -31,16 +30,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Leave the Email Address field blank and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Email Address field blank
 2. 2. Fill all other required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears on the Email_Address field indicating it is required
 
 ---
 
@@ -60,16 +58,15 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Upload a file that does not meet the upload constraints
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select a file that does not meet the upload constraints
 2. 2. Fill all other required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears indicating the file does not meet the upload constraints
 
 ---
 
@@ -89,14 +86,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -118,15 +114,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out while unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is not authenticated
 2. 2. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page and is not redirected to the login page
 
 ---
 
@@ -146,14 +141,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -175,14 +169,13 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] User attempts to log out when not authenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page with no session termination.
 
 ---
 
@@ -206,16 +199,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] Leave the Email Address field blank and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Email Address field blank
 2. 2. Fill all other required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears on the Email_Address field indicating it is required
 
 ---
 
@@ -235,16 +227,15 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Upload a file that does not meet the upload constraints
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select a file that does not meet the upload constraints
 2. 2. Fill all other required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears indicating the file does not meet the upload constraints
 
 ---
 
@@ -266,15 +257,14 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Submit with all required fields empty
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave all required fields blank
 2. 2. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears on the First_Name, Last_Name, and Email_Address fields indicating they are required
 
 ---
 
@@ -295,16 +285,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Upload a file exactly at the size limit for New Picture Upload
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Drag and drop a file that is exactly at the size limit into the New Picture Upload area
 2. 2. Fill in all required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Profile is updated successfully; the profile page refreshes.
 
 ---
 
@@ -324,16 +313,15 @@
 
 ---
 
-### [TC-009] Unknown Title
+### [TC-009] Upload a file one byte over the size limit for New Picture Upload
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Drag and drop a file that is one byte over the size limit into the New Picture Upload area
 2. 2. Fill in all required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Upload is blocked; an error message is displayed indicating the file exceeds the size limit.
 
 ---
 
@@ -354,14 +342,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -383,15 +370,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out while unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is not authenticated
 2. 2. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page and is not redirected to the login page
 
 ---
 
@@ -413,14 +399,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -448,14 +433,13 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] User attempts to log out when not authenticated
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page with no session termination.
 
 ---
 
@@ -477,16 +461,15 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Upload a file that does not meet the upload constraints
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Select a file that does not meet the upload constraints
 2. 2. Fill all other required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears indicating the file does not meet the upload constraints
 
 ---
 
@@ -506,15 +489,14 @@
 
 ---
 
-### [TC-007] Unknown Title
+### [TC-007] Submit with all required fields empty
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave all required fields blank
 2. 2. Click Update Profile
+
+**Original Expected Result:** Inline validation error appears on the First_Name, Last_Name, and Email_Address fields indicating they are required
 
 ---
 
@@ -536,16 +518,15 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Upload a file exactly at the size limit for New Picture Upload
 **Category**: `edge` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Drag and drop a file that is exactly at the size limit into the New Picture Upload area
 2. 2. Fill in all required fields with valid data
 3. 3. Click Update Profile
+
+**Original Expected Result:** Profile is updated successfully; the profile page refreshes.
 
 ---
 
@@ -567,14 +548,13 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] User attempts to log out when not authenticated
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page with no session termination.
 
 ---
 
@@ -594,14 +574,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -623,15 +602,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to log out while unauthenticated
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is not authenticated
 2. 2. Click the Logout button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page and is not redirected to the login page
 
 ---
 
@@ -653,14 +631,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 
@@ -684,14 +661,13 @@
 
 ---
 
-### [TC-013] Unknown Title
+### [TC-013] Send a message
 **Category**: `positive` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the 'Message' button
+
+**Original Expected Result:** Message sent successfully
 
 ---
 
@@ -712,14 +688,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
+
+**Original Expected Result:** terminates the current authenticated session and redirects to the login page
 
 ---
 

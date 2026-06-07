@@ -1,13 +1,12 @@
 # Post-Verification Specifications
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 
@@ -33,16 +32,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `other` | **Coverage**: `partial`
 
 **Coverage Note**: *Receipt of the verification email requires access to the recipient's external email inbox (external system) and so cannot be fully verified in-app. Partial verification can be done via login behavior and by checking the user record via admin UI or API to confirm account creation and email_verified status.*
 
-**Original Test Case Description:**
-> No description available.
-
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -50,16 +48,15 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `other` | **Coverage**: `partial`
 
 **Coverage Note**: *Fully proving the backend state (email delivery and creation of a reset token) requires access to the recipient's email inbox or server logs/database. If those are not accessible, only the in-app confirmation message can be verified.*
 
-**Original Test Case Description:**
-> No description available.
-
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 
@@ -84,14 +81,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -118,14 +114,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 
@@ -159,15 +154,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to invoke Logout action when user is not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Navigate directly to the Logout URL / click the Logout endpoint link (attempt to trigger Logout while unauthenticated)
+
+**Original Expected Result:** Navigation is blocked: the application redirects to the Login page and displays the login form. The Logout action is not performed (no session termination occurs because there is no active session). No protected content is shown.
 
 ---
 
@@ -189,15 +183,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Unauthenticated state shows no action buttons (Logout not visible)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Open the application UI area that normally contains session actions (header, user menu, or action bar)
+
+**Original Expected Result:** The action bar / user menu does not display a 'Logout' button or any authenticated-only actions. There is no clickable Logout control visible in the Unauthenticated state (no action buttons are present).
 
 ---
 
@@ -222,15 +215,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to invoke Logout action when user is not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Navigate directly to the Logout URL / click the Logout endpoint link (attempt to trigger Logout while unauthenticated)
+
+**Original Expected Result:** Navigation is blocked: the application redirects to the Login page and displays the login form. The Logout action is not performed (no session termination occurs because there is no active session). No protected content is shown.
 
 ---
 
@@ -257,18 +249,17 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] After Logout, accessing a protected page is blocked and redirects to login
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `partial`
 
 **Coverage Note**: *Clicking 'Book Now' typically opens the in-app Car Booking page with the selected vehicle and details pre-filled. A permanent backend booking record is usually only created after the user confirms booking and completes payment, so verifying a persisted booking record is not possible at this step.*
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Sign in as <role> to create an authenticated session
 2. 2. Click the Logout action to terminate the session
 3. 3. After logout completes, navigate to a known protected page URL (direct URL entry or bookmarked link)
+
+**Original Expected Result:** Access is blocked: the application redirects to the Login page and displays the login form. Protected page content is not displayed; the terminated session is not restored by the navigation.
 
 ---
 
@@ -295,14 +286,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 
@@ -328,14 +318,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -363,15 +352,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to invoke Logout action when user is not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Navigate directly to the Logout URL / click the Logout endpoint link (attempt to trigger Logout while unauthenticated)
+
+**Original Expected Result:** Navigation is blocked: the application redirects to the Login page and displays the login form. The Logout action is not performed (no session termination occurs because there is no active session). No protected content is shown.
 
 ---
 
@@ -397,14 +385,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -432,15 +419,14 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Logout in one tab then quickly access protected page in another tab
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. In Tab A, click the Logout button
 2. 2. Immediately in Tab B, attempt to navigate to a protected page (click a protected page link or enter its URL)
+
+**Original Expected Result:** Logout in Tab A succeeds: session is terminated and Tab A redirects to the home page. Access attempt in Tab B is blocked: navigation to the protected page redirects to the login page (no protected content is shown).
 
 ---
 
@@ -465,17 +451,16 @@
 
 ---
 
-### [TC-017] Unknown Title
+### [TC-017] Rapid resubmission after redirect: attempt to create duplicate review by using browser Back and Submit again
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Review Submission Form and fill all required fields (Overall_Rating and any visible category ratings)
 2. 2. Click Submit and wait for the success redirect to the item or review confirmation
 3. 3. Press the browser Back button to return to the Review Submission Form
 4. 4. Immediately click Submit again without modifying fields
+
+**Original Expected Result:** Second submission attempt is blocked; a visible blocking message is shown indicating the review cannot be duplicated and only one review is associated with the booking (is blocked / error shown).
 
 ---
 
@@ -500,16 +485,15 @@
 
 ---
 
-### [TC-020] Unknown Title
+### [TC-020] Change Sort_By reorders results
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Open the Sort By dropdown
 2. 2. Select <sort option> from the Sort By dropdown
 3. 3. Observe the Results grid ordering and the Sort By control state
+
+**Original Expected Result:** Results grid reorders according to <sort option>; the Sort By control shows <sort option> as the selected option and the visible ordering of result items updates accordingly
 
 ---
 
@@ -534,17 +518,16 @@
 
 ---
 
-### [TC-022] Unknown Title
+### [TC-022] Departure time range end is before start (invalid time-range) is rejected
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Expand 'Flights Filters' in the left sidebar
 2. 2. Set Departure_Time_Range start to <start time>
 3. 3. Set Departure_Time_Range end to <end time earlier than start>
 4. 4. Click outside the control or wait for the widget to apply changes
+
+**Original Expected Result:** Departure_Time_Range field displays an inline validation error on the time-range control indicating end time must be after start time (e.g. 'End time must be after start time'); the Results grid does not update and Result_Count remains unchanged; the invalid time-range is not applied as a filter.
 
 ---
 
@@ -569,16 +552,15 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `partial`
 
 **Coverage Note**: *Email notification about the modification is sent externally and cannot be fully verified from the in-app UI. This post-verification confirms in-app indicators (success notification, booking detail updates, modification history, and fee lines). Email delivery should be validated separately via the recipient mailbox or system email logs.*
 
-**Original Test Case Description:**
-> No description available.
-
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 
@@ -607,16 +589,15 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `partial`
 
 **Coverage Note**: *Full verification of refund disbursement to the original external payment method and delivery of the outbound cancellation email cannot be performed inside the app. This check verifies in-app state changes (status, displayed refund amount, and any in-app refund/activity records).*
 
-**Original Test Case Description:**
-> No description available.
-
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -643,14 +624,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 
@@ -676,14 +656,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -713,15 +692,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to invoke Logout action when user is not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Navigate directly to the Logout URL / click the Logout endpoint link (attempt to trigger Logout while unauthenticated)
+
+**Original Expected Result:** Navigation is blocked: the application redirects to the Login page and displays the login form. The Logout action is not performed (no session termination occurs because there is no active session). No protected content is shown.
 
 ---
 
@@ -749,15 +727,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Unauthenticated state shows no action buttons (Logout not visible)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Open the application UI area that normally contains session actions (header, user menu, or action bar)
+
+**Original Expected Result:** The action bar / user menu does not display a 'Logout' button or any authenticated-only actions. There is no clickable Logout control visible in the Unauthenticated state (no action buttons are present).
 
 ---
 
@@ -784,16 +761,15 @@
 
 ---
 
-### [TC-005] Unknown Title
+### [TC-005] After Logout, accessing a protected page is blocked and redirects to login
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Sign in as <role> to create an authenticated session
 2. 2. Click the Logout action to terminate the session
 3. 3. After logout completes, navigate to a known protected page URL (direct URL entry or bookmarked link)
+
+**Original Expected Result:** Access is blocked: the application redirects to the Login page and displays the login form. Protected page content is not displayed; the terminated session is not restored by the navigation.
 
 ---
 
@@ -821,15 +797,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Double-click Logout rapidly (duplicate click race)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the authenticated session, click the Logout button
 2. 2. Immediately (within milliseconds) click the Logout button again
+
+**Original Expected Result:** First click succeeds: session termination runs, user is redirected to the home page. Second click is ignored (no duplicate logout or error shown). Subsequent navigation attempts to protected pages are blocked and redirect to the login page.
 
 ---
 
@@ -854,14 +829,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Logged-out user attempting to open a protected page is redirected to Login page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Attempt to navigate to <protected page> (enter protected page URL or click link to protected page)
+
+**Original Expected Result:** The Login page is displayed; the Login form is visible, and access to the requested protected page is not granted.
 
 ---
 
@@ -884,15 +858,14 @@
 
 ---
 
-### [TC-006] Unknown Title
+### [TC-006] Double-click Logout rapidly (duplicate click race)
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. From the authenticated session, click the Logout button
 2. 2. Immediately (within milliseconds) click the Logout button again
+
+**Original Expected Result:** First click succeeds: session termination runs, user is redirected to the home page. Second click is ignored (no duplicate logout or error shown). Subsequent navigation attempts to protected pages are blocked and redirect to the login page.
 
 ---
 
@@ -915,17 +888,16 @@
 
 ---
 
-### [TC-011] Unknown Title
+### [TC-011] Travel_Dates Start set one day after End should be blocked
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Offers_Filters form to open filter controls
 2. 2. In Travel_Dates, set Start = <date B>
 3. 3. In Travel_Dates, set End = <date A> where <date B> is exactly one day after <date A>
 4. 4. Click Apply Filters
+
+**Original Expected Result:** Travel_Dates field displays an inline error indicating the start date is after the end date and Apply Filters is blocked (error shown); Promotions_List is not changed
 
 ---
 
@@ -949,15 +921,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to invoke Logout action when user is not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Navigate directly to the Logout URL / click the Logout endpoint link (attempt to trigger Logout while unauthenticated)
+
+**Original Expected Result:** Navigation is blocked: the application redirects to the Login page and displays the login form. The Logout action is not performed (no session termination occurs because there is no active session). No protected content is shown.
 
 ---
 
@@ -992,15 +963,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Unauthenticated state shows no action buttons (Logout not visible)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Open the application UI area that normally contains session actions (header, user menu, or action bar)
+
+**Original Expected Result:** The action bar / user menu does not display a 'Logout' button or any authenticated-only actions. There is no clickable Logout control visible in the Unauthenticated state (no action buttons are present).
 
 ---
 
@@ -1028,15 +998,14 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to invoke Logout action when user is not authenticated (precondition not met)
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure the user is signed out (no active session)
 2. 2. Navigate directly to the Logout URL / click the Logout endpoint link (attempt to trigger Logout while unauthenticated)
+
+**Original Expected Result:** Navigation is blocked: the application redirects to the Login page and displays the login form. The Logout action is not performed (no session termination occurs because there is no active session). No protected content is shown.
 
 ---
 
@@ -1058,14 +1027,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Authenticated user clicks Logout and is returned to Home page
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button in the action bar
+
+**Original Expected Result:** terminates current session; clears sensitive session data; redirects to home page; subsequent attempts to access protected pages redirect to login page. The Home page is displayed after logout.
 
 ---
 

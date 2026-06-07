@@ -1,13 +1,12 @@
 # Post-Verification Specifications
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -31,14 +30,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -59,14 +57,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to access a protected page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page when attempting to access a protected page
 
 ---
 
@@ -88,14 +85,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to access a protected page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page when attempting to access a protected page
 
 ---
 
@@ -123,14 +119,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -158,14 +153,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -189,14 +183,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -220,14 +213,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to access a protected page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page when attempting to access a protected page
 
 ---
 
@@ -253,14 +245,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -286,14 +277,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -315,14 +305,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to access a protected page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page when attempting to access a protected page
 
 ---
 
@@ -344,14 +333,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to click Logout button when already logged out
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** No action occurs; user remains on the current page
 
 ---
 
@@ -375,14 +363,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -406,14 +393,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -436,14 +422,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to access a protected page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page when attempting to access a protected page
 
 ---
 
@@ -465,14 +450,13 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Attempt to click Logout button when already logged out
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** No action occurs; user remains on the current page
 
 ---
 
@@ -496,15 +480,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
 2. 2. Immediately click the Logout button again
+
+**Original Expected Result:** Second logout attempt is blocked; user remains on the home page without session termination
 
 ---
 
@@ -526,14 +509,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User successfully logs out
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click Logout_Button
+
+**Original Expected Result:** terminates the current session and clears sensitive session data; user is redirected to the home page
 
 ---
 
@@ -555,14 +537,13 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Attempt to access a protected page after logout
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page when attempting to access a protected page
 
 ---
 

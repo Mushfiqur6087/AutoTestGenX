@@ -1,14 +1,13 @@
 # Post-Verification Specifications
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid consecutive logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
 2. 2. Immediately click the Logout button again
+
+**Original Expected Result:** Second logout attempt is ignored; user is redirected to the login page only once
 
 ---
 
@@ -30,14 +29,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page; access to all protected pages requires re-authentication after logout.
 
 ---
 
@@ -57,14 +55,13 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] User logs out successfully
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click the Logout button
+
+**Original Expected Result:** User is redirected to the login page; access to all protected pages requires re-authentication after logout.
 
 ---
 
@@ -86,15 +83,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Unauthenticated user attempts to log out
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure user is not authenticated
 2. 2. Click Logout_Button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page; no session is terminated.
 
 ---
 
@@ -116,15 +112,14 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Rapid consecutive logout attempts
 **Category**: `edge` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Click on the Logout button
 2. 2. Immediately click the Logout button again
+
+**Original Expected Result:** Second logout attempt is ignored; user is redirected to the login page only once
 
 ---
 
@@ -148,15 +143,14 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Unauthenticated user attempts to log out
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Ensure user is not authenticated
 2. 2. Click Logout_Button
+
+**Original Expected Result:** Logout action is blocked; user remains on the current page; no session is terminated.
 
 ---
 

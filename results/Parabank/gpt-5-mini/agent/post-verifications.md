@@ -1,10 +1,7 @@
 # Post-Verification Specifications
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -13,6 +10,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -37,11 +36,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -51,6 +47,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -74,11 +72,8 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -87,6 +82,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
@@ -110,11 +107,8 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Send Message: leave Message Body blank and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Message Body field blank
@@ -122,6 +116,8 @@
 3. 3. Select <Category option> in the Category dropdown
 4. 4. (Optional) Upload <valid attachment of allowed type> in Attachment
 5. 5. Click the Send Message button
+
+**Original Expected Result:** Message Body field displays an inline validation error indicating it is required; form does not submit; no ticket is created and the page remains on the Secure Message form
 
 ---
 
@@ -145,11 +141,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -158,6 +151,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -184,11 +179,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -198,6 +190,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -224,11 +218,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -237,6 +228,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -261,11 +254,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -275,6 +265,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -298,11 +290,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -311,6 +300,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -330,11 +321,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -344,6 +332,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -367,11 +357,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -380,6 +367,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -407,11 +396,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -421,6 +407,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -446,11 +434,8 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -459,6 +444,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
@@ -484,11 +471,8 @@
 
 ---
 
-### [TC-008] Unknown Title
+### [TC-008] Request Callback: clear pre-filled Phone Number and submit (required field left blank)
 **Category**: `negative` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Clear the Phone Number field so it is empty
@@ -496,6 +480,8 @@
 3. 3. Enter <valid Preferred_Date at least next business day> in Preferred Date
 4. 4. Select <valid Preferred_Time_Window> in Preferred Time Window
 5. 5. Click the Request Callback button
+
+**Original Expected Result:** Phone Number field displays an inline validation error indicating it is required; form does not submit; no callback request is created
 
 ---
 
@@ -523,11 +509,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -536,6 +519,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -568,11 +553,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -582,6 +564,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -606,13 +590,10 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `partial`
 
 **Coverage Note**: *The UI exposes the profile fields and a success message but does not guarantee visibility of backend audit metadata (e.g., 'last updated' timestamp or an audit log). Only the UI refresh and unchanged field values can be fully verified in-app; backend update records (if any) require access to logs or an API and are not observable here.*
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -621,6 +602,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
@@ -655,11 +638,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `cross_actor` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -668,6 +648,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -690,11 +672,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -704,6 +683,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -728,11 +709,8 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -741,6 +719,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
@@ -764,11 +744,8 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Send Message: leave Message Body blank and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Message Body field blank
@@ -776,6 +753,8 @@
 3. 3. Select <Category option> in the Category dropdown
 4. 4. (Optional) Upload <valid attachment of allowed type> in Attachment
 5. 5. Click the Send Message button
+
+**Original Expected Result:** Message Body field displays an inline validation error indicating it is required; form does not submit; no ticket is created and the page remains on the Secure Message form
 
 ---
 
@@ -799,11 +778,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -812,6 +788,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -835,11 +813,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -849,6 +824,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -873,11 +850,8 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -886,6 +860,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
@@ -909,11 +885,8 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -922,6 +895,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
@@ -944,11 +919,8 @@
 
 ---
 
-### [TC-004] Unknown Title
+### [TC-004] Send Message: leave Message Body blank and submit
 **Category**: `negative` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Leave the Message Body field blank
@@ -956,6 +928,8 @@
 3. 3. Select <Category option> in the Category dropdown
 4. 4. (Optional) Upload <valid attachment of allowed type> in Attachment
 5. 5. Click the Send Message button
+
+**Original Expected Result:** Message Body field displays an inline validation error indicating it is required; form does not submit; no ticket is created and the page remains on the Secure Message form
 
 ---
 
@@ -979,11 +953,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -992,6 +963,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -1013,11 +986,8 @@
 
 ---
 
-### [TC-001] Unknown Title
+### [TC-001] Send secure message (basic) with required message body
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -1026,6 +996,8 @@
 4. 4. Enter <valid message body> in the Message Body rich text editor
 5. 5. (Optional) Leave Attachment empty
 6. 6. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the notification shows a visible ticket ID
 
 ---
 
@@ -1050,11 +1022,8 @@
 
 ---
 
-### [TC-002] Unknown Title
+### [TC-002] Send secure message with a valid attachment
 **Category**: `positive` | **Verification Type**: `same_actor_navigation` | **Coverage**: `verifiable`
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -1064,6 +1033,8 @@
 5. 5. Click 'Upload' on the Attachment control and select <valid allowed file> from the OS file dialog
 6. 6. Confirm the attachment appears in the form upload list
 7. 7. Click the 'Send Message' button
+
+**Original Expected Result:** A success notification displays: "Message sent successfully. Returns ticket ID." and the support message list shows a new message row with the entered Subject and a visible attachment name
 
 ---
 
@@ -1090,13 +1061,10 @@
 
 ---
 
-### [TC-003] Unknown Title
+### [TC-003] Request callback with valid next-business-day date, time window and editable phone number
 **Category**: `positive` | **Verification Type**: `other` | **Coverage**: `partial`
 
 **Coverage Note**: *There is no documented in-app persistent view for submitted callback requests (no support-queue view specified). Full backend persistence cannot be verified in-app; verification relies on the external email confirmation sent to the user's email inbox. Email delivery may be delayed or routed externally, so mailbox access is required.*
-
-**Original Test Case Description:**
-> No description available.
 
 **Original Steps:**
 1. 1. Navigate to the Support Center page
@@ -1105,6 +1073,8 @@
 4. 4. Select <Preferred Time Window> in the Preferred Time Window control
 5. 5. Verify Phone Number is pre-filled, edit it to <valid phone number> if needed
 6. 6. Click the 'Request Callback' button
+
+**Original Expected Result:** A confirmation banner displays: "Callback request submitted. Sends email confirmation." and the confirmation panel shows the selected Preferred Date, Preferred Time Window and the Phone Number used for the request
 
 ---
 
