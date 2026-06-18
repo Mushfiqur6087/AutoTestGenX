@@ -1,4 +1,0 @@
-from test_case_generation.framework.agents.structural_model_validator import StructuralModelValidatorAgent
-from test_case_generation.framework.agents.structural_model_generator import StructuralModelGeneratorAgent
-
-__all__ = ["StructuralModelGeneratorAgent", "StructuralModelValidatorAgent"]

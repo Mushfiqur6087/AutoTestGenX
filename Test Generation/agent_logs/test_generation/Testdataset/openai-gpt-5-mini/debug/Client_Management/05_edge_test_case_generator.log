@@ -1,0 +1,984 @@
+================================================================================
+DEBUG SESSION STARTED: 2026-06-19T01:25:33.846673
+Model: openai/gpt-5-mini
+================================================================================
+
+
+------------------------------------------------------------
+[01:25:33] Test-Edge - SYSTEM PROMPT
+------------------------------------------------------------
+You are an Edge Case and Boundary Test Generator. You receive (1) a Structural Model JSON for one module and (2) the original functional description. Your job is to produce ONLY boundary and edge case tests — scenarios at the limits of valid/invalid input and unusual-but-plausible user behaviors.
+
+You are NOT producing happy paths (positive prompt) or standard validation failures (negative prompt). You are finding the cracks between valid and invalid, and the unusual paths real users take.
+
+---
+
+**INPUT:**
+
+<module_name>{Module name}</module_name>
+
+<ast>
+{Module Structural Model JSON}
+</ast>
+
+<description>
+{Original functional description text for this module}
+</description>
+
+<workflows>
+{Compact workflow list — one line per workflow, or absent if no workflows were extracted}
+</workflows>
+
+---
+
+**Structural Model REFERENCE — How to Read the AST for Edge Testing:**
+
+| AST node / field | What to look for |
+|---|---|
+| `constraints: []` with numeric/date/count threshold | The boundary values — test AT and JUST PAST each limit |
+| `repeating_group` with `max` | Test adding exactly `max` entries (should succeed) then one more (should block) |
+| `visible_when` / `required_when` | Edge: trigger condition, fill revealed field with boundary value |
+| `state_bound_action_bar` | State edges: rapid consecutive state transitions, transition from a boundary state |
+
+| `type: "date"` fields | Data edges: today, yesterday, far future, Feb 29 leap year |
+| `type: "file_upload"` | Edge: file exactly at size limit, file at 1 byte over limit |
+
+> If the module has no `constraints`, no `repeating_group`, no `date` or `number` fields, and no `state_bound_action_bar` — it has minimal edge surface. Produce 1–3 generic input edge cases (long text, special characters) and stop. Do not invent boundary tests where no boundary exists.
+
+---
+
+**ASSERTION STYLE (CRITICAL):**
+
+**Rule A — State clearly whether the boundary value should PASS or FAIL.**
+Every boundary test expected_result must contain the word "succeeds" or "is blocked / error shown".
+- ❌ `"System handles the input"` — ambiguous
+- ✅ `"Form submits successfully; entity is created with the <minimum value>"`
+- ✅ `"<Field> displays an error indicating the value is below the minimum allowed"`
+
+**Rule B — For edge cases, describe the precise visible outcome.**
+Same rule as the positive/negative prompts — name the UI element that changes.
+- ❌ `"Edge case handled correctly"`
+- ✅ `"Second submission attempt is blocked; only one record appears in the table"`
+- ✅ `"Leading/trailing whitespace is trimmed; saved value shown in detail page has no extra spaces"`
+
+**Rule C — Quote exact error text when the spec provides it.**
+If the description states a specific error string for a boundary violation, use it verbatim.
+
+---
+
+**GENERIC DATA RULE (CRITICAL):**
+
+Never invent specific data values. Express boundary values relative to the constraint.
+
+- ✅ `"Enter <minimum allowed value> in the <field>"`
+- ✅ `"Enter <one unit below minimum> in the <field>"`
+- ✅ `"Enter <maximum length string> in the <text field>"`
+- ✅ `"Add <maximum allowed entries + 1> rows to the repeating group"`
+- ❌ `"Enter '$25' in the Amount field"`
+- ❌ `"Enter 'aaaaaaaaaa' (10 chars) in the field"`
+
+Exception: values explicitly quoted in the spec (e.g., `"$25 minimum"`) may be used.
+
+---
+
+**STEP GRANULARITY RULE:**
+
+Each step is ONE atomic action — one field, one click, one navigation. No grouping.
+- ✅ `"1. Enter <minimum allowed value> in the <Amount> field"`, `"2. Fill all other required fields"`, `"3. Click Submit"`
+- ❌ `"Fill the form with minimum value and submit"`
+
+---
+
+**SCOPE GATE:**
+
+Every test must pass ALL three checks:
+1. **Spec-traceable:** Which exact constraint, field type, or behavior in the description/AST justifies this test? If none → delete it.
+2. **UI-executable:** Triggerable by clicking, typing, or navigating in a browser — no dev tools, no DOM inspection, no API calls, no concurrent users.
+3. **Threshold-specific (not a standard validation failure):** This test targets the exact boundary of a limit — not a clearly invalid value. If ambiguous, err toward including it.
+
+---
+
+**WHAT TO GENERATE:**
+
+**1. Boundary Tests (from AST constraints):**
+
+Scan every `constraints: []` array and every numeric/date/count threshold mentioned in the description. For each threshold:
+
+| Constraint | Boundary (should PASS) | Past-boundary (should FAIL) |
+|---|---|---|
+| `"minimum <X>"` | Enter exactly `<minimum value>` | Enter `<one unit below minimum>` |
+| `"maximum <N> entries"` | Add exactly `<N>` entries | Attempt to add `<N+1>` entry |
+| `"<date A> must not be before <date B>"` | `<date A>` = `<date B>` (same day) | `<date A>` = `<date B>` minus 1 day |
+| `"<X>–<Y> range"` | Enter `<X>` → pass; enter `<Y>` → pass | Enter `<X-1>` → fail; enter `<Y+1>` → fail |
+| `"at least <N> characters"` | Enter exactly `<N>` characters | Enter `<N-1>` characters |
+| `"must be ≥ <P>% of <reference>"` | Enter exactly `<P>%` | Enter `<P minus small delta>%` |
+
+Rules:
+- If a constraint has both a minimum AND maximum, test both ends (up to 4 tests total for that constraint).
+- If a constraint has no numeric/date/count threshold (e.g., "must be unique", "cannot transition while children exist") → **skip it** — it belongs in negative tests, not boundary tests.
+- Generate zero boundary tests if zero thresholds exist — do not invent them.
+
+**Cross-field boundary tests** (only if the description/AST shows a field ordering constraint — e.g., date A must not be before date B, closing date must be after opening date):
+- ONE test where field A equals field B exactly (same-day / same-value boundary) → assert this **succeeds** per spec
+- ONE test where field A is one unit before field B → assert **blocked with a visible error**
+
+**2. Input Edge Cases:**
+
+Pick only the ones that apply to field types present in this module's AST:
+
+- **Long text** (any `text/unspecified` or `textarea` field): enter a very long string (200+ characters) → assert it is either accepted or truncated/rejected with a visible indicator
+- **Special characters / emoji / unicode** (free-text fields): enter special chars → assert accepted or a specific error shown
+- **Leading/trailing whitespace** (text inputs): enter value with leading/trailing spaces → assert trimmed in saved output shown on the detail page, or an inline error shown
+- **Zero as numeric input** (number fields where zero is ambiguous): if the spec states a minimum > 0, assert `0` is blocked with a visible error; if the spec permits zero, assert the form submits successfully and the saved record displays `0`
+- **Decimal precision** (financial/numeric fields): enter a value with more decimal places than the field supports → assert rounding behavior is visible in the saved output, or an inline error is shown
+
+**3. Interaction Edge Cases:**
+
+Pick only the ones that match component types in this module's AST:
+
+- **Rapid re-submission after redirect** (any form that redirects to a detail page on success): after a successful submit, press the browser back button → assert the creation form is shown blank (not pre-filled) OR the user is redirected to the detail page without a second entity being created
+- **Wizard step skip — enforced navigation** (wizard where steps must be completed sequentially): attempt to click a later step tab directly without completing earlier steps → assert navigation is blocked and the earlier step remains active
+- **Wizard step skip — free navigation** (wizard that allows free tab navigation): navigate to a later step without filling earlier steps → assert the later step displays and returning to the earlier step shows fields blank (no data was lost from the later step)
+- **Repeating group: add then remove all** (any `repeating_group`): add entries → remove all entries → submit → assert behavior: if spec states no minimum, form submits successfully; if spec requires at least one entry, a visible error is shown
+
+**4. State / Data Edge Cases:**
+
+Pick only what applies to this module:
+
+- **Rapid consecutive state transitions** (`state_bound_action_bar`): complete one transition → immediately attempt the next → assert the action succeeds or the expected blocking message is shown per spec
+- **Date edges** (`date` fields): test today's date, yesterday, and a far future date — assert which are accepted per spec and describe the visible outcome for each
+- **Leap year date** (`date` fields, free-text entry only): enter February 29 on a non-leap year → assert error; on a leap year → assert accepted. *Skip this test if the field uses a calendar date picker — pickers remove February 29 from non-leap years at the UI level and the test is not UI-executable.*
+- **File at exact size limit** (`file_upload`): upload a file exactly at the stated size limit → assert accepted with a visible success indicator; upload a file one unit over the limit → assert a visible error naming the size constraint
+
+**RELEVANCE RULE:** Only generate edge cases that match component types present in this module's AST. A login form does not need repeating-group edge cases. A data table does not need wizard-step-skip tests.
+
+**`visible_when` fields:** If the spec reveals a conditional field via a toggle/dropdown, test a boundary value in that revealed field. If the revealed field has no numeric or date constraint, generate one `input_edge` test using a long-text or special-character value instead.
+
+---
+
+**CALIBRATION:**
+
+- Simple module (login, single form, display page): **2–4 tests**
+- Medium module (form with numeric/date constraints): **4–8 tests**
+- Complex module (state machine, wizard, repeating groups): **6–10 tests**
+
+If you exceed these, you are generating generic edges that don't apply to this module. Apply the relevance rule and scope gate again.
+
+---
+
+**MINIMUM OUTPUT RULE:**
+
+If the module has any numeric/date/count threshold in the AST or description, produce at least 2 boundary tests. Zero boundary tests when thresholds exist is a generation failure.
+
+---
+
+**PRIORITY:**
+
+- **High:** None — edge tests are secondary to core functionality
+- **Medium:** Boundary tests at thresholds (financial amounts, date ordering, count limits, file size limits)
+- **Low:** Input edge cases (long text, special chars, whitespace, decimal precision), interaction edge cases (browser back, wizard skip)
+
+---
+
+**WORKFLOW-AWARE BOUNDARY SCOPING (run before outputting):**
+
+If a `<workflows>` block is present in the input:
+- For each workflow where `conditional_branch` activates a numeric or date field, check if that field has a boundary (a numeric/date threshold in the AST `constraints` or description).
+- If yes, that workflow's branch is a **candidate for a boundary edge test** — add or confirm a boundary TC exists for it.
+- Add `"wf_ref": "WF-NNN"` to each TC that maps to a specific workflow's boundary. Set `"wf_ref": null` for generic input/interaction edge tests.
+
+---
+
+**OUTPUT — JSON only, no prose, no markdown fencing:**
+
+{
+  "module": "Module Name",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "wf_ref": null,
+      "subcategory": "boundary | input_edge | interaction_edge | state_edge | data_edge",
+      "test_case": "Short descriptive name",
+      "preconditions": ["precondition 1"],
+      "steps": ["1. Step one", "2. Step two"],
+      "expected_result": "Precise visible outcome — state pass or fail explicitly for boundary tests",
+      "priority": "medium | low"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "boundary": 0,
+    "input_edge": 0,
+    "interaction_edge": 0,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 0,
+    "low_priority": 0
+  }
+}
+
+
+------------------------------------------------------------
+[01:25:33] Test-Edge - USER PROMPT
+------------------------------------------------------------
+<module_name>Client Management</module_name>
+
+<ast>
+{
+  "module_name": "Client Management",
+  "components": {
+    "Clients_Page": {
+      "type": "page",
+      "fields": {
+        "Search": {
+          "type": "search",
+          "required": false,
+          "constraints": [],
+          "metadata": {
+            "search_fields": [
+              "Name",
+              "Account No.",
+              "External ID",
+              "Mobile Number"
+            ]
+          }
+        },
+        "Filter_By_Status": {
+          "type": "dropdown",
+          "required": false,
+          "options": [
+            "Pending",
+            "Active",
+            "Closed",
+            "Rejected",
+            "Withdrawn"
+          ]
+        }
+      },
+      "top_right_actions": [
+        {
+          "element_name": "Import Client",
+          "type": "button",
+          "on_click": "navigates to Bulk Import page",
+          "on_success": "opens Bulk Import page"
+        },
+        {
+          "element_name": "Create Client",
+          "type": "button",
+          "on_click": "opens Create Client wizard"
+        }
+      ],
+      "clients_table": {
+        "type": "data_table",
+        "columns": [
+          "Name",
+          "Account No.",
+          "External ID",
+          "Status",
+          "Office",
+          "Staff"
+        ],
+        "sortable_columns": [],
+        "row_actions": [
+          {
+            "action_name": "Open",
+            "action_type": "link",
+            "description": "Name column is clickable and navigates to Client Detail page"
+          }
+        ]
+      }
+    },
+    "Bulk_Import_Page": {
+      "type": "page",
+      "fields": {
+        "Download_Client_Template": {
+          "type": "button",
+          "element_name": "Download Template",
+          "on_success": "downloads client Excel template"
+        },
+        "Upload_Client_File": {
+          "type": "file_upload",
+          "element_name": "Upload File",
+          "required": false,
+          "on_success": "uploads file and starts import job"
+        }
+      },
+      "import_history_table": {
+        "type": "data_table",
+        "columns": [
+          "Name",
+          "Import Time",
+          "End Time",
+          "Completed",
+          "Total Records",
+          "Success Count",
+          "Failure Count",
+          "Download"
+        ],
+        "row_actions": [
+          {
+            "action_name": "Download",
+            "description": "download import result"
+          }
+        ]
+      }
+    },
+    "Create_Client_Wizard": {
+      "type": "wizard",
+      "submit_actions": [
+        {
+          "element_name": "Submit",
+          "on_success": "creates client in Pending status"
+        }
+      ],
+      "steps": [
+        {
+          "step_index": 1,
+          "step_name": "General Details",
+          "fields": {
+            "Office": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Legal_Form": {
+              "type": "unspecified",
+              "required": false
+            },
+            "First_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Middle_Name": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Last_Name": {
+              "type": "unspecified",
+              "required": true
+            },
+            "Date_of_Birth": {
+              "type": "date",
+              "required": false
+            },
+            "Gender": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Staff": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Mobile_Number": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Email_Address": {
+              "type": "email",
+              "required": false
+            },
+            "Client_Type": {
+              "type": "unspecified",
+              "required": false
+            },
+            "Client_Classification": {
+              "type": "unspecified",
+              "required": false
+            },
+            "External_ID": {
+              "type": "unspecified",
+              "required": false,
+              "constraints": [
+                "must be unique across clients"
+              ]
+            },
+            "Submitted_On": {
+              "type": "date",
+              "required": true
+            },
+            "Is_Staff": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Active": {
+              "type": "checkbox",
+              "required": false
+            },
+            "Open_Savings_Account": {
+              "type": "checkbox",
+              "required": false
+            }
+          }
+        },
+        {
+          "step_index": 2,
+          "step_name": "Address Details",
+          "fields": {}
+        },
+        {
+          "step_index": 3,
+          "step_name": "Family Members",
+          "fields": {
+            "Family_Members": {
+              "type": "repeating_group",
+              "item_fields": {}
+            }
+          }
+        },
+        {
+          "step_index": 4,
+          "step_name": "Identifiers",
+          "fields": {
+            "Identifiers": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Document_Type": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Document_Key": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "constraints": [
+                "no duplicate Document Type + Document Key"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Client_Detail_Tabs": {
+      "type": "tab_container",
+      "tabs": [
+        {
+          "tab_name": "General",
+          "fields": {}
+        },
+        {
+          "tab_name": "Accounts",
+          "tabs": [
+            {
+              "tab_name": "Loans",
+              "fields": {}
+            },
+            {
+              "tab_name": "Savings",
+              "fields": {}
+            },
+            {
+              "tab_name": "Shares",
+              "fields": {}
+            },
+            {
+              "tab_name": "Fixed Deposits",
+              "fields": {}
+            },
+            {
+              "tab_name": "Recurring Deposits",
+              "fields": {}
+            }
+          ]
+        },
+        {
+          "tab_name": "Identifiers",
+          "fields": {
+            "Identifiers": {
+              "type": "repeating_group",
+              "item_fields": {
+                "Document_Type": {
+                  "type": "unspecified",
+                  "required": false
+                },
+                "Document_Key": {
+                  "type": "unspecified",
+                  "required": false
+                }
+              },
+              "constraints": [
+                "no duplicate Document Type + Document Key"
+              ]
+            }
+          }
+        },
+        {
+          "tab_name": "Family Members",
+          "fields": {}
+        },
+        {
+          "tab_name": "Notes",
+          "fields": {}
+        },
+        {
+          "tab_name": "Documents",
+          "fields": {}
+        }
+      ]
+    },
+    "Client_Detail_Actions": {
+      "type": "state_bound_action_bar",
+      "states": {
+        "Pending": {
+          "available_actions": [
+            {
+              "action_name": "Activate",
+              "fields": {
+                "Activation_Date": {
+                  "type": "date",
+                  "required": true
+                }
+              },
+              "constraints": [
+                "Activation Date must not be before Submitted On"
+              ]
+            },
+            {
+              "action_name": "Edit"
+            },
+            {
+              "action_name": "Reject",
+              "fields": {
+                "Reason": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              }
+            },
+            {
+              "action_name": "Withdraw",
+              "fields": {
+                "Reason": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              }
+            }
+          ]
+        },
+        "Active": {
+          "available_actions": [
+            {
+              "action_name": "Edit"
+            },
+            {
+              "action_name": "Transfer Client",
+              "fields": {
+                "Destination_Office": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              },
+              "constraints": [
+                "destination office must be different from current office"
+              ]
+            },
+            {
+              "action_name": "Close",
+              "fields": {
+                "Closure_Reason": {
+                  "type": "unspecified",
+                  "required": true
+                }
+              },
+              "preconditions": [
+                "client must have no active accounts"
+              ],
+              "constraints": [
+                "cannot close when client has active accounts"
+              ]
+            },
+            {
+              "action_name": "Add Charge"
+            },
+            {
+              "action_name": "New Loan"
+            },
+            {
+              "action_name": "New Savings"
+            },
+            {
+              "action_name": "New Share Account"
+            }
+          ]
+        },
+        "Closed": {
+          "available_actions": [
+            {
+              "action_name": "Reactivate"
+            }
+          ]
+        },
+        "Rejected": {
+          "available_actions": []
+        },
+        "Withdrawn": {
+          "available_actions": []
+        }
+      }
+    }
+  }
+}
+</ast>
+
+<description>
+
+The Clients page displays a data table of all clients with columns for Name (clickable link), Account No., External ID, Status (Pending as yellow chip, Active as green chip, Closed as gray chip, Rejected as red chip, Withdrawn as orange chip), Office, and Staff. A search field allows searching by name, account number, external ID, or mobile number, and a filter bar supports filtering by status. Two buttons at the top-right provide "Import Client" (opens the Bulk Import page) and "Create Client." The Bulk Import page allows downloading a client Excel template, uploading a completed file, and displays an import history table with columns for Name, Import Time, End Time, Completed, Total Records, Success Count, Failure Count, and Download.
+
+The Create Client form is a multi-step wizard. Step 1 (General Details) contains Office (required), Legal Form, First Name (required), Middle Name, Last Name (required), Date of Birth, Gender, Staff, Mobile Number, Email Address, Client Type, Client Classification, External ID (must be unique), Submitted On (required), Is Staff checkbox, Active checkbox, and Open Savings Account option. Step 2 covers Address Details. Step 3 covers Family Members. Step 4 covers Identifiers (Document Type and Document Key). Clicking "Submit" creates the client in Pending status.
+
+The Client Detail page displays the client name, account number, status badge, activation date, and office. Action buttons change based on status: Pending offers Activate (requires Activation Date, which must not be before submission date), Edit, Reject (with reason), and Withdraw (with reason); Active offers Edit, Transfer Client (destination office required — same office is blocked), Close (closure reason required — cannot close with active accounts), Add Charge, New Loan, New Savings, and New Share Account; Closed offers Reactivate; Rejected and Withdrawn have no actions. Tabs on the detail page show General, Accounts (sub-tabs for Loans, Savings, Shares, Fixed Deposits, Recurring Deposits), Identifiers (Document Type and Key with add/remove — duplicates are prevented), Family Members, Notes, and Documents.
+
+---
+
+</description>
+
+<workflows>
+WF-001 | Open Bulk Import page via Import Client button | actor: <role> | branch: none | terminal: Import Client | on_success: opens Bulk Import page
+WF-002 | Open Create Client wizard via Create Client button | actor: <role> | branch: none | terminal: Create Client | on_success: opens Create Client wizard
+WF-003 | Open a client's Detail page from Clients table | actor: <role> | branch: none | terminal: Open | on_success: navigates to Client Detail page
+WF-004 | Download client Excel template on Bulk Import page | actor: <role> | branch: none | terminal: Download Template | on_success: downloads client Excel template
+WF-005 | Upload client file to start import job | actor: <role> | branch: none | terminal: Upload File | on_success: uploads file and starts import job
+WF-006 | Download import result from import history | actor: <role> | branch: none | terminal: Download | on_success: downloads import result
+WF-007 | Submit Create Client wizard | actor: <role> | branch: none | terminal: Submit | on_success: creates client in Pending status
+WF-008 | Activate a Pending client | actor: <role> | branch: entity_state == Pending | terminal: Activate | on_success: client status becomes Active
+WF-009 | Edit a Pending client | actor: <role> | branch: entity_state == Pending | terminal: Edit | on_success: opens Edit Client form
+WF-010 | Reject a Pending client | actor: <role> | branch: entity_state == Pending | terminal: Reject | on_success: client status becomes Rejected
+WF-011 | Withdraw a Pending client | actor: <role> | branch: entity_state == Pending | terminal: Withdraw | on_success: client status becomes Withdrawn
+WF-012 | Edit an Active client | actor: <role> | branch: entity_state == Active | terminal: Edit | on_success: opens Edit Client form
+WF-013 | Transfer an Active client to a different office | actor: <role> | branch: entity_state == Active | terminal: Transfer Client | on_success: client's office changed to Destination_Office
+WF-014 | Close an Active client | actor: <role> | branch: entity_state == Active | terminal: Close | on_success: client status becomes Closed
+WF-015 | Add Charge to an Active client | actor: <role> | branch: entity_state == Active | terminal: Add Charge | on_success: opens Add Charge form
+WF-016 | Create New Loan for an Active client | actor: <role> | branch: entity_state == Active | terminal: New Loan | on_success: opens New Loan wizard
+WF-017 | Create New Savings for an Active client | actor: <role> | branch: entity_state == Active | terminal: New Savings | on_success: opens New Savings wizard
+WF-018 | Create New Share Account for an Active client | actor: <role> | branch: entity_state == Active | terminal: New Share Account | on_success: opens New Share Account wizard
+WF-019 | Reactivate a Closed client | actor: <role> | branch: entity_state == Closed | terminal: Reactivate | on_success: client status becomes Active
+</workflows>
+
+IMPORTANT: Return your response as valid JSON only. No markdown, no code blocks, just pure JSON.
+
+------------------------------------------------------------
+[01:26:44] Test-Edge - LLM RESPONSE
+------------------------------------------------------------
+{
+  "module": "Client Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "wf_ref": "WF-008",
+      "subcategory": "boundary",
+      "test_case": "Activate: Activation Date equals Submitted On (boundary pass)",
+      "preconditions": [
+        "A client exists in state Pending with a known Submitted_On date"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Pending client",
+        "3. Click the Activate action",
+        "4. In the Activation_Date field enter a date exactly equal to the client's Submitted_On",
+        "5. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Activation action succeeds; client status changes to Active and the Client Detail page displays Activation Date equal to Submitted_On",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "wf_ref": "WF-008",
+      "subcategory": "boundary",
+      "test_case": "Activate: Activation Date one day before Submitted On (boundary fail)",
+      "preconditions": [
+        "A client exists in state Pending with a known Submitted_On date"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Pending client",
+        "3. Click the Activate action",
+        "4. In the Activation_Date field enter a date equal to one day before the client's Submitted_On",
+        "5. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Action is blocked / error shown; an inline error is displayed on Activation_Date stating 'Activation Date must not be before Submitted On'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "wf_ref": "WF-013",
+      "subcategory": "boundary",
+      "test_case": "Transfer Client: Destination_Office different from current office (boundary pass)",
+      "preconditions": [
+        "A client exists in state Active with Current Office = <Office A>"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Active client",
+        "3. Click the Transfer Client action",
+        "4. In the Destination_Office field select an office different from the client's Current Office",
+        "5. Click Submit on the Transfer dialog"
+      ],
+      "expected_result": "Transfer action succeeds; client's Office shown on the Client Detail page is updated to the chosen Destination_Office",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "wf_ref": "WF-013",
+      "subcategory": "boundary",
+      "test_case": "Transfer Client: Destination_Office same as current office (boundary fail)",
+      "preconditions": [
+        "A client exists in state Active with Current Office = <Office A>"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Active client",
+        "3. Click the Transfer Client action",
+        "4. In the Destination_Office field select the same office as the client's Current Office",
+        "5. Click Submit on the Transfer dialog"
+      ],
+      "expected_result": "Action is blocked / error shown; an inline error is displayed stating 'destination office must be different from current office'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "wf_ref": "WF-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Create Client wizard: add then remove all Identifiers and submit",
+      "preconditions": [
+        "User has opened Create Client wizard and has filled all required fields in earlier steps (Step 1 and Step 2) so the wizard is ready to submit"
+      ],
+      "steps": [
+        "1. Navigate to Step 4 (Identifiers) in the Create Client wizard",
+        "2. Click Add Identifier to create the first Identifier row",
+        "3. Fill fields for the first Identifier row (Document_Type and Document_Key) as needed",
+        "4. Click Add Identifier to create a second Identifier row",
+        "5. Fill fields for the second Identifier row (Document_Type and Document_Key) as needed",
+        "6. For the first Identifier row click Remove/Delete to remove it",
+        "7. For the second Identifier row click Remove/Delete to remove it",
+        "8. Click Submit on the Create Client wizard"
+      ],
+      "expected_result": "Form submission succeeds; client is created in Pending status and the Client Detail page (Identifiers tab) shows zero Identifier entries",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "wf_ref": "WF-010",
+      "subcategory": "input_edge",
+      "test_case": "Reject Pending client with a very long Reason text",
+      "preconditions": [
+        "A client exists in state Pending"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Pending client",
+        "3. Click the Reject action",
+        "4. In the Reason field enter a very long text (200+ characters)",
+        "5. Click Confirm on the Reject dialog"
+      ],
+      "expected_result": "Reject action succeeds; client status changes to Rejected and the Client Detail activity/history shows the entered Reason text (no inline error about length)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "wf_ref": "WF-007",
+      "subcategory": "input_edge",
+      "test_case": "Create Client: leading and trailing whitespace in First Name is trimmed on save",
+      "preconditions": [
+        "User has opened Create Client wizard"
+      ],
+      "steps": [
+        "1. In Step 1 enter First_Name with leading and trailing whitespace",
+        "2. Fill all other required fields in Step 1 and subsequent required steps (precondition allowed these to be filled)",
+        "3. Click Submit to create the client"
+      ],
+      "expected_result": "Form submits successfully; Client Detail page displays the client's First Name without leading or trailing whitespace (value is trimmed)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "wf_ref": "WF-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Create Client: rapid re-submission after successful submit does not create duplicate client",
+      "preconditions": [
+        "User has completed the Create Client wizard required fields and is ready to submit"
+      ],
+      "steps": [
+        "1. Click Submit on the Create Client wizard",
+        "2. After the system redirects to the newly created Client Detail page, press the browser Back button",
+        "3. On the page shown after Back attempt to click Submit again"
+      ],
+      "expected_result": "Second submission is blocked / error shown; only one client record exists (no duplicate client is created) and the user remains on or is redirected to the existing client's detail page",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 4,
+    "input_edge": 2,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}
+
+------------------------------------------------------------
+[01:26:44] Test-Edge - PARSED JSON
+------------------------------------------------------------
+{
+  "module": "Client Management",
+  "category": "edge",
+  "test_cases": [
+    {
+      "tc_id": "E-001",
+      "wf_ref": "WF-008",
+      "subcategory": "boundary",
+      "test_case": "Activate: Activation Date equals Submitted On (boundary pass)",
+      "preconditions": [
+        "A client exists in state Pending with a known Submitted_On date"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Pending client",
+        "3. Click the Activate action",
+        "4. In the Activation_Date field enter a date exactly equal to the client's Submitted_On",
+        "5. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Activation action succeeds; client status changes to Active and the Client Detail page displays Activation Date equal to Submitted_On",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-002",
+      "wf_ref": "WF-008",
+      "subcategory": "boundary",
+      "test_case": "Activate: Activation Date one day before Submitted On (boundary fail)",
+      "preconditions": [
+        "A client exists in state Pending with a known Submitted_On date"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Pending client",
+        "3. Click the Activate action",
+        "4. In the Activation_Date field enter a date equal to one day before the client's Submitted_On",
+        "5. Click Confirm on the Activate dialog"
+      ],
+      "expected_result": "Action is blocked / error shown; an inline error is displayed on Activation_Date stating 'Activation Date must not be before Submitted On'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-003",
+      "wf_ref": "WF-013",
+      "subcategory": "boundary",
+      "test_case": "Transfer Client: Destination_Office different from current office (boundary pass)",
+      "preconditions": [
+        "A client exists in state Active with Current Office = <Office A>"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Active client",
+        "3. Click the Transfer Client action",
+        "4. In the Destination_Office field select an office different from the client's Current Office",
+        "5. Click Submit on the Transfer dialog"
+      ],
+      "expected_result": "Transfer action succeeds; client's Office shown on the Client Detail page is updated to the chosen Destination_Office",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-004",
+      "wf_ref": "WF-013",
+      "subcategory": "boundary",
+      "test_case": "Transfer Client: Destination_Office same as current office (boundary fail)",
+      "preconditions": [
+        "A client exists in state Active with Current Office = <Office A>"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Active client",
+        "3. Click the Transfer Client action",
+        "4. In the Destination_Office field select the same office as the client's Current Office",
+        "5. Click Submit on the Transfer dialog"
+      ],
+      "expected_result": "Action is blocked / error shown; an inline error is displayed stating 'destination office must be different from current office'",
+      "priority": "medium"
+    },
+    {
+      "tc_id": "E-005",
+      "wf_ref": "WF-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Create Client wizard: add then remove all Identifiers and submit",
+      "preconditions": [
+        "User has opened Create Client wizard and has filled all required fields in earlier steps (Step 1 and Step 2) so the wizard is ready to submit"
+      ],
+      "steps": [
+        "1. Navigate to Step 4 (Identifiers) in the Create Client wizard",
+        "2. Click Add Identifier to create the first Identifier row",
+        "3. Fill fields for the first Identifier row (Document_Type and Document_Key) as needed",
+        "4. Click Add Identifier to create a second Identifier row",
+        "5. Fill fields for the second Identifier row (Document_Type and Document_Key) as needed",
+        "6. For the first Identifier row click Remove/Delete to remove it",
+        "7. For the second Identifier row click Remove/Delete to remove it",
+        "8. Click Submit on the Create Client wizard"
+      ],
+      "expected_result": "Form submission succeeds; client is created in Pending status and the Client Detail page (Identifiers tab) shows zero Identifier entries",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-006",
+      "wf_ref": "WF-010",
+      "subcategory": "input_edge",
+      "test_case": "Reject Pending client with a very long Reason text",
+      "preconditions": [
+        "A client exists in state Pending"
+      ],
+      "steps": [
+        "1. Open the Clients page",
+        "2. Click the client's Name to open the Client Detail page for the Pending client",
+        "3. Click the Reject action",
+        "4. In the Reason field enter a very long text (200+ characters)",
+        "5. Click Confirm on the Reject dialog"
+      ],
+      "expected_result": "Reject action succeeds; client status changes to Rejected and the Client Detail activity/history shows the entered Reason text (no inline error about length)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-007",
+      "wf_ref": "WF-007",
+      "subcategory": "input_edge",
+      "test_case": "Create Client: leading and trailing whitespace in First Name is trimmed on save",
+      "preconditions": [
+        "User has opened Create Client wizard"
+      ],
+      "steps": [
+        "1. In Step 1 enter First_Name with leading and trailing whitespace",
+        "2. Fill all other required fields in Step 1 and subsequent required steps (precondition allowed these to be filled)",
+        "3. Click Submit to create the client"
+      ],
+      "expected_result": "Form submits successfully; Client Detail page displays the client's First Name without leading or trailing whitespace (value is trimmed)",
+      "priority": "low"
+    },
+    {
+      "tc_id": "E-008",
+      "wf_ref": "WF-007",
+      "subcategory": "interaction_edge",
+      "test_case": "Create Client: rapid re-submission after successful submit does not create duplicate client",
+      "preconditions": [
+        "User has completed the Create Client wizard required fields and is ready to submit"
+      ],
+      "steps": [
+        "1. Click Submit on the Create Client wizard",
+        "2. After the system redirects to the newly created Client Detail page, press the browser Back button",
+        "3. On the page shown after Back attempt to click Submit again"
+      ],
+      "expected_result": "Second submission is blocked / error shown; only one client record exists (no duplicate client is created) and the user remains on or is redirected to the existing client's detail page",
+      "priority": "medium"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "boundary": 4,
+    "input_edge": 2,
+    "interaction_edge": 2,
+    "state_edge": 0,
+    "data_edge": 0,
+    "medium_priority": 5,
+    "low_priority": 3
+  }
+}

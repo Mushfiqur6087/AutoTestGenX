@@ -1,0 +1,824 @@
+{
+  "project_name": "Testdataset",
+  "generated_at": "2026-06-18T19:27:05.288385Z",
+  "model": "openai/gpt-5-mini",
+  "modules": [
+    {
+      "module": "Client Management",
+      "test_cases": [
+        {
+          "tc_id": "TC-001",
+          "wf_ref": "WF-001",
+          "test_case": "Open Bulk Import page via Import Client button",
+          "preconditions": [
+            "User logged in as <role>",
+            "Clients page is open"
+          ],
+          "steps": [
+            "1. Click the 'Import Client' button in the top-right of the Clients page"
+          ],
+          "expected_result": "Bulk Import page is displayed",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-002",
+          "wf_ref": "WF-002",
+          "test_case": "Open Create Client wizard via Create Client button",
+          "preconditions": [
+            "User logged in as <role>",
+            "Clients page is open"
+          ],
+          "steps": [
+            "1. Click the 'Create Client' button in the top-right of the Clients page"
+          ],
+          "expected_result": "Create Client wizard opens",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-003",
+          "wf_ref": "WF-003",
+          "test_case": "Open a client's Detail page from Clients table",
+          "preconditions": [
+            "User logged in as <role>",
+            "Clients page is open",
+            "A client exists in the clients list"
+          ],
+          "steps": [
+            "1. Locate the client row in the Clients table (use Search if needed)",
+            "2. Click the client's Name link in the table"
+          ],
+          "expected_result": "Client Detail page is displayed for the selected client",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-004",
+          "wf_ref": "WF-004",
+          "test_case": "Download client Excel template on Bulk Import page",
+          "preconditions": [
+            "User logged in as <role>",
+            "Bulk Import page is open"
+          ],
+          "steps": [
+            "1. Click the 'Download Template' button"
+          ],
+          "expected_result": "Client Excel template download is triggered in the browser",
+          "priority": "low",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-005",
+          "wf_ref": "WF-005",
+          "test_case": "Upload client file to start import job",
+          "preconditions": [
+            "User logged in as <role>",
+            "Bulk Import page is open"
+          ],
+          "steps": [
+            "1. Click the 'Upload File' button",
+            "2. Select a <valid client import file> in the OS file dialog and confirm upload"
+          ],
+          "expected_result": "A new row appears in the Import History table for the uploaded file indicating the import job has started",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-006",
+          "wf_ref": "WF-006",
+          "test_case": "Download import result from import history",
+          "preconditions": [
+            "User logged in as <role>",
+            "Bulk Import page is open",
+            "An import history row exists with a downloadable result"
+          ],
+          "steps": [
+            "1. In the Import History table, click the 'Download' action for the relevant import row"
+          ],
+          "expected_result": "Import result file download is triggered in the browser",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-007",
+          "wf_ref": "WF-007",
+          "test_case": "Submit Create Client wizard (happy path) and see Pending status",
+          "preconditions": [
+            "User logged in as <role>"
+          ],
+          "steps": [
+            "1. Open the Create Client wizard from the Clients page by clicking 'Create Client'",
+            "2. In Step 1 (General Details), enter values for required fields: select <Office>, enter <First Name>, <Last Name>, and <Submitted On>; optionally enter <External ID> that is unique",
+            "3. Click Next to advance through Step 2 (Address Details) and Step 3 (Family Members) without adding optional entries",
+            "4. In Step 4 (Identifiers) either leave empty or add unique identifier entries",
+            "5. Click 'Submit' on the wizard"
+          ],
+          "expected_result": "Client Detail page opens and the Status badge displays 'Pending' (yellow)",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-008",
+          "wf_ref": "WF-008",
+          "test_case": "Activate a Pending client with valid Activation Date",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Pending status with Submitted On = <submitted date>",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Activate' action in the action bar",
+            "2. In the Activate dialog, enter an <Activation_Date> that is on or after <submitted date>",
+            "3. Click Confirm on the Activate dialog"
+          ],
+          "expected_result": "Status badge updates to 'Active' (green) on the Client Detail page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-009",
+          "wf_ref": "WF-009",
+          "test_case": "Open Edit Client form for a Pending client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Pending status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Edit' action in the action bar"
+          ],
+          "expected_result": "Edit Client form is displayed",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-010",
+          "wf_ref": "WF-010",
+          "test_case": "Reject a Pending client with required reason",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Pending status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Reject' action in the action bar",
+            "2. In the Reject dialog, enter a <Reason>",
+            "3. Click Confirm on the Reject dialog"
+          ],
+          "expected_result": "Status badge updates to 'Rejected' (red) on the Client Detail page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-011",
+          "wf_ref": "WF-011",
+          "test_case": "Withdraw a Pending client with required reason",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Pending status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Withdraw' action in the action bar",
+            "2. In the Withdraw dialog, enter a <Reason>",
+            "3. Click Confirm on the Withdraw dialog"
+          ],
+          "expected_result": "Status badge updates to 'Withdrawn' (orange) on the Client Detail page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-012",
+          "wf_ref": "WF-012",
+          "test_case": "Open Edit Client form for an Active client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Edit' action in the action bar"
+          ],
+          "expected_result": "Edit Client form is displayed",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-013",
+          "wf_ref": "WF-013",
+          "test_case": "Transfer an Active client to a different office",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status and is assigned to <current office>",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Transfer Client' action in the action bar",
+            "2. In the Transfer dialog, select a <Destination_Office> that is different from <current office>",
+            "3. Click Confirm on the Transfer dialog"
+          ],
+          "expected_result": "Office on the Client Detail page updates to display <Destination_Office>",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-014",
+          "wf_ref": "WF-014",
+          "test_case": "Close an Active client with no active accounts",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status with no active accounts",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Close' action in the action bar",
+            "2. In the Close dialog, enter a <Closure_Reason>",
+            "3. Click Confirm on the Close dialog"
+          ],
+          "expected_result": "Status badge updates to 'Closed' (gray) on the Client Detail page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-015",
+          "wf_ref": "WF-015",
+          "test_case": "Open Add Charge form for an Active client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Add Charge' action in the action bar"
+          ],
+          "expected_result": "Add Charge form is displayed",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-016",
+          "wf_ref": "WF-016",
+          "test_case": "Start New Loan wizard for an Active client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'New Loan' action in the action bar"
+          ],
+          "expected_result": "New Loan wizard opens",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-017",
+          "wf_ref": "WF-017",
+          "test_case": "Start New Savings wizard for an Active client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'New Savings' action in the action bar"
+          ],
+          "expected_result": "New Savings wizard opens",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-018",
+          "wf_ref": "WF-018",
+          "test_case": "Start New Share Account wizard for an Active client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Active status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'New Share Account' action in the action bar"
+          ],
+          "expected_result": "New Share Account wizard opens",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-019",
+          "wf_ref": "WF-019",
+          "test_case": "Reactivate a Closed client",
+          "preconditions": [
+            "User logged in as <role>",
+            "A client exists in Closed status",
+            "Client Detail page for that client is open"
+          ],
+          "steps": [
+            "1. Click the 'Reactivate' action in the action bar",
+            "2. Confirm the reactivate action in the confirmation dialog"
+          ],
+          "expected_result": "Status badge updates to 'Active' (green) on the Client Detail page",
+          "priority": "high",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-020",
+          "wf_ref": null,
+          "test_case": "Search and filter clients list by status",
+          "preconditions": [
+            "User logged in as <role>",
+            "Clients page is open",
+            "Clients list contains multiple clients with different statuses"
+          ],
+          "steps": [
+            "1. Enter <search term> in the Search field (searches Name / Account No. / External ID / Mobile Number) and execute the search",
+            "2. Select 'Active' from the Filter By Status dropdown"
+          ],
+          "expected_result": "Clients table displays only rows matching <search term> and having Status 'Active'; unrelated rows are no longer visible",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-021",
+          "wf_ref": null,
+          "test_case": "Create client and add unique Identifiers in wizard (no duplicate Document Type+Key)",
+          "preconditions": [
+            "User logged in as <role>"
+          ],
+          "steps": [
+            "1. Open the Create Client wizard from the Clients page by clicking 'Create Client'",
+            "2. In Step 1 (General Details), enter values for required fields: select <Office>, enter <First Name>, <Last Name>, and <Submitted On>",
+            "3. Click Next to proceed to Step 2 and Step 3 without changes",
+            "4. In Step 4 (Identifiers), click 'Add Row' and enter <Document_Type> and <Document_Key> for the first identifier",
+            "5. Click 'Add Row' again and enter a different <Document_Type> and/or <Document_Key> so the pair is unique",
+            "6. Click 'Submit' on the wizard"
+          ],
+          "expected_result": "Client Detail page opens and the Identifiers tab displays both added identifier entries (each with its Document Type and Document Key)",
+          "priority": "medium",
+          "category": "positive"
+        },
+        {
+          "tc_id": "TC-022",
+          "wf_ref": "WF-007",
+          "test_case": "Create Client \u2014 leave required text field (Office) blank",
+          "preconditions": [
+            "User is logged in",
+            "Create Client wizard is open"
+          ],
+          "steps": [
+            "1. Navigate to Create Client wizard",
+            "2. Leave the <Office> field blank",
+            "3. Fill all other required fields with valid values",
+            "4. Click Submit"
+          ],
+          "expected_result": "Inline validation error appears on the Office field indicating it is required; form does not submit; no client is created (status remains unchanged).",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-023",
+          "wf_ref": "WF-007",
+          "test_case": "Create Client \u2014 leave required date field (Submitted On) blank",
+          "preconditions": [
+            "User is logged in",
+            "Create Client wizard is open"
+          ],
+          "steps": [
+            "1. Navigate to Create Client wizard",
+            "2. Leave the <Submitted_On> field blank",
+            "3. Fill all other required fields with valid values",
+            "4. Click Submit"
+          ],
+          "expected_result": "Inline validation error appears on the Submitted On field indicating it is required; form does not submit; no client is created.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-024",
+          "wf_ref": "WF-007",
+          "test_case": "Create Client \u2014 submit with duplicate External ID (uniqueness constraint)",
+          "preconditions": [
+            "User is logged in",
+            "A client already exists with External ID = <duplicate External_ID>",
+            "Create Client wizard is open"
+          ],
+          "steps": [
+            "1. Navigate to Create Client wizard",
+            "2. Enter <duplicate External_ID> in External ID",
+            "3. Fill all required fields with valid values",
+            "4. Click Submit"
+          ],
+          "expected_result": "External ID field displays an error: 'must be unique across clients'; form does not submit; no client is created.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-025",
+          "wf_ref": "WF-007",
+          "test_case": "Create Client \u2014 add duplicate Identifier (Document Type + Document Key) in Identifiers step",
+          "preconditions": [
+            "User is logged in",
+            "Create Client wizard is open on Step 4 (Identifiers)"
+          ],
+          "steps": [
+            "1. In Identifiers step, add an identifier with <Document_Type_1> and <Document_Key_1>",
+            "2. Add a second identifier item with the same <Document_Type_1> and <Document_Key_1>",
+            "3. Fill all required fields in the wizard",
+            "4. Click Submit"
+          ],
+          "expected_result": "Identifiers repeater displays an error: 'no duplicate Document Type + Document Key' for the duplicated entry; form does not submit; no client is created.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-026",
+          "wf_ref": "WF-008",
+          "test_case": "Activate Pending client \u2014 leave Activation Date blank",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Pending status",
+            "Client Detail page for that Pending client is open"
+          ],
+          "steps": [
+            "1. On Pending client's Detail page, click the Activate action",
+            "2. Leave the <Activation_Date> field blank in the Activate dialog",
+            "3. Click Confirm/Submit in the Activate dialog"
+          ],
+          "expected_result": "Inline validation error appears on the Activation Date field indicating it is required; activation dialog does not submit; client remains in Pending status.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-027",
+          "wf_ref": "WF-008",
+          "test_case": "Activate Pending client \u2014 enter Activation Date before Submitted On (constraint violation)",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Pending status with Submitted On = <submitted_on_date>",
+            "Client Detail page for that Pending client is open"
+          ],
+          "steps": [
+            "1. On Pending client's Detail page, click the Activate action",
+            "2. Enter <activation date before submitted_on_date> in Activation Date",
+            "3. Click Confirm/Submit in the Activate dialog"
+          ],
+          "expected_result": "Activation Date field displays an error: 'Activation Date must not be before Submitted On'; activation dialog does not submit; client remains in Pending status.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-028",
+          "wf_ref": "WF-010",
+          "test_case": "Reject Pending client \u2014 leave Reason blank",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Pending status",
+            "Client Detail page for that Pending client is open"
+          ],
+          "steps": [
+            "1. On Pending client's Detail page, click the Reject action",
+            "2. Leave the <Reason> field blank in the Reject dialog",
+            "3. Click Confirm/Submit in the Reject dialog"
+          ],
+          "expected_result": "Inline validation error appears on the Reason field indicating it is required; reject dialog does not submit; client remains in Pending status.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-029",
+          "wf_ref": "WF-011",
+          "test_case": "Withdraw Pending client \u2014 leave Reason blank",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Pending status",
+            "Client Detail page for that Pending client is open"
+          ],
+          "steps": [
+            "1. On Pending client's Detail page, click the Withdraw action",
+            "2. Leave the <Reason> field blank in the Withdraw dialog",
+            "3. Click Confirm/Submit in the Withdraw dialog"
+          ],
+          "expected_result": "Inline validation error appears on the Reason field indicating it is required; withdraw dialog does not submit; client remains in Pending status.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-030",
+          "wf_ref": "WF-013",
+          "test_case": "Transfer Active client \u2014 leave Destination Office blank",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Active status",
+            "Client Detail page for that Active client is open"
+          ],
+          "steps": [
+            "1. On Active client's Detail page, click the Transfer Client action",
+            "2. Leave the <Destination_Office> field blank in the Transfer dialog",
+            "3. Click Confirm/Submit in the Transfer dialog"
+          ],
+          "expected_result": "Inline validation error appears on the Destination Office field indicating it is required; transfer dialog does not submit; client's Office remains unchanged.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-031",
+          "wf_ref": "WF-013",
+          "test_case": "Transfer Active client \u2014 select same office as destination (constraint violation)",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Active status with current Office = <current_office>",
+            "Client Detail page for that Active client is open"
+          ],
+          "steps": [
+            "1. On Active client's Detail page, click the Transfer Client action",
+            "2. Select <current_office> as the Destination Office",
+            "3. Click Confirm/Submit in the Transfer dialog"
+          ],
+          "expected_result": "Destination Office field displays an error: 'destination office must be different from current office'; transfer dialog does not submit; client's Office remains <current_office>.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-032",
+          "wf_ref": "WF-014",
+          "test_case": "Close Active client \u2014 attempt to close when client has active accounts (precondition violation)",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Active status and has at least one active account",
+            "Client Detail page for that Active client is open"
+          ],
+          "steps": [
+            "1. On Active client's Detail page, click the Close action",
+            "2. Enter a valid <Closure_Reason> in the Close dialog",
+            "3. Click Confirm/Submit in the Close dialog"
+          ],
+          "expected_result": "Close action is blocked: an error is shown indicating the client cannot be closed due to active accounts (constraint: 'cannot close when client has active accounts' / precondition 'client must have no active accounts'); close does not complete; client remains in Active status.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-033",
+          "wf_ref": "WF-014",
+          "test_case": "Close Active client \u2014 Close action should be unavailable when client has active accounts (precondition timing)",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Active status and has at least one active account",
+            "Client Detail page for that Active client is open"
+          ],
+          "steps": [
+            "1. Open the Client Detail page for the Active client that has active accounts",
+            "2. Observe the available actions in the action bar before clicking anything"
+          ],
+          "expected_result": "Close action button is not available (not visible or disabled) when the client has active accounts; the UI prevents initiating Close due to precondition 'client must have no active accounts'; client remains in Active status.",
+          "priority": "high",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-034",
+          "wf_ref": null,
+          "test_case": "Wrong-state attempt \u2014 on Pending client the Transfer Client action is not available",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Pending status",
+            "Client Detail page for that Pending client is open"
+          ],
+          "steps": [
+            "1. Open the Pending client's Detail page",
+            "2. Look for a Transfer Client action/button in the action bar"
+          ],
+          "expected_result": "Transfer Client action is not visible in the action bar for a Pending client; action cannot be performed; client remains in Pending status.",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-035",
+          "wf_ref": null,
+          "test_case": "Wrong-state attempt \u2014 on Active client the Activate action is not available",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Active status",
+            "Client Detail page for that Active client is open"
+          ],
+          "steps": [
+            "1. Open the Active client's Detail page",
+            "2. Look for an Activate action/button in the action bar"
+          ],
+          "expected_result": "Activate action is not visible in the action bar for an Active client; action cannot be performed; client remains in Active status.",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-036",
+          "wf_ref": null,
+          "test_case": "Wrong-state attempt \u2014 on Closed client Edit action is not available",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Closed status",
+            "Client Detail page for that Closed client is open"
+          ],
+          "steps": [
+            "1. Open the Closed client's Detail page",
+            "2. Look for an Edit action/button in the action bar"
+          ],
+          "expected_result": "Edit action is not visible in the action bar for a Closed client; action cannot be performed; client remains in Closed status.",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-037",
+          "wf_ref": null,
+          "test_case": "Wrong-state check \u2014 Rejected and Withdrawn clients show no actions",
+          "preconditions": [
+            "User is logged in",
+            "An existing client is in Rejected status and another client is in Withdrawn status"
+          ],
+          "steps": [
+            "1. Open the Rejected client's Detail page",
+            "2. Observe the action bar for available actions",
+            "3. Open the Withdrawn client's Detail page",
+            "4. Observe the action bar for available actions"
+          ],
+          "expected_result": "For both Rejected and Withdrawn clients the action bar shows no actionable buttons; no actions can be initiated; statuses remain Rejected and Withdrawn respectively.",
+          "priority": "medium",
+          "category": "negative"
+        },
+        {
+          "tc_id": "TC-038",
+          "wf_ref": "WF-008",
+          "subcategory": "boundary",
+          "test_case": "Activate: Activation Date equals Submitted On (boundary pass)",
+          "preconditions": [
+            "A client exists in state Pending with a known Submitted_On date"
+          ],
+          "steps": [
+            "1. Open the Clients page",
+            "2. Click the client's Name to open the Client Detail page for the Pending client",
+            "3. Click the Activate action",
+            "4. In the Activation_Date field enter a date exactly equal to the client's Submitted_On",
+            "5. Click Confirm on the Activate dialog"
+          ],
+          "expected_result": "Activation action succeeds; client status changes to Active and the Client Detail page displays Activation Date equal to Submitted_On",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-039",
+          "wf_ref": "WF-008",
+          "subcategory": "boundary",
+          "test_case": "Activate: Activation Date one day before Submitted On (boundary fail)",
+          "preconditions": [
+            "A client exists in state Pending with a known Submitted_On date"
+          ],
+          "steps": [
+            "1. Open the Clients page",
+            "2. Click the client's Name to open the Client Detail page for the Pending client",
+            "3. Click the Activate action",
+            "4. In the Activation_Date field enter a date equal to one day before the client's Submitted_On",
+            "5. Click Confirm on the Activate dialog"
+          ],
+          "expected_result": "Action is blocked / error shown; an inline error is displayed on Activation_Date stating 'Activation Date must not be before Submitted On'",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-040",
+          "wf_ref": "WF-013",
+          "subcategory": "boundary",
+          "test_case": "Transfer Client: Destination_Office different from current office (boundary pass)",
+          "preconditions": [
+            "A client exists in state Active with Current Office = <Office A>"
+          ],
+          "steps": [
+            "1. Open the Clients page",
+            "2. Click the client's Name to open the Client Detail page for the Active client",
+            "3. Click the Transfer Client action",
+            "4. In the Destination_Office field select an office different from the client's Current Office",
+            "5. Click Submit on the Transfer dialog"
+          ],
+          "expected_result": "Transfer action succeeds; client's Office shown on the Client Detail page is updated to the chosen Destination_Office",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-041",
+          "wf_ref": "WF-013",
+          "subcategory": "boundary",
+          "test_case": "Transfer Client: Destination_Office same as current office (boundary fail)",
+          "preconditions": [
+            "A client exists in state Active with Current Office = <Office A>"
+          ],
+          "steps": [
+            "1. Open the Clients page",
+            "2. Click the client's Name to open the Client Detail page for the Active client",
+            "3. Click the Transfer Client action",
+            "4. In the Destination_Office field select the same office as the client's Current Office",
+            "5. Click Submit on the Transfer dialog"
+          ],
+          "expected_result": "Action is blocked / error shown; an inline error is displayed stating 'destination office must be different from current office'",
+          "priority": "medium",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-042",
+          "wf_ref": "WF-007",
+          "subcategory": "interaction_edge",
+          "test_case": "Create Client wizard: add then remove all Identifiers and submit",
+          "preconditions": [
+            "User has opened Create Client wizard and has filled all required fields in earlier steps (Step 1 and Step 2) so the wizard is ready to submit"
+          ],
+          "steps": [
+            "1. Navigate to Step 4 (Identifiers) in the Create Client wizard",
+            "2. Click Add Identifier to create the first Identifier row",
+            "3. Fill fields for the first Identifier row (Document_Type and Document_Key) as needed",
+            "4. Click Add Identifier to create a second Identifier row",
+            "5. Fill fields for the second Identifier row (Document_Type and Document_Key) as needed",
+            "6. For the first Identifier row click Remove/Delete to remove it",
+            "7. For the second Identifier row click Remove/Delete to remove it",
+            "8. Click Submit on the Create Client wizard"
+          ],
+          "expected_result": "Form submission succeeds; client is created in Pending status and the Client Detail page (Identifiers tab) shows zero Identifier entries",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-043",
+          "wf_ref": "WF-010",
+          "subcategory": "input_edge",
+          "test_case": "Reject Pending client with a very long Reason text",
+          "preconditions": [
+            "A client exists in state Pending"
+          ],
+          "steps": [
+            "1. Open the Clients page",
+            "2. Click the client's Name to open the Client Detail page for the Pending client",
+            "3. Click the Reject action",
+            "4. In the Reason field enter a very long text (200+ characters)",
+            "5. Click Confirm on the Reject dialog"
+          ],
+          "expected_result": "Reject action succeeds; client status changes to Rejected and the Client Detail activity/history shows the entered Reason text (no inline error about length)",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-044",
+          "wf_ref": "WF-007",
+          "subcategory": "input_edge",
+          "test_case": "Create Client: leading and trailing whitespace in First Name is trimmed on save",
+          "preconditions": [
+            "User has opened Create Client wizard"
+          ],
+          "steps": [
+            "1. In Step 1 enter First_Name with leading and trailing whitespace",
+            "2. Fill all other required fields in Step 1 and subsequent required steps (precondition allowed these to be filled)",
+            "3. Click Submit to create the client"
+          ],
+          "expected_result": "Form submits successfully; Client Detail page displays the client's First Name without leading or trailing whitespace (value is trimmed)",
+          "priority": "low",
+          "category": "edge"
+        },
+        {
+          "tc_id": "TC-045",
+          "wf_ref": "WF-007",
+          "subcategory": "interaction_edge",
+          "test_case": "Create Client: rapid re-submission after successful submit does not create duplicate client",
+          "preconditions": [
+            "User has completed the Create Client wizard required fields and is ready to submit"
+          ],
+          "steps": [
+            "1. Click Submit on the Create Client wizard",
+            "2. After the system redirects to the newly created Client Detail page, press the browser Back button",
+            "3. On the page shown after Back attempt to click Submit again"
+          ],
+          "expected_result": "Second submission is blocked / error shown; only one client record exists (no duplicate client is created) and the user remains on or is redirected to the existing client's detail page",
+          "priority": "medium",
+          "category": "edge"
+        }
+      ],
+      "summary": {
+        "total": 45,
+        "positive": 21,
+        "negative": 16,
+        "edge": 8,
+        "boundary": 4,
+        "input_edge": 2,
+        "interaction_edge": 2,
+        "state_edge": 0,
+        "data_edge": 0,
+        "high_priority": 25,
+        "medium_priority": 16,
+        "low_priority": 4
+      }
+    }
+  ],
+  "total_summary": {
+    "total_modules": 1,
+    "total_tests": 45,
+    "positive": 21,
+    "negative": 16,
+    "boundary": 4,
+    "edge": 8,
+    "high_priority": 25,
+    "medium_priority": 16,
+    "low_priority": 4
+  }
+}
