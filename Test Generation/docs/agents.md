@@ -18,11 +18,15 @@ Every agent inherits from `BaseAgent` (`framework/agents/base.py`). `BaseAgent` 
 | **Prompt** | `prompts/structural_model_generator.md` |
 | **Stage** | 1 — Structural Model generation |
 | **Role** | Converts a module's natural-language functional description into a structured UI component tree (AST). |
-| **Inputs** | `module` dict (`title` + `description`), optional `fixes[]` from the previous critic |
+| **Inputs** | `module` dict (`title` + `description`), optional `fixes[]` from the previous validator, `attempt` (int, 1-based), `max_attempts` (int) |
 | **Output** | `{ "module_name": "...", "components": { ... } }` |
 | **LLM params** | `temperature=0.1`, `max_tokens=8192`, `reasoning_effort="medium"` |
 
-The agent only captures **interactive** elements: form fields, buttons, table row/bulk actions, wizard steps, tabs, and state-bound action bars. Passive display text produces no AST nodes. When `fixes` are provided, they are appended to the prompt as a numbered critic-feedback block.
+The agent renders its system prompt template at call time, filling three slots:
+- `{attempt_number}` / `{max_attempts}` — visible to the LLM so it knows how many retries remain.
+- `{fixes_block}` — omitted on attempt 1; on attempts 2+ the validator's `fixes[]` array is injected as a structured block so the LLM applies every fix before generating.
+
+Only **interactive** elements are captured: form fields, buttons, table row/bulk actions, wizard steps, tabs, and state-bound action bars. Passive display text produces zero AST nodes.
 
 ---
 
@@ -33,16 +37,39 @@ The agent only captures **interactive** elements: form fields, buttons, table ro
 | **File** | `agents/structural_model_validator.py` |
 | **Prompt** | `prompts/structural_model_validator.md` |
 | **Stage** | 1 — Structural Model audit |
-| **Role** | Audits an AST against the source description; returns a binary `yes/retry` verdict. |
-| **Inputs** | Raw description text, generated AST JSON |
-| **Output** | `{ "verdict": "yes\|retry", "summary": "...", "missing": [...], "phantoms": [...], "fixes": [...] }` |
+| **Role** | Audits an AST against the source description; returns a `yes`, `retry`, or `needs_clarification` verdict. |
+| **Inputs** | Raw description text, generated AST JSON, `attempt` (int, 1-based), `max_attempts` (int) |
+| **Output** | See schema below |
 | **LLM params** | `temperature=0.1`, `max_tokens=6144`, `reasoning_effort="medium"` |
 
-**Verdict rules:**
-- `yes` — 0–2 minor missing/phantoms, no critical structural errors.
-- `retry` — 3+ missing OR 3+ phantoms OR any required field/state absent OR wrong nesting.
+The validator renders its system prompt template at call time, filling:
+- `{attempt_number}` / `{max_attempts}` — echoed into the output JSON so logs are self-documenting.
+- `{final_attempt_warning}` — injected only on the last attempt, instructing the LLM to return `retry` so the orchestrator can escalate cleanly rather than silently shipping a bad AST.
 
-When `verdict=retry`, the `fixes[]` array is fed directly back to `StructuralModelGeneratorAgent` for the next attempt.
+**Output schema:**
+```json
+{
+  "verdict": "yes | retry | needs_clarification",
+  "attempt": 2,
+  "summary": "<one sentence>",
+  "missing": [
+    { "path": "Component.field", "severity": "critical | minor", "reason": "..." }
+  ],
+  "phantoms": [
+    { "path": "Component.field", "severity": "critical | minor", "reason": "..." }
+  ],
+  "structural_errors": ["<description of Step 5 violation and its AST path>"],
+  "fixes": ["<actionable instruction referencing the exact JSON path>"],
+  "clarifications": ["<exact quoted phrase from description that is ambiguous>"]
+}
+```
+
+**Verdict rules:**
+- `yes` — 0–2 minor missing/phantoms only, no structural errors. `fixes` must be `[]`.
+- `retry` — any critical missing/phantom, 3+ minor missing/phantoms, or any structural error. `fixes` must be populated.
+- `needs_clarification` — description is genuinely unresolvable (not a judgment call). Orchestrator stops retrying and surfaces `clarifications[]` for human review. `fixes` must be `[]`.
+
+When `verdict=retry`, the `fixes[]` array is fed directly back to `StructuralModelGeneratorAgent` for the next attempt. When `verdict=needs_clarification`, the loop stops immediately — retrying against a broken source description would waste budget. When all attempts are exhausted without `yes`, the orchestrator escalates with a severity-broken report (critical missing, critical phantoms, structural errors) rather than silently shipping the last AST.
 
 ---
 
@@ -54,9 +81,15 @@ When `verdict=retry`, the `fixes[]` array is fed directly back to `StructuralMod
 | **Prompt** | `prompts/workflow_extractor.md` |
 | **Stage** | 2 — Workflow extraction |
 | **Role** | Enumerates every distinct executable path through a module's AST. |
-| **Inputs** | `module_title`, `ast` JSON, raw `description`, optional `fixes[]` |
+| **Inputs** | `module_title`, `ast` JSON, raw `description`, optional `fixes[]`, `attempt` (int, 1-based), `max_attempts` (int) |
 | **Output** | `{ "workflows": [ { "wf_id": "WF-001", "name": "...", "actor": "...", "conditional_branch": null\|"...", "terminal_action": "...", "on_success": "..." }, ... ] }` |
 | **LLM params** | `temperature=0.2`, `max_tokens=8192` |
+
+The agent renders its system prompt template at call time, filling three slots:
+- `{attempt_number}` / `{max_attempts}` — visible to the LLM so it knows how many retries remain.
+- `{fixes_block}` — omitted on attempt 1; on attempts 2+ the validator's `fixes[]` array is injected as a structured block.
+
+The prompt includes a 9-item **SELF-CHECK** section that the LLM verifies before outputting (every submit_action has a workflow, every state × action pair is covered, sequential wf_id numbering, etc.).
 
 One workflow per:
 - `form` submit action (× conditional branch if `visible_when` fields exist)
@@ -76,12 +109,41 @@ The agent also exposes `format_workflows_block(workflows)` — a static helper t
 | **File** | `agents/workflow_validator.py` |
 | **Prompt** | `prompts/workflow_validator.md` |
 | **Stage** | 2 — Workflow audit |
-| **Role** | Validates the extracted workflow list for completeness and accuracy. |
-| **Inputs** | Raw description, AST JSON, `workflows[]` list |
-| **Output** | Same schema as `StructuralModelValidatorAgent` (`verdict`, `summary`, `missing`, `phantoms`, `fixes`) |
-| **LLM params** | `temperature=0.1`, `max_tokens=6144` |
+| **Role** | Validates the extracted workflow list for completeness and accuracy; returns a `yes`, `retry`, or `needs_clarification` verdict. |
+| **Inputs** | Raw description, AST JSON, `workflows[]` list, `attempt` (int, 1-based), `max_attempts` (int) |
+| **Output** | See schema below |
+| **LLM params** | `temperature=0.1`, `max_tokens=4096`, `reasoning_effort="medium"` |
 
-Checks for: missing form submit paths, missing state × action pairs, missing table row/bulk actions, phantom workflows not traceable to the AST, wrong terminal action names, bad conditional field references, zero-workflow failures.
+The validator renders its system prompt template at call time, filling:
+- `{attempt_number}` / `{max_attempts}` — echoed into the output JSON so logs are self-documenting.
+- `{final_attempt_warning}` — injected only on the last attempt, instructing the LLM to return `retry` so the orchestrator can escalate cleanly.
+
+**Seven Checks:** missing form workflows, missing state-machine workflows, missing data table workflows, phantom workflows, wrong conditional branches, empty/generic on_success, zero-workflow failures.
+
+**Output schema:**
+```json
+{
+  "verdict": "yes | retry | needs_clarification",
+  "attempt": 2,
+  "summary": "<one sentence>",
+  "missing": [
+    { "path": "AST path or state×action", "severity": "critical | minor", "reason": "..." }
+  ],
+  "phantoms": [
+    { "path": "WF-NNN terminal_action=X", "severity": "critical | minor", "reason": "..." }
+  ],
+  "structural_errors": ["<description of Check 5/6 violation>"],
+  "fixes": ["<actionable instruction>"],
+  "clarifications": ["<exact quoted phrase from description>"]
+}
+```
+
+**Verdict rules:**
+- `yes` — 0–2 minor missing/phantoms only, no structural errors. `fixes` must be `[]`.
+- `retry` — any critical missing/phantom, 3+ minor issues, or any structural error. `fixes` must be populated.
+- `needs_clarification` — description is genuinely unresolvable. Orchestrator stops retrying and surfaces `clarifications[]`. `fixes` must be `[]`.
+
+When all attempts are exhausted without `yes`, the orchestrator escalates with a severity-broken report (critical missing, critical phantoms, structural errors) rather than silently shipping the last workflow list.
 
 ---
 
@@ -99,6 +161,8 @@ Checks for: missing form submit paths, missing state × action pairs, missing ta
 
 Every `wf_id` in the approved workflow list must be covered by at least one positive TC. The TC's `wf_ref` links it back to the workflow.
 
+Uses the shared `build_test_prompt()` utility from `agents/utils.py` for user prompt assembly.
+
 ---
 
 ### `NegativeTestCaseGeneratorAgent`
@@ -115,6 +179,8 @@ Every `wf_id` in the approved workflow list must be covered by at least one posi
 
 For each workflow with a form interaction, generates the most critical blocking failure for that workflow's branch. Adds one negative TC only when it catches a unique bug not covered by any other workflow's negative test.
 
+Uses the shared `build_test_prompt()` utility from `agents/utils.py` for user prompt assembly.
+
 ---
 
 ### `EdgeTestCaseGeneratorAgent`
@@ -130,6 +196,8 @@ For each workflow with a form interaction, generates the most critical blocking 
 | **LLM params** | `temperature=0.3`, `max_tokens=16384` |
 
 For each workflow where `conditional_branch` activates a numeric or date field with a boundary, generates or confirms a boundary edge TC. `wf_ref` may be `null` for non-workflow-specific edges.
+
+Uses the shared `build_test_prompt()` utility from `agents/utils.py` for user prompt assembly.
 
 ---
 

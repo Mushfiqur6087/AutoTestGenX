@@ -21,9 +21,10 @@ spec.md  (## Module sections)
 │  │    attempt 1: StructuralModelGeneratorAgent ──► StructuralModelValidatorAgent  │
 │  │      verdict=yes  ────────────────────────────────────► done    │
 │  │      verdict=retry → fixes[] fed back                           │
+│  │      verdict=needs_clarification ─────────────────────► abort   │
 │  │    attempt 2: StructuralModelGeneratorAgent(fixes) ──► Validator │
 │  │      verdict=yes  ────────────────────────────────────► done    │
-│  │    attempt 3: StructuralModelGeneratorAgent(fixes) ──► ship     │
+│  │    attempt 3: StructuralModelGeneratorAgent(fixes) ──► escalate │
 │  │                           ↓                                     │
 │  [2/4] extract_workflows  (all modules run concurrently)            │
 │  │                                                                  │
@@ -44,9 +45,9 @@ spec.md  (## Module sections)
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Stage 1 — StructuralModelGeneratorAgent + StructuralModelValidatorAgent** — For each module, the generator emits a UI component tree and the validator audits it with a binary `yes/retry` verdict. On retry, the validator's `fixes[]` array is fed directly back to the generator. Maximum 3 attempts per module.
+**Stage 1 — StructuralModelGeneratorAgent + StructuralModelValidatorAgent** — For each module, the generator emits a UI component tree and the validator audits it with a `yes`, `retry`, or `needs_clarification` verdict. On retry, the validator's `fixes[]` array is injected directly into the generator's system prompt for the next attempt. Maximum 3 attempts per module, escalating with a severity-tagged report if exhausted.
 
-**Stage 2 — WorkflowExtractorAgent + WorkflowValidatorAgent** — For each module, the extractor enumerates every distinct executable path through the module (one workflow per submit action, per state × action pair, per table row/bulk action, per conditional branch). The validator audits for missing paths, phantom workflows, and wrong terminal actions — with the same 3-attempt retry loop.
+**Stage 2 — WorkflowExtractorAgent + WorkflowValidatorAgent** — For each module, the extractor enumerates every distinct executable path through the module (one workflow per submit action, per state × action pair, per table row/bulk action, per conditional branch). The validator audits for missing paths, phantom workflows, and wrong terminal actions — with the same `yes/retry/needs_clarification` verdict rules and 3-attempt retry loop.
 
 **Stage 3 — Three test agents** — For each module, three agents run in parallel against both the approved Structural Model and the workflow list: positive tests (must cover every workflow), negative tests (workflow-aware failure injection), and edge/boundary tests (workflow-aware boundary scoping). Each test case carries a `wf_ref` linking it back to the workflow it covers. Results are merged into a single per-module test suite with sequential TC IDs.
 
@@ -244,6 +245,7 @@ AutoTestGenX/
 │   ├── framework/
 │   │   ├── agents/
 │   │   │   ├── base.py                # BaseAgent — LiteLLM wrapper, semaphore, debug logging
+│   │   │   ├── utils.py               # Shared build_test_prompt() utility (Stage 3)
 │   │   │   ├── structural_model_generator.py
 │   │   │   ├── structural_model_validator.py
 │   │   │   ├── workflow_extractor.py
