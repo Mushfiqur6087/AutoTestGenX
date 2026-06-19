@@ -58,21 +58,52 @@ async def generate_and_critique_node(state: PipelineState) -> Dict[str, Any]:
         critique: Dict[str, Any] = {}
 
         for attempt in range(MAX_ATTEMPTS):
-            label = f"attempt {attempt + 1}/{MAX_ATTEMPTS}"
+            attempt_number = attempt + 1
+            label = f"attempt {attempt_number}/{MAX_ATTEMPTS}"
 
-            ast = await ast_agent.arun(module, fixes=fixes if fixes else None)
+            ast = await ast_agent.arun(
+                module,
+                fixes=fixes if fixes else None,
+                attempt=attempt_number,
+                max_attempts=MAX_ATTEMPTS,
+            )
 
-            critique = await critic_agent.arun(desc, ast)
+            critique = await critic_agent.arun(
+                desc,
+                ast,
+                attempt=attempt_number,
+                max_attempts=MAX_ATTEMPTS,
+            )
             verdict = critique.get("verdict", "retry")
 
             if verdict == "yes":
                 n = len(ast.get("components", {}))
                 print(f"  OK {module['title']} | {label} | {n} component(s)")
-                return {"ast": ast, "critique": critique, "attempts": attempt + 1}
+                return {"ast": ast, "critique": critique, "attempts": attempt_number}
 
+            # --- needs_clarification: source text is broken; stop immediately ---
+            if verdict == "needs_clarification":
+                questions = critique.get("clarifications", [])
+                print(
+                    f"  ?? {module['title']} | {label} | verdict=needs_clarification"
+                    f" | {len(questions)} question(s) — source text is ambiguous, stopping"
+                )
+                for q in questions:
+                    print(f"     CLARIFY  {q}")
+                return {
+                    "ast": ast,
+                    "critique": critique,
+                    "attempts": attempt_number,
+                    "needs_clarification": True,
+                    "clarifications": questions,
+                }
+
+            # --- retry ---
             fixes = critique.get("fixes", [])
-            missing = len(critique.get("missing", []))
-            phantoms = len(critique.get("phantoms", []))
+            missing_items = critique.get("missing", [])
+            phantom_items = critique.get("phantoms", [])
+            missing = len(missing_items)
+            phantoms = len(phantom_items)
 
             if attempt < MAX_ATTEMPTS - 1:
                 print(
@@ -80,10 +111,22 @@ async def generate_and_critique_node(state: PipelineState) -> Dict[str, Any]:
                     f" | missing={missing} phantoms={phantoms} | retrying..."
                 )
             else:
+                # Exhausted all attempts — escalate with a detailed breakdown
+                critical_missing = [m for m in missing_items if m.get("severity") == "critical"]
+                critical_phantoms = [p for p in phantom_items if p.get("severity") == "critical"]
+                structural_errors = critique.get("structural_errors", [])
                 print(
-                    f"  !! {module['title']} | max attempts reached"
-                    f" | missing={missing} phantoms={phantoms} | shipping final attempt"
+                    f"  !! {module['title']} | max attempts reached — ESCALATING"
+                    f" | critical_missing={len(critical_missing)}"
+                    f" critical_phantoms={len(critical_phantoms)}"
+                    f" structural_errors={len(structural_errors)}"
                 )
+                for item in critical_missing:
+                    print(f"     MISSING  [{item.get('severity','?')}] {item.get('path','?')}: {item.get('reason','')}")
+                for item in critical_phantoms:
+                    print(f"     PHANTOM  [{item.get('severity','?')}] {item.get('path','?')}: {item.get('reason','')}")
+                for err in structural_errors:
+                    print(f"     STRUCT   {err}")
 
         return {"ast": ast, "critique": critique, "attempts": MAX_ATTEMPTS, "forced_ship": True}
 
@@ -119,6 +162,8 @@ async def generate_and_critique_node(state: PipelineState) -> Dict[str, Any]:
                 "module_title": module["title"],
                 "critique": r["critique"],
                 "forced_ship": r.get("forced_ship", False),
+                "needs_clarification": r.get("needs_clarification", False),
+                "clarifications": r.get("clarifications", []),
             })
 
     print(f"  Done in {time.time() - t0:.1f}s")
@@ -152,21 +197,55 @@ async def extract_workflows_node(state: PipelineState) -> Dict[str, Any]:
         critique: Dict[str, Any] = {}
 
         for attempt in range(MAX_ATTEMPTS):
-            label = f"attempt {attempt + 1}/{MAX_ATTEMPTS}"
+            attempt_number = attempt + 1
+            label = f"attempt {attempt_number}/{MAX_ATTEMPTS}"
 
-            result = await extractor.arun(module["title"], ast, desc, fixes=fixes if fixes else None)
+            result = await extractor.arun(
+                module["title"],
+                ast,
+                desc,
+                fixes=fixes if fixes else None,
+                attempt=attempt_number,
+                max_attempts=MAX_ATTEMPTS,
+            )
             workflows = result.get("workflows", [])
 
-            critique = await critic.arun(desc, ast, workflows)
+            critique = await critic.arun(
+                desc,
+                ast,
+                workflows,
+                attempt=attempt_number,
+                max_attempts=MAX_ATTEMPTS,
+            )
             verdict = critique.get("verdict", "retry")
 
             if verdict == "yes":
                 print(f"  OK {module['title']} | {label} | {len(workflows)} workflow(s)")
-                return {"workflows": workflows, "critique": critique, "attempts": attempt + 1}
+                return {"workflows": workflows, "critique": critique, "attempts": attempt_number}
 
+            # --- needs_clarification: source text is broken; stop immediately ---
+            if verdict == "needs_clarification":
+                questions = critique.get("clarifications", [])
+                print(
+                    f"  ?? {module['title']} | {label} | verdict=needs_clarification"
+                    f" | {len(questions)} question(s) — source text is ambiguous, stopping"
+                )
+                for q in questions:
+                    print(f"     CLARIFY  {q}")
+                return {
+                    "workflows": workflows,
+                    "critique": critique,
+                    "attempts": attempt_number,
+                    "needs_clarification": True,
+                    "clarifications": questions,
+                }
+
+            # --- retry ---
             fixes = critique.get("fixes", [])
-            missing = len(critique.get("missing", []))
-            phantoms = len(critique.get("phantoms", []))
+            missing_items = critique.get("missing", [])
+            phantom_items = critique.get("phantoms", [])
+            missing = len(missing_items)
+            phantoms = len(phantom_items)
 
             if attempt < MAX_ATTEMPTS - 1:
                 print(
@@ -174,10 +253,22 @@ async def extract_workflows_node(state: PipelineState) -> Dict[str, Any]:
                     f" | missing={missing} phantoms={phantoms} | retrying..."
                 )
             else:
+                # Exhausted all attempts — escalate with a detailed breakdown
+                critical_missing = [m for m in missing_items if isinstance(m, dict) and m.get("severity") == "critical"]
+                critical_phantoms = [p for p in phantom_items if isinstance(p, dict) and p.get("severity") == "critical"]
+                structural_errors = critique.get("structural_errors", [])
                 print(
-                    f"  !! {module['title']} | max attempts reached"
-                    f" | missing={missing} phantoms={phantoms} | shipping final attempt"
+                    f"  !! {module['title']} | max attempts reached — ESCALATING"
+                    f" | critical_missing={len(critical_missing)}"
+                    f" critical_phantoms={len(critical_phantoms)}"
+                    f" structural_errors={len(structural_errors)}"
                 )
+                for item in critical_missing:
+                    print(f"     MISSING  [{item.get('severity','?')}] {item.get('path','?')}: {item.get('reason','')}")
+                for item in critical_phantoms:
+                    print(f"     PHANTOM  [{item.get('severity','?')}] {item.get('path','?')}: {item.get('reason','')}")
+                for err in structural_errors:
+                    print(f"     STRUCT   {err}")
 
         return {"workflows": workflows, "critique": critique, "attempts": MAX_ATTEMPTS, "forced_ship": True}
 
@@ -213,6 +304,8 @@ async def extract_workflows_node(state: PipelineState) -> Dict[str, Any]:
                 "module_title": module["title"],
                 "critique": r["critique"],
                 "forced_ship": r.get("forced_ship", False),
+                "needs_clarification": r.get("needs_clarification", False),
+                "clarifications": r.get("clarifications", []),
             })
 
     print(f"  Done in {time.time() - t0:.1f}s")
