@@ -10,6 +10,22 @@ Every agent inherits from `BaseAgent` (`framework/agents/base.py`). `BaseAgent` 
 
 ## Test Generation Agents
 
+### `ModuleContextExtractorAgent`
+
+| Attribute | Value |
+|-----------|-------|
+| **File** | `agents/module_context_extractor.py` |
+| **Prompt** | `prompts/module_context_extractor.md` |
+| **Stage** | 0 — Module Context Extraction |
+| **Role** | Synthesizes global navigation and module lists into a per-module context to ground preconditions and prevent hallucination. |
+| **Inputs** | `module_title`, `description`, `navigation_overview`, `all_modules` |
+| **Output** | `{ "summary": "...", "where_it_fits": "...", "assumed_state_on_entry": "..." }` |
+| **LLM params** | `temperature=0.1`, `max_tokens=1024`, `reasoning_effort="low"` |
+
+This agent runs once per module at the very start of the pipeline. Its output (`<module_context>`) is injected as the first input block into every downstream agent's prompt to ensure they understand where the module fits in the broader application lifecycle.
+
+---
+
 ### `StructuralModelGeneratorAgent`
 
 | Attribute | Value |

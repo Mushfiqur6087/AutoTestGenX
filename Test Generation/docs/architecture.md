@@ -16,6 +16,7 @@ test_generation/
 │   ├── agents/
 │   │   ├── base.py                 # BaseAgent — LiteLLM wrapper, semaphore, debug logging
 │   │   ├── utils.py                # Shared build_test_prompt() utility (Stage 3)
+│   │   ├── module_context_extractor.py     # Stage 0 extractor
 │   │   ├── structural_model_generator.py   # Stage 1 generator
 │   │   ├── structural_model_validator.py   # Stage 1 critic
 │   │   ├── workflow_extractor.py           # Stage 2 extractor
@@ -31,6 +32,7 @@ test_generation/
 │       ├── reporters.py            # Markdown report renderers
 │       └── runs.py                 # Run-ID generation, sidecar metadata, checkpoint helpers
 └── prompts/
+    ├── module_context_extractor.md
     ├── structural_model_generator.md
     ├── structural_model_validator.md
     ├── workflow_extractor.md
@@ -47,10 +49,18 @@ test_generation/
 ### LangGraph Node Graph
 
 ```
-generate_and_critique ──► extract_workflows ──► generate_tests ──► finalize ──► END
+extract_module_context ──► generate_and_critique ──► extract_workflows ──► generate_tests ──► finalize ──► END
 ```
 
 Each node is an `async` function that reads `PipelineState` and returns a dict of state updates. All modules are processed **concurrently** within each node using `asyncio.gather`.
+
+---
+
+### Node: `extract_module_context`
+
+- **Purpose:** Stage 0 — synthesizes a global context block for each module to prevent precondition hallucination.
+- **Per-module:** `ModuleContextExtractorAgent` reads the module's description along with the global application navigation overview and list of all modules.
+- **Output state key:** `module_context_results`
 
 ---
 
@@ -134,6 +144,7 @@ The semaphore is acquired per `acall_llm` call (the innermost unit), not per mod
 | Key | Reducer | Description |
 |-----|---------|-------------|
 | `functional_desc` | `_last_value` | Parsed spec input (modules list + navigation text) |
+| `module_context_results` | `_last_value` | List of per-module context blocks |
 | `structural_model_results` | `_last_value` | List of per-module AST results |
 | `structural_model_critique_results` | `_last_value` | List of per-module validator verdicts (includes `forced_ship`, `needs_clarification`, `clarifications`) |
 | `workflow_results` | `_last_value` | List of per-module workflow lists |

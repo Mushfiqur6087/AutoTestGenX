@@ -4,7 +4,7 @@ This skill documents the actual test-generation surface of the AutoTestGenX pipe
 as it operates against the raw functional descriptions in `dataset/raw_specifications/`
 (Moodle Teacher / Student, Mifos, PHPTravels, Parabank, SwagLab).
 
-The pipeline runs seven agents in three stages: a **structural model** (AST) is
+The pipeline runs eight agents in four stages: a **module context** is synthesized globally, a **structural model** (AST) is
 extracted from the spec, **workflows** are enumerated from the AST, then three
 parallel test generators (positive / negative / edge) produce JSON test cases
 referencing the workflows via `wf_ref`.
@@ -285,15 +285,3 @@ the assignment row exists in the DB; performance of the rich-text editor;
 mobile-rendering parity; WCAG conformance of the panels.
 
 ---
-
-## 7. Cross-Reference
-
-| Question | Source prompt |
-|---|---|
-| What positive tests cover | `test_generation/prompts/positive_test_case_generator.md` (WHAT TO GENERATE, Coverage Completeness Gate) |
-| What negative tests cover | `test_generation/prompts/negative_test_case_generator.md` (WHAT TO GENERATE, Scope Gate) |
-| What edge tests cover | `test_generation/prompts/edge_test_case_generator.md` (WHAT TO GENERATE, RELEVANCE RULE) |
-| What the workflow list contains | `test_generation/prompts/workflow_extractor.md` |
-| Per-agent rationale | `docs/agents.md` |
-| Pipeline wiring | `docs/architecture.md`, `docs/pipeline.md` |
-| Output schema | `docs/data_models.md` |

@@ -295,6 +295,7 @@ class PipelineState(TypedDict, total=False):
     debug_dir: str
     output_dir: str
     test_types: Set[str]                # {"positive", "negative", "edge"}
+    module_context_results: List[Dict[str, Any]]
     structural_model_results: List[Dict[str, Any]]
     structural_model_critique_results: List[Dict[str, Any]]
     workflow_results: List[Dict[str, Any]]

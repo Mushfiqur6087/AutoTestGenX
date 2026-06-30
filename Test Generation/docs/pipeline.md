@@ -16,6 +16,28 @@ The CLI parses the markdown and extracts 6 modules. "Client Management" is modul
 
 ---
 
+## Stage 0 — Module Context Extraction
+
+Before generating the structural model, the pipeline extracts a global context for each module.
+
+### Attempt 1 of 1 — ModuleContextExtractorAgent
+
+The agent receives the global `navigation_overview` and the `all_modules` list, along with the "Client Management" module title and description.
+
+**LLM output:**
+
+```json
+{
+  "summary": "The Client Management module allows users to view, create, and manage the lifecycle of clients in the system.",
+  "where_it_fits": "This module is the primary entry point for all client operations, accessed via Clients -> Client Management in the top navigation.",
+  "assumed_state_on_entry": "User is authenticated. To view or create, no prior state is required. To edit, an existing client must be present."
+}
+```
+
+This context block is injected into the INPUT section of all downstream prompts.
+
+---
+
 ## Stage 1 — Structural Model Generation
 
 ### Attempt 1 of 3 — StructuralModelGeneratorAgent
