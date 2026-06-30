@@ -1,0 +1,76 @@
+
+\section{Methodology}
+
+AutoTestGen resolves the limitations of single-prompt LLMs by decomposing the testing lifecycle into specialised stages. Instead of relying on a monolithic inference step, the framework distributes tasks across dedicated agents organised into two pipelines that run sequentially. The entire generation process is anchored to a formally defined artefact chain derived from the plain-language input $R$:
+%
+\[
+  R \;\longrightarrow\; C \;\longrightarrow\; M \;\longrightarrow\; \Pi \;\longrightarrow\; T, \qquad T \;\longrightarrow\; V
+\]
+%
+where $C$ is the global Module Context, $M$ is the Structural Model, $\Pi$ is the set of executable workflow paths, $T$ is the raw test suite, and $V$ is the post-generation verification schema. Each artefact is a well-defined function of its predecessor, ensuring full traceability from requirement to test.
+
+% ---------------------------------------------------------
+\subsection{Phase 1: Test Generation}
+% ---------------------------------------------------------
+
+The first pipeline converts the plain-language functional specification into a formal, verified test suite. The pipeline is broken into four sequential stages.
+
+\subsubsection{Stage 1: Module Context Extraction}
+
+When LLMs process isolated modules (e.g., ``Client Management''), they lack visibility into the broader application ecosystem, often hallucinating preconditions or misinterpreting the module's role within the system. To prevent this, the pipeline begins by synthesizing a global context block for each module.
+
+This stage is handled by the \texttt{ModuleContextExtractor} agent. It processes the raw functional specification $R$, specifically cross-referencing the target module against the application's global navigation overview and the complete list of all other modules. The agent produces the Module Context $C$, which defines the module's summary, its precise location within the application's information architecture, and the assumed system state required to access it. This context $C$ is subsequently injected into the prompts of all downstream agents to permanently ground their reasoning and eliminate precondition hallucinations.
+
+\subsubsection{Stage 2: Interface Modelling}
+
+The pipeline begins by converting the raw functional specification into a validated, machine-readable representation of the application's user interface. This stage exists because of a fundamental risk in LLM-based generation: if an agent reads a plain-text description and immediately attempts to generate test cases, it has no structured anchor to work from. The model may misinterpret ambiguous descriptions, invent interface elements that do not exist, or silently omit components mentioned only briefly in the specification.
+
+This stage is handled by two agents: the \texttt{StructuralModelGenerator} and the \texttt{StructuralModelValidator}. The Generator reads a single module from the functional specification $R$ and constructs the Structural Model $M$, a machine-readable representation that captures every interactive element in that module: form fields, buttons, data tables, wizard steps, tab containers, and state-bound action bars, together with their types, constraints, and conditional relationships. Crucially, $M$ is derived from $R$ alone and requires no access to the running application at this stage.
+
+Once the Generator produces $M$, the Validator audits it against a strict JSON schema, yielding a binary \texttt{pass/retry} verdict. If the model is rejected, the Validator compiles a \texttt{fixes} array that precisely identifies every violation and passes it back to the Generator, which produces a corrected version. This critic-retry loop is bounded to a maximum of three attempts. By introducing an adversarial Validator agent, the system mechanically detects and corrects hallucinations, transforming an inherently unreliable generation process into a robust, high-fidelity pipeline and providing a guaranteed-quality checkpoint before any workflow extraction or test generation begins.
+
+\subsubsection{Stage 3: Workflow Extraction}
+
+If an LLM attempts to write test cases directly from an interface model or raw text, it tends to focus exclusively on obvious happy paths and frequently overlooks secondary interactions such as state-conditional buttons, bulk actions, or edge-case workflows. To guarantee comprehensive test coverage, the system must deterministically enumerate every possible user journey before any test code is written. Separating path enumeration from test synthesis allows the extraction agents to focus entirely on structural graph traversal without the cognitive load of generating complex test steps.
+
+This enumeration is handled by the \texttt{WorkflowExtractor} and the \texttt{WorkflowValidator}. The Extractor mechanically derives all distinct executable paths $\Pi$ by utilising the cumulative context of both the structural model $M$ and the original functional specification $R$. For instance, a data table component yields one distinct workflow per row-action and bulk-action, while a state-bound action bar yields one workflow per state-action pair. Each extracted path $\pi \in \Pi$ carries a unique identifier, an actor role, an optional entry condition, a terminal action, and an observed success outcome.
+
+Like the previous stage, the extraction is governed by a strict critic-retry loop. The Validator audits the extracted paths to identify missing workflows, hallucinated workflows, or incorrect terminal actions. If violations are found, feedback is routed back to the Extractor for up to three attempts, ensuring that the resulting workflow map $\Pi$ is complete and free of hallucinations before test synthesis begins.
+
+\subsubsection{Stage 4: Parallel Test Generation}
+
+A single LLM instructed to generate all possible tests for a given module typically suffers from generation fatigue, producing generic and repetitive steps that lack depth, frequently failing to explore negative scenarios or boundary conditions. AutoTestGen solves this limitation by deploying three specialised synthesis agents that operate concurrently, each adopting a distinct focused persona rather than attempting to satisfy all coverage requirements simultaneously.
+
+Three agents handle this stage: the \texttt{PositiveTestGenerator}, the \texttt{NegativeTestGenerator}, and the \texttt{EdgeTestGenerator}. Rather than guessing which paths to test, these agents utilise the full cumulative context of the validated workflows $\Pi$, the structural model $M$, and the original functional rules $R$.
+
+\begin{itemize}
+    \item The \textbf{Positive} agent ensures every extracted workflow is covered by at least one success-path test.
+    \item The \textbf{Negative} agent performs workflow-aware failure injection, testing critical blocking conditions such as invalid inputs and permission violations.
+    \item The \textbf{Edge} agent probes conditional boundaries on numeric, date, or length-constrained fields.
+\end{itemize}
+
+The tests from all three agents are merged into a single formal raw test suite $T$. To ensure mathematical traceability, every test case carries an explicit \texttt{wf\_ref} token guaranteeing that it maps back to the specific workflow $\pi \in \Pi$ it was designed to exercise.
+
+% ---------------------------------------------------------
+\subsection{Phase 2: Post-Generation Verification}
+% ---------------------------------------------------------
+
+A fundamental limitation of naive LLM-generated tests is their superficiality regarding persistent state changes. When tasked with creating a user or submitting an order, a standard LLM typically concludes the test the moment the final submit button is clicked. It inherently fails to verify whether the underlying data was actually saved to the system. To resolve this, AutoTestGen employs an independent pipeline dedicated exclusively to generating rigorous post-conditional oracles $V$ for data-altering actions.
+
+To support cross-actor verifications, such as a teacher creating an assignment that a student then verifies, the agents are provided with a concatenated merged description of all actor modules, giving them a complete global view of the system's requirements.
+
+\subsubsection{Stage 1: State Change Classification}
+
+Generating complex verification schemas for read-only actions such as navigating to a dashboard or viewing a static report wastes computational resources. Therefore, the pipeline employs a strict pre-filtering mechanism handled by the \texttt{StateChangeClassifier} agent. The agent evaluates every positive test case in the raw test suite $T$. Navigational, form-validation, and negative tests are immediately filtered out. Only tests that perform persistent changes such as creating, updating, deleting, or executing transactional operations are permitted to proceed to the next stage.
+
+\subsubsection{Stage 2: Verification Generation}
+
+For every test that passes the gate, the \texttt{PostVerificationAgent} determines the precise strategy required to prove the mutation succeeded and assigns one of three verification strategies:
+
+\begin{itemize}
+    \item \textbf{Same-Actor Navigation:} The test navigates to a different location within the same session to observe the newly created or modified record. For example, after a fund transfer, the verification step navigates to the transaction history page to confirm the new transaction appears.
+    \item \textbf{Cross-Actor Verification:} A second actor logs in through a separate session to verify the persistent change made by the first actor. For instance, if a student submits an assignment, the verification test logs in using teacher credentials to confirm the submission is visible in the grading portal.
+    \item \textbf{Other:} A fallback for any scenario that does not fit the preceding two categories, typically including persistent changes that occur outside the application boundary such as external email notifications or third-party payment gateways.
+\end{itemize}
+
+Once the strategy is determined, the agent generates a formal schema containing a \texttt{pre\_check} describing what to observe before execution and a \texttt{post\_check} describing what to observe after the persistent change occurs. The output explicitly retains the test case identifier of the source test, ensuring a precise one-to-one link between the generated test steps in $T$ and the post-generation verification schema $V$.
